@@ -1,0 +1,39 @@
+"""
+(c)2007 by the GunGame Coding Team
+
+    Title:      gg_hostage_objective
+Version #:      12.5.2007
+Description:    Adds rewards for rescueing or preventing the rescuing of hostages.
+"""
+
+import es
+from gungame import gungame
+
+# Register this addon with EventScripts
+info = es.AddonInfo() 
+info.name     = "gg_hostage_objective Addon for GunGame: Python" 
+info.version  = "12.5.2007"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
+info.basename = "gungame/included_addons/gg_hostage_objective" 
+info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+
+
+def load():
+    # Register this addon with GunGame
+    global dict_playerWeapons
+    gungame.registerAddon('gungame/included_addons/gg_unl_grenade', 'gg_unl_grenade')
+    
+    if gungame.getGunGameVar('gg_xtra_grenades') == '1':
+        gungame.setGunGameVar('gg_xtra_grenades', '0')
+        
+        
+def unload():
+    # Unregister this addon with GunGame
+    gungame.unregisterAddon('gungame/included_addons/gg_unl_grenade')
+    
+    
+def gg_variable_changed(event_var):
+    # Watch for required addon load/unload
+    if event_var['cvarname'] == 'gg_xtra_grenades' and event_var['newvalue'] == '1':
+        gungame.setGunGameVar('gg_xtra_grenades', 0)
+        es.msg('#lightgreen', 'WARNING: gg_xtra_grenades cannot be loaded while gg_unl_grenade is enabled!')

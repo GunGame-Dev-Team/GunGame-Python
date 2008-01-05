@@ -33,7 +33,7 @@ class WarmUpWeaponError(_GunGameQueryError):
     pass
 
 global list_allWeapons
-list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
+list_allWeapons = ['knife', 'glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
 
 global mp_freezetimeBackUp
 mp_freezetimeBackUp = 0
@@ -65,7 +65,7 @@ def load():
     # Make sure there is supposed to be a warmup weapon
     if str(warmupWeapon) != '0':
         #Make sure the warmup weapon is a valid weapon choice
-        if not list_allWeapons.count(warmupWeapon):
+        if warmupWeapon not in list_allWeapons:
             # Nope, the admin typoed it. Let's set it to 0 so that we don't have to worry about this later
             gungame.setGunGameVar('gg_warmup_weapon', '0')
             # Kick out an error due to the typo by the admin
@@ -115,9 +115,16 @@ def player_spawn(event_var):
         if gungame.getGunGameVar('gg_warmup_weapon') != 'knife':
             # Give the player the WarmUp Round Weapon
             es.server.cmd('es_xgive %s weapon_%s' %(userid, gungame.getGunGameVar('gg_warmup_weapon')))
+        else:
+            es.sexec(userid, 'use weapon_knife')
+            gungame.stripPlayer(userid)
     else:
         # It looks like we are giving them the level 1 weapon...
         gungame.giveWeapon(userid)
+
+def hegrenade_detonate(event_var):
+    if event_var['es_userteam'] > 1 and gungame.getGunGameVar('gg_warmup_weapon') == 'hegrenade':
+        es.server.cmd('es_give %s weapon_hegrenade' %event_var['userid'])
 
 def countDown(countDownTimeRemaining):
     # Subtract 1 from the remaining time

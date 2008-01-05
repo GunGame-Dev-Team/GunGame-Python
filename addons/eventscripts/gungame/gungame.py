@@ -2104,8 +2104,15 @@ def gg_variable_changed(event_var):
     cvarName = event_var['cvarname']
     newValue = event_var['newvalue']
     oldValue = event_var['value']
+    # GG_UNL_GRENADE
+    if cvarName == 'gg_unl_grenades':
+        if newValue == '1':
+            es.server.queuecmd('es_load gungame/included_addons/gg_unl_grenade')
+        elif newValue == '0':
+            if 'gungame\included_addons\gg_unl_grenades' in dict_gungameRegisteredAddons:
+                es.unload('gungame/included_addons/gg_unl_grenade')
     # GG_EARN_NADE
-    if cvarName == 'gg_earn_grenades':
+    elif cvarName == 'gg_earn_grenades':
         if newValue == '1':
             es.server.queuecmd('es_load gungame/included_addons/gg_earn_nade')
         elif newValue == '0':
@@ -2167,6 +2174,27 @@ def gg_variable_changed(event_var):
         elif newValue == '0':
             if 'gungame\included_addons\gg_spawn_protect' in dict_gungameRegisteredAddons:
                 es.unload('gungame/included_addons/gg_spawn_protect')
+    # GG_TRIPLE_LEVEL
+    elif cvarName == 'gg_triple_on':
+        if newValue == '1':
+            es.server.queuecmd('es_load gungame/included_addons/gg_triple_level')
+        elif newValue == '0':
+            if 'gungame\included_addons\gg_triple_level' in dict_gungameRegisteredAddons:
+                es.unload('gungame/included_addons/gg_triple_level')
+    # GG_FRIENDLYFIRE
+    elif cvarName == 'gg_auto_ff':
+        if newValue == '1':
+            es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
+        elif newValue == '0':
+            if 'gungame\included_addons\gg_friendlyfire' in dict_gungameRegisteredAddons:
+                es.unload('gungame/included_addons/gg_friendlyfire')
+    # GG_NOBLOCK
+    elif cvarName == 'gg_noblock_enable':
+        if newValue == '1':
+            es.server.queuecmd('es_load gungame/included_addons/gg_noblock')
+        elif newValue == '0':
+            if 'gungame\included_addons\gg_noblock' in dict_gungameRegisteredAddons:
+                es.unload('gungame/included_addons/gg_noblock')
 
 # ===================================================================================================
 # ===================================================================================================

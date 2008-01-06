@@ -9,10 +9,10 @@ Description:    Adds map voting capabilities to gungame.
 import es
 import os
 import random
-import gamethread
 from gungame import gungame
-import playerlib
 import popuplib
+import usermsg
+import repeat
 
 # register this addon with EventScripts
 info = es.AddonInfo() 
@@ -24,7 +24,7 @@ info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
 # custom map list for the end map vote
 gg_map_list_file = gungame.getGunGameVar('gg_map_list_file')
-# file to use for the map vote.
+# file to use for the map vote
 gg_map_list_source = int(gungame.getGunGameVar('gg_map_list_source'))
 # number of maps in the end of map vote
 gg_map_vote_size = int(gungame.getGunGameVar('gg_map_vote_size'))
@@ -32,6 +32,8 @@ gg_map_vote_size = int(gungame.getGunGameVar('gg_map_vote_size'))
 gg_dont_show_last_maps = int(gungame.getGunGameVar('gg_dont_show_last_maps'))
 # the amount of time in seconds aloud for the vote
 gg_vote_time = int(gungame.getGunGameVar('gg_vote_time'))
+# shows player name and vote selection in the player chat
+gg_show_player_vote = int(gungame.getGunGameVar('gg_show_player_vote'))
 
 # dictionary for gg_map_list_source settings
 # 1 = mapcycle.txt
@@ -73,11 +75,15 @@ def load():
 def unload():
     # unregister this addon with GunGame
     gungame.unregisterAddon('gungame/included_addons/gg_map_vote')
-
+    
+    # delete popup
     if popuplib.exists('VoteMenu'):
-        gamethread.cancelDelayed('VoteResultsDelay')
-        popuplib.unsendname('VoteMenu', playerlib.getUseridList('#all'))
+        popuplib.unsendname('VoteMenu', es.getUseridList())
         popuplib.delete('VoteMenu')
+        
+    #delete repeat
+    if repeat.status('VoteCounter'):
+        repeat.delete('VoteCounter')
 
 def gg_variable_changed(event_var):
     # register change in gg_map_list_file
@@ -100,6 +106,10 @@ def gg_variable_changed(event_var):
     if event_var['cvarname'] == 'gg_vote_time':
         global gg_vote_time
         gg_vote_time = int(gungame.getGunGameVar('gg_vote_time'))
+    # register change in gg_show_player_vote
+    if event_var['cvarname'] == 'gg_show_player_vote':
+        global gg_show_player_vote
+        gg_show_player_vote = int(gungame.getGunGameVar('gg_show_player_vote'))
 
 def es_map_start(event_var):
     global gg_dont_show_last_maps
@@ -114,8 +124,8 @@ def es_map_start(event_var):
 
     # get vote ready
     if popuplib.exists('VoteMenu'):
-        gamethread.cancelDelayed('VoteResultsDelay')
-        popuplib.unsendname('VoteMenu', playerlib.getUseridList('#all'))
+        repeat.delete('VoteCounter')
+        popuplib.unsendname('VoteMenu', es.getUseridList())
         popuplib.delete('VoteMenu')
     InitiateVote()
 
@@ -130,7 +140,7 @@ def gg_win(event_var):
     global dict_PlayerChoice
     global VoteActive
     if VoteActive:
-        gamethread.cancelDelayed('VoteResultsDelay')
+        repeat.delete('VoteCounter')
         VoteResults()
     winningMap = dict_PlayerChoice['WinningMap']
     if winningMap != None:
@@ -191,6 +201,7 @@ def SetVoteList():
         
     #reset Winning Map
     dict_PlayerChoice.clear()
+    dict_PlayerChoice['VotedMaps'] = {}
     dict_PlayerChoice['TotalVotes'] = 0
     dict_PlayerChoice['WinningMap'] = None
     dict_PlayerChoice['WinningMapVotes'] = 0
@@ -198,29 +209,51 @@ def SetVoteList():
 def StartVote():
     global gg_vote_time
     global VoteActive
+    global VoteTimer
     
     # send the map vote to the players
     es.msg('#lightgreen', '[GG MAP VOTE] Place your votes...')
-    popuplib.send('VoteMenu', playerlib.getUseridList('#all'))
-    gamethread.delayedname(gg_vote_time, 'VoteResultsDelay', VoteResults, ())
+    popuplib.send('VoteMenu', es.getUseridList())
     es.cexec_all('play admin_plugin/actions/startyourvoting.mp3')
+    
+    VoteTimer = gg_vote_time
+    repeat.create('VoteCounter', VoteCountdown)
+    repeat.start('VoteCounter', 1, 0)
     VoteActive = 1
 
+def VoteCountdown(repeatInfo):
+    global dict_PlayerChoice
+    global VoteTimer
+    
+    if VoteTimer:
+        HudhintText = 'Time Remaining: %i' %VoteTimer
+        for map in dict_PlayerChoice['VotedMaps']:
+            HudhintText = '%s\n%s(%i)' %(HudhintText, map, dict_PlayerChoice['VotedMaps'][map])
+        for userid in es.getUseridList():
+            usermsg.hudhint(userid, HudhintText)
+    else:
+        VoteResults()
+        repeat.delete('VoteCounter')
+    VoteTimer -= 1
+    
+    
 def VoteMenuSelect(userid, MapChoice, popupid):
     global dict_PlayerChoice
     global list_VoteList
+    global gg_show_player_vote
     if MapChoice in list_VoteList:
-        # announce players choice
-        Name = es.getplayername(userid)
-        es.msg('#lightgreen', '%s voted %s' % (Name, MapChoice))
+        # announce players choice if enabled
+        if gg_show_player_vote:
+            Name = es.getplayername(userid)
+            es.msg('#lightgreen', '%s voted %s' % (Name, MapChoice))
         # register votes
-        if MapChoice not in dict_PlayerChoice:
-            dict_PlayerChoice[MapChoice] = 1
+        if MapChoice not in dict_PlayerChoice['VotedMaps']:
+            dict_PlayerChoice['VotedMaps'][MapChoice] = 1
         else:
-            dict_PlayerChoice[MapChoice] += 1
-        if dict_PlayerChoice[MapChoice] > dict_PlayerChoice['WinningMapVotes']:
+            dict_PlayerChoice['VotedMaps'][MapChoice] += 1
+        if dict_PlayerChoice['VotedMaps'][MapChoice] > dict_PlayerChoice['WinningMapVotes']:
             dict_PlayerChoice['WinningMap'] = MapChoice
-            dict_PlayerChoice['WinningMapVotes'] = dict_PlayerChoice[MapChoice]
+            dict_PlayerChoice['WinningMapVotes'] = dict_PlayerChoice['VotedMaps'][MapChoice]
         dict_PlayerChoice['TotalVotes'] += 1
 
 def VoteResults():
@@ -230,14 +263,19 @@ def VoteResults():
     VoteActive = 0
     list_VoteList = []
     # close and delete popup
-    popuplib.unsendname('VoteMenu', playerlib.getUseridList('#all'))
+    popuplib.unsendname('VoteMenu', es.getUseridList())
     popuplib.delete('VoteMenu')
     # announce winning map
     if dict_PlayerChoice['TotalVotes']:
         es.msg('#multi', '#green[GG MAP VOTE] #lightgreenResults are in, %i votes cast...' % dict_PlayerChoice['TotalVotes'])
         es.msg('#lightgreen', '%s won with %i votes' % (dict_PlayerChoice['WinningMap'], dict_PlayerChoice['WinningMapVotes']))
+        for userid in es.getUseridList():
+            usermsg.hudhint(userid, 'Nextmap:\n%s' %dict_PlayerChoice['WinningMap'])
     else:
         es.msg('#lightgreen', 'Vote cancelled: not enough votes.')
+        for userid in es.getUseridList():
+            usermsg.hudhint(userid, 'Not enough votes')
+
     es.cexec_all('play admin_plugin/actions/endofvote.mp3')
 
 # console command gg_vote_cancel
@@ -245,8 +283,8 @@ def CancelVote():
     global VoteActive
     if VoteActive:
         VoteActive = 0
-        gamethread.cancelDelayed('VoteResultsDelay')
-        popuplib.unsendname('VoteMenu', playerlib.getUseridList('#all'))
+        repeat.delete('VoteCounter')
+        popuplib.unsendname('VoteMenu', es.getUseridList())
         popuplib.delete('VoteMenu')
         es.msg('#multi', '#green[GG MAP VOTE] #lightgreenVote has been cancelled')
     else:

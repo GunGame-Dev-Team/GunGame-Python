@@ -18,7 +18,7 @@ info = es.AddonInfo()
 info.name     = "gg_spawn_protection Addon for GunGame: Python" 
 info.version  = "12.31.2007"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_knife_elite" 
+info.basename = "gungame/included_addons/gg_spawn_protect" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
 gg_spawn_protect = int(gungame.getGunGameVar('gg_spawn_protect'))

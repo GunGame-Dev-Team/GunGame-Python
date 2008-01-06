@@ -4,7 +4,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_deathmatch
-Version #:      12.31.2007
+Version #:      06.01.2008
 Description:    This will respawn players after "x" amount of time after dying.
                 Also, a fancy effect will be added to the ragdoll after they
                 died.
@@ -13,24 +13,30 @@ Description:    This will respawn players after "x" amount of time after dying.
 import es
 import playerlib
 import gamethread
+import repeat
+import usermsg
+
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_deathmatch Addon for GunGame: Python" 
 info.version  = "06.01.08"
-info.url      = "" 
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch" 
 info.author   = "Saul, cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
 # Get some deathmatch settings
 addonOptions = {}
 addonOptions['enabled'] = int(gungame.getGunGameVar('gg_deathmatch'))
-addonOptions['respawn_delay'] = float(gungame.getGunGameVar('gg_dm_respawn_delay'))
+addonOptions['respawn_delay'] = int(float(gungame.getGunGameVar('gg_dm_respawn_delay')) + 1)
 addonOptions['ragdoll_effect'] = int(gungame.getGunGameVar('gg_dm_ragdoll_effect'))
 addonOptions['respawn_cmd'] = gungame.getGunGameVar('gg_dm_respawn_cmd')
 addonOptions['turbo_mode_originally'] = int(gungame.getGunGameVar('gg_turbo'))
 addonOptions['knife_elite_originally'] = int(gungame.getGunGameVar('gg_knife_elite'))
+
+# Globals
+respawnPlayers = {}
 
 def load():
     # Register this addon with GunGame
@@ -39,6 +45,10 @@ def load():
     # Enable turbo mode, and disable knife elite
     gungame.setGunGameVar('gg_turbo', '1')
     gungame.setGunGameVar('gg_knife_elite', '0')
+    
+    # Get a player list
+    for userid in playerlib.getUseridList('#dead'):
+        respawn(userid)
 
 def unload():
     # Set turbo mode and knife elite back to what they originally were
@@ -61,20 +71,53 @@ def gg_variable_changed(event_var):
         gungame.setGunGameVar('gg_knife_elite', 0)
         es.msg('#lightgreen', 'WARNING: gg_knife_elite cannot be loaded while gg_deathmatch is enabled!')
 
-def player_death(event_var):
+def player_class(event_var):
     # Is deathmatch enabled?
-    if int(addonOptions['enabled']) == 0:
+    if addonOptions['enabled'] == 0:
         return
     
-    # Give the entity dissolver and set its KeyValues
-    es.server.cmd('es_xgive %s env_entity_dissolver' % event_var['userid'])
-    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "target cs_ragdoll"' % event_var['userid'])
-    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "magnitude 1"' % event_var['userid'])
-    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (event_var['userid'], addonOptions['ragdoll_effect'] + 1))
+    # Respawn the player
+    respawn(event_var['userid'])
+
+def player_death(event_var):
+    # Is deathmatch enabled?
+    if addonOptions['enabled'] == 0:
+        return
     
     # Respawn the player
-    gamethread.delayed(addonOptions['respawn_delay'], es.server.cmd, "%s %s" % (addonOptions['respawn_cmd'], event_var['userid']))
+    respawn(event_var['userid'])
+
+def RespawnCountdown(userid, repeatInfo):
+    # Is the counter 1?
+    if respawnPlayers[userid] == 1:
+        usermsg.hudhint(userid, 'Respawning in: 1 second.')
+    else:
+        usermsg.hudhint(userid, "Respawning in: %s seconds." % respawnPlayers[userid])
     
-    # Dissolve the ragdoll then kill the dissolver
-    gamethread.delayed(2, es.server.cmd, "es_xfire %s env_entity_dissolver Dissolve" % event_var['userid'])
-    gamethread.delayed(4, es.server.cmd, "es_xfire %s env_entity_dissolver Kill" % event_var['userid'])
+    # Decrement the timer
+    respawnPlayers[userid] -= 1
+
+def respawn(userid):
+    # Tell the userid they are respawning
+    respawnPlayers[userid] = addonOptions['respawn_delay'] - 1
+    repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
+    repeat.start('RespawnCounter%s' % userid, 1, addonOptions['respawn_delay'] - 1)
+    
+    # Respawn the player
+    gamethread.delayed(addonOptions['respawn_delay'], es.server.cmd, "%s %s" % (addonOptions['respawn_cmd'], userid))
+    
+    # Use ragdoll effects
+    if addonOptions['ragdoll_effect'] > 0:
+        # Give the entity dissolver and set its KeyValues
+        es.server.cmd('es_xgive %s env_entity_dissolver' % userid)
+        es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "target cs_ragdoll"' % userid)
+        es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "magnitude 1"' % userid)
+        es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (userid, addonOptions['ragdoll_effect'] + 1))
+        
+        # Dissolve the ragdoll then kill the dissolver
+        gamethread.delayed(2, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
+        gamethread.delayed(6, es.server.cmd, 'es_xfire %s env_entity_dissolver Kill' % userid)
+        gamethread.delayed(6, es.server.cmd, 'es_xremove cs_ragdoll')
+    else:
+        # Kill the ragdoll
+        gamethread.delayed(2, es.server.cmd, 'es_xremove cs_ragdoll')

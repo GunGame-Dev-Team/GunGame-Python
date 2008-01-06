@@ -19,7 +19,7 @@ from gungame import gungame
 info = es.AddonInfo() 
 info.name     = "gg_deathmatch Addon for GunGame: Python" 
 info.version  = "06.01.08"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
+info.url      = "" 
 info.basename = "gungame/included_addons/gg_deathmatch" 
 info.author   = "Saul, cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
@@ -70,7 +70,7 @@ def player_death(event_var):
     es.server.cmd('es_xgive %s env_entity_dissolver' % event_var['userid'])
     es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "target cs_ragdoll"' % event_var['userid'])
     es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "magnitude 1"' % event_var['userid'])
-    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype 3"' % event_var['userid'])
+    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (event_var['userid'], addonOptions['ragdoll_effect'] + 1))
     
     # Respawn the player
     gamethread.delayed(addonOptions['respawn_delay'], es.server.cmd, "%s %s" % (addonOptions['respawn_cmd'], event_var['userid']))

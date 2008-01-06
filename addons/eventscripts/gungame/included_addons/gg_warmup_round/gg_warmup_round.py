@@ -11,6 +11,10 @@ Description:    GunGame WarmUp Round allows players to begin warming up for
 
 import es
 import gamethread
+import usermsg
+import playerlib
+import repeat
+
 from gungame import gungame
 
 # Register this addon with EventScripts
@@ -19,7 +23,7 @@ info.name     = "gg_warmup_round Addon for GunGame: Python"
 info.version  = "1.2.2008"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_warmup_round" 
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
 
 # Begin Multiple Error Classes
 class _GunGameQueryError:
@@ -32,14 +36,12 @@ class _GunGameQueryError:
 class WarmUpWeaponError(_GunGameQueryError):
     pass
 
-global list_allWeapons
 list_allWeapons = ['knife', 'glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
-
-global mp_freezetimeBackUp
 mp_freezetimeBackUp = 0
 
 def load():
     global mp_freezetimeBackUp
+    global warmupTime
     
     # Cancel the delay to set PreventLevel for everyone to "0"
     gamethread.cancelDelayed('setPreventAll0')
@@ -54,10 +56,11 @@ def load():
     gungame.setPreventLevelAll(1)
     
     # Set a variable to hold the amount of WarmUp Time
-    gungameWarmUpTimeRemaining = int(gungame.getGunGameVar('gg_warmup_timer')) + 1
+    warmupTime = int(gungame.getGunGameVar('gg_warmup_timer')) + 1
     
-    # Create a delay to send to the loop
-    gamethread.delayedname(1, 'gungameWarmUpRound', countDown, (gungameWarmUpTimeRemaining))
+    # Create a repeat
+    repeat.create('WarmupTimer', countDown)
+    repeat.start('WarmupTimer', 1, 0)
     
     # Retrieve the warmup weapon
     warmupWeapon = gungame.getGunGameVar('gg_warmup_weapon')
@@ -126,19 +129,25 @@ def hegrenade_detonate(event_var):
     if event_var['es_userteam'] > 1 and gungame.getGunGameVar('gg_warmup_weapon') == 'hegrenade':
         es.server.cmd('es_give %s weapon_hegrenade' %event_var['userid'])
 
-def countDown(countDownTimeRemaining):
-    # Subtract 1 from the remaining time
-    countDownTimeRemaining -= 1
+def countDown(repeatInfo):
+    global warmupTime
     
     # If the remaining time is greater than 1
-    if countDownTimeRemaining > 1:
-        # Send a centermsg displaying the time left
-        es.centermsg('GunGame WarmUp Time: %d' %countDownTimeRemaining)
-        # Use a 1 second delay to start the loop over again
-        gamethread.delayedname(1, 'gungameWarmUpRound', countDown, (countDownTimeRemaining))
-    # Time to end the warmup round...
-    else:
+    if warmupTime >= 1:
+        # Loop through the players
+        for userid in playerlib.getUseridList('#all'):
+            # Send a hudhint to userid with the remaining timeleft
+            usermsg.hudhint(userid, 'Warmup round timer: %d' % warmupTime)
+            
+        # Decrement the timeleft counter
+        warmupTime -= 1
+    
+    elif warmupTime == 0:
         # Restart the game in 1 second
         es.server.cmd('mp_restartgame 1')
+        
+        # Stop the timer
+        repeat.stop('WarmupTimer')
+        
         # Unload "gungame/included_addons/gg_warmup_round" in 2 seconds
         gamethread.delayed(1, es.unload, ('gungame/included_addons/gg_warmup_round'))

@@ -1103,8 +1103,7 @@ def registerPlayers():
     
     # BEGIN REGISTRATION OF ACTIVE PLAYERS IN THE AFK DICTIONARY
     # -------------------------------------------------------------------------------------------------
-    dict_playerlist = es.createplayerlist()
-    for userid in dict_playerlist:
+    for userid in es.getUseridList():
         userid = int(userid)
         if not dict_afk.has_key(userid):
             dict_afk[userid] = afkPlayers()
@@ -1114,8 +1113,7 @@ def registerPlayers():
 
     # BEGIN PLAYER SETUP CODE
     # ---------------------------------------
-    dict_playerlist = es.createplayerlist()
-    for userid in dict_playerlist:
+    for userid in es.getUseridList():
         userid = int(userid)
         steamid = playerlib.uniqueid(userid, 1)
         # BEGIN AFK CODE
@@ -1170,8 +1168,7 @@ def restartGunGame(reasonText=None):
     gamethread.delayed(2, es.centermsg, ('GunGame Restarting!!!'))
 
 def setPreventLevelAll(value):
-    dict_gungamePlayers = es.createplayerlist()
-    for userid in dict_gungamePlayers:
+    for userid in es.getUseridList():
         gungamePlayer = gungame.getPlayer(userid)
         gungamePlayer.set('preventlevel', int(value))
 
@@ -1938,7 +1935,9 @@ def gg_levelup(event_var):
                 rebuildLeaderMenu()
                 # Set this new level to be the new oldLeaderLevel
                 setGunGameVar('oldleaderlevel', int(event_var['old_level']))
-                es.msg('#multi', '\x04%s\x01 is now leading on level \x03%d' %(event_var['name'], int(event_var['new_level'])))
+                # Loop through the players and send a saytext2 message
+                for userid in es.getUseridList():
+                    usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\3%s\1 is now leading on level \4%d' % (event_var['name'], int(event_var['new_level'])))
             # Let's see if the player has tied the other leaders
             else:
                 # OK. They have tied someone else.
@@ -1948,12 +1947,14 @@ def gg_levelup(event_var):
                 leaderCount = int(len(list_leaderNames))
                 # There are 2 leaders
                 if leaderCount == 2:
-                    # Format the message
-                    es.msg('#multi', '[\x032-way tie\x01]\x04 %s \x01has tied the other leader on level \x03%d' %(event_var['name'], int(event_var['new_level'])))
+                    # Loop through the players and send a saytext2 message
+                    for userid in es.getUseridList():
+                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\1[\4%s-way tie\1]\3 %s\1 has tied the other leader on level \4%d' % ('2', event_var['name'], int(event_var['new_level'])))
                 # There are more than 2 leaders
                 elif leaderCount > 2:
-                    # Format the message
-                    es.msg('#multi', '[\x03%d-way tie\x01]\x04 %s \x01has tied the other leaders on level \x03%d' %(leaderCount, event_var['name'], int(event_var['new_level'])))
+                    # Loop through the players and send a saytext2 message
+                    for userid in es.getUseridList():
+                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\1[\4%d-way tie\1]\3 %s\1 has tied the other leaders on level \4%d' % (leaderCount, event_var['name'], int(event_var['new_level'])))
                 # Rebuild the leaders menu
                 rebuildLeaderMenu()
         # ----------------------------------------------------------------------
@@ -2195,6 +2196,20 @@ def gg_variable_changed(event_var):
         elif newValue == '0':
             if 'gungame\included_addons\gg_noblock' in dict_gungameRegisteredAddons:
                 es.unload('gungame/included_addons/gg_noblock')
+    # GG_DEATHMATCH
+    elif cvarName == 'gg_deathmatch':
+        if newValue == '1':
+            es.server.queuecmd('es_load gungame/included_addons/gg_deathmatch')
+        elif newValue == '0':
+            if 'gungame\included_addons\gg_deathmatch' in dict_gungameRegisteredAddons:
+                es.unload('gungame/included_addons/gg_deathmatch')
+    # GG_ELIMINATION
+    elif cvarName == 'gg_elimination':
+        if newValue == '1':
+            es.server.queuecmd('es_load gungame/included_addons/gg_elimination')
+        elif newValue == '0':
+            if 'gungame\included_addons\gg_elimination' in dict_gungameRegisteredAddons:
+                es.unload('gungame/included_addons/gg_elimination')
 
 # ===================================================================================================
 # ===================================================================================================

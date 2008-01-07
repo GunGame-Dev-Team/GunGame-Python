@@ -1730,17 +1730,36 @@ def player_spawn(event_var):
                 
                 # Get levels behind leader
                 levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
-                
+                    
                 # How many levels behind the leader?
                 if levelsBehindLeader == 0:
                     # Is there more than 1 leader?
                     if len(getLeaderUserid()) == 1:    
                         HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
                     else:
-                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders (' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                        leadersCount = 0
+                        
+                        # Get the first 2 leaders
+                        for leader in getLeaderUserid():
+                            # More than 2 leaders added?
+                            if leadersCount == 2:
+                                HudHintText += '...'
+                                break
+                            
+                            # Don't add our userid
+                            if leader == userid:
+                                continue
+                            
+                            # Add the name to the hudhint and increment the leaders count
+                            HudHintText += es.getplayername(leader) + ', '
+                            leadersCount += 1
+                        
+                        # Finish off the HudHint
+                        HudHintText += ')'
                 else:
                     HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(getLeaderUserid()[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
-                
+                    
                 gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
             
             # Retrieve the armor type
@@ -1751,6 +1770,7 @@ def player_spawn(event_var):
             # Give the player kevlar only
             elif armorType == 1:
                 es.server.cmd('es_xgive %d item_kevlar' %userid)
+            
             if int(getGunGameVar('gg_map_obj')) > 1:
                 # Check to see if this player is a CT
                 if int(event_var['es_userteam']) == 3:
@@ -1759,6 +1779,7 @@ def player_spawn(event_var):
                         # See if the admin wants us to give them a defuser
                         if int(getGunGameVar('gg_player_defuser')) > 0:
                             playerlibPlayer = playerlib.getPlayer(userid)
+                            
                             # Make sure the player doesn't already have a defuser
                             if not playerlibPlayer.get('defuser'):
                                 es.server.cmd('es_xgive %d item_defuser' %userid)
@@ -1982,11 +2003,30 @@ def gg_levelup(event_var):
                 if len(getLeaderUserid()) == 1:    
                     HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
                 else:
-                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders (' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                    leadersCount = 0
+                    
+                    # Get the first 2 leaders
+                    for leader in getLeaderUserid():
+                        # More than 2 leaders added?
+                        if leadersCount == 2:
+                            HudHintText += '...'
+                            break
+                        
+                        # Don't add our userid
+                        if leader == userid:
+                            continue
+                        
+                        # Add the name to the hudhint and increment the leaders count
+                        HudHintText += es.getplayername(leader) + ', '
+                        leadersCount += 1
+                    
+                    # Finish off the HudHint
+                    HudHintText += ')'
             else:
                 HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(getLeaderUserid()[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
                 
-            gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
+            gamethread.delayed(0.5, usermsg.hudhint, (event_var['userid'], HudHintText))
         
         # BEGIN CODE FOR TRIGGERING CUSTOM EVENT "GG_VOTE"
         # ----------------------------------------------------------------------------------

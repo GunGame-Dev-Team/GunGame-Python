@@ -1727,9 +1727,21 @@ def player_spawn(event_var):
             if not dict_gungameRegisteredAddons.has_key('gungame/included_addons/gg_warmup_round'):
                 # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
                 giveWeapon(userid)
-                # Message the player and let them know their level info
-                hudHintText = 'Current level: %d of %d\nCurrent weapon: %s' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                gamethread.delayed(0.5, usermsg.hudhint, (userid, hudHintText))
+                
+                # Get levels behind leader
+                levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
+                
+                # How many levels behind the leader?
+                if levelsBehindLeader == 0:
+                    # Is there more than 1 leader?
+                    if len(getLeaderUserid()) == 1:    
+                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                    else:
+                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                else:
+                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(getLeaderUserid()[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
+                
+                gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
             
             # Retrieve the armor type
             armorType = int(getGunGameVar('gg_player_armor'))
@@ -1959,6 +1971,22 @@ def gg_levelup(event_var):
                 rebuildLeaderMenu()
         # ----------------------------------------------------------------------
         # END LEADER LEVEL COMPARISONS & MESSAGING
+        
+        if not dict_gungameRegisteredAddons.has_key('gungame/included_addons/gg_warmup_round'):
+            # Get levels behind leader
+            levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
+                
+            # How many levels behind the leader?
+            if levelsBehindLeader == 0:
+                # Is there more than 1 leader?
+                if len(getLeaderUserid()) == 1:    
+                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                else:
+                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+            else:
+                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(getLeaderUserid()[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
+                
+            gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
         
         # BEGIN CODE FOR TRIGGERING CUSTOM EVENT "GG_VOTE"
         # ----------------------------------------------------------------------------------
@@ -2210,6 +2238,15 @@ def gg_variable_changed(event_var):
         elif newValue == '0':
             if 'gungame\included_addons\gg_elimination' in dict_gungameRegisteredAddons:
                 es.unload('gungame/included_addons/gg_elimination')
+
+def getLeaderUserid():
+    global dict_gungame_core
+    leaderLevel = getLeaderLevel()
+    list_leaders = []
+    for userid in dict_gungame_core:
+        if int(dict_gungame_core[userid].int_level) == leaderLevel:
+            list_leaders.append(userid)
+    return list_leaders
 
 # ===================================================================================================
 # ===================================================================================================

@@ -2,25 +2,25 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_map_vote
-Version #:      12.26.2007
+Version #:      07.01.08
 Description:    Adds map voting capabilities to gungame.
 '''
 
 import es
 import os
 import random
-from gungame import gungame
 import popuplib
 import usermsg
 import repeat
+from gungame import gungame
 
 # register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_map_vote Addon for GunGame: Python" 
-info.version  = "12.26.2007"
+info.version  = "07.01.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_map_vote" 
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
 
 # custom map list for the end map vote
 gg_map_list_file = gungame.getGunGameVar('gg_map_list_file')
@@ -145,7 +145,7 @@ def gg_win(event_var):
     winningMap = dict_PlayerChoice['WinningMap']
     if winningMap != None:
         es.set('nextlevel', winningMap)
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenNext map: %s' % winningMap)
+        es.msg('#multi', '\4GG Map Vote\1: Next map is \4%s\1' % winningMap)
 
 def InitiateVote():
     global gg_map_list_source
@@ -212,7 +212,7 @@ def StartVote():
     global VoteTimer
     
     # send the map vote to the players
-    es.msg('#lightgreen', '[GG MAP VOTE] Place your votes...')
+    es.msg('#multi', '\4GG Map Vote\1: Place your votes for the nextmap.')
     popuplib.send('VoteMenu', es.getUseridList())
     es.cexec_all('play admin_plugin/actions/startyourvoting.mp3')
     
@@ -226,14 +226,16 @@ def VoteCountdown(repeatInfo):
     global VoteTimer
     
     if VoteTimer:
-        HudhintText = 'Time Remaining: %i' %VoteTimer
+        HudhintText = 'Time Remaining: %d\n' % VoteTimer
         for map in dict_PlayerChoice['VotedMaps']:
-            HudhintText = '%s\n%s(%i)' %(HudhintText, map, dict_PlayerChoice['VotedMaps'][map])
+            HudhintText += '%s (%d votes)' % (HudhintText, map, dict_PlayerChoice['VotedMaps'][map])
         for userid in es.getUseridList():
             usermsg.hudhint(userid, HudhintText)
     else:
         VoteResults()
         repeat.delete('VoteCounter')
+        
+    # Decrement timer
     VoteTimer -= 1
     
     
@@ -245,7 +247,7 @@ def VoteMenuSelect(userid, MapChoice, popupid):
         # announce players choice if enabled
         if gg_show_player_vote:
             Name = es.getplayername(userid)
-            es.msg('#lightgreen', '%s voted %s' % (Name, MapChoice))
+            es.msg('\3', '%s voted %s' % (Name, MapChoice))
         # register votes
         if MapChoice not in dict_PlayerChoice['VotedMaps']:
             dict_PlayerChoice['VotedMaps'][MapChoice] = 1
@@ -262,17 +264,19 @@ def VoteResults():
     global VoteActive
     VoteActive = 0
     list_VoteList = []
-    # close and delete popup
+    
+    # Close and delete popup
     popuplib.unsendname('VoteMenu', es.getUseridList())
     popuplib.delete('VoteMenu')
-    # announce winning map
+    
+    # Announce winning map
     if dict_PlayerChoice['TotalVotes']:
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenResults are in, %i votes cast...' % dict_PlayerChoice['TotalVotes'])
-        es.msg('#lightgreen', '%s won with %i votes' % (dict_PlayerChoice['WinningMap'], dict_PlayerChoice['WinningMapVotes']))
+        es.msg('#multi', '\4GG Map Vote\1: \4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_PlayerChoice['WinningMap'], dict_PlayerChoice['WinningMapVotes'], dict_PlayerChoice['TotalVotes']))
+        
         for userid in es.getUseridList():
             usermsg.hudhint(userid, 'Nextmap:\n%s' %dict_PlayerChoice['WinningMap'])
     else:
-        es.msg('#lightgreen', 'Vote cancelled: not enough votes.')
+        es.msg('#multi', '\4GG Map Vote\1: The vote was cancelled. Not even votes were cast.')
         for userid in es.getUseridList():
             usermsg.hudhint(userid, 'Not enough votes')
 
@@ -286,21 +290,21 @@ def CancelVote():
         repeat.delete('VoteCounter')
         popuplib.unsendname('VoteMenu', es.getUseridList())
         popuplib.delete('VoteMenu')
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenVote has been cancelled')
+        es.msg('#multi', '\4GG Map Vote\1: Vote has been cancelled.')
     else:
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenNo active vote to cancel')
+        es.msg('#multi', '\4GG Map Vote\1: No active vote to cancel.')
 
 # console command gg_vote_list
 def GetVoteList():
     global list_VoteList
     if list_VoteList != []:
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenList of maps in the next vote...')
+        es.msg('#multi', '\4GG Map Vote\1: List of maps in the next vote...')
         msgFormat = ''
         for map in list_VoteList:
             msgFormat = '%s%s ' % (msgFormat, map)
-        es.msg('#lightgreen', msgFormat)
+        es.msg('\3', msgFormat)
     else:
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenVoteList is empty')
+        es.msg('#multi', '\4GG Map Vote\1: The vote list is empty.')
 
 # console command gg_vote_shuffle
 def ShuffleVoteList():
@@ -308,13 +312,13 @@ def ShuffleVoteList():
     global VoteActive
     if not VoteActive:
         SetVoteList()
-        es.msg('#lightgreen', '[GG MAP VOTE] New shuffled map list')
+        es.msg('#multi', '\4GG Map Vote\1: New shuffled map list!')
         msgFormat = ''
         for map in list_VoteList:
             msgFormat = '%s%s ' % (msgFormat, map)
-        es.msg('#lightgreen', msgFormat)
+        es.msg('\3', msgFormat)
     else:
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenVote already in progress!')
+        es.msg('#multi', '\4GG Map Vote\1: Vote already in progress!')
 
 # console command gg_vote_start
 def VoteStart():
@@ -324,4 +328,4 @@ def VoteStart():
             SetVoteList()
         StartVote()
     else:
-        es.msg('#multi', '#green[GG MAP VOTE] #lightgreenVote already in progress!')
+        es.msg('#multi', '\4GG Map Vote\1: Vote already in progress!')

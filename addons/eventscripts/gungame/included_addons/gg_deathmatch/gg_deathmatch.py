@@ -3,7 +3,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_deathmatch
-Version #:      06.01.2008
+Version #:      1.0.1 (06.01.2008)
 Description:    This will respawn players after a specified amount of time after
                 dying.
                 In addition, a fancy effect will be applied to the ragdoll after
@@ -11,17 +11,20 @@ Description:    This will respawn players after a specified amount of time after
 '''
 
 import es
+import os.path
 import playerlib
 import gamethread
 import repeat
+import random
 import usermsg
+import string
 
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_deathmatch Addon for GunGame: Python" 
-info.version  = "06.01.08"
+info.version  = "1.0.1 (06.01.2008)"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch" 
 info.author   = "Saul, cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
@@ -37,7 +40,9 @@ addonOptions['knife_elite_originally'] = int(gungame.getGunGameVar('gg_knife_eli
 addonOptions['map_obj_originally'] = int(gungame.getGunGameVar('gg_map_obj'))
 
 # Globals
-respawnPlayers = {}
+respawnCounters = {}
+lastSpawnPoint = {}
+spawnPoints = 0
 
 def load():
     # Register this addon with GunGame
@@ -61,6 +66,53 @@ def unload():
     # Unregister this addon with GunGame
     gungame.unregisterAddon('gungame/included_addons/gg_deathmatch')
 
+def es_map_start(event_var):
+    # Reset the spawn points dict and check if there is a spawnpoint file
+    global spawnPoints
+    spawnPoints = {}
+    spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % event_var['mapname'])
+    spawnPointsExist = os.path.isfile(spawnFile)
+    
+    # Does the spawn file exist
+    if not spawnPointsExist:
+        spawnPoints = 0
+        return
+    
+    # Load the file
+    spawnPointFile = open(spawnFile, 'r')
+    fileLines = spawnPointFile.readlines()
+    i = 0
+    
+    # Loop through the lines
+    for line in fileLines:
+        # Strip the line
+        line = line.strip()
+        
+        # Split the line
+        values = line.split(' ')
+        
+        # Get each value and put it into the spawnPoints dictionary
+        spawnPoints[i] = values
+        
+        # Increment the amount of lines
+        i += 1
+
+def getGameDir(dir):
+    # Get the gungame addon path
+    addonPath = es.getAddonPath('gungame')
+    
+    # Split using the path seperator
+    parts = addonPath.split('\\')
+    
+    # Pop the last 2 items in the list
+    parts.pop()
+    parts.pop()
+    
+    # Append cfg then join
+    parts.append(dir)
+    
+    return string.join(parts, '\\')
+    
 def gg_variable_changed(event_var):
     # Check required variables to see if they have changed
     if event_var['cvarname'] == 'gg_deathmatch':
@@ -91,27 +143,52 @@ def player_death(event_var):
     if addonOptions['enabled'] == 0:
         return
     
+    # Remove their defuser
+    gamethread.delayed(0.5, es.remove, ('item_defuser'))
+    
     # Respawn the player
     respawn(event_var['userid'])
 
 def RespawnCountdown(userid, repeatInfo):
+    # Is warmup round?
+    if gungame.getRegisteredAddons().has_key('gungame\\included_addons\\gg_warmup_round'):
+        return
+    
     # Is the counter 1?
-    if respawnPlayers[userid] == 1:
+    if respawnCounters[userid] == 1:
         usermsg.hudhint(userid, 'Respawning in: 1 second.')
     else:
-        usermsg.hudhint(userid, "Respawning in: %s seconds." % respawnPlayers[userid])
+        usermsg.hudhint(userid, "Respawning in: %s seconds." % respawnCounters[userid])
     
     # Decrement the timer
-    respawnPlayers[userid] -= 1
+    respawnCounters[userid] -= 1
 
 def respawn(userid):
     # Tell the userid they are respawning
-    respawnPlayers[userid] = addonOptions['respawn_delay'] 
+    respawnCounters[userid] = addonOptions['respawn_delay'] 
     repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
     repeat.start('RespawnCounter%s' % userid, 1, addonOptions['respawn_delay'])
     
     # Respawn the player
     gamethread.delayed(addonOptions['respawn_delay'] + 1, es.server.cmd, "%s %s" % (addonOptions['respawn_cmd'], userid))
+    
+    # Do we have a spawn point file?
+    if spawnPoints != 0:
+        # Get a random spawn index
+        spawnindex = random.randint(0, len(spawnPoints))
+        
+        try:
+            if lastSpawnPoint[userid] == spawnindex:
+                # Get another random spawn index
+                spawnindex = random.randint(0, len(spawnPoints))
+        except KeyError:
+            pass
+        
+        # Set the spawnindex as the last spawn point
+        lastSpawnPoint[userid] = spawnindex
+        
+        # Teleport the player
+        gamethread.delayed(addonOptions['respawn_delay'] + 1, gungame.teleportPlayer, (int(userid), spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4]))
     
     # Give the entity dissolver and set its KeyValues
     es.server.cmd('es_xgive %s env_entity_dissolver' % userid)
@@ -122,4 +199,3 @@ def respawn(userid):
     # Dissolve the ragdoll then kill the dissolver
     gamethread.delayed(2, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
     gamethread.delayed(6, es.server.cmd, 'es_xfire %s env_entity_dissolver Kill' % userid)
-    gamethread.delayed(6, es.server.cmd, 'es_xfire %s cs_ragdoll Kill' % userid)

@@ -116,24 +116,27 @@ def player_spawn(event_var):
         return
     
     userid = int(event_var['userid'])
-    
+    playerlibPlayer = playerlib.getPlayer(userid)
     # See if the admin wants to give something other than the level 1 weapon
-    if str(gungame.getGunGameVar('gg_warmup_weapon')) != '0':
-        # Check to make sure that the WarmUp Weapon is not a knife
-        if gungame.getGunGameVar('gg_warmup_weapon') != 'knife':
-            # Give the player the WarmUp Round Weapon
-            es.server.cmd('es_xgive %s weapon_%s' %(userid, gungame.getGunGameVar('gg_warmup_weapon')))
-            gamethread.delayed(0.1, es.sexec, (userid, 'use weapon_knife'))
+    if event_var['es_userteam'] > 1 and not playerlibPlayer.get('isdead'):
+        if str(gungame.getGunGameVar('gg_warmup_weapon')) != '0':
+            # Check to make sure that the WarmUp Weapon is not a knife
+            if gungame.getGunGameVar('gg_warmup_weapon') != 'knife':
+                # Give the player the WarmUp Round Weapon
+                es.sexec(userid, 'use weapon_knife')
+                es.server.cmd('es_xgive %s weapon_%s' %(userid, gungame.getGunGameVar('gg_warmup_weapon')))
+                # gamethread.delayed(0.1, es.sexec, (userid, 'use weapon_knife'))
+            else:
+                es.sexec(userid, 'use weapon_knife')
         else:
-            gungame.stripPlayer(userid)
-            gamethread.delayed(0.1, es.sexec, (userid, 'use weapon_knife'))
-    else:
-        # It looks like we are giving them the level 1 weapon...
-        gungame.giveWeapon(userid)
+            # It looks like we are giving them the level 1 weapon...
+            gungame.giveWeapon(userid)
 
 def hegrenade_detonate(event_var):
-    if event_var['es_userteam'] > 1 and gungame.getGunGameVar('gg_warmup_weapon') == 'hegrenade':
-        es.server.cmd('es_xgive %s weapon_hegrenade' % event_var['userid'])
+    userid = event_var['userid']
+    playerlibPlayer = playerlib.getPlayer(userid)
+    if event_var['es_userteam'] > 1 and not playerlibPlayer.get('isdead') and gungame.getGunGameVar('gg_warmup_weapon') == 'hegrenade':
+        es.server.cmd('es_xgive %s weapon_hegrenade' %userid)
 
 def countDown(repeatInfo):
     global warmupTime

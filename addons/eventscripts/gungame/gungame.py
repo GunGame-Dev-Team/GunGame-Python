@@ -1724,42 +1724,46 @@ def player_spawn(event_var):
             stripPlayer(userid)
             
             # Check to see if the WarmUp Round is Active
-            if not dict_gungameRegisteredAddons.has_key('gungame/included_addons/gg_warmup_round'):
+            if not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_warmup_round'):
                 # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
                 giveWeapon(userid)
                 
-                # Get levels behind leader
-                levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
-                    
-                # How many levels behind the leader?
-                if levelsBehindLeader == 0:
-                    # Is there more than 1 leader?
-                    if len(getLeaderUserid()) == 1:    
-                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                    else:
-                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders (' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                        leadersCount = 0
-                        
-                        # Get the first 2 leaders
-                        for leader in getLeaderUserid():
-                            # More than 2 leaders added?
-                            if leadersCount == 2:
-                                HudHintText += '...'
-                                break
-                            
-                            # Don't add our userid
-                            if leader == userid:
-                                continue
-                            
-                            # Add the name to the hudhint and increment the leaders count
-                            HudHintText += es.getplayername(leader) + ', '
-                            leadersCount += 1
-                        
-                        # Finish off the HudHint
-                        HudHintText += ')'
+                if getLeaderLevel() < 2:
+                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
                 else:
-                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(getLeaderUserid()[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
-                    
+                    # Get levels behind leader
+                    levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
+                    # Get list of leaders userids
+                    list_leadersUserid = getLevelUseridList(getLeaderLevel())
+                    # How many levels behind the leader?
+                    if levelsBehindLeader == 0:
+                        # Is there more than 1 leader?
+                        if len(list_leadersUserid) == 1:    
+                            HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                        else:
+                            HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders (' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
+                            leadersCount = 0
+                            
+                            # Get the first 2 leaders
+                            for leader in list_leadersUserid:
+                                # More than 2 leaders added?
+                                if leadersCount == 2:
+                                    HudHintText += '...'
+                                    break
+                                
+                                # Don't add our userid
+                                if leader == userid:
+                                    continue
+                                
+                                # Add the name to the hudhint and increment the leaders count
+                                HudHintText += es.getplayername(leader) + ', '
+                                leadersCount += 1
+                            
+                            # Finish off the HudHint
+                            HudHintText += ')'
+                    else:
+                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
+                        
                 gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
             
             # Retrieve the armor type
@@ -1993,21 +1997,24 @@ def gg_levelup(event_var):
         # ----------------------------------------------------------------------
         # END LEADER LEVEL COMPARISONS & MESSAGING
         
-        if not dict_gungameRegisteredAddons.has_key('gungame/included_addons/gg_warmup_round'):
+        if not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_warmup_round'):
             # Get levels behind leader
             levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
+            
+            # Get list of leaders userids
+            list_leadersUserid = getLevelUseridList(getLeaderLevel())
                 
             # How many levels behind the leader?
             if levelsBehindLeader == 0:
                 # Is there more than 1 leader?
-                if len(getLeaderUserid()) == 1:    
+                if len(list_leadersUserid) == 1:    
                     HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
                 else:
                     HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders (' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
                     leadersCount = 0
                     
                     # Get the first 2 leaders
-                    for leader in getLeaderUserid():
+                    for leader in list_leadersUserid:
                         # More than 2 leaders added?
                         if leadersCount == 2:
                             HudHintText += '...'
@@ -2024,7 +2031,7 @@ def gg_levelup(event_var):
                     # Finish off the HudHint
                     HudHintText += ')'
             else:
-                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(getLeaderUserid()[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
+                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
                 
             gamethread.delayed(0.5, usermsg.hudhint, (event_var['userid'], HudHintText))
         
@@ -2278,15 +2285,6 @@ def gg_variable_changed(event_var):
         elif newValue == '0':
             if 'gungame\included_addons\gg_elimination' in dict_gungameRegisteredAddons:
                 es.unload('gungame/included_addons/gg_elimination')
-
-def getLeaderUserid():
-    global dict_gungame_core
-    leaderLevel = getLeaderLevel()
-    list_leaders = []
-    for userid in dict_gungame_core:
-        if int(dict_gungame_core[userid].int_level) == leaderLevel:
-            list_leaders.append(userid)
-    return list_leaders
 
 # ===================================================================================================
 # ===================================================================================================

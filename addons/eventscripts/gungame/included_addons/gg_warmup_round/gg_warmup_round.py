@@ -58,19 +58,19 @@ def load():
     # Set a variable to hold the amount of WarmUp Time
     warmupTime = int(gungame.getGunGameVar('gg_warmup_timer')) + 1
     
-    # Create a repeat
-    repeat.create('WarmupTimer', countDown)
-    repeat.start('WarmupTimer', 1, 0)
-    
     # Retrieve the warmup weapon
     warmupWeapon = gungame.getGunGameVar('gg_warmup_weapon')
     
+    # Start the countdown timer
+    gamethread.delayed(3, startTimer, ())
+    
     # Make sure there is supposed to be a warmup weapon
     if str(warmupWeapon) != '0':
-        #Make sure the warmup weapon is a valid weapon choice
+        # Make sure the warmup weapon is a valid weapon choice
         if warmupWeapon not in list_allWeapons:
             # Nope, the admin typoed it. Let's set it to 0 so that we don't have to worry about this later
             gungame.setGunGameVar('gg_warmup_weapon', '0')
+            
             # Kick out an error due to the typo by the admin
             raise WarmUpWeaponError, warmupWeapon + ' is not a valid weapon. Setting \'gg_warmup_weapon\' to level 1\'s weapon.'
             
@@ -98,6 +98,11 @@ def unload():
     # Return "mp_freezetime" to what it was originally
     es.server.cmd('mp_freezetime %d' %mp_freezetimeBackUp)
 
+def startTimer():
+    # Create a repeat
+    repeat.create('WarmupTimer', countDown)
+    repeat.start('WarmupTimer', 1, 0)
+
 def gg_variable_changed(event_var):
     # if the "gg_warmup_timer" is changed to 0, we need to unload this bad-boy
     if event_var['cvarname'] == 'gg_warmup_timer' and event_var['newvalue'] == '0':
@@ -115,8 +120,10 @@ def player_spawn(event_var):
     if event_var['es_userteam'] == 1:
         return
     
+    # Get player userid and player object
     userid = int(event_var['userid'])
     playerlibPlayer = playerlib.getPlayer(userid)
+    
     # See if the admin wants to give something other than the level 1 weapon
     if event_var['es_userteam'] > 1 and not playerlibPlayer.get('isdead'):
         if str(gungame.getGunGameVar('gg_warmup_weapon')) != '0':
@@ -125,7 +132,6 @@ def player_spawn(event_var):
                 # Give the player the WarmUp Round Weapon
                 es.sexec(userid, 'use weapon_knife')
                 es.server.cmd('es_xgive %s weapon_%s' %(userid, gungame.getGunGameVar('gg_warmup_weapon')))
-                # gamethread.delayed(0.1, es.sexec, (userid, 'use weapon_knife'))
             else:
                 es.sexec(userid, 'use weapon_knife')
         else:
@@ -133,10 +139,13 @@ def player_spawn(event_var):
             gungame.giveWeapon(userid)
 
 def hegrenade_detonate(event_var):
+    # Get player userid and player object
     userid = event_var['userid']
     playerlibPlayer = playerlib.getPlayer(userid)
+    
+    # Give user a hegrenade, if eligable
     if event_var['es_userteam'] > 1 and not playerlibPlayer.get('isdead') and gungame.getGunGameVar('gg_warmup_weapon') == 'hegrenade':
-        es.server.cmd('es_xgive %s weapon_hegrenade' %userid)
+        es.server.cmd('es_xgive %s weapon_hegrenade' % userid)
 
 def countDown(repeatInfo):
     global warmupTime
@@ -148,11 +157,19 @@ def countDown(repeatInfo):
             # Send a hudhint to userid with the remaining timeleft
             usermsg.hudhint(userid, 'Warmup round timer: %d' % warmupTime)
             
+            # Countdown 5 or less?
+            if warmupTime <= 5:
+                es.cexec(userid, 'playgamesound hl1/fvox/beep.wav')
+        
+        # If warmuptime is 1, start game restart
+        if warmupTime == 1:
+            es.server.cmd('mp_restartgame 1')
+        
         # Decrement the timeleft counter
         warmupTime -= 1
     elif warmupTime == 0:
-        # Restart the game in 1 second
-        es.server.cmd('mp_restartgame 1')
+        # Play beep
+        es.cexec_all('playgamesound hl1/fvox/beep.wav')
         
         # Stop the timer
         repeat.stop('WarmupTimer')

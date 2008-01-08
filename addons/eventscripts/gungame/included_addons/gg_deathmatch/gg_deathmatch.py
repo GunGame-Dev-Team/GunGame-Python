@@ -1,35 +1,41 @@
 #!/usr/bin/env python
 '''
-(c)2007 by the GunGame Coding Team
-
-    Title:      gg_deathmatch
-Version #:      1.0.1 (06.01.2008)
-Description:    This will respawn players after a specified amount of time after
-                dying.
-                In addition, a fancy effect will be applied to the ragdoll after
-                they die.
+================================================================================
+    All content copyright (c) 2008, GunGame Coding Team
+================================================================================
+    Name: gg_deathmatch
+    Main Author: Saul Rennison
+    Version: 1.0.2 (08.01.2008)
+================================================================================
+    This will respawn players after a specified amount of time after dying.
+    In addition, a fancy effect will be applied to the ragdoll after they die.
+================================================================================
 '''
 
-import es
+# System imports
 import os.path
+import string
+import random
+
+# Eventscripts imports
+import es
 import playerlib
 import gamethread
 import repeat
-import random
 import usermsg
-import string
 
+# Gungame import
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
-info.name     = "gg_deathmatch Addon for GunGame: Python" 
-info.version  = "1.0.1 (06.01.2008)"
+info.name     = "gg_deathmatch (for GunGame: Python)"
+info.version  = "1.0.2 (08.01.2008)"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch" 
-info.author   = "Saul, cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
 
-# Get some deathmatch settings
+# Get some addon options
 addonOptions = {}
 addonOptions['enabled'] = int(gungame.getGunGameVar('gg_deathmatch'))
 addonOptions['respawn_delay'] = int(gungame.getGunGameVar('gg_dm_respawn_delay'))
@@ -53,6 +59,12 @@ def load():
     gungame.setGunGameVar('gg_knife_elite', '0')
     gungame.setGunGameVar('gg_map_obj', '3')
     
+    # Has map loaded?
+    currentMap = str(es.ServerVar('eventscripts_currentmap'))
+    if currentMap != '0':
+        # Get spawn points, map loaded
+        getSpawnPoints()
+    
     # Get a player list of dead players then spawn them
     for userid in playerlib.getUseridList('#dead'):
         respawn(userid)
@@ -67,10 +79,13 @@ def unload():
     gungame.unregisterAddon('gungame/included_addons/gg_deathmatch')
 
 def es_map_start(event_var):
+    getSpawnPoints(event_var['mapname'])
+
+def getSpawnPoints(mapName):
     # Reset the spawn points dict and check if there is a spawnpoint file
     global spawnPoints
     spawnPoints = {}
-    spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % event_var['mapname'])
+    spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName)
     spawnPointsExist = os.path.isfile(spawnFile)
     
     # Does the spawn file exist

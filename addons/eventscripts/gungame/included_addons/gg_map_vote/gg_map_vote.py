@@ -226,9 +226,9 @@ def VoteCountdown(repeatInfo):
     global VoteTimer
     
     if VoteTimer:
-        HudhintText = 'Time Remaining: %d\n' % VoteTimer
+        HudhintText = 'Time Remaining: %d' % VoteTimer
         for map in dict_PlayerChoice['VotedMaps']:
-            HudhintText += '%s (%d votes)' % (HudhintText, map, dict_PlayerChoice['VotedMaps'][map])
+            HudhintText += '\n%s (%d votes)' % (HudhintText, map, dict_PlayerChoice['VotedMaps'][map])
         for userid in es.getUseridList():
             usermsg.hudhint(userid, HudhintText)
     else:

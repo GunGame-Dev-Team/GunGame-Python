@@ -1746,9 +1746,17 @@ def player_spawn(event_var):
                             
                             # Get the first 2 leaders
                             for leader in list_leadersUserid:
-                                # More than 2 leaders added?
-                                if leadersCount == 2:
+                                # Increment leader count
+                                leadersCount += 1
+                                
+                                # Already 2 leaders added?
+                                if leadersCount == 3:
                                     HudHintText += '...'
+                                    break
+                                
+                                # Don't add the comma if there is 2 or less leaders
+                                if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
+                                    HudHintText += es.getplayername(leader)
                                     break
                                 
                                 # Don't add our userid
@@ -1757,7 +1765,6 @@ def player_spawn(event_var):
                                 
                                 # Add the name to the hudhint and increment the leaders count
                                 HudHintText += es.getplayername(leader) + ', '
-                                leadersCount += 1
                             
                             # Finish off the HudHint
                             HudHintText += ')'
@@ -2015,9 +2022,17 @@ def gg_levelup(event_var):
                     
                     # Get the first 2 leaders
                     for leader in list_leadersUserid:
+                        # Increment leader count
+                        leadersCount += 1
+                        
                         # More than 2 leaders added?
-                        if leadersCount == 2:
+                        if leadersCount == 3:
                             HudHintText += '...'
+                            break
+                        
+                        # Don't add the comma if there is 2 or less leaders
+                        if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
+                            HudHintText += es.getplayername(leader)
                             break
                         
                         # Don't add our userid
@@ -2026,7 +2041,6 @@ def gg_levelup(event_var):
                         
                         # Add the name to the hudhint and increment the leaders count
                         HudHintText += es.getplayername(leader) + ', '
-                        leadersCount += 1
                     
                     # Finish off the HudHint
                     HudHintText += ')'
@@ -2150,10 +2164,14 @@ def gg_win(event_var):
     # Reset Players in the GunGame Core Database
     registerPlayers()
     
-    es.msg('\x04%s\x01 won!!!' %playerName)
-    es.centermsg('%s won!!!' %playerName)
-    gamethread.delayed(2, es.centermsg, ('%s won!!!' %playerName))
-    gamethread.delayed(4, es.centermsg, ('%s won!!!' %playerName))
+    # SayText2 the message to the world
+    for pUserid in playerlib.getUseridList('#all'):
+        usermsg.saytext2(pUserid, event_var['es_userindex'], '\3%s\1 won the game!' % playerName)
+    
+    # Now centermessage it
+    es.centermsg('%s won!' %playerName)
+    gamethread.delayed(2, es.centermsg, ('%s won!' %playerName))
+    gamethread.delayed(4, es.centermsg, ('%s won!' %playerName))
     
     es.cexec_all('playgamesound music/HL2_song15.mp3')
     

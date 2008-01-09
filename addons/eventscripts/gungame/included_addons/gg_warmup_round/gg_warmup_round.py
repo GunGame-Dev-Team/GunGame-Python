@@ -49,9 +49,6 @@ def load():
     # Register this addon with GunGame
     gungame.registerAddon('gungame/included_addons/gg_warmup_round', 'GG WarmUp Round')
     
-    # Create a dictionary of players on the server for the following loop
-    dict_gungamePlayers = es.createplayerlist()
-    
     # Set PreventAll to "1" for everyone
     gungame.setPreventLevelAll(1)
     
@@ -85,9 +82,6 @@ def unload():
     
     # Unregister this addon with GunGame
     gungame.unregisterAddon('gungame/included_addons/gg_warmup_round')
-    
-    # Create a dictionary of players on the server for the following loop
-    dict_gungamePlayers = es.createplayerlist()
     
     # Set everyone's PreventLevel to 0
     gungame.setPreventLevelAll(0)
@@ -178,5 +172,5 @@ def countDown(repeatInfo):
         # Stop the timer
         repeat.stop('WarmupTimer')
         
-        # Unload "gungame/included_addons/gg_warmup_round" in 2 seconds
-        gamethread.delayed(1, es.unload, ('gungame/included_addons/gg_warmup_round'))
+        # Unload "gungame/included_addons/gg_warmup_round"
+        es.unload('gungame/included_addons/gg_warmup_round')

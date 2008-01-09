@@ -145,13 +145,13 @@ def gg_variable_changed(event_var):
         gungame.setGunGameVar('gg_knife_elite', 0)
         es.msg('#lightgreen', 'WARNING: gg_knife_elite cannot be loaded while gg_deathmatch is enabled!')
 
-def player_class(event_var):
+def player_team(event_var):
     # Is deathmatch enabled?
     if addonOptions['enabled'] == 0:
         return
     
     # Respawn the player
-    respawn(event_var['userid'])
+    gamethread.delayed(5, es.server.cmd, ('%s %s' % (addonOptions['respawn_cmd'], event_var['userid'])))
 
 def player_death(event_var):
     # Is deathmatch enabled?

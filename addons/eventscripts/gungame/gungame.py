@@ -11,7 +11,7 @@ import cPickle
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.1 beta"
+gungameVersion = "1.0.22"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -353,10 +353,12 @@ def rebuildLeaderMenu():
         popuplib.unsendname('gungameLeadersMenu', playerlib.getUseridList('#human'))
         # Now, we need to delete it
         popuplib.delete('gungameLeadersMenu')
+    # Get leader level
+    leaderLevel = int(getLeaderLevel())
     # Let's create the "gungameLeadersMenu" popup
     gungameLeadersMenu = popuplib.create('gungameLeadersMenu')
     gungameLeadersMenu.addline('->1. Current Leaders:')
-    gungameLeadersMenu.addline('    Level %d (%s)' %(int(getLeaderLevel()), getLevelWeapon(getLeaderLevel())))
+    gungameLeadersMenu.addline('    Level %d (%s)' %(leaderLevel, getLevelWeapon(leaderLevel)))
     gungameLeadersMenu.addline('--------------------------')
     for leaderName in list_leaderNames:
         gungameLeadersMenu.addline('   * %s' %leaderName)
@@ -707,14 +709,6 @@ def ess_gettotallevels():
     if int(es.getargc()) == 2:
         varName = es.getargv(1)
         es.set(varName, getTotalLevels())
-    else:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
-
-def ess_getleaderlevel():
-    # gg_getleaderlevel <variable>
-    if int(es.getargc()) == 2:
-        varName = es.getargv(1)
-        es.set(varName, getLeaderLevel())
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
 
@@ -1728,13 +1722,16 @@ def player_spawn(event_var):
                 # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
                 giveWeapon(userid)
                 
-                if getLeaderLevel() < 2:
+                # Get leader level
+                leaderLevel = int(getLeaderLevel())
+                
+                if leaderLevel < 2:
                     HudHintText = 'Current level: %d of %d\nCurrent weapon: %s' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
                 else:
                     # Get levels behind leader
-                    levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
+                    levelsBehindLeader = leaderLevel - gungamePlayer.get('level')
                     # Get list of leaders userids
-                    list_leadersUserid = getLevelUseridList(getLeaderLevel())
+                    list_leadersUserid = getLevelUseridList(leaderLevel)
                     # How many levels behind the leader?
                     if levelsBehindLeader == 0:
                         # Is there more than 1 leader?
@@ -1769,7 +1766,7 @@ def player_spawn(event_var):
                             # Finish off the HudHint
                             HudHintText += ')'
                     else:
-                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
+                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), leaderLevel, getTotalLevels(), getLevelWeapon(leaderLevel))
                         
                 gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
             
@@ -2006,10 +2003,10 @@ def gg_levelup(event_var):
         
         if not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_warmup_round'):
             # Get levels behind leader
-            levelsBehindLeader = getLeaderLevel() - gungamePlayer.get('level')
+            levelsBehindLeader = newLeaderLevel - gungamePlayer.get('level')
             
             # Get list of leaders userids
-            list_leadersUserid = getLevelUseridList(getLeaderLevel())
+            list_leadersUserid = getLevelUseridList(newLeaderLevel)
                 
             # How many levels behind the leader?
             if levelsBehindLeader == 0:
@@ -2045,13 +2042,13 @@ def gg_levelup(event_var):
                     # Finish off the HudHint
                     HudHintText += ')'
             else:
-                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), getLeaderLevel(), getTotalLevels(), getLevelWeapon(getLeaderLevel()))
+                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), newLeaderLevel, getTotalLevels(), getLevelWeapon(newLeaderLevel))
                 
             gamethread.delayed(0.5, usermsg.hudhint, (event_var['userid'], HudHintText))
         
         # BEGIN CODE FOR TRIGGERING CUSTOM EVENT "GG_VOTE"
         # ----------------------------------------------------------------------------------
-        if int(getLeaderLevel()) == getTotalLevels() - int(getGunGameVar('gg_vote_trigger')):
+        if newLeaderLevel == getTotalLevels() - int(getGunGameVar('gg_vote_trigger')):
             # Only continue if no other script has set the next map
             if es.ServerVar('eventscripts_nextmapoverride') == '':
                 if not getGunGameVar('gungame_voting_started'):

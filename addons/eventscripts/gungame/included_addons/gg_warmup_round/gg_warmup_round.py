@@ -63,6 +63,7 @@ def load():
     
     # Start the countdown timer
     gamethread.delayed(3, startTimer, ())
+    es.server.cmd('mp_restartgame %s' % warmupTime)
     
     # Make sure there is supposed to be a warmup weapon
     if str(warmupWeapon) != '0':
@@ -161,13 +162,13 @@ def countDown(repeatInfo):
             if warmupTime <= 5:
                 es.cexec(userid, 'playgamesound hl1/fvox/beep.wav')
         
-        # If warmuptime is 1, start game restart
-        if warmupTime == 1:
-            es.server.cmd('mp_restartgame 1')
-        
         # Decrement the timeleft counter
         warmupTime -= 1
     elif warmupTime == 0:
+        for userid in playerlib.getUseridList('#all'):
+            # Send a hudhint to userid that the warmup round has ended
+            usermsg.hudhint(userid, 'Warmup round timer: 0')
+        
         # Play beep
         es.cexec_all('playgamesound hl1/fvox/beep.wav')
         

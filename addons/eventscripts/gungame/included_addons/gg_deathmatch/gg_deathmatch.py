@@ -63,7 +63,7 @@ def load():
     currentMap = str(es.ServerVar('eventscripts_currentmap'))
     if currentMap != '0':
         # Get spawn points, map loaded
-        getSpawnPoints()
+        getSpawnPoints(currentMap)
     
     # Get a player list of dead players then spawn them
     for userid in playerlib.getUseridList('#dead'):

@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_map_vote
-Version #:      07.01.08
+Version #:      09.01.08
 Description:    Adds map voting capabilities to gungame.
 '''
 
@@ -14,24 +14,29 @@ import usermsg
 import repeat
 from gungame import gungame
 
-# register this addon with EventScripts
+# Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_map_vote Addon for GunGame: Python" 
-info.version  = "07.01.08"
+info.version  = "09.01.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_map_vote" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
 
 # custom map list for the end map vote
 gg_map_list_file = gungame.getGunGameVar('gg_map_list_file')
+
 # file to use for the map vote
 gg_map_list_source = int(gungame.getGunGameVar('gg_map_list_source'))
+
 # number of maps in the end of map vote
 gg_map_vote_size = int(gungame.getGunGameVar('gg_map_vote_size'))
-# tumber of recently played maps excluded from vote
+
+# number of recently played maps excluded from vote
 gg_dont_show_last_maps = int(gungame.getGunGameVar('gg_dont_show_last_maps'))
+
 # the amount of time in seconds aloud for the vote
 gg_vote_time = int(gungame.getGunGameVar('gg_vote_time'))
+
 # shows player name and vote selection in the player chat
 gg_show_player_vote = int(gungame.getGunGameVar('gg_show_player_vote'))
 
@@ -276,7 +281,7 @@ def VoteResults():
         for userid in es.getUseridList():
             usermsg.hudhint(userid, 'Nextmap:\n%s' %dict_PlayerChoice['WinningMap'])
     else:
-        es.msg('#multi', '\4GG Map Vote\1: The vote was cancelled. Not even votes were cast.')
+        es.msg('#multi', '\4GG Map Vote\1: The vote was cancelled. No votes were cast.')
         for userid in es.getUseridList():
             usermsg.hudhint(userid, 'Not enough votes')
 

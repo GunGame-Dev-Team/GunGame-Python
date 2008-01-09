@@ -63,7 +63,6 @@ def load():
     
     # Start the countdown timer
     gamethread.delayed(3, startTimer, ())
-    es.server.cmd('mp_restartgame %s' % warmupTime)
     
     # Make sure there is supposed to be a warmup weapon
     if str(warmupWeapon) != '0':
@@ -161,6 +160,10 @@ def countDown(repeatInfo):
             # Countdown 5 or less?
             if warmupTime <= 5:
                 es.cexec(userid, 'playgamesound hl1/fvox/beep.wav')
+        
+        # If warmuptime is 1, start game restart
+        if warmupTime == 2:
+            es.server.cmd('mp_restartgame 2')
         
         # Decrement the timeleft counter
         warmupTime -= 1

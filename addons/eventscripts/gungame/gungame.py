@@ -11,7 +11,7 @@ import cPickle
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.22"
+gungameVersion = "1.0.30"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -47,24 +47,16 @@ def GetProfilerTime(storage):
 
 # Set Up multiple lists and dictionaries for use throughout GunGame
 dict_afk = {}
-# global dict_afk
 dict_gungame_core = {}
-# global dict_gungame_core
 dict_gungameVariables = {}
-# global dict_gungameVariables
 list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
-# global list_primaryWeapons
 list_secondaryWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven']
-# global list_secondaryWeapons
 list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
-# global list_allWeapons
 dict_gungameRegisteredAddons = {}
-# global dict_gungameRegisteredAddons
 dict_reconnectingPlayers = {}
-# global dict_reconnectingPlayers
 dict_gungameWinners = {}
-# global dict_gungameWinners
 dict_gungameRegisteredDependencies = {}
+list_includedAddonsDir = []
 
 # Class used in the dict_gungame_core
 class gungamePlayers:
@@ -1322,6 +1314,7 @@ def unloadConfig(configPath):
 # ===================================================================================================
 def load():
     StartProfiling(g_Prof)
+    global list_includedAddonsDir
     global dict_gungameVariables
     global dict_gungameWinners
     global countBombDeathAsSuicide
@@ -1336,6 +1329,18 @@ def load():
     # Load the "../cstrike/cfg/gungame/gg_default_addons.cfg"
     configPath = os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg'
     loadConfig(configPath)
+    
+    # Get the scripts in the "../cstrike/addons/eventscripts/gungame/included_addons" folder
+    list_includedAddonsDir = []
+    for includedAddon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/included_addons/'):
+        if includedAddon[0:3] == 'gg_':
+            list_includedAddonsDir.append(includedAddon)
+    
+    # Get the scripts in the "../cstrike/addons/eventscripts/gungame/custom_addons" folder
+    list_customAddonsDir = []
+    for customAddon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/custom_addons/'):
+        if customAddon[0:3] == 'gg_':
+            list_customAddonsDir.append(customAddon)
     
     # See if we need to create a list of strip exceptions
     global list_stripExceptions
@@ -2189,12 +2194,34 @@ def gg_win(event_var):
         winnersDataBaseFile.close()
 
 def gg_variable_changed(event_var):
+    global list_includedAddonsDir
     global dict_gungameRegisteredAddons
     global dict_gungameRegisteredDependencies
     global list_allWeapons
     cvarName = event_var['cvarname']
     newValue = event_var['newvalue']
-    oldValue = event_var['value']
+    oldValue = event_var['oldvalue']
+    
+    # GG_NADE_BONUS
+    if cvarName == 'gg_nade_bonus':
+        if newValue != '0' and newValue != 'knife' and newValue in list_allWeapons:
+            es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_nade_bonus'):
+            es.unload('gungame/included_addons/gg_nade_bonus')
+    # GG_SPAWN_PROTECTION
+    elif cvarName == 'gg_spawn_protect':
+        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_spawn_protect'):
+            es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
+        elif newValue == '0':
+            es.unload('gungame/included_addons/gg_spawn_protect')
+    # All other included addons
+    elif cvarName in list_includedAddonsDir:
+        if newValue == '1':
+            es.server.queuecmd('es_load gungame/included_addons/%s' %cvarName)
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\%s' %cvarName):
+            es.unload('gungame/included_addons/%s' %cvarName)
+
+    '''
     # GG_UNL_GRENADE
     if cvarName == 'gg_unl_grenades':
         if newValue == '1':
@@ -2210,7 +2237,7 @@ def gg_variable_changed(event_var):
             if 'gungame\included_addons\gg_earn_nade' in dict_gungameRegisteredAddons:
                 es.unload('gungame/included_addons/gg_earn_nade')
     # GG_NADE_BONUS
-    elif cvarName == 'gg_nade_bonus':
+    if cvarName == 'gg_nade_bonus':
         if newValue != '0' and newValue != 'knife' and newValue in list_allWeapons:
             es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
         elif newValue == '0':
@@ -2300,7 +2327,7 @@ def gg_variable_changed(event_var):
         elif newValue == '0':
             if 'gungame\included_addons\gg_elimination' in dict_gungameRegisteredAddons:
                 es.unload('gungame/included_addons/gg_elimination')
-
+'''
 # ===================================================================================================
 # ===================================================================================================
 #                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! END GAME EVENTS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 

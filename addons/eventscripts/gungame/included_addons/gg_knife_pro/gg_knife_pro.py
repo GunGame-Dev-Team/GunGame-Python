@@ -49,8 +49,12 @@ def gg_variable_changed(event_var):
         es.unload('gungame/included_addons/gg_knife_pro')
 
 def player_death(event_var):
-    # Check for knife kill, warmup off, and not a team kill
+    # Check for knife kill, and not a team kill
     if event_var['weapon'] != 'knife' or event_var['es_attackerteam'] == event_var['es_userteam']:
+        return
+
+    # Is warmup round?
+    if gungame.getRegisteredAddons().has_key('gungame\\included_addons\\gg_warmup_round'):
         return
     
     # Get attacker info

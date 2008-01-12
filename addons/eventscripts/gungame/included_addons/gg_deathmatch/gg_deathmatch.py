@@ -5,7 +5,7 @@
 ================================================================================
     Name: gg_deathmatch
     Main Author: Saul Rennison
-    Version: 1.0.2 (08.01.2008)
+    Version: 1.0.41 (12.01.2008)
 ================================================================================
     This will respawn players after a specified amount of time after dying.
     In addition, a fancy effect will be applied to the ragdoll after they die.
@@ -30,7 +30,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.2 (08.01.2008)"
+info.version  = "1.0.41 (21.01.2008)"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch" 
 info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
@@ -56,8 +56,12 @@ def load():
     
     # Enable turbo mode, and disable knife elite
     gungame.setGunGameVar('gg_turbo', '1')
-    gungame.setGunGameVar('gg_knife_elite', '0')
+    # gungame.setGunGameVar('gg_knife_elite', '0')
     gungame.setGunGameVar('gg_map_obj', '3')
+    
+    # Register Dependencies
+    gungame.registerDependency('gungame/included_addons/gg_turbo', 'gungame/included_addons/gg_deathmatch')
+    gungame.registerDependency('gungame/included_addons/gg_dead_strip', 'gungame/included_addons/gg_deathmatch')
     
     # Has map loaded?
     currentMap = str(es.ServerVar('eventscripts_currentmap'))
@@ -77,7 +81,27 @@ def unload():
     
     # Unregister this addon with GunGame
     gungame.unregisterAddon('gungame/included_addons/gg_deathmatch')
-
+    # Register Dependencies
+    gungame.unregisterDependency('gungame/included_addons/gg_turbo', 'gungame/included_addons/gg_deathmatch')
+    gungame.unregisterDependency('gungame/included_addons/gg_dead_strip', 'gungame/included_addons/gg_deathmatch')
+    
+def gg_variable_changed(event_var):
+    # Check required variables to see if they have changed
+    if event_var['cvarname'] == 'gg_deathmatch':
+        addonOptions['enabled'] = int(gungame.getGunGameVar('gg_deathmatch'))
+    
+    if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) < 3:
+        gungame.setGunGameVar('gg_map_obj', 3)
+        es.msg('#lightgreen', 'WARNING: Map objectives must be removed while gg_deathmatch is enabled!')
+    
+    if event_var['cvarname'] == 'gg_turbo' and int(event_var['newvalue']) == 0:
+        gungame.setGunGameVar('gg_turbo', 1)
+        es.msg('#lightgreen', 'WARNING: gg_turbo cannot be unloaded while gg_deathmatch is enabled!')
+        '''
+    if event_var['cvarname'] == 'gg_knife_elite' and int(event_var['newvalue']) == 1:
+        gungame.setGunGameVar('gg_knife_elite', 0)
+        es.msg('#lightgreen', 'WARNING: gg_knife_elite cannot be loaded while gg_deathmatch is enabled!')
+'''
 def es_map_start(event_var):
     getSpawnPoints(event_var['mapname'])
 
@@ -127,23 +151,6 @@ def getGameDir(dir):
     parts.append(dir)
     
     return string.join(parts, '\\')
-    
-def gg_variable_changed(event_var):
-    # Check required variables to see if they have changed
-    if event_var['cvarname'] == 'gg_deathmatch':
-        addonOptions['enabled'] = int(gungame.getGunGameVar('gg_deathmatch'))
-    
-    if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) < 3:
-        gungame.setGunGameVar('gg_turbo', 3)
-        es.msg('#lightgreen', 'WARNING: Map objectives must be removed while gg_deathmatch is enabled!')
-    
-    if event_var['cvarname'] == 'gg_turbo' and int(event_var['newvalue']) == 0:
-        gungame.setGunGameVar('gg_turbo', 1)
-        es.msg('#lightgreen', 'WARNING: gg_turbo cannot be unloaded while gg_deathmatch is enabled!')
-        
-    if event_var['cvarname'] == 'gg_knife_elite' and int(event_var['newvalue']) == 1:
-        gungame.setGunGameVar('gg_knife_elite', 0)
-        es.msg('#lightgreen', 'WARNING: gg_knife_elite cannot be loaded while gg_deathmatch is enabled!')
 
 def player_team(event_var):
     # Is deathmatch enabled?

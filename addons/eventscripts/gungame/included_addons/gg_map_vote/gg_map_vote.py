@@ -56,12 +56,16 @@ dict_mapListFile[3] = dict_mapVoteVars['gg_map_list_file']
 
 # list of recent maps - maps here are for testing only
 list_recentMaps = []
+
 # dictionary of Player Vote Choices
 dict_playerChoice = {}
+
 # list of potential vote maps
 list_mapList = []
+
 # list of Maps being voted for
 list_voteList = []
+
 # check to see if vote is active
 voteActive = 0
 
@@ -135,7 +139,7 @@ def gg_win(event_var):
     winningMap = dict_playerChoice['winningMap']
     if winningMap != None:
         es.set('nextlevel', winningMap)
-        es.msg('#multi', '\4GG Map Vote\1: Next map is \4%s\1' % winningMap)
+        announce('Next map is \4%s' % winningMap)
 
 def initiateVote():
     global dict_mapVoteVars
@@ -173,22 +177,25 @@ def setVoteList():
     global dict_mapVoteVars
     global list_mapList
     global list_voteList
-    # set the size of the vote list
+    
+    # Set the size of the vote list
     mapsQuantity = len(list_mapList)
     if dict_mapVoteVars['gg_map_vote_size'] and mapsQuantity > dict_mapVoteVars['gg_map_vote_size']:
         list_voteList = random.sample(list_mapList, dict_mapVoteVars['gg_map_vote_size'])
     else:
         list_voteList = list_mapList
     
-    # create the menu popup
+    # Create the menu popup
     votePopup = popuplib.easymenu('voteMenu', '_popup_choice', voteMenuSelect)
-    # set title for the menu
+    
+    # Set title for the menu
     votePopup.settitle('Next Map?')
-    # loop threw maps to build list
+    
+    # Loop through maps to build list
     for map in list_voteList:
         votePopup.addoption(map, map)
         
-    #reset Winning Map
+    # Reset the player choice dict
     dict_playerChoice.clear()
     dict_playerChoice['votedMaps'] = {}
     dict_playerChoice['totalVotes'] = 0
@@ -200,11 +207,14 @@ def startVote():
     global voteActive
     global voteTimer
     
-    # send the map vote to the players
-    es.msg('#multi', '\4GG Map Vote\1: Place your votes for the nextmap.')
+    # Send the map vote to the players
+    announce('Place your votes for the nextmap.')
     popuplib.send('voteMenu', es.getUseridList())
+    
+    # Play vote
     es.cexec_all('play admin_plugin/actions/startyourvoting.mp3')
     
+    # Start the countdown
     voteTimer = dict_mapVoteVars['gg_vote_time']
     repeat.create('voteCounter', VoteCountdown)
     repeat.start('voteCounter', 1, 0)
@@ -233,11 +243,19 @@ def voteMenuSelect(userid, mapChoice, popupid):
     global dict_playerChoice
     global list_voteList
     global dict_mapVoteVars
+    
+    # Get index of userid
+    index = playerlib.getPlayer(userid).attributes['index']
+    
+    # Loop through the map choices
     if mapChoice in list_voteList:
-        # announce players choice if enabled
+        # Announce players choice if enabled
         if dict_mapVoteVars['gg_show_player_vote']:
             name = es.getplayername(userid)
-            es.msg('\3', '%s voted %s' % (name, mapChoice))
+            
+            # Announce to the world
+            for userid in es.getUseridList():
+                usermsg.saytext2(userid, index, '\3%s\1 voted for \4%s' % (name, mapChoice))
         # register votes
         if mapChoice not in dict_playerChoice['votedMaps']:
             dict_playerChoice['votedMaps'][mapChoice] = 1
@@ -261,14 +279,14 @@ def voteResults():
     
     # Announce winning map
     if dict_playerChoice['totalVotes']:
-        es.msg('#multi', '\4GG Map Vote\1: \4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_playerChoice['winningMap'], dict_playerChoice['winningMapVotes'], dict_playerChoice['totalVotes']))
+        announce('\4GG Map Vote\1: \4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_playerChoice['winningMap'], dict_playerChoice['winningMapVotes'], dict_playerChoice['totalVotes']))
         
         for userid in es.getUseridList():
-            usermsg.hudhint(userid, 'Nextmap:\n%s' %dict_playerChoice['winningMap'])
+            usermsg.hudhint(userid, 'Nextmap:\n%s' % dict_playerChoice['winningMap'])
     else:
-        es.msg('#multi', '\4GG Map Vote\1: The vote was cancelled. No votes were cast.')
+        announce('The vote was cancelled, no votes were cast.')
         for userid in es.getUseridList():
-            usermsg.hudhint(userid, 'Not enough votes')
+            usermsg.hudhint(userid, 'Not enough votes.')
 
     es.cexec_all('play admin_plugin/actions/endofvote.mp3')
 
@@ -280,35 +298,39 @@ def CancelVote():
         repeat.delete('voteCounter')
         popuplib.unsendname('voteMenu', es.getUseridList())
         popuplib.delete('voteMenu')
-        es.msg('#multi', '\4GG Map Vote\1: Vote has been cancelled.')
+        announce('Vote has been cancelled.')
     else:
-        es.msg('#multi', '\4GG Map Vote\1: No active vote to cancel.')
+        announce('No active vote to cancel.')
 
 # console command gg_vote_list
 def GetVoteList():
     global list_voteList
+    
     if list_voteList != []:
-        es.msg('#multi', '\4GG Map Vote\1: List of maps in the next vote...')
+        announce('List of maps in the next vote...')
         msgFormat = ''
         for map in list_voteList:
-            msgFormat = '%s%s ' % (msgFormat, map)
+            msgFormat += '%s ' % map
+        
+        announce(msgFormat)
         es.msg('\3', msgFormat)
     else:
-        es.msg('#multi', '\4GG Map Vote\1: The vote list is empty.')
+        announce('The vote list is empty.')
 
 # console command gg_vote_shuffle
 def ShuffleVoteList():
     global list_voteList
     global voteActive
+    
     if not voteActive:
         setVoteList()
-        es.msg('#multi', '\4GG Map Vote\1: New shuffled map list!')
+        announce('New shuffled map list!')
         msgFormat = ''
         for map in list_voteList:
             msgFormat = '%s%s ' % (msgFormat, map)
         es.msg('\3', msgFormat)
     else:
-        es.msg('#multi', '\4GG Map Vote\1: Vote already in progress!')
+        announce('Vote already in progress!')
 
 # console command gg_vote_start
 def VoteStart():
@@ -318,4 +340,10 @@ def VoteStart():
             setVoteList()
         startVote()
     else:
-        es.msg('#multi', '\4GG Map Vote\1: Vote already in progress!')
+        announce('Vote already in progress!')
+        
+def announce(message):
+    es.msg('#multi', '\4[GG:Map Vote]\1 %s' % message)
+    
+def tell(userid, message):
+    es.tell(userid, '#multi', '\4[GG:Map Vote]\1 %s' % message)

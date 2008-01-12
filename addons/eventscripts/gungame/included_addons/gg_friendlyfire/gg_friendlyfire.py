@@ -47,5 +47,14 @@ def checkff():
         if int(es.ServerVar("mp_friendlyfire")) == 0:
             # Set FF to 1; Message and Sound
             es.forcevalue("mp_friendlyfire", 1)
-            es.msg("#lightgreen", "Friendly Fire is ON!!!  Watch your fire!")
-            es.cexec_all("play", "npc/roller/mine/rmine_tossed1.wav")
+            announce('Friendly fire is now on. Watch your fire.')
+            es.cexec_all("play npc/roller/mine/rmine_tossed1.wav")
+            
+def announce(message):
+    es.msg('#multi', '\4[GG:Friendly Fire]\1 %s' % message)
+   
+def tell(userid, message):
+    es.tell(userid, '#multi', '\4[GG:Friendly Fire]\1 %s' % message)
+
+def echo(message):
+    es.dbgmsg(0, '[GG:Friendly Fire] %s' % message)

@@ -36,8 +36,8 @@ def gg_levelup(event_var):
     if tripler.get("triple") == 3:
         # Sound and Messages
         es.emitsound("player", event_var["userid"], gungame.getGunGameVar("gg_sound_triple"), 1.0, 1.0)
-        es.msg("#multi", "#green%s#lightgreen triple levelled!!!" % event_var["name"])
-        es.centermsg("%s triple levelled!!!" % event_var["name"])
+        announce('\4%s\1 triple levelled!' % event_var['name'])
+        es.centermsg("%s triple levelled!" % event_var["name"])
         
         # Effect to player
         es.give(event_var["userid"], "env_spark")
@@ -52,13 +52,11 @@ def gg_levelup(event_var):
         player = playerlib.getPlayer(event_var["userid"])
         player.set("speed", 1.5)
         
-        # Gravity
-	  # THIS IS ONLY A TEST TO MAKE IT WITHOUT EST!
+        # Gravity (experimental)
         es.give(event_var["userid"], "trigger_gravity")
         es.fire(event_var["userid"], "trigger_gravity", "setparent", "!activator")
         es.fire(event_var["userid"], "trigger_gravity", "addoutput", "gravity 0.55")
         es.fire(event_var["userid"], "trigger_gravity", "enable")
-	  # THIS IS ONLY A TEST TO MAKE IT WITHOUT EST!
         
         # Stop Triple Level Bonus after 10 secs
         gamethread.delayed(10, removetriple, event_var["userid"])
@@ -74,10 +72,17 @@ def removetriple(userid):
         player = playerlib.getPlayer(userid)
         player.set("speed", 1)
         
-        # Stop Gravity
-	  # THIS IS ONLY A TEST TO MAKE IT WITHOUT EST!
-        es.fire(userid, "trigger_gravity", "disable")
-	  # THIS IS ONLY A TEST TO MAKE IT WITHOUT EST!
+        # Stop Gravity (experimental)
+        es.fire(userid, "trigger_gravity", "Kill")
     else:
         # Echo debug message, the user left
-        es.dbgmsg(1, "GunGame: Python Triple Level Addon: Can't remove triple bonus, user left")
+        echo('Cannot remove triple bonus, the user left.')
+        
+def announce(message):
+    es.msg('#multi', '\4[GG:Triple Level]\1 %s' % message)
+   
+def tell(userid, message):
+    es.tell(userid, '#multi', '\4[GG:Triple Level]\1 %s' % message)
+
+def echo(message):
+    es.dbgmsg(0, '[GG:Triple Level] %s' % message)

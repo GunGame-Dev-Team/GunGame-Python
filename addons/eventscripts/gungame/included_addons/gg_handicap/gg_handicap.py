@@ -71,4 +71,14 @@ def handicapUpdate(repeatInfo):
         gungamePlayer = gungame.getPlayer(str(userid))
         if gungamePlayer.get('level') < averageLevel:
             gungamePlayer.set('level', averageLevel)
-    es.msg('#multi', '#green [#lightgreenHANDICAP#green]#default all players are now level#lightgreen %i#default or higher.' % averageLevel)
+    
+    announce('All players are now level \4%d\1 or higher.' % averageLevel)
+    
+def announce(message):
+    es.msg('#multi', '\4[GG:Handicap]\1 %s' % message)
+   
+def tell(userid, message):
+    es.tell(userid, '#multi', '\4[GG:Handicap]\1 %s' % message)
+
+def echo(message):
+    es.dbgmsg(0, '[GG:Handicap] %s' % message)

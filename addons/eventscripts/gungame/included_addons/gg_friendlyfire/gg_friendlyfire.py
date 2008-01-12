@@ -49,7 +49,7 @@ def checkff():
             es.forcevalue("mp_friendlyfire", 1)
             announce('Friendly fire is now on. Watch your fire.')
             es.cexec_all("play npc/roller/mine/rmine_tossed1.wav")
-            
+
 def announce(message):
     es.msg('#multi', '\4[GG:Friendly Fire]\1 %s' % message)
    

@@ -26,5 +26,5 @@ def unload():
     gungame.unregisterAddon("gungame/included_addons/gg_noblock")
 
 def player_spawn(event_var):
-    # Set player's colliongroup to 2, noblock
+    # Set player's collisiongroup to 2, noblock
     es.setplayerprop(event_var["userid"], "CCSPlayer.baseclass.baseclass.baseclass.baseclass.baseclass.baseclass.m_CollisionGroup", 2)

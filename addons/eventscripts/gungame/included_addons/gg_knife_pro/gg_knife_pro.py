@@ -71,6 +71,7 @@ def player_death(event_var):
     # Is the attacker on the grenade level?
     if gungameAttacker.get('weapon') == 'hegrenade':
         tell(attacker, 'You cannot skip the grenade level!')
+        return
     
     # Is the victim on level 1?
     if int(gungameVictim.get('level')) == 1:

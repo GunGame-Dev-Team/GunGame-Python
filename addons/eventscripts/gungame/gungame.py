@@ -1768,14 +1768,14 @@ def player_spawn(event_var):
                                     HudHintText += '...'
                                     break
                                 
+                                # Don't add our userid
+                                if leader == userid:
+                                    continue
+                                
                                 # Don't add the comma if there is 2 or less leaders
                                 if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
                                     HudHintText += es.getplayername(leader)
                                     break
-                                
-                                # Don't add our userid
-                                if leader == userid:
-                                    continue
                                 
                                 # Add the name to the hudhint and increment the leaders count
                                 HudHintText += es.getplayername(leader) + ', '
@@ -2043,15 +2043,15 @@ def gg_levelup(event_var):
                         if leadersCount == 3:
                             HudHintText += '...'
                             break
+                    
+                        # Don't add our userid
+                        if leader == userid:
+                            continue
                         
                         # Don't add the comma if there is 2 or less leaders
                         if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
                             HudHintText += es.getplayername(leader)
                             break
-                        
-                        # Don't add our userid
-                        if leader == userid:
-                            continue
                         
                         # Add the name to the hudhint and increment the leaders count
                         HudHintText += es.getplayername(leader) + ', '

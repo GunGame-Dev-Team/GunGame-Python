@@ -11,7 +11,7 @@ import cPickle
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.30"
+gungameVersion = "1.0.44"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -766,6 +766,7 @@ def ess_registerdependency():
 # BEGIN Generic Gungame COMMANDS
 # ---------------------------------------------------
 def teleportPlayer(userid, x, y, z, eyeangle0=None, eyeangle1=None):
+    userid = int(userid)
     # gungame.teleportPlayer(2, 1, 1, 1, 90, 180)
     es.server.cmd('es_setpos %d %s %s %s' %(userid, x, y, z))
     if eyeangle0 or eyeangle1:
@@ -949,30 +950,55 @@ def registerDependency(dependencyName, addonName):
     global dict_gungameRegisteredDependencies
     dependencyName = dependencyName.replace('/','\\')
     addonName = addonName.replace('/', '\\')
-    # Make sure that this dependency is registered as a GunGame Addon
-    if dict_gungameRegisteredAddons.has_key(dependencyName):
-        # Make sure that this addon is registered as a GunGame Addon
-        if dict_gungameRegisteredAddons.has_key(addonName):
-            # Check if addon is already a registered as a GunGame Dependency
-            if dict_gungameRegisteredDependencies.has_key(dependencyName):
-                # Check if this addon already registered this dependency
-                if addonName not in dict_gungameRegisteredDependencies[dependencyName]:
-                    dict_gungameRegisteredDependencies[dependencyName].append(addonName)
-                    # Send a message to console stating that the depenency has been successfully unregistered with GunGame
-                    es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %dependencyName)
-                else:
-                    # Send an error message to console stating that the addon has been previously registered to this depependency
-                    es.dbgmsg(0, '[GunGame] Dependency Registered Failed. \'%s\' has already been registered to \'%s\'' %(addonName,dependencyName))
-            else:
-                dict_gungameRegisteredDependencies[dependencyName] = [addonName]
+    # Make sure that this addon is registered as a GunGame Addon
+    if dict_gungameRegisteredAddons.has_key(addonName):
+        # Check if addon is already a registered as a GunGame Dependency
+        if dict_gungameRegisteredDependencies.has_key(dependencyName):
+            # Check if this addon already registered this dependency
+            if addonName not in dict_gungameRegisteredDependencies[dependencyName]:
+                dict_gungameRegisteredDependencies[dependencyName].append(addonName)
                 # Send a message to console stating that the depenency has been successfully unregistered with GunGame
                 es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %dependencyName)
+            else:
+                # Send an error message to console stating that the addon has been previously registered to this depependency
+                es.dbgmsg(0, '[GunGame] Dependency Registered Failed. \'%s\' has already been registered to \'%s\'' %(addonName,dependencyName))
         else:
-            # Send an error message to console stating that the addon is not a registered addon
-            es.dbgmsg(0, '[GunGame] Dependency Registration Failed. \'%s\' is not a registered addon.' %addonName)
+            dict_gungameRegisteredDependencies[dependencyName] = [addonName]
+            # Send a message to console stating that the depenency has been successfully unregistered with GunGame
+            es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %dependencyName)
     else:
-        # Send an error message to console stating that the dependency is not a registered addon
-        es.dbgmsg(0, '[GunGame] Dependency Registration Failed. \'%s\' is not a registered addon.' %dependencyName)
+        # Send an error message to console stating that the addon is not a registered addon
+        es.dbgmsg(0, '[GunGame] Dependency Registration Failed. \'%s\' is not a registered addon.' %addonName)
+
+def unregisterDependency(dependencyName, addonName):
+    global dict_gungameRegisteredDependencies
+    dependencyName = dependencyName.replace('/','\\')
+    addonName = addonName.replace('/', '\\')
+    # Check if addon is already a registered as a GunGame Dependency
+    if dict_gungameRegisteredDependencies.has_key(dependencyName):
+        # Check if this addon already registered this dependency
+        if addonName in dict_gungameRegisteredDependencies[dependencyName]:
+            dict_gungameRegisteredDependencies[dependencyName].remove(addonName)
+            # Send a message to console stating that the depenency has been successfully unregistered with GunGame
+            es.dbgmsg(0, '[GunGame] Dependency Unregistered Successfully: \'%s\'' %dependencyName)
+            # Remove dependency from dict if it has no more addons
+            if not len(dict_gungameRegisteredDependencies[dependencyName]):
+                del dict_gungameRegisteredDependencies[dependencyName]
+        else:
+            # Send an error message to console stating that the addon has been previously registered to this depependency
+            es.dbgmsg(0, '[GunGame] Dependency Unregistered Failed. \'%s\' is not registered to \'%s\'' %(addonName,dependencyName))
+    else:
+        # Send an error message to console stating that the addon is not a registered addon
+        es.dbgmsg(0, '[GunGame] Dependency Unregistration Failed. \'%s\' is not a registered dependency.' %addonName)
+
+def checkDependency(dependencyName):
+    global dict_gungameRegisteredDependencies
+    dependencyName = dependencyName.replace('/','\\')
+    # Check to see if addon is a registered dependency
+    if dict_gungameRegisteredDependencies.has_key(dependencyName):
+        return 1
+    else:
+        return 0
 
 def getRegisteredDependencies():
     global dict_gungameRegisteredDependencies
@@ -1768,14 +1794,14 @@ def player_spawn(event_var):
                                     HudHintText += '...'
                                     break
                                 
-                                # Don't add our userid
-                                if leader == userid:
-                                    continue
-                                
                                 # Don't add the comma if there is 2 or less leaders
                                 if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
                                     HudHintText += es.getplayername(leader)
                                     break
+                                
+                                # Don't add our userid
+                                if leader == userid:
+                                    continue
                                 
                                 # Add the name to the hudhint and increment the leaders count
                                 HudHintText += es.getplayername(leader) + ', '
@@ -2043,15 +2069,15 @@ def gg_levelup(event_var):
                         if leadersCount == 3:
                             HudHintText += '...'
                             break
-                    
-                        # Don't add our userid
-                        if leader == userid:
-                            continue
                         
                         # Don't add the comma if there is 2 or less leaders
                         if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
                             HudHintText += es.getplayername(leader)
                             break
+                        
+                        # Don't add our userid
+                        if leader == userid:
+                            continue
                         
                         # Add the name to the hudhint and increment the leaders count
                         HudHintText += es.getplayername(leader) + ', '

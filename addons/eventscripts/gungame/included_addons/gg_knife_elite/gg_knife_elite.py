@@ -26,13 +26,26 @@ dict_playerIsElite = {}
 def load():
     # Register this addon with GunGame
     gungame.registerAddon('gungame/included_addons/gg_knife_elite', 'GG Knife Elite')
-    # Check required addons
+    # Check if turbo is running
     if gungame.getGunGameVar('gg_turbo') == '1':
-        gungame.setGunGameVar('gg_turbo', '0')
+        # Check if gg_turbo is a dependency of any other addons
+        if not gungame.checkDependency('gungame/included_addons/gg_turbo'):
+            # Unload gg_turbo
+            gungame.setGunGameVar('gg_turbo', '0')
+        else:
+            # gg_turbo has depencies, show message and unload gg_knife_pro
+            es.dbgmsg(0, 'WARNING: gg_knife_elite cannot unload gg_turbo')
+            es.dbgmsg(0, 'gg_turbo is a dependency of the following addons:')
+            for addon in gungame.getRegisteredDependencies():
+                es.dbgmsg(0, addon)
+            es.dbgmsg(0, 'gg_knife_elite will be unloaded')
+            gungame.setGunGameVar('gg_knife_elite', '0')
+    #Register gg_dead_strip as a dependency
+    gungame.registerDependency('gungame/included_addons/gg_dead_strip', 'gungame/included_addons/gg_knife_elite')
+    # Check if gg_dead_strip is running
     if gungame.getGunGameVar('gg_dead_strip') == '0':
         gungame.setGunGameVar('gg_dead_strip', '1')
-    gungame.registerDependency('gungame/included_addons/gg_dead_strip', 'gungame/included_addons/gg_knife_elite')
-    
+        
     global dict_playerIsElite
     players = playerlib.getUseridList("#all")
     for tempid in players:
@@ -42,12 +55,25 @@ def load():
 def unload():
     #Unregister this addon with GunGame
     gungame.unregisterAddon('gungame/included_addons/gg_knife_elite')
+    #Register gg_deat_strip as a dependency
+    gungame.unregisterDependency('gungame/included_addons/gg_dead_strip', 'gungame/included_addons/gg_knife_elite')
 
 def gg_variable_changed(event_var):
     # Watch for required addon load/unload
     if event_var['cvarname'] == 'gg_turbo' and event_var['newvalue'] == '1':
-        gungame.setGunGameVar('gg_turbo', 0)
-        es.msg('#lightgreen', 'WARNING: gg_turbo cannot be loaded while gg_knife_elite is enabled!')
+        # Check if gg_turbo is a dependency of any other addons
+        if not gungame.checkDependency('gungame/included_addons/gg_turbo'):
+            # Unload gg_turbo
+            gungame.setGunGameVar('gg_turbo', '0')
+            es.dbgmsg(0, 'WARNING: gg_turbo cannot be loaded while gg_knife_elite is enabled!')
+        else:
+            # gg_turbo has depencies, show message and unload gg_knife_pro
+            es.dbgmsg(0, 'WARNING: gg_knife_elite cannot unload gg_turbo')
+            es.dbgmsg(0, 'gg_turbo is a dependency of the following addons:')
+            for addon in getRegisteredDependencies():
+                es.dbgmsg(0, addon)
+            es.dbgmsg(0, 'gg_knife_elite will be unloaded')
+            gungame.setGunGameVar('gg_knife_elite', '0')
 
 def player_spawn(event_var):
     global dict_playerIsElite

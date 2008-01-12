@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_elimination
-Version #:      1.0.30
+Version #:      1.0.40
 Description:    Players respawn after their killer is killed.
                 Originally for ES1.3 created by ichthy.
                 http://addons.eventscripts.com/addons/view/3972
@@ -15,7 +15,7 @@ import gamethread
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_elimination Addon for GunGame: Python" 
-info.version  = "1.0.30"
+info.version  = "1.0.40"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_elimination"
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
@@ -37,7 +37,7 @@ def load():
     
     # Unload Elimination if gg_deathmatch is set to 1
     if gungame.getGunGameVar('gg_deathmatch') == '1':
-        es.unload('gungame/included_addons/gg_elimination')
+        gungame.setGunGameVar('gg_elimination', 0)
 
 def unload():
     # Prevent players from spawning after gg_elimination is disabled
@@ -53,7 +53,7 @@ def gg_variable_changed(event_var):
         gg_dm_ragdoll_effect = int(gungame.getGunGameVar('gg_dm_ragdoll_effect'))
     # Turn off Elimination if DeathMatch is enabled
     if event_var['cvarname'] == 'gg_deathmatch' and event_var['newlevel'] == '1':
-        es.unload('gungame/included_addons/gg_elimination')
+        gungame.setGunGameVar('gg_elimination', 0)
 
 def es_map_start(event_var):
     global roundActive

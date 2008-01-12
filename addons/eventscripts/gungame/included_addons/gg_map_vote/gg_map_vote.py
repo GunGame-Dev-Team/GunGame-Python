@@ -279,15 +279,14 @@ def voteResults():
     
     # Announce winning map
     if dict_playerChoice['totalVotes']:
-        announce('\4GG Map Vote\1: \4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_playerChoice['winningMap'], dict_playerChoice['winningMapVotes'], dict_playerChoice['totalVotes']))
+        announce('\4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_playerChoice['winningMap'], dict_playerChoice['winningMapVotes'], dict_playerChoice['totalVotes']))
         
         for userid in es.getUseridList():
             usermsg.hudhint(userid, 'Nextmap:\n%s' % dict_playerChoice['winningMap'])
     else:
         announce('The vote was cancelled, no votes were cast.')
-        for userid in es.getUseridList():
-            usermsg.hudhint(userid, 'Not enough votes.')
 
+    # Play end of vote sound
     es.cexec_all('play admin_plugin/actions/endofvote.mp3')
 
 # console command gg_vote_cancel
@@ -300,22 +299,21 @@ def CancelVote():
         popuplib.delete('voteMenu')
         announce('Vote has been cancelled.')
     else:
-        announce('No active vote to cancel.')
+        echo('No active vote to cancel.')
 
 # console command gg_vote_list
 def GetVoteList():
     global list_voteList
     
     if list_voteList != []:
-        announce('List of maps in the next vote...')
+        echo('List of maps in the next vote...')
         msgFormat = ''
         for map in list_voteList:
             msgFormat += '%s ' % map
-        
-        announce(msgFormat)
-        es.msg('\3', msgFormat)
+            
+        echo(msgFormat)
     else:
-        announce('The vote list is empty.')
+        echo('The vote list is empty.')
 
 # console command gg_vote_shuffle
 def ShuffleVoteList():
@@ -324,13 +322,13 @@ def ShuffleVoteList():
     
     if not voteActive:
         setVoteList()
-        announce('New shuffled map list!')
+        echo('New shuffled map list!')
         msgFormat = ''
         for map in list_voteList:
             msgFormat = '%s%s ' % (msgFormat, map)
-        es.msg('\3', msgFormat)
+        echo(msgFormat)
     else:
-        announce('Vote already in progress!')
+        echo('Vote already in progress!')
 
 # console command gg_vote_start
 def VoteStart():
@@ -340,10 +338,13 @@ def VoteStart():
             setVoteList()
         startVote()
     else:
-        announce('Vote already in progress!')
+        echo('Vote already in progress!')
         
 def announce(message):
     es.msg('#multi', '\4[GG:Map Vote]\1 %s' % message)
     
 def tell(userid, message):
     es.tell(userid, '#multi', '\4[GG:Map Vote]\1 %s' % message)
+
+def echo(message):
+    es.dbgmsg(0, '[GG:Map Vote] %s' % message)

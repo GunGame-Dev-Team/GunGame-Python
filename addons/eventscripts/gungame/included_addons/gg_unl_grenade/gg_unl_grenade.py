@@ -8,6 +8,7 @@ Description:    When a player reaches grenade level, they are given another gren
 """
 
 import es
+import playerlib
 from gungame import gungame
 
 # Register this addon with EventScripts
@@ -43,5 +44,7 @@ def gg_variable_changed(event_var):
 def hegrenade_detonate(event_var):
     userid = event_var['userid']
     gungamePlayer = gungame.getPlayer(userid)
-    if event_var['es_userteam'] > 1 and gungamePlayer.get('weapon') == 'hegrenade':
+    playerlibPlayer = playerlib.getPlayer(userid)
+    
+    if event_var['es_userteam'] > 1 and gungamePlayer.get('weapon') == 'hegrenade' and not int(playerlibPlayer.get('isdead')):
         es.server.cmd('es_give %s weapon_hegrenade' % userid)

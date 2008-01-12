@@ -1150,6 +1150,10 @@ def restartGunGame(reasonText=None):
     # Check to see if the warmup round needs to be activated
     if int(getGunGameVar('gg_warmup_timer')) > 0:
         gamethread.delayed(5, es.load, ('gungame/included_addons/gg_warmup_round'))
+    else:
+        # Fire gg_start event
+        gamethread.delayed(5, es.event, ('initialize','gg_start'))
+        gamethread.delayed(5, es.event, ('fire','gg_start'))
     es.msg(reasonText)
     gamethread.delayed(2, es.centermsg, ('GunGame Restarting!!!'))
 
@@ -1485,6 +1489,10 @@ def load():
         # Check to see if the warmup round needs to be activated
         if int(getGunGameVar('gg_warmup_timer')) > 0:
             es.load('gungame/included_addons/gg_warmup_round')
+        else:
+            # Fire gg_start event
+            es.event('initialize','gg_start')
+            es.event('fire','gg_start')
     
     # RESTART CURRENT MAP
     es.server.cmd('mp_restartgame 2')
@@ -1529,6 +1537,10 @@ def es_map_start(event_var):
     # Check to see if the warmup round needs to be activated
     if int(getGunGameVar('gg_warmup_timer')) > 0:
         es.load('gungame/included_addons/gg_warmup_round')
+    else:
+        # Fire gg_start event
+        es.event('initialize','gg_start')
+        es.event('fire','gg_start')
     
     # Reset the GunGame Round
     registerPlayers()

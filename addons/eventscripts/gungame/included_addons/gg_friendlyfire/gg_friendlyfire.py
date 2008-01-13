@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_friendlyfire
-Version #:      1.5.2008
+Version #:      1.0.51
 Description:    Friendlyfire will activate when the last level is reached
 '''
 
@@ -13,13 +13,13 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_friendlyfire Addon for GunGame: Python" 
-info.version  = "1.5.2008"
+info.version  = "1.0.51"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_friendlyfire" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisber"
 
 # Set Level where FF has to be activate
-ff = gungame.getTotalLevels() - int(gungame.getGunGameVar("gg_auto_ff"))
+ff = gungame.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
 
 def load():
     # Register this addon with GunGame

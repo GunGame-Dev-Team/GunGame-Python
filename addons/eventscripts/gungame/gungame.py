@@ -1097,7 +1097,14 @@ def equipPlayer():
     es.server.cmd('es_xremove game_player_equip')
     es.server.cmd('es_xgive %s game_player_equip' %userid)
     es.server.cmd('es_xfire %s game_player_equip addoutput \"weapon_knife 1\"' %userid)
-    es.server.cmd('es_xfire %s game_player_equip addoutput \"item_assaultsuit 1\"' %userid)
+	# Retrieve the armor type
+    armorType = int(getGunGameVar('gg_player_armor'))
+    if armorType == 2:
+    # Give the player full armor
+        es.server.cmd('es_xfire %s game_player_equip addoutput \"item_assaultsuit 1\"' %userid)
+    # Give the player kevlar only
+    elif armorType == 1:
+        es.server.cmd('es_xfire %s game_player_equip addoutput \"item_kevlar 1\"' %userid)
 
 def registerPlayers():
     global dict_afk
@@ -1820,16 +1827,7 @@ def player_spawn(event_var):
                         HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), leaderLevel, getTotalLevels(), getLevelWeapon(leaderLevel))
                         
                 gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
-            
-            # Retrieve the armor type
-            armorType = int(getGunGameVar('gg_player_armor'))
-            if armorType == 2:
-            # Give the player full armor
-                es.server.cmd('es_xgive %d item_assaultsuit' %userid)
-            # Give the player kevlar only
-            elif armorType == 1:
-                es.server.cmd('es_xgive %d item_kevlar' %userid)
-            
+                
             if int(getGunGameVar('gg_map_obj')) > 1:
                 # Check to see if this player is a CT
                 if int(event_var['es_userteam']) == 3:
@@ -2260,120 +2258,20 @@ def gg_variable_changed(event_var):
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
         elif newValue == '0':
             es.unload('gungame/included_addons/gg_spawn_protect')
+    # GG_FRIENDLYFIRE
+    elif cvarName == 'gg_friendlyfire':
+        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_friendlyfire'):
+            es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
+        elif newValue == '0':
+            es.unload('gungame/included_addons/gg_friendlyfire')
     # All other included addons
     elif cvarName in list_includedAddonsDir:
         if newValue == '1':
             es.server.queuecmd('es_load gungame/included_addons/%s' %cvarName)
         elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\%s' %cvarName):
             es.unload('gungame/included_addons/%s' %cvarName)
+            
 
-    '''
-    # GG_UNL_GRENADE
-    if cvarName == 'gg_unl_grenades':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_unl_grenade')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_unl_grenades' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_unl_grenade')
-    # GG_EARN_NADE
-    elif cvarName == 'gg_earn_grenades':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_earn_nade')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_earn_nade' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_earn_nade')
-    # GG_NADE_BONUS
-    if cvarName == 'gg_nade_bonus':
-        if newValue != '0' and newValue != 'knife' and newValue in list_allWeapons:
-            es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_nade_bonus' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_nade_bonus')
-    # GG_TURBO
-    elif cvarName == 'gg_turbo':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_turbo')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_turbo' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_turbo')
-    # GG_KNIFE_ELITE
-    elif cvarName == 'gg_knife_elite':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_knife_elite')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_knife_elite' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_knife_elite')
-    # GG_DEAD_STRIP
-    elif cvarName == 'gg_dead_strip':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_dead_strip')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_dead_strip' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_dead_strip')
-    # GG_KNIFE_PRO
-    elif cvarName == 'gg_knife_pro':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_knife_pro')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_knife_pro' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_knife_pro')
-    # GG_HANDICAP
-    elif cvarName == 'gg_handicap':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_handicap')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_handicap' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_handicap')
-    # GG_MAP_VOTE
-    elif cvarName == 'gg_map_vote':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_map_vote')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_map_vote' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_map_vote')
-    # GG_SPAWN_PROTECTION
-    elif cvarName == 'gg_spawn_protect':
-        if int(newValue) and 'gungame\included_addons\gg_spawn_protect' not in dict_gungameRegisteredAddons:
-            es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_spawn_protect' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_spawn_protect')
-    # GG_TRIPLE_LEVEL
-    elif cvarName == 'gg_triple_on':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_triple_level')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_triple_level' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_triple_level')
-    # GG_FRIENDLYFIRE
-    elif cvarName == 'gg_auto_ff':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_friendlyfire' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_friendlyfire')
-    # GG_NOBLOCK
-    elif cvarName == 'gg_noblock_enable':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_noblock')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_noblock' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_noblock')
-    # GG_DEATHMATCH
-    elif cvarName == 'gg_deathmatch':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_deathmatch')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_deathmatch' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_deathmatch')
-    # GG_ELIMINATION
-    elif cvarName == 'gg_elimination':
-        if newValue == '1':
-            es.server.queuecmd('es_load gungame/included_addons/gg_elimination')
-        elif newValue == '0':
-            if 'gungame\included_addons\gg_elimination' in dict_gungameRegisteredAddons:
-                es.unload('gungame/included_addons/gg_elimination')
-'''
 # ===================================================================================================
 # ===================================================================================================
 #                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! END GAME EVENTS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 

@@ -56,7 +56,7 @@ def load():
     
     # Enable turbo mode, and remove all objectives
     gungame.setGunGameVar('gg_turbo', '1')
-    gungame.setGunGameVar('gg_map_obj', '3')
+    gungame.setGunGameVar('gg_map_obj', '0')
     
     # Register Dependencies
     gungame.registerDependency('gungame/included_addons/gg_turbo', 'gungame/included_addons/gg_deathmatch')
@@ -90,8 +90,8 @@ def gg_variable_changed(event_var):
     if event_var['cvarname'] == 'gg_deathmatch':
         addonOptions['enabled'] = int(gungame.getGunGameVar('gg_deathmatch'))
     
-    if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) < 3:
-        gungame.setGunGameVar('gg_map_obj', 3)
+    if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) > 0:
+        gungame.setGunGameVar('gg_map_obj', 0)
         es.msg('#lightgreen', 'WARNING: Map objectives must be removed while gg_deathmatch is enabled!')
     
     if event_var['cvarname'] == 'gg_turbo' and int(event_var['newvalue']) == 0:

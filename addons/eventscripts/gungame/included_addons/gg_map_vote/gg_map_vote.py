@@ -77,13 +77,13 @@ def load():
 
     # create commands
     if not es.exists('command','gg_vote_cancel'):
-        es.regcmd('gg_vote_cancel','gungame/included_addons/gg_map_vote/CancelVote','Cancels an active map vote.')
+        es.regcmd('gg_vote_cancel','gungame/included_addons/gg_map_vote/cancelVote','Cancels an active map vote.')
     if not es.exists('command','gg_vote_list'):
-        es.regcmd('gg_vote_list','gungame/included_addons/gg_map_vote/GetVoteList','Gets a list of maps in the upcoming vote.')
+        es.regcmd('gg_vote_list','gungame/included_addons/gg_map_vote/getVoteList','Gets a list of maps in the upcoming vote.')
     if not es.exists('command','gg_vote_shuffle'):
-        es.regcmd('gg_vote_shuffle','gungame/included_addons/gg_map_vote/ShuffleVoteList','Gets a new random set of maps for the upcoming vote.')
+        es.regcmd('gg_vote_shuffle','gungame/included_addons/gg_map_vote/shuffleVoteList','Gets a new random set of maps for the upcoming vote.')
     if not es.exists('command','gg_vote_start'):
-        es.regcmd('gg_vote_start','gungame/included_addons/gg_map_vote/VoteStart','Start a random map vote.')
+        es.regcmd('gg_vote_start','gungame/included_addons/gg_map_vote/voteStart','Start a random map vote.')
     
     # Set some globals
     gungame.getGlobal('voteActive', 0)
@@ -235,18 +235,16 @@ def VoteCountdown(repeatInfo):
     if voteTimer:
         hudhintText = 'Time Remaining: %d' % voteTimer
         for map in dict_playerChoice['votedMaps']:
-            print dict_playerChoice['votedMaps'][map]
             hudhintText += '\n%s (%d votes)' % (map, dict_playerChoice['votedMaps'][map])
         for userid in es.getUseridList():
             usermsg.hudhint(userid, hudhintText)
     else:
         voteResults()
         repeat.delete('voteCounter')
-        gungame.getGlobal('voteActive').set(0)
+        # gungame.getGlobal('voteActive').set(0)
         
     # Decrement timer
     voteTimer -= 1
-    
     
 def voteMenuSelect(userid, mapChoice, popupid):
     global dict_playerChoice
@@ -274,7 +272,7 @@ def voteMenuSelect(userid, mapChoice, popupid):
             dict_playerChoice['votedMaps'][mapChoice] += 1
             
         # Have got enough votes?
-        if dict_playerChoice['votedMaps'][mapChoice] >= dict_playerChoice['winningMapVotes']:
+        if dict_playerChoice['votedMaps'][mapChoice] > dict_playerChoice['winningMapVotes']:
             dict_playerChoice['winningMap'] = mapChoice
             dict_playerChoice['winningMapVotes'] = dict_playerChoice['votedMaps'][mapChoice]
             
@@ -306,7 +304,7 @@ def voteResults():
     es.cexec_all('play admin_plugin/actions/endofvote.mp3')
 
 # console command gg_vote_cancel
-def CancelVote():
+def cancelVote():
     global voteActive
     if voteActive:
         voteActive = 0
@@ -317,7 +315,7 @@ def CancelVote():
     else:
         echo('No active vote to cancel.')
 
-def GetVoteList():
+def getVoteList():
     global list_voteList
     
     if list_voteList != []:
@@ -331,7 +329,7 @@ def GetVoteList():
         echo('The vote list is empty.')
 
 # console command gg_vote_shuffle
-def ShuffleVoteList():
+def shuffleVoteList():
     global list_voteList
     global voteActive
     
@@ -346,7 +344,7 @@ def ShuffleVoteList():
         echo('Vote already in progress!')
 
 # console command gg_vote_start
-def VoteStart():
+def voteStart():
     global voteActive
     if not voteActive:
         if not popuplib.exists('voteMenu'):

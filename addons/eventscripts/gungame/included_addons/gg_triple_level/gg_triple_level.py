@@ -13,67 +13,76 @@ from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
-info.name     = "gg_triple_level Addon for GunGame: Python" 
-info.version  = "1.5.2008"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_triple_level" 
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisber"
+info.name     = 'gg_triple_level Addon for GunGame: Python' 
+info.version  = '1.5.2008'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45' 
+info.basename = 'gungame/included_addons/gg_triple_level' 
+info.author   = 'cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisber'
 
 # Dic for Triple Level
 
 def load():
-    # Register this addon with GunGame
-    gungame.registerAddon("gungame/included_addons/gg_triple_level", "GG Triple Level")
+	# Register this addon with GunGame
+	gungame.registerAddon('gungame/included_addons/gg_triple_level', 'GG Triple Level')
 
 def unload():
-    # Unregister this addon with GunGame
-    gungame.unregisterAddon("gungame/included_addons/gg_triple_level")
+	# Unregister this addon with GunGame
+	gungame.unregisterAddon('gungame/included_addons/gg_triple_level')
 
 def gg_levelup(event_var):
-    # If is it a Triple Level
-    tripler = gungame.getPlayer(event_var["userid"])
-    
-    if tripler.get("triple") == 3:
-        # Sound and Messages
-        es.emitsound("player", event_var["userid"], gungame.getGunGameVar("gg_sound_triple"), 1.0, 1.0)
-        announce('\4%s\1 triple levelled!' % event_var['name'])
-        es.centermsg("%s triple levelled!" % event_var["name"])
+	# If is it a Triple Level
+	userid = event_var['userid']
+	tripler = gungame.getPlayer(event_var['userid'])
+	tripler.set('triple', int(tripler.get('triple')) + 1)
+
+	if tripler.get('triple') == 3:
+		# Sound and Messages
+		es.emitsound('player', event_var['userid'], gungame.getGunGameVar('gg_sound_triple'), 1.0, 1.0)
+		announce('\4%s\1 triple levelled!' % event_var['name'])
+		es.centermsg('%s triple levelled!' % event_var['name'])
         
-        # Effect to player
-        es.give(event_var["userid"], "env_spark")
-        es.fire(event_var["userid"], "env_spark", "setparent", "!activator")
-        es.fire(event_var["userid"], "env_spark", "addoutput", "spawnflags 896")
-        es.fire(event_var["userid"], "env_spark", "addoutput", "angles -90 0 0")
-        es.fire(event_var["userid"], "env_spark", "addoutput", "magnitude 8")
-        es.fire(event_var["userid"], "env_spark", "addoutput", "traillength 3")
-        es.fire(event_var["userid"], "env_spark", "startspark")
+		# Effect to player
+		es.server.cmd('es_xgive %s env_spark' %userid)
+		es.server.cmd('es_xfire %s env_spark setparent !activator' %userid)
+		es.server.cmd('es_xfire %s env_spark addoutput \"spawnflags 896\"' %userid)
+		es.server.cmd('es_xfire %s env_spark addoutput \"angles -90 0 0\"' %userid)
+		es.server.cmd('es_xfire %s env_spark addoutput \"magnitude 8\"' %userid)
+		es.server.cmd('es_xfire %s env_spark addoutput \"traillength 3\"' %userid)
+		es.server.cmd('es_xfire %s env_spark startspark' %userid)
         
         # Speed
-        player = playerlib.getPlayer(event_var["userid"])
-        player.set("speed", 1.5)
+		player = playerlib.getPlayer(userid)
+		player.set('speed', 1.5)
         
         # Gravity (experimental)
-        es.give(event_var["userid"], "trigger_gravity")
-        es.fire(event_var["userid"], "trigger_gravity", "setparent", "!activator")
-        es.fire(event_var["userid"], "trigger_gravity", "addoutput", "gravity 0.55")
-        es.fire(event_var["userid"], "trigger_gravity", "enable")
-        
+		es.server.cmd('es_xgive %s trigger_gravity' %userid)
+		es.server.cmd('es_xfire %s trigger_gravity setparent !activator' %userid)
+		es.server.cmd('es_xfire %s trigger_gravity addoutput \"gravity 0.55\"' %userid)
+		es.server.cmd('es_xfire %s trigger_gravity enable' %userid)
+
+		# Reset the level counter to 0 since they just tripled
+		tripler.set('triple', 0)
+		
         # Stop Triple Level Bonus after 10 secs
-        gamethread.delayed(10, removetriple, event_var["userid"])
+        gamethread.delayed(10, removetriple, event_var['userid'])
+
+def player_death(event_var):
+	tripler = gungame.getPlayer(event_var['userid'])
+	tripler.set('triple', 0)
 
 def removetriple(userid):
     # Check if UserID exists
     # In the 10 secs the user maybe left
-    if es.exists("userid", userid):
+    if es.exists('userid', userid):
         # Stop Effect
-        es.fire(userid, "env_spark", "stopspark")
+		es.server.cmd('es_xfire %s env_spark stopspark' %userid)
         
         # Stop Speed
         player = playerlib.getPlayer(userid)
-        player.set("speed", 1)
+        player.set('speed', 1)
         
         # Stop Gravity (experimental)
-        es.fire(userid, "trigger_gravity", "Kill")
+		es.server.cmd('es_xfire %s trigger_gravity kill' %userid)
     else:
         # Echo debug message, the user left
         echo('Cannot remove triple bonus, the user left.')

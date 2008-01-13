@@ -49,6 +49,7 @@ def GetProfilerTime(storage):
 dict_afk = {}
 dict_gungame_core = {}
 dict_gungameVariables = {}
+dict_globals = {}
 list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
 list_secondaryWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven']
 list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
@@ -57,6 +58,37 @@ dict_reconnectingPlayers = {}
 dict_gungameWinners = {}
 dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
+
+# Class used in globals
+class globalVar:
+    def __init__(self, name, value):
+        # Initialize the variables
+        self.name = name
+        self.value = value
+        self.valueType = type(value)
+        
+    def set(self, value):
+        # Are the types the same?
+        if(type(value) != self.valueType):
+            raise VariableError, 'Cannot set global var, type of value differs from when it was initialized. (Expected Type: %s, Type: %s, Var: %s)' % (self.valueType, type(value), self.name)
+        
+        # Set the value
+        self.value = value
+    
+    def get(self):
+        return self.value
+    
+    def __int__(self):
+        return int(self.value)
+    
+    def __str__(self):
+        return str(self.value)
+    
+    def __bool__(self):
+        return bool(self.value)
+    
+    def __float__(self):
+        return float(self.value)
 
 # Class used in the dict_gungame_core
 class gungamePlayers:
@@ -830,6 +862,22 @@ def setGunGameVar(variableName, variableValue):
     else:
         # Oops, this variable doesn't exist in the GunGame Variables Dictionary
         raise VariableError, str(variableName) + ' is not a valid GunGame variable'
+    
+def getGlobal(variableName, variableValue=None):
+    # Does the variable exist?
+    if not dict_globals.has_key(variableName):
+        # Is there a value?
+        if variableValue == None:
+            raise ValueError, 'Cannot create global, no value. (Var: %s)' % variableName
+        
+        # Create a class
+        dict_globals[variableName] = globalVar(variableName, variableValue)
+        
+        # Return
+        return dict_globals[variableName]
+    else:
+        # Just return the class
+        return dict_globals[variableName]
         
 def giveWeapon(userid):
     if es.exists('userid', userid):

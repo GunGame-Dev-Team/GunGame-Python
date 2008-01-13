@@ -88,7 +88,7 @@ def player_death(event_var):
         return
     
     # Is the level difference higher than the limit?
-    if gungameAttackerLevel - gungameVictimLevel >= gg_knife_pro_limit:
+    if ((gungameAttackerLevel - gungameVictimLevel) >= gg_knife_pro_limit) and gg_knife_pro_limit != 0:
         tell(attacker, 'The level difference between you and the victim is higher than the set limit.')
         return
     

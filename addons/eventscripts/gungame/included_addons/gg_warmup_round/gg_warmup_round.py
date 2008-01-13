@@ -43,6 +43,9 @@ def load():
     global mp_freezetimeBackUp
     global warmupTime
     
+    # Set "isWarmup" global
+    gungame.getGlobal('isWarmup', 1)
+    
     # Cancel the delay to set PreventLevel for everyone to "0"
     gamethread.cancelDelayed('setPreventAll0')
     
@@ -96,6 +99,9 @@ def startTimer():
     # Create a repeat
     repeat.create('WarmupTimer', countDown)
     repeat.start('WarmupTimer', 1, 0)
+    
+    # Create timeleft global
+    gungame.getGlobal('warmupTimeLeft', warmupTime)
 
 def gg_variable_changed(event_var):
     # if the "gg_warmup_timer" is changed to 0, we need to unload this bad-boy
@@ -151,6 +157,9 @@ def countDown(repeatInfo):
             # Send a hudhint to userid with the remaining timeleft
             usermsg.hudhint(userid, 'Warmup round timer: %d' % warmupTime)
             
+            # Set timeleft global
+            gungame.getGlobal('warmupTimeLeft').set(warmupTime)
+            
             # Countdown 5 or less?
             if warmupTime <= 5:
                 es.cexec(userid, 'playgamesound hl1/fvox/beep.wav')
@@ -171,6 +180,8 @@ def countDown(repeatInfo):
         
         # Stop the timer
         repeat.stop('WarmupTimer')
+        
+        gungame.getGlobal('isWarmup').set(0)
         
         # Unload "gungame/included_addons/gg_warmup_round"
         es.unload('gungame/included_addons/gg_warmup_round')

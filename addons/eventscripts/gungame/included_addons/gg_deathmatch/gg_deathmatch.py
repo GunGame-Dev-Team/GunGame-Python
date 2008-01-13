@@ -168,8 +168,8 @@ def player_death(event_var):
     respawn(event_var['userid'])
 
 def RespawnCountdown(userid, repeatInfo):
-    # Is warmup round?
-    if gungame.getRegisteredAddons().has_key('gungame\\included_addons\\gg_warmup_round'):
+    # Is it in warmup?
+    if int(gungame.getGlobal('isWarmup')) or int(gungame.getGlobal('voteActive')):
         return
     
     # Is the counter 1?

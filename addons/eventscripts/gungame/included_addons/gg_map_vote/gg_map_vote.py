@@ -10,8 +10,10 @@ import es
 import os
 import random
 import popuplib
+import playerlib
 import usermsg
 import repeat
+
 from gungame import gungame
 
 # Register this addon with EventScripts
@@ -82,7 +84,10 @@ def load():
         es.regcmd('gg_vote_shuffle','gungame/included_addons/gg_map_vote/ShuffleVoteList','Gets a new random set of maps for the upcoming vote.')
     if not es.exists('command','gg_vote_start'):
         es.regcmd('gg_vote_start','gungame/included_addons/gg_map_vote/VoteStart','Start a random map vote.')
-        
+    
+    # Set some globals
+    gungame.getGlobal('voteActive', 0)
+    
     initiateVote()
 
 def unload():
@@ -218,7 +223,10 @@ def startVote():
     voteTimer = dict_mapVoteVars['gg_vote_time']
     repeat.create('voteCounter', VoteCountdown)
     repeat.start('voteCounter', 1, 0)
+    
+    # Set the active vars
     voteActive = 1
+    gungame.getGlobal('voteActive').set(1)
 
 def VoteCountdown(repeatInfo):
     global dict_playerChoice
@@ -234,6 +242,7 @@ def VoteCountdown(repeatInfo):
     else:
         voteResults()
         repeat.delete('voteCounter')
+        gungame.getGlobal('voteActive').set(0)
         
     # Decrement timer
     voteTimer -= 1
@@ -251,19 +260,25 @@ def voteMenuSelect(userid, mapChoice, popupid):
     if mapChoice in list_voteList:
         # Announce players choice if enabled
         if dict_mapVoteVars['gg_show_player_vote']:
+            # Get player name
             name = es.getplayername(userid)
             
             # Announce to the world
             for userid in es.getUseridList():
                 usermsg.saytext2(userid, index, '\3%s\1 voted for \4%s' % (name, mapChoice))
-        # register votes
+        
+        # Register the vote
         if mapChoice not in dict_playerChoice['votedMaps']:
             dict_playerChoice['votedMaps'][mapChoice] = 1
         else:
             dict_playerChoice['votedMaps'][mapChoice] += 1
-        if dict_playerChoice['votedMaps'][mapChoice] > dict_playerChoice['winningMapVotes']:
+            
+        # Have got enough votes?
+        if dict_playerChoice['votedMaps'][mapChoice] >= dict_playerChoice['winningMapVotes']:
             dict_playerChoice['winningMap'] = mapChoice
             dict_playerChoice['winningMapVotes'] = dict_playerChoice['votedMaps'][mapChoice]
+            
+        # Increment total votes
         dict_playerChoice['totalVotes'] += 1
 
 def voteResults():
@@ -282,11 +297,12 @@ def voteResults():
         announce('\4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_playerChoice['winningMap'], dict_playerChoice['winningMapVotes'], dict_playerChoice['totalVotes']))
         
         for userid in es.getUseridList():
+# console command gg_vote_list
             usermsg.hudhint(userid, 'Nextmap:\n%s' % dict_playerChoice['winningMap'])
     else:
         announce('The vote was cancelled, no votes were cast.')
 
-    # Play end of vote sound
+    # Play end of vote soundHey
     es.cexec_all('play admin_plugin/actions/endofvote.mp3')
 
 # console command gg_vote_cancel
@@ -301,7 +317,6 @@ def CancelVote():
     else:
         echo('No active vote to cancel.')
 
-# console command gg_vote_list
 def GetVoteList():
     global list_voteList
     

@@ -86,7 +86,7 @@ def load():
         es.regcmd('gg_vote_start','gungame/included_addons/gg_map_vote/voteStart','Start a random map vote.')
     
     # Set some globals
-    gungame.getGlobal('voteActive', 0)
+    gungame.setGlobal('voteActive', 0)
     
     initiateVote()
 
@@ -226,7 +226,7 @@ def startVote():
     
     # Set the active vars
     voteActive = 1
-    gungame.getGlobal('voteActive').set(1)
+    gungame.setGlobal('voteActive', 1)
 
 def VoteCountdown(repeatInfo):
     global dict_playerChoice
@@ -241,7 +241,6 @@ def VoteCountdown(repeatInfo):
     else:
         voteResults()
         repeat.delete('voteCounter')
-        # gungame.getGlobal('voteActive').set(0)
         
     # Decrement timer
     voteTimer -= 1
@@ -283,7 +282,10 @@ def voteResults():
     global dict_playerChoice
     global list_voteList
     global voteActive
+    
+    #set active vars
     voteActive = 0
+    gungame.setGlobal('voteActive', 0)
     list_voteList = []
     
     # Close and delete popup

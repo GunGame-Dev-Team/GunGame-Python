@@ -59,37 +59,6 @@ dict_gungameWinners = {}
 dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
 
-# Class used in globals
-class globalVar:
-    def __init__(self, name, value):
-        # Initialize the variables
-        self.name = name
-        self.value = value
-        self.valueType = type(value)
-        
-    def set(self, value):
-        # Are the types the same?
-        if(type(value) != self.valueType):
-            raise VariableError, 'Cannot set global var, type of value differs from when it was initialized. (Expected Type: %s, Type: %s, Var: %s)' % (self.valueType, type(value), self.name)
-        
-        # Set the value
-        self.value = value
-    
-    def get(self):
-        return self.value
-    
-    def __int__(self):
-        return int(self.value)
-    
-    def __str__(self):
-        return str(self.value)
-    
-    def __bool__(self):
-        return bool(self.value)
-    
-    def __float__(self):
-        return float(self.value)
-
 # Class used in the dict_gungame_core
 class gungamePlayers:
     "Class used to store core GunGame information"
@@ -862,23 +831,19 @@ def setGunGameVar(variableName, variableValue):
     else:
         # Oops, this variable doesn't exist in the GunGame Variables Dictionary
         raise VariableError, str(variableName) + ' is not a valid GunGame variable'
-    
-def getGlobal(variableName, variableValue=None):
+
+def setGlobal(variableName, variableValue):
+    global dict_globals
+    dict_globals[variableName] = str(variableValue)
+
+def getGlobal(variableName):
+    global dict_globals
     # Does the variable exist?
-    if not dict_globals.has_key(variableName):
-        # Is there a value?
-        if variableValue == None:
-            raise ValueError, 'Cannot create global, no value. (Var: %s)' % variableName
-        
-        # Create a class
-        dict_globals[variableName] = globalVar(variableName, variableValue)
-        
-        # Return
+    if dict_globals.has_key(variableName):
         return dict_globals[variableName]
     else:
-        # Just return the class
-        return dict_globals[variableName]
-        
+        return '0'
+
 def giveWeapon(userid):
     if es.exists('userid', userid):
         if int(es.getplayerteam(userid)) > 1:
@@ -973,7 +938,6 @@ def registerAddon(addonName, menuText):
 
 def unregisterAddon(addonName):
     global dict_gungameRegisteredAddons
-    global dict_gungameRegisteredDependencies
     addonName = addonName.replace('/', '\\')
     # Make sure that this addon has been registered as a GunGame Addon
     if dict_gungameRegisteredAddons.has_key(addonName):
@@ -984,10 +948,6 @@ def unregisterAddon(addonName):
     else:
         # Send an error message to console stating that the addon has not been previously registered with GunGame
         es.dbgmsg(0, '[GunGame] Addon Unregistration Failed. \'%s\' has not been previously registered.' %addonName)
-    if dict_gungameRegisteredDependencies.has_key(addonName):
-        for dependentAddon in dict_gungameRegisteredDependencies[addonName]:
-            es.dbgmsg(0, '[GunGame] Dependency Addon Unloaded. \'%s\' cannot fuction without %s.' %(dependentAddon, addonName))
-            es.unload(dependentAddon.replace('\\', '/'))
         
 def getRegisteredAddons():
     global dict_gungameRegisteredAddons

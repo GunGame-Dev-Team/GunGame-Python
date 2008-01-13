@@ -44,7 +44,7 @@ def load():
     global warmupTime
     
     # Set "isWarmup" global
-    gungame.getGlobal('isWarmup', 1)
+    gungame.setGlobal('isWarmup', 1)
     
     # Cancel the delay to set PreventLevel for everyone to "0"
     gamethread.cancelDelayed('setPreventAll0')
@@ -101,7 +101,7 @@ def startTimer():
     repeat.start('WarmupTimer', 1, 0)
     
     # Create timeleft global
-    gungame.getGlobal('warmupTimeLeft', warmupTime)
+    gungame.setGlobal('warmupTimeLeft', warmupTime)
 
 def gg_variable_changed(event_var):
     # if the "gg_warmup_timer" is changed to 0, we need to unload this bad-boy
@@ -158,7 +158,7 @@ def countDown(repeatInfo):
             usermsg.hudhint(userid, 'Warmup round timer: %d' % warmupTime)
             
             # Set timeleft global
-            gungame.getGlobal('warmupTimeLeft').set(warmupTime)
+            gungame.setGlobal('warmupTimeLeft', warmupTime)
             
             # Countdown 5 or less?
             if warmupTime <= 5:
@@ -181,7 +181,7 @@ def countDown(repeatInfo):
         # Stop the timer
         repeat.stop('WarmupTimer')
         
-        gungame.getGlobal('isWarmup').set(0)
+        gungame.setGlobal('isWarmup', 0)
         
         # Unload "gungame/included_addons/gg_warmup_round"
         es.unload('gungame/included_addons/gg_warmup_round')

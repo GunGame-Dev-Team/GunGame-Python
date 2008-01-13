@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_map_vote
-Version #:      1.0.27
+Version #:      1.0.50
 Description:    Adds map voting capabilities to gungame.
 '''
 
@@ -19,7 +19,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_map_vote Addon for GunGame: Python" 
-info.version  = "1.0.27"
+info.version  = "1.0.50"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_map_vote" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"

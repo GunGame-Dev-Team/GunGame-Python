@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_map_vote
-Version #:      1.0.50
+Version #:      1.0.56
 Description:    Adds map voting capabilities to gungame.
 '''
 
@@ -19,30 +19,24 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_map_vote Addon for GunGame: Python" 
-info.version  = "1.0.50"
+info.version  = "1.0.56"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_map_vote" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
-
 
 # Dictionary of MapVote variables
 dict_mapVoteVars = {}
 
 # custom map list for the end map vote
 dict_mapVoteVars['gg_map_list_file'] = gungame.getGunGameVar('gg_map_list_file')
-
 # file to use for the map vote
 dict_mapVoteVars['gg_map_list_source'] = int(gungame.getGunGameVar('gg_map_list_source'))
-
 # number of maps in the end of map vote
 dict_mapVoteVars['gg_map_vote_size'] = int(gungame.getGunGameVar('gg_map_vote_size'))
-
 # number of recently played maps excluded from vote
 dict_mapVoteVars['gg_dont_show_last_maps'] = int(gungame.getGunGameVar('gg_dont_show_last_maps'))
-
 # the amount of time in seconds aloud for the vote
 dict_mapVoteVars['gg_vote_time'] = int(gungame.getGunGameVar('gg_vote_time'))
-
 # shows player name and vote selection in the player chat
 dict_mapVoteVars['gg_show_player_vote'] = int(gungame.getGunGameVar('gg_show_player_vote'))
 
@@ -58,18 +52,17 @@ dict_mapListFile[3] = dict_mapVoteVars['gg_map_list_file']
 
 # list of recent maps - maps here are for testing only
 list_recentMaps = []
-
 # dictionary of Player Vote Choices
 dict_playerChoice = {}
-
 # list of potential vote maps
 list_mapList = []
-
 # list of Maps being voted for
 list_voteList = []
-
 # check to see if vote is active
 voteActive = 0
+# get old eventscripts_maphandler value
+oldEventscriptsMaphandler = es.ServerVar('eventscripts_maphandler')
+es.ServerVar('eventscripts_maphandler').set(1)
 
 def load():
     # register this addon with GunGame
@@ -91,8 +84,13 @@ def load():
     initiateVote()
 
 def unload():
+    global oldEventscriptsMaphandler
+    
     # unregister this addon with GunGame
     gungame.unregisterAddon('gungame/included_addons/gg_map_vote')
+        
+    # Restore original value for eventscripts_maphandler
+    es.ServerVar('eventscripts_maphandler').set(oldEventscriptsMaphandler)
     
     # delete popup
     if popuplib.exists('voteMenu'):
@@ -294,15 +292,16 @@ def voteResults():
     
     # Announce winning map
     if dict_playerChoice['totalVotes']:
+        #set eventscripts_nextmapoverride to the winning map
+        es.ServerVar('eventscripts_nextmapoverride').set(dict_playerChoice['winningMap'])
         announce('\4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_playerChoice['winningMap'], dict_playerChoice['winningMapVotes'], dict_playerChoice['totalVotes']))
         
         for userid in es.getUseridList():
-# console command gg_vote_list
             usermsg.hudhint(userid, 'Nextmap:\n%s' % dict_playerChoice['winningMap'])
     else:
         announce('The vote was cancelled, no votes were cast.')
 
-    # Play end of vote soundHey
+    # Play end of vote sound
     es.cexec_all('play admin_plugin/actions/endofvote.mp3')
 
 # console command gg_vote_cancel
@@ -317,6 +316,7 @@ def cancelVote():
     else:
         echo('No active vote to cancel.')
 
+# console command gg_vote_list
 def getVoteList():
     global list_voteList
     

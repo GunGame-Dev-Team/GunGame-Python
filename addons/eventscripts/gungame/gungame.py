@@ -5,13 +5,12 @@ import gamethread
 import gungame
 import playerlib
 import usermsg
-import repeat
 import popuplib
 import cPickle
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.50"
+gungameVersion = "1.0.56"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -483,10 +482,13 @@ class Player:
         # GET ISPLAYERAFK
         # myPlayer.get('isplayerafk')
         if param == 'isplayerafk':
-            list_playerlocation = es.getplayerlocation(self.userid)
-            afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[1]'))
-            if int(afk_math_total) == int(dict_afk[self.userid].int_afk_math_total):
-                return True
+            if not es.isbot(self.userid):
+                list_playerlocation = es.getplayerlocation(self.userid)
+                afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[1]'))
+                if int(afk_math_total) == int(dict_afk[self.userid].int_afk_math_total):
+                    return True
+                else:
+                    return False
             else:
                 return False
         
@@ -1137,16 +1139,6 @@ def registerPlayers():
     
     # Set up a custom variable for tracking the leader level in dict_gungameVariables
     dict_gungameVariables['oldleaderlevel'] = 1
-    
-    # BEGIN REGISTRATION OF ACTIVE PLAYERS IN THE AFK DICTIONARY
-    # -------------------------------------------------------------------------------------------------
-    for userid in es.getUseridList():
-        userid = int(userid)
-        if not dict_afk.has_key(userid):
-            dict_afk[userid] = afkPlayers()
-            gamethread.delayed(1, update_afk_dict, userid)
-    # ----------------------------------------------------------------------------------------------
-    # END REGISTRATION OF ACTIVE PLAYERS IN THE AFK DICTIONARY
 
     # BEGIN PLAYER SETUP CODE
     # ---------------------------------------
@@ -1155,8 +1147,9 @@ def registerPlayers():
         steamid = playerlib.uniqueid(userid, 1)
         # BEGIN AFK CODE
         # ------------------------
-        if not dict_afk.has_key(userid):
+        if not dict_afk.has_key(userid) and not es.isbot(userid):
             dict_afk[userid] = afkPlayers()
+            gamethread.delayed(1, update_afk_dict, userid)
         # ---------------------
         # END AFK CODE
         
@@ -1377,13 +1370,14 @@ def load():
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Load the "../cstrike/cfg/gungame/gg_en_config.cfg"
-    configPath = os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg'
-    loadConfig(configPath)
+    loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg')
     StopProfiling(g_Prof)
     
     # Load the "../cstrike/cfg/gungame/gg_default_addons.cfg"
-    configPath = os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg'
-    loadConfig(configPath)
+    loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg')
+    
+    # Load the "../cstrike/cfg/gungame/gg_map_vote.cfg"
+    gungame.loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_map_vote.cfg')
     
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/included_addons" folder
     list_includedAddonsDir = []
@@ -1531,9 +1525,6 @@ def load():
     
     # Set up a custom variable for tracking the leader level in dict_gungameVariables
     dict_gungameVariables['oldleaderlevel'] = 1
-    
-    # Set the value of "gg_vote_trigger" to be the level of what we want to trigger event "gg_vote"
-    # setGunGameVar('gg_vote_trigger', (getTotalLevels() - int(getGunGameVar('gg_vote_trigger')))) 
 
     # If there is a current map listed, then the admin has loaded GunGame mid-round/mid-map
     if str(es.ServerVar('eventscripts_currentmap')) != '':
@@ -1619,7 +1610,7 @@ def round_start(event_var):
     # Loop through all weapons
     for weapon in list_allWeapons:
         # Make sure that the admin doesn't want the weapon left on the map
-        if not list_stripExceptions.count(weapon):
+        if weapon not in list_stripExceptions:
             # Remove the weapon from the map
             es.server.cmd('es_xfire %d weapon_%s kill' %(userid, weapon))
     
@@ -1706,7 +1697,7 @@ def player_activate(event_var):
     steamid = playerlib.uniqueid(userid, 1)
     # BEGIN AFK CODE
     # ------------------------
-    if not dict_afk.has_key(userid):
+    if not dict_afk.has_key(userid) and not es.isbot(userid):
         dict_afk[userid] = afkPlayers()
     # ---------------------
     # END AFK CODE
@@ -1754,7 +1745,7 @@ def player_disconnect(event_var):
     
     # BEGIN AFK CODE
     # ------------------------
-    if dict_afk.has_key(userid):
+    if dict_afk.has_key(userid) and not es.isbot(userid):
         del dict_afk[userid]
     # ---------------------
     # END AFK CODE
@@ -1856,9 +1847,10 @@ def player_spawn(event_var):
 def player_jump(event_var):
     global dict_afk
     userid = int(event_var['userid'])
-    
-    # Here, we will make sure that the player isn't counted as AFK
-    dict_afk[userid].int_afk_math_total = 1
+    # check if player is a bot
+    if not es.isbot(userid):
+        # Here, we will make sure that the player isn't counted as AFK
+        dict_afk[userid].int_afk_math_total = 1
 
 def player_death(event_var):
     StartProfiling(g_Prof)
@@ -2198,6 +2190,8 @@ def unload():
 
 def gg_vote(event_var):
     setGunGameVar('gungame_voting_started', True)
+    if getGunGameVar('gg_map_vote') == '2':
+        es.server.cmd('ma_voterandom end %s' %getGunGameVar('gg_map_vote_size'))
 
 def gg_win(event_var):
     global dict_gungameWinners
@@ -2256,8 +2250,14 @@ def gg_variable_changed(event_var):
     newValue = event_var['newvalue']
     oldValue = event_var['oldvalue']
     
+    # GG_MAPVOTE
+    if cvarName == 'gg_map_vote':
+        if newValue == '1' and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_map_vote'):
+            es.server.queuecmd('es_load gungame/included_addons/gg_map_vote')
+        elif newValue != '1' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_map_vote'):
+            es.unload('gungame/included_addons/gg_map_vote')
     # GG_NADE_BONUS
-    if cvarName == 'gg_nade_bonus':
+    elif cvarName == 'gg_nade_bonus':
         if newValue != '0' and newValue != 'knife' and newValue in list_allWeapons:
             es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
         elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_nade_bonus'):
@@ -2304,8 +2304,10 @@ def getPlayer(userid):
 # -----------------------------------------------------------------------------------------------------
 def update_afk_dict(userid):
     global dict_afk
-    list_playerlocation = es.getplayerlocation(userid)
-    afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[1]'))
-    dict_afk[userid].int_afk_math_total = int(afk_math_total)
+    # check if player is a bot
+    if not es.isbot(userid):
+        list_playerlocation = es.getplayerlocation(userid)
+        afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[1]'))
+        dict_afk[userid].int_afk_math_total = int(afk_math_total)
 # --------------------------------------------------------------------------------------------------
 # END CODE TO UPDATE PLAYER LOCATION INTO THE AFK DICTIONARY

@@ -438,11 +438,11 @@ class Player:
         # myPlayer.set('afkrounds', 2)
         if param == 'triple':
             value1 = int(value1)
-            if value1 > 0:
+            if value1 >= 0:
                 if dict_gungame_core.has_key(self.userid):
                     dict_gungame_core[self.userid].int_triple_level = value1
             else:
-                raise TripleValueError, 'Triple Level value must be greater than 0'
+                raise TripleValueError, 'Triple Level value must be equal to or greater than 0'
         
         # SET MULTIKILL
         # myPlayer.set('multikill', 3)
@@ -846,11 +846,13 @@ def getGlobal(variableName):
 
 def giveWeapon(userid):
     if es.exists('userid', userid):
-        if int(es.getplayerteam(userid)) > 1:
-            gungamePlayer = gungame.getPlayer(userid)
-            es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' %(userid, gungamePlayer.get('weapon')))
-        else:
-            raise UseridError, str(userid) + ' is an invalid userid'
+        gungamePlayer = gungame.getPlayer(userid)
+        if int(es.getplayerteam(userid)) > 1 and not gungamePlayer.attributes['isdead']:
+            playerWeapon = gungamePlayer.get('weapon')
+            if playerWeapon != 'knife':
+                es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' %(userid, playerWeapon))
+    else:
+        raise UseridError, str(userid) + ' is an invalid userid'
 
 def setWeapons(weaponOrder):
     #gungame.setWeapons(string)
@@ -948,7 +950,15 @@ def unregisterAddon(addonName):
     else:
         # Send an error message to console stating that the addon has not been previously registered with GunGame
         es.dbgmsg(0, '[GunGame] Addon Unregistration Failed. \'%s\' has not been previously registered.' %addonName)
-        
+
+def checkRegisteredAddon(addonName):
+    global dict_gungameRegisteredAddons
+    addonName = addonName.replace('/', '\\')
+    # Check if this addon is registered as a GunGame Addon
+    if dict_gungameRegisteredAddons.has_key(addonName):
+        return 1
+    return 0
+
 def getRegisteredAddons():
     global dict_gungameRegisteredAddons
     return dict_gungameRegisteredAddons
@@ -2256,13 +2266,13 @@ def gg_variable_changed(event_var):
     elif cvarName == 'gg_spawn_protect':
         if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_spawn_protect'):
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
-        elif newValue == '0':
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_spawn_protect'):
             es.unload('gungame/included_addons/gg_spawn_protect')
     # GG_FRIENDLYFIRE
     elif cvarName == 'gg_friendlyfire':
         if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_friendlyfire'):
             es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
-        elif newValue == '0':
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_friendlyfire'):
             es.unload('gungame/included_addons/gg_friendlyfire')
     # All other included addons
     elif cvarName in list_includedAddonsDir:

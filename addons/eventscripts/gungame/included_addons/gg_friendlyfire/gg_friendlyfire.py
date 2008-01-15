@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_friendlyfire
-Version #:      1.0.51
+Version #:      1.15.2008
 Description:    Friendlyfire will activate when the last level is reached
 '''
 
@@ -13,7 +13,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_friendlyfire Addon for GunGame: Python" 
-info.version  = "1.0.51"
+info.version  = "1.15.2008"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_friendlyfire" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisber"
@@ -28,13 +28,13 @@ def load():
     # Set mp_friendlyfire to 0
     es.forcevalue("mp_friendlyfire", 0)
 
-def round_start(event_var):
-    # Set mp_friendlyfire to 0
-    es.forcevalue("mp_friendlyfire", 0)
-
 def unload():
     # Unregister this addon with GunGame
     gungame.unregisterAddon("gungame/included_addons/gg_friendlyfire")
+
+def round_start(event_var):
+    # Set mp_friendlyfire to 0
+    es.forcevalue("mp_friendlyfire", 0)
 
 def gg_levelup(event_var):
     # Delay because gungame core is not fast enough
@@ -47,14 +47,14 @@ def checkff():
         if int(es.ServerVar("mp_friendlyfire")) == 0:
             # Set FF to 1; Message and Sound
             es.forcevalue("mp_friendlyfire", 1)
-            announce('Friendly fire is now on. Watch your fire.')
+            announce("Friendly fire is now on. Watch your fire.")
             es.cexec_all("play npc/roller/mine/rmine_tossed1.wav")
 
 def announce(message):
-    es.msg('#multi', '\4[GG:Friendly Fire]\1 %s' % message)
+    es.msg("#multi", "\4[GG:Friendly Fire]\1 %s" % message)
    
 def tell(userid, message):
-    es.tell(userid, '#multi', '\4[GG:Friendly Fire]\1 %s' % message)
+    es.tell(userid, "#multi", "\4[GG:Friendly Fire]\1 %s" % message)
 
 def echo(message):
-    es.dbgmsg(0, '[GG:Friendly Fire] %s' % message)
+    es.dbgmsg(0, "[GG:Friendly Fire] %s" % message)

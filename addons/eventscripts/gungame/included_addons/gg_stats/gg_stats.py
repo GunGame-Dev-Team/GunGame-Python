@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_stats
-Version #:      1.7.2008
+Version #:      1.15.2008
 Description:    This is an addon only for HLStatsX Users. This addon allows HLStatsX to read out the stats!
 '''
 
@@ -25,6 +25,12 @@ def unload():
     # Unregister this addon with GunGame
     gungame.unregisterAddon("gungame/included_addons/gg_stats")
 
+def cteam(team):
+    if team == 2:
+        return "TERRORIST"
+    
+    return "CT"
+
 def escs(string):
     # Escape string
     string = string.replace(";", "\;")
@@ -39,40 +45,13 @@ def escs(string):
     return string
 
 def gg_levelup(event_var):
-    # Set team to None
-    team = None
-    
-    # Get team
-    if event_var["team"] == 2:
-        team = "CT"
-    else:
-        team = "TERRORIST"
-    
     # Publish to server
-    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\levelup" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), team))
+    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\levelup" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))
 
 def gg_leveldown(event_var):
-    # Set team to None
-    team = None
-    
-    # Get team
-    if event_var["team"] == 2:
-        team = "CT"
-    else:
-        team = "TERRORIST"
-    
     # Publish to server
-    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\leveldown" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), team))
+    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\leveldown" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))
 
 def gg_win(event_var):
-    # Set team to None
-    team = None
-    
-    # Get team
-    if event_var["team"] == 2:
-        team = "CT"
-    else:
-        team = "TERRORIST"
-    
     # Publish to server
-    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\win" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), team))
+    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\win" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))

@@ -1,6 +1,6 @@
 //=========== (C) Copyright 2007 GunGame 4 All rights reserved. ===========
 //
-// Events triggered by GunGame mod version 1.0.30
+// Events triggered by GunGame mod version 1.0.58
 //
 // No spaces in event names, max length 32
 // All strings are case sensitive
@@ -27,6 +27,7 @@
 		"name"		"string"	// The name of the player that levelled up
 		"victim"	"short"		// The userid of victim
 		"victimname" "string"	// The victim's name
+        "weapon"    "string"    // The attackers weapon
 	}
 	"gg_leveldown"
 	{

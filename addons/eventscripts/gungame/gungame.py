@@ -10,7 +10,7 @@ import cPickle
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.56"
+gungameVersion = "1.0.58"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -1020,6 +1020,15 @@ def checkDependency(dependencyName):
     else:
         return 0
 
+def getAddonDependencyList(dependencyName):
+    global dict_gungameRegisteredDependencies
+    dependencyName = dependencyName.replace('/','\\')
+    dependencyList = []
+    if dict_gungameRegisteredDependencies.has_key(dependencyName):
+        for addon in dict_gungameRegisteredDependencies[dependencyName]:
+            dependencyList.append(addon)
+    return dependencyList
+
 def getRegisteredDependencies():
     global dict_gungameRegisteredDependencies
     return dict_gungameRegisteredDependencies
@@ -1046,7 +1055,7 @@ def logWeaponOrder(text, weaponOrderPath):
             es.dbgmsg(0, list_weaponOrderErrors.pop())
         es.dbgmsg(0, '')
 
-def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None):
+def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
     # BEGIN THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_LEVELUP"
     # -----------------------------------------------------------------------------------------------------------
     es.event('initialize', 'gg_levelup')
@@ -1066,6 +1075,8 @@ def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam,
     es.event('setint', 'gg_levelup', 'victim', victimUserid)
     # The victim's name
     es.event('setstring', 'gg_levelup', 'victimname', victimName)
+    # The attackers weapon
+    es.event('setstring', 'gg_levelup', 'weapon', weapon)
     # Fire the "GG_LEVELUP" event
     es.event('fire', 'gg_levelup')
     # --------------------------------------------------------------------------------------------------------

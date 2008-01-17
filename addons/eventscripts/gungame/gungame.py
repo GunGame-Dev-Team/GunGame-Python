@@ -10,7 +10,7 @@ import cPickle
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.58"
+gungameVersion = "1.0.59"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -1562,6 +1562,9 @@ def load():
     StopProfiling(g_Prof)
     #es.msg("Load benchmark: %f seconds" % GetProfilerTime(g_Prof))
     
+    # Load gg_sounds
+    es.load('gungame/included_addons/gg_sounds')
+    
     # Fire gg_load event
     es.event('initialize','gg_load')
     es.event('fire','gg_load')
@@ -1889,8 +1892,6 @@ def player_death(event_var):
                                 gungameAttacker.set('level', levelUpNewLevel)
                                 # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
                                 triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
-                                #TEMP
-                                es.playsound(attacker, 'ambient/misc/brass_bell_f.wav', 1.0)
                             else:
                                 attackerMultiKillCount = gungameAttacker.get('multikill') + 1
                                 if attackerMultiKillCount == int(getGunGameVar('gg_multikill')):
@@ -1898,8 +1899,6 @@ def player_death(event_var):
                                     levelUpNewLevel = levelUpOldLevel + 1
                                     # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
                                     triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
-                                    #TEMP
-                                    es.playsound(attacker, 'ambient/misc/brass_bell_f.wav', 1.0)
                                 else:
                                     usermsg.hudhint(userid, 'Kills this level: %d of %d' %(attackerMultiKillCount, int(getGunGameVar('gg_multikill'))))
                                     gungameAttacker.set('multikill', attackerMultiKillCount)
@@ -1909,8 +1908,6 @@ def player_death(event_var):
                             levelUpNewLevel = levelUpOldLevel + 1
                             # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
                             triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
-                            #TEMP
-                            es.playsound(attacker, 'ambient/misc/brass_bell_f.wav', 1.0)
                 # The victim was AFK
                 else:
                     usermsg.hudhint(attacker, '%s was AFK\nYour kill did not count!!!' %event_var['es_username'])
@@ -2146,7 +2143,7 @@ def unload():
     for addonName in dict_gungameRegisteredAddons:
         es.unload(addonName.replace('\\', '/'))
         
-    # Disable Buyzones
+    # Enable Buyzones
     userid = es.getuserid()
     es.server.cmd('es_xfire %d func_buyzone Enable' %userid)
     
@@ -2194,7 +2191,9 @@ def unload():
         es.unregsaycmd('!leaders')
     if es.exists('clientcommand', '!leaders'):
         es.unregclientcmd('!leaders')
-    
+        
+    # Unload gg_sounds
+    es.unload('gungame/included_addons/gg_sounds')
     # Fire gg_unload event
     es.event('initialize','gg_unload')
     es.event('fire','gg_unload')
@@ -2233,8 +2232,6 @@ def gg_win(event_var):
     es.centermsg('%s won!' %playerName)
     gamethread.delayed(2, es.centermsg, ('%s won!' %playerName))
     gamethread.delayed(4, es.centermsg, ('%s won!' %playerName))
-    
-    es.cexec_all('playgamesound music/HL2_song15.mp3')
     
     if int(getGunGameVar('gg_save_winners')) > 0:
         # See if the player has won before

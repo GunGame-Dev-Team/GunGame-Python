@@ -8,6 +8,7 @@ Description:    When a player joins they are given the average level.
 
 import es
 from gungame import gungame
+from gungame.included_addons.gg_sounds import gg_sounds as gg_sound
 import repeat
 import playerlib
 
@@ -71,6 +72,8 @@ def handicapUpdate(repeatInfo):
         gungamePlayer = gungame.getPlayer(str(userid))
         if gungamePlayer.get('level') < averageLevel:
             gungamePlayer.set('level', averageLevel)
+            if gg_sound.gg_sounds['handicap'] != '0':
+                es.playsound(userid, gg_sound.gg_sounds['handicap'], 1.0)
     
     announce('All players are now level \4%d\1 or higher.' % averageLevel)
     

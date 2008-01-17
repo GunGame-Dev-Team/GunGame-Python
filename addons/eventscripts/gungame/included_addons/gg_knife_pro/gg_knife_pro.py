@@ -96,7 +96,7 @@ def player_death(event_var):
     gungame.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], gungameVictimLevel, gungameVictimLevel - 1, attacker, event_var['es_attackername'])
     
     # Trigger level up for the attacker
-    gungame.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerLevel + 1, userid, event_var['es_username'])
+    gungame.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerLevel + 1, userid, event_var['es_username'], 'knife')
     
     # Announce the level stealing
     levelStole(attacker, userid)

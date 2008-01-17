@@ -1,6 +1,22 @@
+'''
+(c)2008 by the GunGame Coding Team
+
+    Title:      gg_sounds
+Version #:      1.17.2008
+Description:    When a player makes 3 levels in one round he get faster and have an effect for 10 secs
+'''
+
 import es, os
 import ConfigParser
 from gungame import gungame
+
+# Register this addon with EventScripts
+info = es.AddonInfo() 
+info.name     = "gg_sounds Addon for GunGame: Python" 
+info.version  = "1.17.08"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
+info.basename = "gungame/included_addons/gg_knife_pro" 
+info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
 
 global gg_sounds
 gg_sounds = {}
@@ -55,7 +71,6 @@ def readSoundPack():
                 # The option is not valid...let's let them know
                 es.dbgmsg(0, 'The \'%s\' option is invalid ... skipping.' %option)
     addSounds()
-    es.msg(gg_sounds)
 
 def addSounds():
     for soundName in gg_sounds:
@@ -69,12 +84,10 @@ def gg_levelup(event_var):
             if gg_sounds['levelsteal'] != '0':
                 es.playsound(userid, gg_sounds['levelsteal'], 1.0)
         else:
-            es.msg(event_var['weapon'])
             es.playsound(userid, gg_sounds['levelup'], 1.0)
     else:
         if gg_sounds['levelup'] != '0':
             es.playsound(userid, gg_sounds['levelup'], 1.0)
-            es.msg(gg_sounds['levelup'])
     gungamePlayer = gungame.getPlayer(userid)
     playerWeapon = gungame.getLevelWeapon(gungamePlayer.get('level'))
     if playerWeapon == 'hegrenade':

@@ -1901,7 +1901,7 @@ def player_death(event_var):
                                     #TEMP
                                     es.playsound(attacker, 'ambient/misc/brass_bell_f.wav', 1.0)
                                 else:
-                                    usermsg.hudhint('Kills this level: %d of %d' %(attackerMultiKillCount, int(getGunGameVar('gg_multikill'))))
+                                    usermsg.hudhint(userid, 'Kills this level: %d of %d' %(attackerMultiKillCount, int(getGunGameVar('gg_multikill'))))
                                     gungameAttacker.set('multikill', attackerMultiKillCount)
                         # Multikill was not active
                         else:

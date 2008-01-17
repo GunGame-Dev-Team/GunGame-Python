@@ -51,9 +51,12 @@ dict_gungameVars['map_obj_originally'] = int(gungame.getGunGameVar('gg_map_obj')
 # Globals
 respawnCounters = {}
 lastSpawnPoint = {}
-spawnPoints = 0
+spawnPoints = {}
+mapName = 0
 
 def load():
+    global mapName
+    
     # Register this addon with GunGame
     gungame.registerAddon('gungame/included_addons/gg_deathmatch', 'GG Deathmatch')
     
@@ -83,19 +86,23 @@ def load():
             es.dbgmsg(0, '*************')
             gungame.setGunGameVar('gg_deathmatch', '0')
             
-    # create commands
+    # Create commands
     if not es.exists('command','dm_add'):
-        es.regcmd('dm_add','gungame/included_addons/gg_deathmatch/addSpawnPoint','Adds a spawnpoint to the current map.')
+        es.regclientcmd('dm_add','gungame/included_addons/gg_deathmatch/cmd_addSpawnPoint', 'Adds a spawnpoint at <userid>\'s location on the current map.')
     if not es.exists('command','dm_del_all'):
-        es.regcmd('dm_del_all','gungame/included_addons/gg_deathmatch/delAllSpawnPoints','Deletes all spawnpoint on the current map.')
+        es.regclientcmd('dm_del_all','gungame/included_addons/gg_deathmatch/cmd_delAllSpawnPoints', 'Deletes all spawnpoints on the current map.')
     if not es.exists('command','dm_show'):
-        es.regcmd('dm_show','gungame/included_addons/gg_deathmatch/showSpawnPoints','Shows all spawnpoint on the current map.')
-
+        es.regclientcmd('dm_show','gungame/included_addons/gg_deathmatch/cmd_showSpawnPoints', 'Shows all spawnpoints with a glow on the current map.')
+    if not es.exists('command','dm_print'):
+        es.regclientcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_printSpawnPoints', 'Displays spawnpoints for this map (including indexes) in the callers console.')
+    if not es.exists('command','dm_remove'):
+        es.regclientcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_delSpawnPoint', 'Removes a single spawnpoint.')
     
     # Has map loaded?
     currentMap = str(es.ServerVar('eventscripts_currentmap'))
     if currentMap != '0':
         # Get spawn points, map loaded
+        mapName = currentMap
         getSpawnPoints(currentMap)
     
     # Get a player list of dead players then spawn them
@@ -117,6 +124,8 @@ def unload():
     if not dict_gungameVars['dead_strip_originally']:
         if not gungame.checkDependency('gungame/included_addons/gg_dead_strip'):
             gungame.setGunGameVar('gg_dead_strip', 0)
+    
+    # Return vars
     gungame.setGunGameVar('gg_knife_elite', dict_gungameVars['knife_elite_originally'])
     gungame.setGunGameVar('gg_map_obj', dict_gungameVars['map_obj_originally'])
 
@@ -125,14 +134,16 @@ def gg_variable_changed(event_var):
     if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) > 0:
         gungame.setGunGameVar('gg_map_obj', 0)
         es.msg('#lightgreen', 'WARNING: Map objectives must be removed while gg_deathmatch is enabled!')
+    
     if event_var['cvarname'] == 'gg_turbo' and int(event_var['newvalue']) == 0:
         gungame.setGunGameVar('gg_turbo', 1)
         es.msg('#lightgreen', 'WARNING: gg_turbo cannot be unloaded while gg_deathmatch is enabled!')
+    
     if event_var['cvarname'] == 'gg_dead_strip' and int(event_var['newvalue']) == 0:
         gungame.setGunGameVar('gg_dead_strip', 1)
         es.msg('#lightgreen', 'WARNING: gg_dead_strip cannot be unloaded while gg_deathmatch is enabled!')
         
-    # watch for changes in deathmatch variables
+    # Watch for changes in deathmatch variables
     if dict_deathmatchVars.has_key(event_var['cvarname']):
         dict_deathmatchVars[event_var['cvarname']] = int(event_var['newvalue'])
         
@@ -143,10 +154,12 @@ def gg_variable_changed(event_var):
             # Unload gg_knife_elite
             gungame.setGunGameVar('gg_knife_elite', '0')
         else:
-            # gg_knife_elite has depencies, show message and unload gg_deathmatch
+            # gg_knife_elite has dependencies, show message and unload gg_deathmatch
             es.dbgmsg(0, '***WARNING***')
             es.dbgmsg(0, '* gg_deathmatch cannot unload gg_knife_elite')
             es.dbgmsg(0, '* gg_knife_elite is a dependency of the following addons:')
+            
+            # Show dependencies
             for addon in gungame.getAddonDependencyList('gungame/included_addons/gg_knife_elite'):
                 es.dbgmsg(0, '* ' + addon)
             es.dbgmsg(0, '* gg_deathmatch will be unloaded')
@@ -154,13 +167,19 @@ def gg_variable_changed(event_var):
             gungame.setGunGameVar('gg_deathmatch', '0')
 
 def es_map_start(event_var):
+    global mapName
+    
+    mapName = event_var['mapname']
     getSpawnPoints(event_var['mapname'])
 
-def getSpawnPoints(mapName):
-    # Reset the spawn points dict and check if there is a spawnpoint file
+def getSpawnPoints(_mapName):
     global spawnPoints
+    global spawnFile
+    global spawnPointsExist
+    
+    # Open the file and clear the spawn point dictionary
     spawnPoints = {}
-    spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName)
+    spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % _mapName)
     spawnPointsExist = os.path.isfile(spawnFile)
     
     # Does the spawn file exist
@@ -186,6 +205,63 @@ def getSpawnPoints(mapName):
         
         # Increment the amount of lines
         i += 1
+
+def addSpawnPoint(posX, posY, posZ, eyeYaw):
+    global mapName
+    global spawnFile
+    
+    # Do we have a spawn point file?
+    if not spawnPointsExist:
+        # Create spawnpoint file
+        spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName)
+        spawnPointFile = open(spawnFile, 'w').close()
+        
+        # Rehash spawnpoints
+        getSpawnPoints(mapName)
+        
+    
+    # Open the spawnpoint file
+    spawnPointFile = open(spawnFile, 'a')
+    
+    # Prep the vars
+    posX = float(posX)
+    posY = float(posY)
+    posZ = float(posZ)
+    eyeYaw = float(eyeYaw)
+    
+    # Write to file, flush and close
+    spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (posX, posY, posZ, eyeYaw))
+    spawnPointFile.flush()
+    spawnPointFile.close()
+    
+    # Get spawnpoints again
+    getSpawnPoints(mapName)
+    
+def removeSpawnPoint(index):
+    # Do we have a spawn point file?
+    if not spawnPointsExist:
+        return False
+    
+    # Remove spawn point from dictionary
+    del spawnPoints[int(index)]
+
+    # Load the file
+    spawnPointFile = open(spawnFile, 'w')
+    
+    # Loop through the spawnpoints
+    for index in spawnPoints:
+        # Get list
+        spawnLoc = spawnPoints[index]
+        
+        # Write to file
+        spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (spawnPoint[0], spawnPoint[1], spawnPoint[2], spawnPoint[4]))
+        
+    # Flush and close the file
+    spawnPointFile.flush()
+    spawnPointFile.close()
+
+    # Get spawnpoints again
+    getSpawnPoints(mapName)
 
 def getGameDir(dir):
     # Get the gungame addon path
@@ -230,7 +306,7 @@ def RespawnCountdown(userid, repeatInfo):
 
 def respawn(userid):
     # Tell the userid they are respawning
-    respawnCounters[userid] = dict_deathmatchVars['respawn_delay'] 
+    respawnCounters[userid] = dict_deathmatchVars['respawn_delay']
     repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
     repeat.start('RespawnCounter%s' % userid, 1, dict_deathmatchVars['respawn_delay'])
     
@@ -265,61 +341,108 @@ def respawn(userid):
     gamethread.delayed(2, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
     gamethread.delayed(6, es.server.cmd, 'es_xfire %s env_entity_dissolver Kill' % userid)
     
-def addSpawnPoint():
-    #dm_add <userid>
-    if int(es.getargc()) == 2:
-        # check if userid is valid
-        userid = int(es.getargv(1))
-        if es.exists('userid', userid):
-            #check if a map is loaded
-            currentMap = str(es.ServerVar('eventscripts_currentmap'))
-            if currentMap != '0':
-                # get player location and viewing angles
-                playerlibPlayer = playerlib.getPlayer(userid)
-                playerLocation = es.getplayerlocation(userid)
-                playerViewAngle = playerlibPlayer.get('viewangle')
-                
-                # write spawnpoints to file      
-                spawnFile = open(os.getcwd() + '/cstrike/cfg/gungame/spawnpoints/' + currentMap + '.txt', 'a')
-                spawnFile.write('%s %s %s %f %f\n' %(playerLocation[0], playerLocation[1], playerLocation[2], playerViewAngle[0], playerViewAngle[1]))
-                spawnFile.close()
-                
-                # show a sprite at new spawnpoint location
-                es.server.cmd('est_effect 11 %d 0 sprites/greenglow1.vmt %s %s %f 5 1 255' %(userid, playerLocation[0], playerLocation[1], float(playerLocation[2]) + 50))
-                es.msg('#green', '[GG Deathmatch] Spawnpoint added')
-        else:
-            es.dbgmsg(0, '[GG Deathmatch] %d is not a valid userid' %userid)
-    else:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
+def cmd_addSpawnPoint():
+    global spawnPoints
+    
+    # Do we have enough arguments?
+    if int(es.getargc()) != 2:
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 1'
+    
+    # Get executor userid and 1st argument
+    cmdUserid = int(es.getcmduserid())
+    userid = int(es.getargv(1))
+    
+    # Does the userid exist?
+    if not es.exists('userid', userid):
+        tell(cmdUserid, 'The userid %d is not valid.' % userid)
+        return
+    
+    # Is a map loaded?
+    if mapName != 0:
+        # Get player location and viewing angles
+        playerlibPlayer = playerlib.getPlayer(userid)
+        playerLoc = es.getplayerlocation(userid)
+        playerViewAngle = playerlibPlayer.get('viewangle')
+        
+        # Add spawn point
+        addSpawnPoint(playerLoc[0], playerLoc[1], playerLoc[2], playerViewAngle[0])
+        
+        # Show a sprite at the new spawnpoint location
+        es.server.cmd('est_effect 11 %d 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, playerLoc[0], playerLoc[1], float(playerLoc[2]) + 50))
+        
+        # Tell the user where the spawnpoint is, and the index
+        tell(cmdUserid, 'Added spawnpoint [Index: %d]' % (len(spawnPoints) - 1))
 
-def delAllSpawnPoints():
-    #dm_del_all <userid>
-    if int(es.getargc()) == 1:
-        #check if a map is loaded
-        currentMap = str(es.ServerVar('eventscripts_currentmap'))
-        if currentMap != '0':
-            # clear spawnpoint file
-            spawnFile = open(os.getcwd() + '/cstrike/cfg/gungame/spawnpoints/' + currentMap + '.txt', 'w')
-            spawnFile.close()
-    else:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
+def cmd_delAllSpawnPoints():
+    # Enough arguments?
+    if int(es.getargc()) != 1:
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 0'
+    
+    # Check if a map is loaded
+    if mapName != 0:
+        # Clear the spawnpoint file
+        spawnFile = open(getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName), 'w').close()
+        
+        # Get spawnpoints
+        getSpawnPoints(mapName)
 
-def showSpawnPoints():
-    #dm_del_all <userid>
-    if int(es.getargc()) == 1:
-        #check if a map is loaded
-        currentMap = str(es.ServerVar('eventscripts_currentmap'))
-        if currentMap != '0':
-            userid = es.getuserid()
-            IndexNumber = 0
-            es.dbgmsg(0, '**** Spawnpoints Index ****')
-            spawnFile = open(os.getcwd() + '/cstrike/cfg/gungame/spawnpoints/' + currentMap + '.txt', 'r')
-            spawnFileLines = spawnFile.readlines()
-            for line in spawnFileLines:
-                line = line.strip()
-                spriteLocation = line.split(' ')
-                es.server.cmd('est_effect 11 %s 0 sprites/greenglow1.vmt %s %s %f 5 1 255' %(userid, spriteLocation[0], spriteLocation[1], float(spriteLocation[2]) + 50))
-                IndexNumber += 1
-                es.dbgmsg(0, '%d: %s %s %s %s %s' %(IndexNumber, spriteLocation[0], spriteLocation[1], spriteLocation[2], spriteLocation[3], spriteLocation[4]))
-    else:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
+def cmd_printSpawnPoints():
+    # Enough arguments?
+    if int(es.getargc()) != 1:
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 0'
+    
+    # Get userid
+    userid = es.getcmduserid()
+    client_echo(userid, ' ** Spawnpoints for %s:' % mapName)
+    
+    # Loop through the spawnpoints
+    for index in spawnPoints:
+        # Get list
+        spawnLoc = spawnPoints[index]
+        
+        # Tell the user
+        client_echo(userid, 'Index: %d, X: %s, Y: %s, Z: %s' % (index, spawnLoc[0], spawnLoc[1], spawnLoc[2]))
+    
+    client_echo(userid, ' ** End of spawnpoints.')
+    tell(userid, ' ** Check your console for the output.')
+
+def cmd_delSpawnPoint():
+    # Enough arguments?
+    if int(es.getargc()) != 2:
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 1'
+    
+    # Delete the spawn point
+    removeSpawnPoint(int(es.getargv(1)))
+    
+    # Tell caller that it was removed
+    tell(es.getcmduserid(), 'Spawnpoint was removed, spawnpoint file rehashed.')
+
+def cmd_showSpawnPoints():
+    # Do we have enough arguments?
+    if int(es.getargc()) != 1:
+        # Raise argument error
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
+    
+    # Set vars
+    userid = es.getcmduserid()
+    
+    # Loop through spawn points
+    for index in spawnPoints:
+        # Get list
+        spriteLoc = spawnPoints[index]
+        
+        # Create sprite
+        es.server.cmd('est_effect 11 %s 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, spriteLoc[0], spriteLoc[1], float(spriteLoc[3]) + 50))
+
+'''Messaging functions'''
+def announce(message):
+    es.msg('#multi', '\4[GG:Deathmatch]\1 %s' % message)
+    
+def tell(userid, message):
+    es.tell(userid, '#multi', '\4[GG:Deathmatch]\1 %s' % message)
+
+def client_echo(userid, message):
+    usermsg.echo(userid, '[GG:Deathmatch] %s' % message)
+
+def echo(message):
+    es.dbgmsg(0, '[GG:Deathmatch] %s' % message)

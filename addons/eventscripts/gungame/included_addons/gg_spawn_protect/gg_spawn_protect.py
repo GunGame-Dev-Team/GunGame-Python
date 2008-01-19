@@ -22,12 +22,12 @@ info.basename = "gungame/included_addons/gg_spawn_protect"
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
 # Addon settings
-addonOpts = {}
-addonOpts['red'] = int(gungame.getGunGameVar('gg_spawn_protect_red'))
-addonOpts['green'] = int(gungame.getGunGameVar('gg_spawn_protect_green'))
-addonOpts['blue'] = int(gungame.getGunGameVar('gg_spawn_protect_blue'))
-addonOpts['alpha'] = int(gungame.getGunGameVar('gg_spawn_protect_alpha'))
-addonOpts['delay'] = int(gungame.getGunGameVar('gg_spawn_protect'))
+dict_SpawnProtectVars = {}
+dict_SpawnProtectVars['red'] = int(gungame.getGunGameVar('gg_spawn_protect_red'))
+dict_SpawnProtectVars['green'] = int(gungame.getGunGameVar('gg_spawn_protect_green'))
+dict_SpawnProtectVars['blue'] = int(gungame.getGunGameVar('gg_spawn_protect_blue'))
+dict_SpawnProtectVars['alpha'] = int(gungame.getGunGameVar('gg_spawn_protect_alpha'))
+dict_SpawnProtectVars['delay'] = int(gungame.getGunGameVar('gg_spawn_protect'))
 
 def load():
     # Register this addon with GunGame
@@ -38,9 +38,14 @@ def unload():
     gungame.unregisterAddon('gungame/included_addons/gg_spawn_protect')
 
 def gg_variable_changed(event_var):
+    global dict_SpawnProtectVars
+    
     # Register change in gg_map_list_file
     if event_var['cvarname'] == 'gg_spawn_protect':
-        addonOpts['delay'] = int(gungame.getGunGameVar('gg_spawn_protect'))
+        dict_SpawnProtectVars['delay'] = int(gungame.getGunGameVar('gg_spawn_protect'))
+    # watch for changes in map vote variables
+    elif dict_SpawnProtectVars.has_key(event_var['cvarname']):
+        dict_SpawnProtectVars[event_var['cvarname']] = int(event_var['newvalue'])
 
 def player_spawn(event_var):
     # If not warmup round...
@@ -50,15 +55,15 @@ def player_spawn(event_var):
         gungamePlayer = gungame.getPlayer(userid)
         playerlibPlayer = playerlib.getPlayer(userid)
         
-        # Debug
-        #print 'Spawn Protect: R: %s, G: %s, B: %s, A: %s' % (addonOpts['red'], addonOpts['green'], addonOpts['blue'], addonOpts['alpha'])
-        
         # Set protected settings
-        gungamePlayer.set('PreventLevel', 1)
         playerlibPlayer.set('health', 999)
-        playerlibPlayer.set('color', (addonOpts['red'], addonOpts['green'], addonOpts['blue'], addonOpts['alpha']))
+        playerlibPlayer.set('color', (dict_SpawnProtectVars['red'], dict_SpawnProtectVars['green'], dict_SpawnProtectVars['blue'], dict_SpawnProtectVars['alpha']))
         
         # Set un-protected settings
-        gamethread.delayed(addonOpts['delay'], gungamePlayer.set, ('preventlevel', 0))
-        gamethread.delayed(addonOpts['delay'], playerlibPlayer.set, ('health', 100))
-        gamethread.delayed(addonOpts['delay'], playerlibPlayer.set, ('color', (255, 255, 255, 255)))
+        gamethread.delayed(dict_SpawnProtectVars['delay'], playerlibPlayer.set, ('health', 100))
+        gamethread.delayed(dict_SpawnProtectVars['delay'], playerlibPlayer.set, ('color', (255, 255, 255, 255)))
+        
+        # See if prevent level is already turned on
+        if not gungamePlayer.get('preventlevel'):
+            gungamePlayer.set('preventlevel', 1)
+            gamethread.delayed(dict_SpawnProtectVars['delay'], gungamePlayer.set, ('preventlevel', 0))

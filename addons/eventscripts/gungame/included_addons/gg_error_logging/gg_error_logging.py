@@ -3,7 +3,7 @@ import traceback
 import es
 import os
 import time
-import gungame
+from gungame import gungame
 
 gungameErrorLogPath = es.ServerVar('eventscripts_gamedir') + '/addons/eventscripts/gungame/errorlog/errors.log'
 dateFormat = '[%A, %B %d, %Y %H:%M:%S]'

@@ -336,14 +336,14 @@ def respawn(userid):
         gamethread.delayed(dict_deathmatchVars['respawn_delay'] + 1, gungame.teleportPlayer, (int(userid), spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4]))
     
     # Give the entity dissolver and set its KeyValues
-    es.server.cmd('es_xfire %s env_entity_dissolver Kill' % userid)
     es.server.cmd('es_xgive %s env_entity_dissolver' % userid)
     es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "target cs_ragdoll"' % userid)
     es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "magnitude 1"' % userid)
     es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (userid, dict_deathmatchVars['ragdoll_effect']))
     
     # Dissolve the ragdoll then kill the dissolver
-    gamethread.delayed(2, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
+    gamethread.delayed(1, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
+    gamethread.delayed(6, es.server.cmd, 'es_xfire %s env_entity_dissolver Kill' % userid)
     
 def cmd_addSpawnPoint():
     global spawnPoints

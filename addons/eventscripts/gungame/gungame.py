@@ -10,7 +10,7 @@ import cPickle
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.59"
+gungameVersion = "1.0.64"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -1304,7 +1304,7 @@ def loadConfig(configPath):
                         # Create console variables
                         es.ServerVar(list_variables[0]).set(list_variables[1])
                         # See if this is our "gg_default_addons.cfg" and trigger the event "gg_variable_changed"
-                        if configPath == os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg':
+                        if configPath == os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg' or configPath == os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg':
                             # Initialize the event "gg_variable_changed"
                             es.event('initialize', 'gg_variable_changed')
                             # Set the cvar name that is being changed

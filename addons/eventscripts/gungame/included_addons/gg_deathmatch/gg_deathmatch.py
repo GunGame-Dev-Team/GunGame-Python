@@ -26,6 +26,7 @@ import usermsg
 
 # Gungame import
 from gungame import gungame
+from gungame.gungame import ArgumentError
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 

@@ -4,6 +4,7 @@ import random
 import gamethread
 import gungame
 import playerlib
+import langlib
 import usermsg
 import popuplib
 import cPickle
@@ -57,6 +58,7 @@ dict_reconnectingPlayers = {}
 dict_gungameWinners = {}
 dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
+langStrings = None
 
 # Class used in the dict_gungame_core
 class gungamePlayers:
@@ -1120,8 +1122,10 @@ def equipPlayer():
     es.server.cmd('es_xremove game_player_equip')
     es.server.cmd('es_xgive %s game_player_equip' %userid)
     es.server.cmd('es_xfire %s game_player_equip addoutput \"weapon_knife 1\"' %userid)
-	# Retrieve the armor type
+    
+    # Retrieve the armor type
     armorType = int(getGunGameVar('gg_player_armor'))
+    
     if armorType == 2:
     # Give the player full armor
         es.server.cmd('es_xfire %s game_player_equip addoutput \"item_assaultsuit 1\"' %userid)
@@ -1373,10 +1377,13 @@ def unloadConfig(configPath):
 # ===================================================================================================
 def load():
     StartProfiling(g_Prof)
+    
     global list_includedAddonsDir
     global dict_gungameVariables
     global dict_gungameWinners
     global countBombDeathAsSuicide
+    global langStrings
+    
     # LOAD CUSTOM GUNGAME EVENTS
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
@@ -1389,6 +1396,9 @@ def load():
     
     # Load the "../cstrike/cfg/gungame/gg_map_vote.cfg"
     gungame.loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_map_vote.cfg')
+    
+    # Get strings
+    langStrings = langlib.Strings(os.getcwd() + '/cstrike/cfg/gungame/strings.ini')
     
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/included_addons" folder
     list_includedAddonsDir = []
@@ -1997,6 +2007,7 @@ def bomb_exploded(event_var):
             
 def gg_levelup(event_var):
     global list_leaderNames
+    
     # Check for a winner first
     if int(event_var['old_level']) == getTotalLevels():
         es.event('initialize', 'gg_win')
@@ -2319,3 +2330,106 @@ def update_afk_dict(userid):
         dict_afk[userid].int_afk_math_total = int(afk_math_total)
 # --------------------------------------------------------------------------------------------------
 # END CODE TO UPDATE PLAYER LOCATION INTO THE AFK DICTIONARY
+
+# ===================================================================================================
+#   MESSAGE CLASS
+# ===================================================================================================
+class Message:
+    def __init__(self, userid = None):
+        # Is userid console?
+        if userid == 0:
+            # Set userid and object
+            self.userid = 0
+            self.object = None
+            
+            # Ignore the rest of init
+            return
+        
+        # Set userid
+        self.userid = userid
+        
+        # Set the player object
+        if userid:
+            self.object = playerlib.getPlayer(userid)
+    
+    def getLangStrings(self, message):
+        # Set some vars
+        file = message.split(':')[0]
+        string = message.split(':')[1]
+        
+        # Set lang strings
+        self.langStrings = langlib.Strings('%s/cstrike/cfg/gungame/translations/%s.ini' % (os.getcwd(), file))
+        
+        # Return
+        return string
+    
+    def getString(self, message, tokens = None, object = None):
+        # If no object set, use the class default
+        if not object and self.userid != 0:
+            object = self.object
+        
+        # Return the string
+        try:
+            return self.langStrings(message, tokens, object.get('lang'))
+        except:
+            return self.langStrings(message, tokens)
+        
+    def msg(self, message, tokens = {}):
+        # Get string
+        string = self.getLangStrings(message)
+        
+        # Set prefix
+        prefix = '\4[%s]\1' % (self.langStrings('Prefix', {}, 'en'))
+        
+        if self.userid:
+            es.tell(self.userid, '%s %s' % (prefix, self.getString(string, tokens)))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                es.tell(userid, '%s %s' % (prefix, self.getString(string, tokens)))
+                
+    def hudhint(self, message, tokens = {}):
+        # Get lang strings
+        string = self.getLangStrings(message)
+        
+        # Is a userid set?
+        if self.userid:
+            # Send HudHint
+            usermsg.hudhint(self.userid, self.getString(string, tokens))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                usermsg.hudhint(userid, self.getString(string, tokens, object))
+            
+    def echo(self, message, tokens = {}):
+        # Get string
+        string = self.getLangStrings(message)
+        
+        # Set prefix
+        prefix = '%s:' % (self.langStrings('Prefix', {}, 'en'))
+        
+        if self.userid == 0:
+            # Print to console
+            es.dbgmsg(0, '%s %s' % (prefix, self.getString(string, tokens)))
+        elif self.userid:
+            # Send echo message
+            usermsg.echo(self.userid, '%s %s' % (prefix, self.getString(string, tokens)))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                usermsg.echo(userid, '%s %s' % (prefix, self.getString(string, tokens)))

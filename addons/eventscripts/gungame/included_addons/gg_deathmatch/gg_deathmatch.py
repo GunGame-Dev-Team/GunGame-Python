@@ -84,19 +84,20 @@ def load():
                 es.dbgmsg(0, '* ' + addon)
             es.dbgmsg(0, '* gg_deathmatch will be unloaded')
             es.dbgmsg(0, '*************')
+            
             gungame.setGunGameVar('gg_deathmatch', '0')
             
     # Create commands
     if not es.exists('command','dm_add'):
-        es.regclientcmd('dm_add','gungame/included_addons/gg_deathmatch/cmd_addSpawnPoint', 'Adds a spawnpoint at <userid>\'s location on the current map.')
+        es.regcmd('dm_add','gungame/included_addons/gg_deathmatch/cmd_addSpawnPoint', 'Adds a spawnpoint at <userid>\'s location on the current map.')
     if not es.exists('command','dm_del_all'):
-        es.regclientcmd('dm_del_all','gungame/included_addons/gg_deathmatch/cmd_delAllSpawnPoints', 'Deletes all spawnpoints on the current map.')
+        es.regcmd('dm_del_all','gungame/included_addons/gg_deathmatch/cmd_delAllSpawnPoints', 'Deletes all spawnpoints on the current map.')
     if not es.exists('command','dm_show'):
-        es.regclientcmd('dm_show','gungame/included_addons/gg_deathmatch/cmd_showSpawnPoints', 'Shows all spawnpoints with a glow on the current map.')
+        es.regcmd('dm_show','gungame/included_addons/gg_deathmatch/cmd_showSpawnPoints', 'Shows all spawnpoints with a glow on the current map.')
     if not es.exists('command','dm_print'):
-        es.regclientcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_printSpawnPoints', 'Displays spawnpoints for this map (including indexes) in the callers console.')
+        es.regcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_printSpawnPoints', 'Displays spawnpoints for this map (including indexes) in the callers console.')
     if not es.exists('command','dm_remove'):
-        es.regclientcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_delSpawnPoint', 'Removes a single spawnpoint.')
+        es.regcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_delSpawnPoint', 'Removes a single spawnpoint.')
     
     # Has map loaded?
     currentMap = str(es.ServerVar('eventscripts_currentmap'))
@@ -297,12 +298,15 @@ def RespawnCountdown(userid, repeatInfo):
     
     # Is the counter 1?
     if respawnCounters[userid] == 1:
-        usermsg.hudhint(userid, 'Respawning in: 1 second.')
+        gungame.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Singular')
     else:
-        usermsg.hudhint(userid, "Respawning in: %s seconds." % respawnCounters[userid])
+        gungame.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Plural', {'time': respawnCounters[userid]})
     
     # Decrement the timer
     respawnCounters[userid] -= 1
+
+def player_spawn(ev):
+    gungame.Message(int(ev['userid'])).msg('gg_deathmatch:YouSpawned')
 
 def respawn(userid):
     # Tell the userid they are respawning
@@ -332,6 +336,7 @@ def respawn(userid):
         gamethread.delayed(dict_deathmatchVars['respawn_delay'] + 1, gungame.teleportPlayer, (int(userid), spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4]))
     
     # Give the entity dissolver and set its KeyValues
+    es.server.cmd('es_xfire %s env_entity_dissolver Kill' % userid)
     es.server.cmd('es_xgive %s env_entity_dissolver' % userid)
     es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "target cs_ragdoll"' % userid)
     es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "magnitude 1"' % userid)
@@ -339,22 +344,21 @@ def respawn(userid):
     
     # Dissolve the ragdoll then kill the dissolver
     gamethread.delayed(2, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
-    gamethread.delayed(6, es.server.cmd, 'es_xfire %s env_entity_dissolver Kill' % userid)
     
 def cmd_addSpawnPoint():
     global spawnPoints
     
     # Do we have enough arguments?
     if int(es.getargc()) != 2:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 1'
+        # Raise argument error
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
     
     # Get executor userid and 1st argument
-    cmdUserid = int(es.getcmduserid())
     userid = int(es.getargv(1))
     
     # Does the userid exist?
     if not es.exists('userid', userid):
-        tell(cmdUserid, 'The userid %d is not valid.' % userid)
+        gungame.Message(0).echo('CannotCreateSpawnpoint', {'userid': userid})
         return
     
     # Is a map loaded?
@@ -371,12 +375,13 @@ def cmd_addSpawnPoint():
         es.server.cmd('est_effect 11 %d 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, playerLoc[0], playerLoc[1], float(playerLoc[2]) + 50))
         
         # Tell the user where the spawnpoint is, and the index
-        tell(cmdUserid, 'Added spawnpoint [Index: %d]' % (len(spawnPoints) - 1))
+        gungame.Message(userid).tell('gg_deathmatch:AddedSpawnpoint', {'index': len(spawnPoints) - 1})
 
 def cmd_delAllSpawnPoints():
     # Enough arguments?
     if int(es.getargc()) != 1:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 0'
+        # Raise argument error
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
     
     # Check if a map is loaded
     if mapName != 0:
@@ -389,42 +394,43 @@ def cmd_delAllSpawnPoints():
 def cmd_printSpawnPoints():
     # Enough arguments?
     if int(es.getargc()) != 1:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 0'
+        # Raise argument error
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
     
-    # Get userid
-    userid = es.getcmduserid()
-    client_echo(userid, ' ** Spawnpoints for %s:' % mapName)
+    # Send message
+    gungame.Message(0).echo('gg_deathmatch:SpawnpointsFor', {'map': mapName})
     
     # Loop through the spawnpoints
     for index in spawnPoints:
         # Get list
         spawnLoc = spawnPoints[index]
         
-        # Tell the user
-        client_echo(userid, 'Index: %d, X: %s, Y: %s, Z: %s' % (index, spawnLoc[0], spawnLoc[1], spawnLoc[2]))
+        # Print to console
+        gungame.Message(0).echo('gg_deathmatch:SpawnpointInfo', {'index': index, 'x': spawnLoc[0], 'y': spawnLoc[1], 'z': spawnLoc[2]})
     
-    client_echo(userid, ' ** End of spawnpoints.')
-    tell(userid, ' ** Check your console for the output.')
+    # Send end message
+    gungame.Message(0).echo('gg_deathmatch:SpawnpointsEnd')
 
 def cmd_delSpawnPoint():
     # Enough arguments?
-    if int(es.getargc()) != 2:
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' of arguments provided. Expected: 1'
+    if int(es.getargc()) == 2:
+        # Raise argument error
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
     
     # Delete the spawn point
     removeSpawnPoint(int(es.getargv(1)))
     
-    # Tell caller that it was removed
-    tell(es.getcmduserid(), 'Spawnpoint was removed, spawnpoint file rehashed.')
+    # Print to console
+    gungame.Message(0).echo('RemovedSpawnpoint', {'index': es.getargv(1)})
 
 def cmd_showSpawnPoints():
     # Do we have enough arguments?
-    if int(es.getargc()) != 1:
+    if int(es.getargc()) != 2:
         # Raise argument error
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
     
     # Set vars
-    userid = es.getcmduserid()
+    userid = es.getargv(1)
     
     # Loop through spawn points
     for index in spawnPoints:
@@ -433,16 +439,3 @@ def cmd_showSpawnPoints():
         
         # Create sprite
         es.server.cmd('est_effect 11 %s 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, spriteLoc[0], spriteLoc[1], float(spriteLoc[3]) + 50))
-
-'''Messaging functions'''
-def announce(message):
-    es.msg('#multi', '\4[GG:Deathmatch]\1 %s' % message)
-    
-def tell(userid, message):
-    es.tell(userid, '#multi', '\4[GG:Deathmatch]\1 %s' % message)
-
-def client_echo(userid, message):
-    usermsg.echo(userid, '[GG:Deathmatch] %s' % message)
-
-def echo(message):
-    es.dbgmsg(0, '[GG:Deathmatch] %s' % message)

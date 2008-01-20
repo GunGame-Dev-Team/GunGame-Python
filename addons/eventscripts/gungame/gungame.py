@@ -23,8 +23,6 @@ info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
-
-
 # TEMP CODE FOR PROFILER
 import time
 g_Prof = {}
@@ -37,15 +35,7 @@ def StopProfiling(storage):
 def GetProfilerTime(storage): 
     return storage['stop'] - storage['start']
 
-
-
-
-
-
-
-
-
-# Set Up multiple lists and dictionaries for use throughout GunGame
+# Global vars
 dict_afk = {}
 dict_gungame_core = {}
 dict_gungameVariables = {}
@@ -58,7 +48,6 @@ dict_reconnectingPlayers = {}
 dict_gungameWinners = {}
 dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
-langStrings = None
 
 # Class used in the dict_gungame_core
 class gungamePlayers:
@@ -1382,7 +1371,6 @@ def load():
     global dict_gungameVariables
     global dict_gungameWinners
     global countBombDeathAsSuicide
-    global langStrings
     
     # LOAD CUSTOM GUNGAME EVENTS
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
@@ -1396,9 +1384,6 @@ def load():
     
     # Load the "../cstrike/cfg/gungame/gg_map_vote.cfg"
     gungame.loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_map_vote.cfg')
-    
-    # Get strings
-    langStrings = langlib.Strings(os.getcwd() + '/cstrike/cfg/gungame/strings.ini')
     
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/included_addons" folder
     list_includedAddonsDir = []
@@ -2410,6 +2395,42 @@ class Message:
                 
                 # Send it
                 usermsg.hudhint(userid, self.getString(string, tokens, object))
+                
+    def saytext2(self, index, message, tokens = {}):
+        # Get lang strings
+        string = self.getLangStrings(message)
+        
+        # Is a userid set?
+        if self.userid:
+            # Send SayText2 message
+            usermsg.saytext2(self.userid, index, self.getString(string, tokens))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                usermsg.saytext2(userid, index, self.getString(string, tokens, object))
+                
+    def centermsg(self, message, tokens = {}):
+        # Get lang strings
+        string = self.getLangStrings(message)
+        
+        # Is a userid set?
+        if self.userid:
+            # Send CenterMsg
+            es.centermsg(self.userid, self.getString(string, tokens))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                es.centermsg(userid, self.getString(string, tokens, object))
             
     def echo(self, message, tokens = {}):
         # Get string

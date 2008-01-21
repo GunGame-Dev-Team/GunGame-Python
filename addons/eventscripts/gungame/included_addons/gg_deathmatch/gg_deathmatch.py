@@ -23,6 +23,7 @@ import playerlib
 import gamethread
 import repeat
 import usermsg
+import keyvalues
 
 # Gungame import
 from gungame import gungame
@@ -39,7 +40,6 @@ info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
 # Get some deathmatch vars
 dict_deathmatchVars = {}
 dict_deathmatchVars['respawn_delay'] = int(gungame.getGunGameVar('gg_dm_respawn_delay'))
-dict_deathmatchVars['ragdoll_effect'] = int(gungame.getGunGameVar('gg_dm_ragdoll_effect'))
 dict_deathmatchVars['respawn_cmd'] = gungame.getGunGameVar('gg_dm_respawn_cmd')
 
 # Get some gungame vars to restore later
@@ -98,7 +98,9 @@ def load():
     if not es.exists('command','dm_print'):
         es.regcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_printSpawnPoints', 'Displays spawnpoints for this map (including indexes) in the callers console.')
     if not es.exists('command','dm_remove'):
-        es.regcmd('dm_print','gungame/included_addons/gg_deathmatch/cmd_delSpawnPoint', 'Removes a single spawnpoint.')
+        es.regcmd('dm_remove','gungame/included_addons/gg_deathmatch/cmd_delSpawnPoint', 'Removes a single spawnpoint.')
+    if not es.exists('command','dm_convert'):
+        es.regcmd('dm_convert','gungame/included_addons/gg_deathmatch/cmd_convert', 'Converts legacy GGv3 spawnpoints into CSS:DM format.')
     
     # Has map loaded?
     currentMap = str(es.ServerVar('eventscripts_currentmap'))
@@ -306,9 +308,6 @@ def RespawnCountdown(userid, repeatInfo):
     # Decrement the timer
     respawnCounters[userid] -= 1
 
-def player_spawn(ev):
-    gungame.Message(int(ev['userid'])).msg('gg_deathmatch:YouSpawned')
-
 def respawn(userid):
     # Tell the userid they are respawning
     respawnCounters[userid] = dict_deathmatchVars['respawn_delay']
@@ -335,16 +334,6 @@ def respawn(userid):
         
         # Teleport the player
         gamethread.delayed(dict_deathmatchVars['respawn_delay'] + 1, gungame.teleportPlayer, (int(userid), spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4]))
-    
-    # Give the entity dissolver and set its KeyValues
-    es.server.cmd('es_xgive %s env_entity_dissolver' % userid)
-    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "target cs_ragdoll"' % userid)
-    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "magnitude 1"' % userid)
-    es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (userid, dict_deathmatchVars['ragdoll_effect']))
-    
-    # Dissolve the ragdoll then kill the dissolver
-    gamethread.delayed(1, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
-    gamethread.delayed(6, es.server.cmd, 'es_xfire %s env_entity_dissolver Kill' % userid)
     
 def cmd_addSpawnPoint():
     global spawnPoints
@@ -377,6 +366,60 @@ def cmd_addSpawnPoint():
         
         # Tell the user where the spawnpoint is, and the index
         gungame.Message(userid).tell('gg_deathmatch:AddedSpawnpoint', {'index': len(spawnPoints) - 1})
+        
+def cmd_convert():
+    # Do we have enough arguments?
+    if int(es.getargc()) != 1:
+        # Raise argument error
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
+    
+    # Loop through the files in the legacy folder
+    for f in os.listdir(getGameDir('cfg\\gungame\\spawnpoints\\legacy')):
+        name, ext = os.path.splitext(f) # Handles no-extension files, etc.
+        
+        if name.startswith('es_') and name.endswith('_db') and ext == '.txt':
+            # Announce we are parsing it
+            gungame.Message(0).echo('gg_deathmatch:ConvertingFile', {'file': f})
+            
+            # Parse it
+            points = parseLegacySpawnpoint(getGameDir('cfg\\gungame\\spawnpoints\\legacy\\') + f)
+            
+            # Now write it to a file
+            newFile = open(getGameDir('cfg\\gungame\\spawnpoints\\') + f.strip('es_').strip('_db'), 'w')
+            
+            # Loop through the points
+            for point in points:
+                newFile.write('%s %s %s 0.000000 0.000000 0.000000\n' % (points[point][0], points[point][1], points[point][2]))
+                
+            # Close the file and flush
+            newFile.close()
+            
+    # Announce that all files have been converted
+    gungame.Message(0).echo('gg_deathmatch:ConvertingCompleted')
+
+def parseLegacySpawnpoint(file):
+    # Create vars
+    points = {}
+
+    # Load the keygroup file
+    kv = keyvalues.KeyValues(name=file.strip('es_').strip('_db.txt'))
+    kv.load(file)
+    
+    # Get the total points
+    totalVals = kv['total']['total']
+    
+    # Loop through the values
+    i = 0
+    while i < totalVals:
+        # Increment
+        i += 1
+        
+        # Get the point and split it
+        toSplit = kv['points'][str(i)]
+        points[i] = toSplit.split(',')
+    
+    # Return
+    return points
 
 def cmd_delAllSpawnPoints():
     # Enough arguments?

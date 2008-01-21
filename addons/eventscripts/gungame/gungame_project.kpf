@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="0651bb49-f501-4ccc-aaea-20751ee88255" kpf_version="4" name="gungame_project.kpf">
-<preference-set idref="0651bb49-f501-4ccc-aaea-20751ee88255/included_addons/gg_warmup_round/gg_warmup_round.py">
+<preference-set idref="0651bb49-f501-4ccc-aaea-20751ee88255/included_addons/gg_deathmatch/gg_deathmatch.py">
   <string id="lastInvocation">default</string>
 <preference-set id="Invocations">
 <preference-set id="default">
@@ -9,9 +9,33 @@
   <string id="language">Python</string>
   <string id="getparams"></string>
   <boolean id="use-console">0</boolean>
-  <string relative="path" id="filename">included_addons/gg_warmup_round/gg_warmup_round.py</string>
+  <string relative="path" id="filename">included_addons/gg_deathmatch/gg_deathmatch.py</string>
   <string id="mpostparams"></string>
   <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params"></string>
+  <string id="executable-params"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string id="userEnvironment"></string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+<preference-set idref="0651bb49-f501-4ccc-aaea-20751ee88255/included_addons/gg_warmup_round/gg_warmup_round.py">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="language">Python</string>
+  <string id="getparams"></string>
+  <boolean id="show-dialog">1</boolean>
+  <boolean id="use-console">0</boolean>
+  <string id="mpostparams"></string>
+  <string relative="path" id="filename">included_addons/gg_warmup_round/gg_warmup_round.py</string>
   <string id="request-method">GET</string>
   <string id="params"></string>
   <string id="executable-params"></string>

@@ -5,10 +5,9 @@
 ================================================================================
     Name: gg_deathmatch
     Main Author: Saul Rennison
-    Version: 1.0.58 (16.01.2008)
+    Version: 1.0.58 (21.01.2008)
 ================================================================================
     This will respawn players after a specified amount of time after dying.
-    In addition, a fancy effect will be applied to the ragdoll after they die.
 ================================================================================
 '''
 

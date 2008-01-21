@@ -8,6 +8,7 @@ import langlib
 import usermsg
 import popuplib
 import cPickle
+import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
@@ -2045,12 +2046,12 @@ def gg_levelup(event_var):
                 if leaderCount == 2:
                     # Loop through the players and send a saytext2 message
                     for userid in es.getUseridList():
-                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\1[\4%s-way tie\1]\3 %s\1 has tied the other leader on level \4%d' % ('2', event_var['name'], int(event_var['new_level'])))
+                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\4[2-way tie]\3 %s\1 has tied the other leader on level \4%d' % (event_var['name'], int(event_var['new_level'])))
                 # There are more than 2 leaders
                 elif leaderCount > 2:
                     # Loop through the players and send a saytext2 message
                     for userid in es.getUseridList():
-                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\1[\4%d-way tie\1]\3 %s\1 has tied the other leaders on level \4%d' % (leaderCount, event_var['name'], int(event_var['new_level'])))
+                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\4[%d-way tie]\3 %s\1 has tied the other leaders on level \4%d' % (leaderCount, event_var['name'], int(event_var['new_level'])))
                 # Rebuild the leaders menu
                 rebuildLeaderMenu()
         # ----------------------------------------------------------------------
@@ -2293,19 +2294,32 @@ def gg_variable_changed(event_var):
 # ===================================================================================================
 
 
-# BEGIN INTERACTIVE PYTHON COMMANDS
-# ------------------------------------------------------------
+# ===================================================================================================
+#   HELPER FUNCTIONS
+# ===================================================================================================
 def getPlayer(userid):
     try:
         # Why not just use the Player constructor?
         return Player(userid)
     except (UseridError, TypeError), e:
         raise e
-# --------------------------------------------------------
-# END INTERACTIVE PYTHON COMMANDS
 
-# BEGIN CODE TO UPDATE PLAYER LOCATION INTO THE AFK DICTIONARY
-# -----------------------------------------------------------------------------------------------------
+def getGameDir(dir):
+    # Get the gungame addon path
+    addonPath = es.getAddonPath('gungame')
+    
+    # Split using the path seperator
+    parts = addonPath.split('\\')
+    
+    # Pop the last 2 items in the list
+    parts.pop()
+    parts.pop()
+    
+    # Append cfg then join
+    parts.append(dir)
+    
+    return string.join(parts, '\\')
+
 def update_afk_dict(userid):
     global dict_afk
     # check if player is a bot
@@ -2313,8 +2327,7 @@ def update_afk_dict(userid):
         list_playerlocation = es.getplayerlocation(userid)
         afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[1]'))
         dict_afk[userid].int_afk_math_total = int(afk_math_total)
-# --------------------------------------------------------------------------------------------------
-# END CODE TO UPDATE PLAYER LOCATION INTO THE AFK DICTIONARY
+
 
 # ===================================================================================================
 #   MESSAGE CLASS
@@ -2343,7 +2356,19 @@ class Message:
         string = message.split(':')[1]
         
         # Set lang strings
-        self.langStrings = langlib.Strings('%s/cstrike/cfg/gungame/translations/%s.ini' % (os.getcwd(), file))
+        if file == 'core':
+            self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/strings.ini' % os.getcwd())
+        else:
+            # Does the folder exist in included_addons?
+            if os.path.isfile(getGameDir('addons\\eventscripts\\gungame\\included_addons\\%s\\strings.ini' % file)):
+                # Load file from included_addons
+                self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/included_addons/%s/strings.ini' % (os.getcwd(), file))
+            elif os.path.isfile(getGameDir('addons\\eventscripts\\gungame\\custom_addons\\%s\\strings.ini' % file)):
+                # Load file from custom_addons
+                self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/custom_addons/%s/strings.ini' % (os.getcwd(), file))
+            else:
+                # Raise error
+                raise NameError, 'Could not find %s/strings.ini in either the included_addons or custom_addons folder.' % file
         
         # Return
         return string
@@ -2359,15 +2384,18 @@ class Message:
         except:
             return self.langStrings(message, tokens)
         
-    def msg(self, message, tokens = {}):
+    def msg(self, message, tokens = {}, usePrefix=True):
         # Get string
         string = self.getLangStrings(message)
         
         # Set prefix
-        prefix = '\4[%s]\1' % (self.langStrings('Prefix', {}, 'en'))
+        if usePrefix:
+            prefix = '\4[%s]\1 ' % (self.langStrings('Prefix', {}, 'en'))
+        else:
+            prefix = ''
         
         if self.userid:
-            es.tell(self.userid, '%s %s' % (prefix, self.getString(string, tokens)))
+            es.tell(self.userid, '%s%s' % (prefix, self.getString(string, tokens)))
         else:
             # Loop through the players
             for userid in es.getUseridList():
@@ -2376,7 +2404,7 @@ class Message:
                 object = playerlib.getPlayer(userid)
                 
                 # Send it
-                es.tell(userid, '%s %s' % (prefix, self.getString(string, tokens)))
+                es.tell(userid, '%s%s' % (prefix, self.getString(string, tokens)))
                 
     def hudhint(self, message, tokens = {}):
         # Get lang strings
@@ -2414,7 +2442,7 @@ class Message:
                 # Send it
                 usermsg.saytext2(userid, index, self.getString(string, tokens, object))
                 
-    def centermsg(self, message, tokens = {}):
+    def centermsg(self, message, tokens={}):
         # Get lang strings
         string = self.getLangStrings(message)
         
@@ -2432,19 +2460,22 @@ class Message:
                 # Send it
                 es.centermsg(userid, self.getString(string, tokens, object))
             
-    def echo(self, message, tokens = {}):
+    def echo(self, message, tokens={}, usePrefix=True):
         # Get string
         string = self.getLangStrings(message)
         
         # Set prefix
-        prefix = '%s:' % (self.langStrings('Prefix', {}, 'en'))
+        if usePrefix:
+            prefix = '%s: ' % (self.langStrings('Prefix', {}, 'en'))
+        else:
+            prefix = ''
         
         if self.userid == 0:
             # Print to console
-            es.dbgmsg(0, '%s %s' % (prefix, self.getString(string, tokens)))
+            es.dbgmsg(0, '%s%s' % (prefix, self.getString(string, tokens)))
         elif self.userid:
             # Send echo message
-            usermsg.echo(self.userid, '%s %s' % (prefix, self.getString(string, tokens)))
+            usermsg.echo(self.userid, '%s%s' % (prefix, self.getString(string, tokens)))
         else:
             # Loop through the players
             for userid in es.getUseridList():
@@ -2453,4 +2484,4 @@ class Message:
                 object = playerlib.getPlayer(userid)
                 
                 # Send it
-                usermsg.echo(userid, '%s %s' % (prefix, self.getString(string, tokens)))
+                usermsg.echo(userid, '%s%s' % (prefix, self.getString(string, tokens)))

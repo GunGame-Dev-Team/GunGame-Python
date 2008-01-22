@@ -12,7 +12,7 @@ import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.64"
+gungameVersion = "1.0.77"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -49,6 +49,7 @@ dict_reconnectingPlayers = {}
 dict_gungameWinners = {}
 dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
+list_customAddonsDir = []
 
 # Class used in the dict_gungame_core
 class gungamePlayers:
@@ -1024,6 +1025,14 @@ def getAddonDependencyList(dependencyName):
 def getRegisteredDependencies():
     global dict_gungameRegisteredDependencies
     return dict_gungameRegisteredDependencies
+
+def getIncludedAddonsDirList():
+    global list_includedAddonsDir
+    return list_includedAddonsDir
+    
+def getCustomAddonsDirList():
+    global list_customAddonsDir
+    return list_customAddonsDir
 # -----------------------------------------------
 # END Generic Gungame COMMANDS
 
@@ -1369,6 +1378,7 @@ def load():
     StartProfiling(g_Prof)
     
     global list_includedAddonsDir
+    global list_customAddonsDir
     global dict_gungameVariables
     global dict_gungameWinners
     global countBombDeathAsSuicide

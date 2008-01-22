@@ -17,7 +17,7 @@ info.basename = "gungame/included_addons/gg_error_logging"
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisber"
 
 def load():
-    gungame.registerAddon('gungame/included_addons/gg_error_logging', 'GG Error Logging')
+    gungame.registerAddon('gg_error_logging', 'GG Error Logging')
     sys.excepthook = gungameExceptHook
     if not os.path.isfile(gungameErrorLogPath):
         # Create the Error Log
@@ -25,11 +25,11 @@ def load():
         gungameErrorLog.close()
         
 def unload():
-    gungame.unregisterAddon('gungame/included_addons/gg_error_logging')
+    gungame.unregisterAddon('gg_error_logging')
 
 def gg_variable_changed(event_var):
     if event_var['cvarname'] == 'gg_error_logging' and event_var['newvalue'] == '0':
-        es.unload('gungame/included_addons/gg_error_logging')
+        es.unload('gg_error_logging')
 
 def gungameExceptHook(type, value, tb):
     gungameError = traceback.format_exception(type, value, tb)

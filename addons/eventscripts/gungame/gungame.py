@@ -1797,7 +1797,7 @@ def player_spawn(event_var):
             stripPlayer(userid)
             
             # Check to see if the WarmUp Round is Active
-            if not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_warmup_round'):
+            if not dict_gungameRegisteredAddons.has_key('gg_warmup_round'):
                 # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
                 giveWeapon(userid)
                 
@@ -2070,7 +2070,7 @@ def gg_levelup(event_var):
         # ----------------------------------------------------------------------
         # END LEADER LEVEL COMPARISONS & MESSAGING
         
-        if not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_warmup_round'):
+        if not dict_gungameRegisteredAddons.has_key('gg_warmup_round'):
             # Get levels behind leader
             levelsBehindLeader = newLeaderLevel - gungamePlayer.get('level')
             
@@ -2276,33 +2276,33 @@ def gg_variable_changed(event_var):
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':
-        if newValue == '1' and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_map_vote'):
+        if newValue == '1' and  not dict_gungameRegisteredAddons.has_key('gg_map_vote'):
             es.server.queuecmd('es_load gungame/included_addons/gg_map_vote')
-        elif newValue != '1' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_map_vote'):
+        elif newValue != '1' and dict_gungameRegisteredAddons.has_key('gg_map_vote'):
             es.unload('gungame/included_addons/gg_map_vote')
     # GG_NADE_BONUS
     elif cvarName == 'gg_nade_bonus':
         if newValue != '0' and newValue != 'knife' and newValue in list_allWeapons:
             es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_nade_bonus'):
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_nade_bonus'):
             es.unload('gungame/included_addons/gg_nade_bonus')
     # GG_SPAWN_PROTECTION
     elif cvarName == 'gg_spawn_protect':
-        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_spawn_protect'):
+        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gg_spawn_protect'):
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_spawn_protect'):
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_spawn_protect'):
             es.unload('gungame/included_addons/gg_spawn_protect')
     # GG_FRIENDLYFIRE
     elif cvarName == 'gg_friendlyfire':
-        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_friendlyfire'):
+        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gg_friendlyfire'):
             es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\gg_friendlyfire'):
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_friendlyfire'):
             es.unload('gungame/included_addons/gg_friendlyfire')
     # All other included addons
     elif cvarName in list_includedAddonsDir:
         if newValue == '1':
             es.server.queuecmd('es_load gungame/included_addons/%s' %cvarName)
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gungame\\included_addons\\%s' %cvarName):
+        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('%s' %cvarName):
             es.unload('gungame/included_addons/%s' %cvarName)
             
 

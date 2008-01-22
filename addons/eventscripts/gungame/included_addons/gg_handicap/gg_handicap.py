@@ -25,7 +25,7 @@ gg_handicap_update = int(gungame.getGunGameVar('gg_handicap_update'))
 def load():
     global gg_handicap_update
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_handicap', 'GG Handicap')
+    gungame.registerAddon('gg_handicap', 'GG Handicap')
     if gg_handicap_update:
         repeat.create('handicapUpdateLoop', handicapUpdate)
         repeat.start('handicapUpdateLoop', gg_handicap_update, 0)
@@ -33,7 +33,7 @@ def load():
 def unload():
     global gg_handicap_update
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_handicap')
+    gungame.unregisterAddon('gg_handicap')
     if gg_handicap_update:
         repeat.delete('handicapUpdateLoop')
 

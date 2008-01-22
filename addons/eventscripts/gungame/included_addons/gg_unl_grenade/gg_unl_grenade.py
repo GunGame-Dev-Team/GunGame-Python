@@ -23,7 +23,7 @@ info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 def load():
     # Register this addon with GunGame
     global dict_playerWeapons
-    gungame.registerAddon('gungame/included_addons/gg_unl_grenade', 'GG Unlimited Grenade')
+    gungame.registerAddon('gg_unl_grenade', 'GG Unlimited Grenade')
     
     if gungame.getGunGameVar('gg_earn_nade') == '1':
         gungame.setGunGameVar('gg_earn_nade', '0')
@@ -31,7 +31,7 @@ def load():
         
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_unl_grenade')
+    gungame.unregisterAddon('gg_unl_grenade')
     
     
 def gg_variable_changed(event_var):

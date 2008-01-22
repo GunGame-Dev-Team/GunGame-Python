@@ -26,15 +26,11 @@ if 'weapon_' not in gungame.getGunGameVar('gg_nade_bonus'):
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_nade_bonus', 'GG Nade Bonus')
+    gungame.registerAddon('gg_nade_bonus', 'GG Nade Bonus')
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_nade_bonus')
-
-def gg_variable_changed(event_var):
-    if event_var['cvarname'] == 'gg_nade_bonus' and event_var['newvalue'] == '0':
-        es.unload('gungame/included_addons/gg_nade_bonus')
+    gungame.unregisterAddon('gg_nade_bonus')
 
 def player_spawn(event_var):
     userid = int(event_var['userid'])

@@ -19,11 +19,11 @@ info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisb
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon("gungame/included_addons/gg_noblock", "GG NoBlock")
+    gungame.registerAddon("gg_noblock", "GG NoBlock")
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon("gungame/included_addons/gg_noblock")
+    gungame.unregisterAddon("gg_noblock")
 
 def player_spawn(event_var):
     # Set player's collisiongroup to 2, noblock

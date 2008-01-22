@@ -23,14 +23,14 @@ ff = gungame.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon("gungame/included_addons/gg_friendlyfire", "GG FriendlyFire")
+    gungame.registerAddon("gg_friendlyfire", "GG FriendlyFire")
     
     # Set mp_friendlyfire to 0
     es.forcevalue("mp_friendlyfire", 0)
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon("gungame/included_addons/gg_friendlyfire")
+    gungame.unregisterAddon("gg_friendlyfire")
 
 def round_start(event_var):
     # Set mp_friendlyfire to 0

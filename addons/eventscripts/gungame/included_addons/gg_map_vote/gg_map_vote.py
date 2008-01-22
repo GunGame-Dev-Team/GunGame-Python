@@ -66,7 +66,7 @@ es.ServerVar('eventscripts_maphandler').set(1)
 
 def load():
     # register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_map_vote', 'gg_map_vote')
+    gungame.registerAddon('gg_map_vote', 'gg_map_vote')
 
     # create commands
     if not es.exists('command','gg_vote_cancel'):
@@ -87,7 +87,7 @@ def unload():
     global oldEventscriptsMaphandler
     
     # unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_map_vote')
+    gungame.unregisterAddon('gg_map_vote')
         
     # Restore original value for eventscripts_maphandler
     es.ServerVar('eventscripts_maphandler').set(oldEventscriptsMaphandler)

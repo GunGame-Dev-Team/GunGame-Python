@@ -21,15 +21,15 @@ info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
 def load():
     # Register the addon with GunGame so that it will be automatically unloaded if GunGame is unloaded
-    gungame.registerAddon('gungame/included_addons/gg_earn_nade', 'GG Earn Nade')
+    gungame.registerAddon('gg_earn_nade', 'GG Earn Nade')
 
 def unload():
     # Unregister the addon with GunGame so that it will be automatically unloaded if GunGame is unloaded
-    gungame.unregisterAddon('gungame/included_addons/gg_earn_nade')
+    gungame.unregisterAddon('gg_earn_nade')
 
 def gg_variable_changed(event_var):
     if event_var['cvarname'] == 'gg_earn_grenades' and event_var['newvalue'] == '0':
-        es.unload('gungame/included_addons/gg_earn_nade')
+        es.unload('gg_earn_nade')
 
 def player_death(event_var):
     attacker = int(event_var['attacker'])

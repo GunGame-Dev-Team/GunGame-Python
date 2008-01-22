@@ -61,11 +61,11 @@ def load():
     global mapName
     
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_deathmatch', 'GG Deathmatch')
+    gungame.registerAddon('gg_deathmatch', 'GG Deathmatch')
     
     # Register Dependencies
-    gungame.registerDependency('gungame/included_addons/gg_turbo', 'gungame/included_addons/gg_deathmatch')
-    gungame.registerDependency('gungame/included_addons/gg_dead_strip', 'gungame/included_addons/gg_deathmatch')
+    gungame.registerDependency('gg_turbo', 'gg_deathmatch')
+    gungame.registerDependency('gg_dead_strip', 'gg_deathmatch')
     
     # Enable turbo mode, and remove all objectives
     gungame.setGunGameVar('gg_turbo', '1')
@@ -75,7 +75,7 @@ def load():
     # Check if gg_knife_elite is running
     if gungame.getGunGameVar('gg_knife_elite') == '1':
         # Check if gg_knife_elite is a dependency of any other addons
-        if not gungame.checkDependency('gungame/included_addons/gg_knife_elite'):
+        if not gungame.checkDependency('gg_knife_elite'):
             # Unload gg_knife_elite
             gungame.setGunGameVar('gg_knife_elite', '0')
         else:
@@ -83,7 +83,7 @@ def load():
             es.dbgmsg(0, '***WARNING***')
             es.dbgmsg(0, '* gg_deathmatch cannot unload gg_knife_elite')
             es.dbgmsg(0, '* gg_knife_elite is a dependency of the following addons:')
-            for addon in gungame.getAddonDependencyList('gungame/included_addons/gg_knife_elite'):
+            for addon in gungame.getAddonDependencyList('gg_knife_elite'):
                 es.dbgmsg(0, '* ' + addon)
             es.dbgmsg(0, '* gg_deathmatch will be unloaded')
             es.dbgmsg(0, '*************')
@@ -117,18 +117,18 @@ def load():
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_deathmatch')
+    gungame.unregisterAddon('gg_deathmatch')
     
     # UnRegister Dependencies
-    gungame.unregisterDependency('gungame/included_addons/gg_turbo', 'gungame/included_addons/gg_deathmatch')
-    gungame.unregisterDependency('gungame/included_addons/gg_dead_strip', 'gungame/included_addons/gg_deathmatch')
+    gungame.unregisterDependency('gg_turbo', 'gg_deathmatch')
+    gungame.unregisterDependency('gg_dead_strip', 'gg_deathmatch')
     
     # Set turbo mode and knife elite back to what they originally were
     if not dict_gungameVars['turbo_mode_originally']:
-        if not gungame.checkDependency('gungame/included_addons/gg_turbo'):
+        if not gungame.checkDependency('gg_turbo'):
             gungame.setGunGameVar('gg_turbo', 0)
     if not dict_gungameVars['dead_strip_originally']:
-        if not gungame.checkDependency('gungame/included_addons/gg_dead_strip'):
+        if not gungame.checkDependency('gg_dead_strip'):
             gungame.setGunGameVar('gg_dead_strip', 0)
     
     # Return vars
@@ -156,7 +156,7 @@ def gg_variable_changed(event_var):
     # Check if gg_knife_elite is running
     if event_var['cvarname'] == 'gg_knife_elite' and int(event_var['newvalue']) == 1:
         # Check if gg_knife_elite is a dependency of any other addons
-        if not gungame.checkDependency('gungame/included_addons/gg_knife_elite'):
+        if not gungame.checkDependency('gg_knife_elite'):
             # Unload gg_knife_elite
             gungame.setGunGameVar('gg_knife_elite', '0')
         else:
@@ -166,7 +166,7 @@ def gg_variable_changed(event_var):
             es.dbgmsg(0, '* gg_knife_elite is a dependency of the following addons:')
             
             # Show dependencies
-            for addon in gungame.getAddonDependencyList('gungame/included_addons/gg_knife_elite'):
+            for addon in gungame.getAddonDependencyList('gg_knife_elite'):
                 es.dbgmsg(0, '* ' + addon)
             es.dbgmsg(0, '* gg_deathmatch will be unloaded')
             es.dbgmsg(0, '*************')

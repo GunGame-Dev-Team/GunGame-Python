@@ -33,7 +33,7 @@ def load():
         dict_playersEliminated[str(userid)] = []
         
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_elimination', 'GG Elimination')
+    gungame.registerAddon('gg_elimination', 'GG Elimination')
     
     # Unload Elimination if gg_deathmatch is set to 1
     if gungame.getGunGameVar('gg_deathmatch') == '1':
@@ -45,7 +45,7 @@ def unload():
     roundActive = 0
     
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_elimination')
+    gungame.unregisterAddon('gg_elimination')
 
 def gg_variable_changed(event_var):
     # Register change for gg_dm_ragdoll_effect

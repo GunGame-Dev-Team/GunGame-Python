@@ -25,11 +25,11 @@ list_currentTripleLevel = []
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon("gungame/included_addons/gg_triple_level", "GG Triple Level")
+    gungame.registerAddon("gg_triple_level", "GG Triple Level")
     
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon("gungame/included_addons/gg_triple_level")
+    gungame.unregisterAddon("gg_triple_level")
 
 def gg_levelup(event_var):
     userid = event_var['userid']

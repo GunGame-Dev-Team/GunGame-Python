@@ -30,11 +30,15 @@ info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_welcome_msg', 'GG Welcome Message')
+    gungame.registerAddon('gg_welcome_msg', 'GG Welcome Message')
     
     # Create the popup
     menu = popuplib.create('gg_welcome_msg')
     menu.addline('')
+    
+def unload():
+    # Unregister this addon with GunGame
+    gungame.unregisterAddon('gg_welcome_msg')
     
 def player_connect(event_var):
     # Send the popup in 10 seconds

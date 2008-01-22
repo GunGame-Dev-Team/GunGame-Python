@@ -23,14 +23,14 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp'
 def load():
     # Register this addon with GunGame
     global dict_playerWeapons
-    gungame.registerAddon('gungame/included_addons/gg_dead_strip', 'GG Dead Strip')
+    gungame.registerAddon('gg_dead_strip', 'GG Dead Strip')
     es.addons.registerClientCommandFilter(filterDrop)
     
     # es.server.cmd('eventscripts_cmdprefixes = !d')
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_dead_strip')
+    gungame.unregisterAddon('gg_dead_strip')
     es.addons.unregisterClientCommandFilter(filterDrop)
 
 def item_pickup(event_var):

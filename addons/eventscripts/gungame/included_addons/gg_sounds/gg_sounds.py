@@ -15,7 +15,7 @@ info = es.AddonInfo()
 info.name     = "gg_sounds Addon for GunGame: Python" 
 info.version  = "1.17.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_knife_pro" 
+info.basename = "gungame/included_addons/gg_sounds" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
 
 global gg_sounds
@@ -37,7 +37,14 @@ list_validSoundPackOptions  = ['levelup',
                                'handicap']
 
 def load():
+    # Register this addon with GunGame
+    gungame.registerAddon('gg_sounds', 'GG Sounds')
+    
     readSoundPack()
+    
+def unload():
+    # Unregister this addon with GunGame
+    gungame.unregisterAddon('gg_sounds')
 
 def readSoundPack():
     soundPackName               = gungame.getGunGameVar('gg_soundpack')

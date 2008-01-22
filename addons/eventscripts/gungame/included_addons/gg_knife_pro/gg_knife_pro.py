@@ -27,14 +27,14 @@ gg_knife_pro_limit = 0
 
 def load():    
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_knife_pro', 'GG Knife Pro')
+    gungame.registerAddon('gg_knife_pro', 'GG Knife Pro')
     
     # Get gg_knife_pro_limit
     gg_knife_pro_limit = int(gungame.getGunGameVar('gg_knife_pro_limit'))
     
 def unload():
     # Register this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_knife_pro')
+    gungame.unregisterAddon('gg_knife_pro')
 
 def gg_variable_changed(event_var):
     # Get the cvar name
@@ -44,10 +44,6 @@ def gg_variable_changed(event_var):
     if cvar == 'gg_knife_pro_limit':
         gg_knife_pro_limit = int(event_var['newvalue'])
     
-    # Unload the addon if they changed "gg_knife_pro" to "0"
-    if cvar == 'gg_knife_pro' and event_var['newvalue'] == '0':
-        es.unload('gungame/included_addons/gg_knife_pro')
-
 def player_death(event_var):
     # Check for knife kill, and not a team kill
     if event_var['weapon'] != 'knife' or event_var['es_attackerteam'] == event_var['es_userteam']:

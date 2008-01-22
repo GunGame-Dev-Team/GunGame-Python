@@ -19,11 +19,11 @@ info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisb
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon("gungame/included_addons/gg_stats", "GG Stats")
+    gungame.registerAddon("gg_stats", "GG Stats")
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon("gungame/included_addons/gg_stats")
+    gungame.unregisterAddon("gg_stats")
 
 def cteam(team):
     if team == 2:

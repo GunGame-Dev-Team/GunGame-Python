@@ -25,12 +25,12 @@ dict_hostageTracker = {}
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_hostage_objective', 'GG Hostage Objective')
+    gungame.registerAddon('gg_hostage_objective', 'GG Hostage Objective')
         
         
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_hostage_objective')
+    gungame.unregisterAddon('gg_hostage_objective')
     
     
 def round_start(event_var):

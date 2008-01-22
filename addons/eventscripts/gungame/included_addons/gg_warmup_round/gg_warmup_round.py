@@ -50,7 +50,7 @@ def load():
     gamethread.cancelDelayed('setPreventAll0')
     
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_warmup_round', 'GG WarmUp Round')
+    gungame.registerAddon('gg_warmup_round', 'GG WarmUp Round')
     
     # Set PreventAll to "1" for everyone
     gungame.setPreventLevelAll(1)
@@ -84,7 +84,7 @@ def unload():
     global mp_freezetimeBackUp
     
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_warmup_round')
+    gungame.unregisterAddon('gg_warmup_round')
     
     # Set everyone's PreventLevel to 0
     gungame.setPreventLevelAll(0)

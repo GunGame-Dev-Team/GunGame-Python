@@ -35,11 +35,11 @@ addonCVars['ragdoll_effect'] = int(gungame.getGunGameVar('gg_dissolver_effect'))
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_dissolver', 'GG Dissolver')
+    gungame.registerAddon('gg_dissolver', 'GG Dissolver')
     
 def unload():
     # UnRegister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_dissolver')
+    gungame.unregisterAddon('gg_dissolver')
 
 def player_death(event_var):
     # Set vars

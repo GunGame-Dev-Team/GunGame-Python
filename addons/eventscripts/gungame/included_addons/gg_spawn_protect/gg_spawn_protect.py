@@ -31,11 +31,11 @@ dict_SpawnProtectVars['delay'] = int(gungame.getGunGameVar('gg_spawn_protect'))
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_spawn_protect', 'GG Spawn Protection')
+    gungame.registerAddon('gg_spawn_protect', 'GG Spawn Protection')
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_spawn_protect')
+    gungame.unregisterAddon('gg_spawn_protect')
 
 def gg_variable_changed(event_var):
     global dict_SpawnProtectVars

@@ -21,11 +21,11 @@ info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
 
 def load():
     # Register this addon with GunGame
-    gungame.registerAddon('gungame/included_addons/gg_turbo', 'GG Turbo')
+    gungame.registerAddon('gg_turbo', 'GG Turbo')
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gungame/included_addons/gg_turbo')
+    gungame.unregisterAddon('gg_turbo')
 
 def gg_levelup(event_var):
     userid = int(event_var['userid'])

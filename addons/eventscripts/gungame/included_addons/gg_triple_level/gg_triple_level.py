@@ -69,8 +69,9 @@ def gg_levelup(event_var):
         gamethread.delayed(10, removeTriple, (userid))
 
 def player_death(event_var):
+    userid = event_var['userid']
     # Get deaths player
-    tripler = gungame.getPlayer(event_var["userid"])
+    tripler = gungame.getPlayer(userid)
     
     # Reset the triple level counter on player death
     tripler.set("triple", 0)

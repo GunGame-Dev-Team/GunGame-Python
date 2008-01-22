@@ -75,11 +75,6 @@ def player_death(event_var):
     
     # Reset the triple level counter on player death
     tripler.set("triple", 0)
-    
-    # Check to see if this player is currently triple-levelled
-    if userid in list_currentTripleLevel:
-        # Since they are triple-levelled, we need to remove the triple
-        removeTriple(userid)
 
 def round_start(event_var):
     # Get all players

@@ -54,6 +54,9 @@ lastSpawnPoint = {}
 spawnPoints = {}
 mapName = 0
 
+# ==============================================================================
+#   Event functions
+# ==============================================================================
 def load():
     global mapName
     
@@ -174,7 +177,21 @@ def es_map_start(event_var):
     
     mapName = event_var['mapname']
     getSpawnPoints(event_var['mapname'])
+    
+def player_team(event_var):
+    # Respawn the player
+    gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], event_var['userid'])))
 
+def player_death(event_var):
+    # Remove their defuser
+    gamethread.delayed(0.5, es.remove, ('item_defuser'))
+    
+    # Respawn the player
+    respawn(event_var['userid'])
+
+# ==============================================================================
+#   Spawnpoint functions
+# ==============================================================================
 def getSpawnPoints(_mapName):
     global spawnPoints
     global spawnFile
@@ -182,7 +199,7 @@ def getSpawnPoints(_mapName):
     
     # Open the file and clear the spawn point dictionary
     spawnPoints = {}
-    spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % _mapName)
+    spawnFile = gungame.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % _mapName)
     spawnPointsExist = os.path.isfile(spawnFile)
     
     # Does the spawn file exist
@@ -216,7 +233,7 @@ def addSpawnPoint(posX, posY, posZ, eyeYaw):
     # Do we have a spawn point file?
     if not spawnPointsExist:
         # Create spawnpoint file
-        spawnFile = getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName)
+        spawnFile = gungame.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName)
         spawnPointFile = open(spawnFile, 'w').close()
         
         # Rehash spawnpoints
@@ -266,33 +283,9 @@ def removeSpawnPoint(index):
     # Get spawnpoints again
     getSpawnPoints(mapName)
 
-def getGameDir(dir):
-    # Get the gungame addon path
-    addonPath = es.getAddonPath('gungame')
-    
-    # Split using the path seperator
-    parts = addonPath.split('\\')
-    
-    # Pop the last 2 items in the list
-    parts.pop()
-    parts.pop()
-    
-    # Append cfg then join
-    parts.append(dir)
-    
-    return string.join(parts, '\\')
-
-def player_team(event_var):
-    # Respawn the player
-    gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], event_var['userid'])))
-
-def player_death(event_var):
-    # Remove their defuser
-    gamethread.delayed(0.5, es.remove, ('item_defuser'))
-    
-    # Respawn the player
-    respawn(event_var['userid'])
-
+# ==============================================================================
+#   Respawn code
+# ==============================================================================
 def RespawnCountdown(userid, repeatInfo):
     # Is it in warmup?
     if int(gungame.getGlobal('isWarmup')) or int(gungame.getGlobal('voteActive')):
@@ -333,39 +326,10 @@ def respawn(userid):
         
         # Teleport the player
         gamethread.delayed(dict_deathmatchVars['respawn_delay'] + 1, gungame.teleportPlayer, (int(userid), spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4]))
-    
-def cmd_addSpawnPoint():
-    global spawnPoints
-    
-    # Do we have enough arguments?
-    if int(es.getargc()) != 2:
-        # Raise argument error
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
-    
-    # Get executor userid and 1st argument
-    userid = int(es.getargv(1))
-    
-    # Does the userid exist?
-    if not es.exists('userid', userid):
-        gungame.Message(0).echo('CannotCreateSpawnpoint', {'userid': userid})
-        return
-    
-    # Is a map loaded?
-    if mapName != 0:
-        # Get player location and viewing angles
-        playerlibPlayer = playerlib.getPlayer(userid)
-        playerLoc = es.getplayerlocation(userid)
-        playerViewAngle = playerlibPlayer.get('viewangle')
-        
-        # Add spawn point
-        addSpawnPoint(playerLoc[0], playerLoc[1], playerLoc[2], playerViewAngle[0])
-        
-        # Show a sprite at the new spawnpoint location
-        es.server.cmd('est_effect 11 %d 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, playerLoc[0], playerLoc[1], float(playerLoc[2]) + 50))
-        
-        # Tell the user where the spawnpoint is, and the index
-        gungame.Message(userid).tell('gg_deathmatch:AddedSpawnpoint', {'index': len(spawnPoints) - 1})
-        
+
+# ==============================================================================
+#   Convertion commands
+# ==============================================================================
 def cmd_convert():
     # Do we have enough arguments?
     if int(es.getargc()) != 1:
@@ -373,18 +337,18 @@ def cmd_convert():
         raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
     
     # Loop through the files in the legacy folder
-    for f in os.listdir(getGameDir('cfg\\gungame\\spawnpoints\\legacy')):
+    for f in os.listdir(gungame.getGameDir('cfg\\gungame\\spawnpoints\\legacy')):
         name, ext = os.path.splitext(f) # Handles no-extension files, etc.
         
         if name.startswith('es_') and name.endswith('_db') and ext == '.txt':
             # Announce we are parsing it
-            gungame.Message(0).echo('gg_deathmatch:ConvertingFile', {'file': f})
+            gungame.echo(0, 'gg_deathmatch', 'ConvertingFile', {'file': f})
             
             # Parse it
-            points = parseLegacySpawnpoint(getGameDir('cfg\\gungame\\spawnpoints\\legacy\\') + f)
+            points = parseLegacySpawnpoint(gungame.getGameDir('cfg\\gungame\\spawnpoints\\legacy\\') + f)
             
             # Now write it to a file
-            newFile = open(getGameDir('cfg\\gungame\\spawnpoints\\') + f.strip('es_').strip('_db'), 'w')
+            newFile = open(gungame.getGameDir('cfg\\gungame\\spawnpoints\\') + f.strip('es_').strip('_db'), 'w')
             
             # Loop through the points
             for point in points:
@@ -394,7 +358,7 @@ def cmd_convert():
             newFile.close()
             
     # Announce that all files have been converted
-    gungame.Message(0).echo('gg_deathmatch:ConvertingCompleted')
+    gungame.echo(0, 'gg_deathmatch', 'ConvertingCompleted')
 
 def parseLegacySpawnpoint(file):
     # Create vars
@@ -420,6 +384,41 @@ def parseLegacySpawnpoint(file):
     # Return
     return points
 
+# ==============================================================================
+#   Console commands
+# ==============================================================================
+def cmd_addSpawnPoint():
+    global spawnPoints
+    
+    # Do we have enough arguments?
+    if int(es.getargc()) != 2:
+        # Raise argument error
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
+    
+    # Get executor userid and 1st argument
+    userid = int(es.getargv(1))
+    
+    # Does the userid exist?
+    if not es.exists('userid', userid):
+        gungame.echo(0, 'gg_deathmatch', 'CannotCreateSpawnpoint', {'userid': userid})
+        return
+    
+    # Is a map loaded?
+    if mapName != 0:
+        # Get player location and viewing angles
+        playerlibPlayer = playerlib.getPlayer(userid)
+        playerLoc = es.getplayerlocation(userid)
+        playerViewAngle = playerlibPlayer.get('viewangle')
+        
+        # Add spawn point
+        addSpawnPoint(playerLoc[0], playerLoc[1], playerLoc[2], playerViewAngle[0])
+        
+        # Show a sprite at the new spawnpoint location
+        es.server.cmd('est_effect 11 %d 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, playerLoc[0], playerLoc[1], float(playerLoc[2]) + 50))
+        
+        # Tell the user where the spawnpoint is, and the index
+        gungame.msg(userid, 'gg_deathmatch', 'AddedSpawnpoint', {'index': len(spawnPoints) - 1})
+
 def cmd_delAllSpawnPoints():
     # Enough arguments?
     if int(es.getargc()) != 1:
@@ -429,7 +428,7 @@ def cmd_delAllSpawnPoints():
     # Check if a map is loaded
     if mapName != 0:
         # Clear the spawnpoint file
-        spawnFile = open(getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName), 'w').close()
+        spawnFile = open(gungame.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName), 'w').close()
         
         # Get spawnpoints
         getSpawnPoints(mapName)
@@ -441,7 +440,7 @@ def cmd_printSpawnPoints():
         raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
     
     # Send message
-    gungame.Message(0).echo('gg_deathmatch:SpawnpointsFor', {'map': mapName})
+    gungame.echo(0, 'gg_deathmatch', 'SpawnpointsFor', {'map': mapName})
     
     # Loop through the spawnpoints
     for index in spawnPoints:
@@ -449,10 +448,10 @@ def cmd_printSpawnPoints():
         spawnLoc = spawnPoints[index]
         
         # Print to console
-        gungame.Message(0).echo('gg_deathmatch:SpawnpointInfo', {'index': index, 'x': spawnLoc[0], 'y': spawnLoc[1], 'z': spawnLoc[2]})
+        gungame.echo(0, 'gg_deathmatch', 'SpawnpointInfo', {'index': index, 'x': spawnLoc[0], 'y': spawnLoc[1], 'z': spawnLoc[2]})
     
     # Send end message
-    gungame.Message(0).echo('gg_deathmatch:SpawnpointsEnd')
+    gungame.echo(0, 'gg_deathmatch', 'SpawnpointsEnd')
 
 def cmd_delSpawnPoint():
     # Enough arguments?
@@ -464,7 +463,7 @@ def cmd_delSpawnPoint():
     removeSpawnPoint(int(es.getargv(1)))
     
     # Print to console
-    gungame.Message(0).echo('RemovedSpawnpoint', {'index': es.getargv(1)})
+    gungame.echo(0, 'gg_deathmatch', 'RemovedSpawnpoint', {'index': es.getargv(1)})
 
 def cmd_showSpawnPoints():
     # Do we have enough arguments?

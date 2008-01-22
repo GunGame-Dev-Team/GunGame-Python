@@ -211,7 +211,7 @@ def startVote():
     global voteTimer
     
     # Send the map vote to the players
-    announce('Place your votes for the nextmap.')
+    gungame.msg('#all', 'gg_map_vote', 'PlaceYourVotes')
     popuplib.send('voteMenu', es.getUseridList())
     
     # Play vote
@@ -231,13 +231,29 @@ def VoteCountdown(repeatInfo):
     global voteTimer
     
     if voteTimer:
-        hudhintText = 'Time Remaining: %d' % voteTimer
+        # Countdown 5 or less?
+        if voteTimer <= 5:
+            # Beep :)
+            es.cexec_all('playgamesound hl1/fvox/beep.wav')
+            
+        # Get vote info
+        voteInfo = str()
         for map in dict_playerChoice['votedMaps']:
-            hudhintText += '\n%s (%d votes)' % (map, dict_playerChoice['votedMaps'][map])
-        for userid in es.getUseridList():
-            usermsg.hudhint(userid, hudhintText)
+            voteInfo += '\n%s (%d votes)' % (map, dict_playerChoice['votedMaps'][map])
+
+        # Send the HudHint
+        if voteTimer == 1:
+            gungame.hudhint('#all', 'gg_map_vote', 'Countdown_Singular', {'voteInfo': voteInfo})
+        else:
+            gungame.hudhint('#all', 'gg_map_vote', 'Countdown_Plural', {'time': voteTimer, 'voteInfo': voteInfo})
     else:
+        # Play beep sound
+        es.cexec_all('playgamesound hl1/fvox/beep.wav')
+        
+        # Get results
         voteResults()
+        
+        # Delete the repeat
         repeat.delete('voteCounter')
         
     # Decrement timer
@@ -259,8 +275,7 @@ def voteMenuSelect(userid, mapChoice, popupid):
             name = es.getplayername(userid)
             
             # Announce to the world
-            for userid in es.getUseridList():
-                usermsg.saytext2(userid, index, '\3%s\1 voted for \4%s' % (name, mapChoice))
+            gungame.saytext2('#all', 'gg_map_vote', index, 'VotedFor', {'name': name, 'map': mapChoice})
         
         # Register the vote
         if mapChoice not in dict_playerChoice['votedMaps']:
@@ -281,7 +296,7 @@ def voteResults():
     global list_voteList
     global voteActive
     
-    #set active vars
+    # Set vars
     voteActive = 0
     gungame.setGlobal('voteActive', 0)
     list_voteList = []
@@ -292,14 +307,15 @@ def voteResults():
     
     # Announce winning map
     if dict_playerChoice['totalVotes']:
-        #set eventscripts_nextmapoverride to the winning map
+        # Set eventscripts_nextmapoverride to the winning map
         es.ServerVar('eventscripts_nextmapoverride').set(dict_playerChoice['winningMap'])
-        announce('\4%s\1 won with \4%d\1 votes. \4%d\1 votes were cast.' % (dict_playerChoice['winningMap'], dict_playerChoice['winningMapVotes'], dict_playerChoice['totalVotes']))
         
-        for userid in es.getUseridList():
-            usermsg.hudhint(userid, 'Nextmap:\n%s' % dict_playerChoice['winningMap'])
+        # Announce the winning map
+        gungame.msg('#all', 'gg_map_vote', 'WinningMap', {'map': dict_playerChoice['winningMap'], 'votes': dict_playerChoice['winningMapVotes'], 'totalVotes': dict_playerChoice['totalVotes']})
+        gungame.hudhint('#all', 'gg_map_vote', 'Nextmap', {'map': dict_playerChoice['winningMap']})
     else:
-        announce('The vote was cancelled, no votes were cast.')
+        # Announce not enough votes
+        gungame.msg('#all', 'gg_map_vote', 'NotEnoughVotes')
 
     # Play end of vote sound
     es.cexec_all('play admin_plugin/actions/endofvote.mp3')
@@ -312,23 +328,26 @@ def cancelVote():
         repeat.delete('voteCounter')
         popuplib.unsendname('voteMenu', es.getUseridList())
         popuplib.delete('voteMenu')
-        announce('Vote has been cancelled.')
+        
+        gungame.msg('#all', 'gg_map_vote', 'VoteCancelled')
     else:
-        echo('No active vote to cancel.')
+        gungame.echo(0, 'gg_map_vote', 'NoVoteToCancel')
 
 # console command gg_vote_list
 def getVoteList():
     global list_voteList
     
     if list_voteList != []:
-        echo('List of maps in the next vote...')
-        msgFormat = ''
+        gungame.echo(0, 'gg_map_vote', 'ListOfMaps')
+        msgFormat = str()
+        
+        # Get maps
         for map in list_voteList:
             msgFormat += '%s ' % map
-            
-        echo(msgFormat)
+        
+        es.dbgmsg(0, msgFormat)
     else:
-        echo('The vote list is empty.')
+        gungame.echo(0, 'gg_map_vote', 'VoteListEmpty')
 
 # console command gg_vote_shuffle
 def shuffleVoteList():
@@ -337,13 +356,13 @@ def shuffleVoteList():
     
     if not voteActive:
         setVoteList()
-        echo('New shuffled map list!')
+        gungame.echo(0, 'gg_map_vote', 'NewMapList')
         msgFormat = ''
         for map in list_voteList:
             msgFormat = '%s%s ' % (msgFormat, map)
         echo(msgFormat)
     else:
-        echo('Vote already in progress!')
+        gungame.echo(0, 'gg_map_vote', 'VoteAlreadyInProgress')
 
 # console command gg_vote_start
 def voteStart():
@@ -353,13 +372,4 @@ def voteStart():
             setVoteList()
         startVote()
     else:
-        echo('Vote already in progress!')
-        
-def announce(message):
-    es.msg('#multi', '\4[GG:Map Vote]\1 %s' % message)
-    
-def tell(userid, message):
-    es.tell(userid, '#multi', '\4[GG:Map Vote]\1 %s' % message)
-
-def echo(message):
-    es.dbgmsg(0, '[GG:Map Vote] %s' % message)
+        gungame.echo(0, 'gg_map_vote', 'VoteAlreadyInProgress')

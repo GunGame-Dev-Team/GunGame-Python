@@ -2347,12 +2347,53 @@ def update_afk_dict(userid):
         afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[1]'))
         dict_afk[userid].int_afk_math_total = int(afk_math_total)
 
+# ===================================================================================================
+#   MESSAGE WRAPPERS
+# ===================================================================================================
+def msg(userid, addon, msg, opts={}, usePrefix=True):
+    # Create message
+    if userid == '#all':
+        Message().msg('%s:%s' % (addon, msg), opts, usePrefix)
+    else:
+        Message(userid).msg('%s:%s' % (addon, msg), opts, usePrefix)
+
+def saytext2(userid, addon, index, msg, opts={}, usePrefix=True):
+    # Create message
+    if userid == '#all':
+        Message().saytext2(index, '%s:%s' % (addon, msg), opts, usePrefix)
+    else:
+        Message(userid).saytext2(index, '%s:%s' % (addon, msg), opts, usePrefix)
+
+def echo(userid, addon, msg, opts={}, usePrefix=True):
+    # Create message
+    if userid == '#all':
+        Message().echo('%s:%s' % (addon, msg), opts, usePrefix)
+    else:
+        Message(userid).echo('%s:%s' % (addon, msg), opts, usePrefix)
+
+def hudhint(userid, addon, msg, opts={}):
+    # Create message
+    if userid == '#all':
+        Message().hudhint('%s:%s' % (addon, msg), opts)
+    else:
+        Message(userid).hudhint('%s:%s' % (addon, msg), opts)
+
+def centermsg(userid, addon, msg, opts={}):
+    # Create message
+    if userid == '#all':
+        Message().centermsg('%s:%s' % (addon, msg), opts)
+    else:
+        Message(userid).centermsg('%s:%s' % (addon, msg), opts)
 
 # ===================================================================================================
 #   MESSAGE CLASS
 # ===================================================================================================
 class Message:
     def __init__(self, userid = None):
+        # Set vars
+        self.userid = 0
+        self.object = None
+        
         # Is userid console?
         if userid == 0:
             # Set userid and object
@@ -2362,12 +2403,10 @@ class Message:
             # Ignore the rest of init
             return
         
-        # Set userid
-        self.userid = userid
-        
         # Set the player object
         if userid:
             self.object = playerlib.getPlayer(userid)
+            self.userid = userid
     
     def getLangStrings(self, message):
         # Set some vars
@@ -2389,17 +2428,23 @@ class Message:
                 # Raise error
                 raise NameError, 'Could not find %s/strings.ini in either the included_addons or custom_addons folder.' % file
         
-        # Return
+        # Format the string then return it
         return string
     
     def getString(self, message, tokens = None, object = None):
         # If no object set, use the class default
-        if not object and self.userid != 0:
+        if not object and self.userid != 0 and self.object != None:
             object = self.object
         
         # Return the string
         try:
-            return self.langStrings(message, tokens, object.get('lang'))
+            # Format the string
+            string = self.langStrings(message, tokens, object.get('lang'))
+            string = string.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
+            string = string.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
+            
+            # Return the string
+            return string
         except:
             return self.langStrings(message, tokens)
         
@@ -2456,7 +2501,7 @@ class Message:
         # Is a userid set?
         if self.userid:
             # Send SayText2 message
-            usermsg.saytext2(self.userid, index, self.getString(string, tokens))
+            usermsg.saytext2(self.userid, index, '%s%s' % (prefix, self.getString(string, tokens)))
         else:
             # Loop through the players
             for userid in es.getUseridList():
@@ -2465,7 +2510,7 @@ class Message:
                 object = playerlib.getPlayer(userid)
                 
                 # Send it
-                usermsg.saytext2(userid, index, self.getString(string, tokens, object))
+                usermsg.saytext2(userid, index, '%s%s' % (prefix, self.getString(string, tokens, object)))
                 
     def centermsg(self, message, tokens={}):
         # Get lang strings

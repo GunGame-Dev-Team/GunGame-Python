@@ -1867,17 +1867,20 @@ def player_spawn(event_var):
 def player_jump(event_var):
     global dict_afk
     userid = int(event_var['userid'])
-    # check if player is a bot
+    
+    # Is player human?
     if not es.isbot(userid):
         # Here, we will make sure that the player isn't counted as AFK
         dict_afk[userid].int_afk_math_total = 1
 
 def player_death(event_var):
-    StartProfiling(g_Prof)
     global countBombDeathAsSuicide
+    
+    # Set vars
     userid = int(event_var['userid'])
     gungameVictim = gungame.getPlayer(userid)
     attacker = int(event_var['attacker'])
+    
     # If the attacker is not "world"
     if attacker != 0:
         gungameAttacker = gungame.getPlayer(attacker)
@@ -1930,12 +1933,13 @@ def player_death(event_var):
             if userid == attacker:
                 # Yep! They killed themselves. Now let's see if we are going to punish the dead...
                 if int(getGunGameVar('gg_suicide_punish')) > 0:
+                    # Set vars
                     levelDownOldLevel = int(gungameAttacker.get('level'))
                     levelDownNewLevel = levelDownOldLevel - int(getGunGameVar('gg_suicide_punish'))
+                    
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:
                         # LEVEL DOWN CODE
-                        # triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, victimUserid, victimName)
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
                     else:
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
@@ -1943,64 +1947,63 @@ def player_death(event_var):
             else:
                 # Let's see if we get to punish the vile TK'er...
                 if int(getGunGameVar('gg_tk_punish')) > 0:
+                    # Set vars
                     levelDownOldLevel = gungameAttacker.get('level')
                     levelDownNewLevel = levelDownOldLevel - int(getGunGameVar('gg_tk_punish'))
+                    
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:
-                        # LEVEL DOWN CODE
-                        # triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, victimUserid, victimName)
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
                     else:
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
-    # Killed by "world"
     else:
+        # Killed by "world"
         gungameAttacker = gungame.getPlayer(userid)
+        
         if int(getGunGameVar('gg_suicide_punish')) > 0:
             # Make sure that the explosion of the bomb doesn't count as a suicide to punish
             if countBombDeathAsSuicide:
+                # Set vars
                 levelDownOldLevel = gungameAttacker.get('level')
                 levelDownNewLevel = levelDownOldLevel - int(getGunGameVar('gg_suicide_punish'))
+                
                 # Let's not put them on a non-existant level 0...
                 if levelDownNewLevel > 0:
                     # LEVEL DOWN CODE
-                    # triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, victimUserid, victimName)
                     triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
-    StopProfiling(g_Prof)
-    #es.msg("Event player_death benchmark: %f seconds" % GetProfilerTime(g_Prof))
 
 def bomb_defused(event_var):
+    ## TODO: Should we put in an option to allow them to skip these levels by defusing?
+    
+    # Set vars
     userid = int(event_var['userid'])
     gungamePlayer = gungame.getPlayer(userid)
     playerWeapon = gungamePlayer.get('weapon')
-    # Should we put in an option to allow them to skip these levels by defusing???
-    # Make sure that we don't allow them to bypass the "knife" and "hegrenade" levels
-    if playerWeapon != 'knife' and playerWeapon != 'hegrenade':
-        # Let's not let them win the game by allowing them to defuse...
-        if int(gungamePlayer.get('level')) != int(getTotalLevels()):
-            levelUpOldLevel = gungamePlayer.get('level')
-            levelUpNewLevel = levelUpOldLevel + 1
-            triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
-        else:
-            es.tell(attacker, '#multi', '\x01You can not skip the \x03%s\x01 level (level \x03#%d\x01) by defusing!' %(playerWeapon, int(gungamePlayer.get('level'))))
-    else:
-        es.tell(attacker, '#multi', '\x01You can not skip the \x03%s\x01 level (level \x03#%d\x01) by defusing!' %(playerWeapon, int(gungamePlayer.get('level'))))    
+    
+    # Cant skip the last level
+    if int(gungamePlayer.get('level')) == int(getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
+        es.tell(userid, '#multi', 'You can not skip the \4%s\1 level by defusing the bomb!' % playerWeapon)
+    
+    # Level them up
+    levelUpOldLevel = gungamePlayer.get('level')
+    levelUpNewLevel = levelUpOldLevel + 1
+    triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
 
 def bomb_exploded(event_var):
+    # Set vars
     userid = int(event_var['userid'])
     gungamePlayer = gungame.getPlayer(userid)
     playerWeapon = gungamePlayer.get('weapon')
-    # Make sure that we don't allow them to bypass the "knife" and "hegrenade" levels
-    if playerWeapon != 'knife' and playerWeapon != 'hegrenade':
-        # Let's not let them win the game by successful explosion...
-        if int(gungamePlayer.get('level')) != int(getTotalLevels()):
-            levelUpOldLevel = gungamePlayer.get('level')
-            levelUpNewLevel = levelUpOldLevel + 1
-            triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
-        else:
-            es.tell(userid, '#multi', '\x01You can not skip the \x03%s\x01 level (level \x03#%d\x01) by planting the bomb!' %(playerWeapon, int(gungamePlayer.get('level'))))
-    else:
-        es.tell(userid, '#multi', '\x01You can not skip the \x03%s\x01 level (level \x03#%d\x01) by planting the bomb!' %(playerWeapon, int(gungamePlayer.get('level'))))
-            
+    
+    # Cant skip the last level
+    if int(gungamePlayer.get('level')) == int(getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
+        es.tell(userid, '#multi', 'You can not skip the \4%s\1 level by planting the bomb!' % playerWeapon)
+    
+    # Level them up
+    levelUpOldLevel = gungamePlayer.get('level')
+    levelUpNewLevel = levelUpOldLevel + 1
+    triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
+
 def gg_levelup(event_var):
     global list_leaderNames
     
@@ -2186,21 +2189,27 @@ def unload():
                 es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
     
     # Unregister all GunGame Say and Client Commands
-    if not es.exists('saycommand', '!weapons'):
+    if es.exists('saycommand', '!weapons'):
         es.unregsaycmd('!weapons')
-    if not es.exists('clientcommand', '!weapons'):
+        
+    if es.exists('clientcommand', '!weapons'):
         es.unregclientcmd('!weapons')
+        
     if es.exists('saycommand', '!leader'):
         es.unregsaycmd('!leader')
+        
     if es.exists('clientcommand', '!leader'):
         es.unregclientcmd('!leader')
+        
     if es.exists('saycommand', '!leaders'):
         es.unregsaycmd('!leaders')
+        
     if es.exists('clientcommand', '!leaders'):
         es.unregclientcmd('!leaders')
         
     # Unload gg_sounds
     es.unload('gungame/included_addons/gg_sounds')
+    
     # Fire gg_unload event
     es.event('initialize','gg_unload')
     es.event('fire','gg_unload')
@@ -2434,9 +2443,15 @@ class Message:
                 # Send it
                 usermsg.hudhint(userid, self.getString(string, tokens, object))
                 
-    def saytext2(self, index, message, tokens = {}):
+    def saytext2(self, index, message, tokens = {}, usePrefix=True):
         # Get lang strings
         string = self.getLangStrings(message)
+        
+        # Set prefix
+        if usePrefix:
+            prefix = '\4[%s]\1 ' % (self.langStrings('Prefix', {}, 'en'))
+        else:
+            prefix = ''
         
         # Is a userid set?
         if self.userid:

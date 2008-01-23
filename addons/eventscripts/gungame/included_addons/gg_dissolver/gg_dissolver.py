@@ -47,7 +47,7 @@ def player_death(event_var):
     
     # Just remove the ragdoll?
     if addonCVars['ragdoll_effect'] == 0:
-        gamethread.delayed(2, es.server.cmd, 'es_xfire %s cs_ragdoll Kill' % userid)
+        es.delayed('2', 'es_xfire %s cs_ragdoll Kill' % userid)
     else:
         # Give the entity dissolver and set its KeyValues
         es.server.cmd('es_xgive %s env_entity_dissolver' % userid)
@@ -56,5 +56,6 @@ def player_death(event_var):
         es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (userid, addonCVars['ragdoll_effect'] - 1))
         
         # Dissolve the ragdoll then kill the dissolver
-        gamethread.delayedname(1, userid, es.server.cmd, 'es_xfire %s env_entity_dissolver Dissolve' % userid)
-        gamethread.delayedname(6, userid, es.server.cmd, 'es_xfire %s env_entity_dissolver Kill' % userid)
+        es.delayed('0.01', 'es_xfire %s env_entity_dissolver Dissolve' % userid)
+        es.delayed('4', 'es_xfire %s env_entity_dissolver Kill' % userid)
+        es.delayed('4', 'es_xfire %s cs_ragdoll Kill' % userid)

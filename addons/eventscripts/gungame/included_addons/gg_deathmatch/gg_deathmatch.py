@@ -114,6 +114,9 @@ def load():
     # Get a player list of dead players then spawn them
     for userid in playerlib.getUseridList('#dead'):
         respawn(userid)
+        
+    # Set freezetime
+    es.server.cmd('mp_freezetime 0')
 
 def unload():
     # Unregister this addon with GunGame
@@ -181,6 +184,7 @@ def es_map_start(event_var):
 def player_team(event_var):
     # Respawn the player
     gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], event_var['userid'])))
+    gungame.msg(int(event_var['userid']), 'gg_deathmatch', 'ConnectRespawnIn')
 
 def player_death(event_var):
     # Remove their defuser
@@ -188,6 +192,33 @@ def player_death(event_var):
     
     # Respawn the player
     respawn(event_var['userid'])
+    
+def player_spawn(event_var):
+    # Is a spectator?
+    if int(event_var['es_userteam']) <= 1:
+        return
+    
+    # Set vars
+    global spawnPoints
+    userid = int(event_var['userid'])
+    
+    # Do we have a spawn point file?
+    if spawnPoints != 0:
+        # Get a random spawn index
+        spawnindex = random.randint(0, len(spawnPoints) - 1)
+        
+        try:
+            if lastSpawnPoint[userid] == spawnindex:
+                # Get another random spawn index
+                spawnindex = random.randint(0, len(spawnPoints) - 1)
+        except KeyError:
+            pass
+        
+        # Set the spawnindex as the last spawn point
+        lastSpawnPoint[userid] = spawnindex
+        
+        # Teleport the player
+        gungame.teleportPlayer(userid, spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4])
 
 # ==============================================================================
 #   Spawnpoint functions
@@ -308,24 +339,6 @@ def respawn(userid):
     
     # Respawn the player
     gamethread.delayed(dict_deathmatchVars['respawn_delay'] + 1, es.server.cmd, "%s %s" % (dict_deathmatchVars['respawn_cmd'], userid))
-    
-    # Do we have a spawn point file?
-    if spawnPoints != 0:
-        # Get a random spawn index
-        spawnindex = random.randint(0, len(spawnPoints) - 1)
-        
-        try:
-            if lastSpawnPoint[userid] == spawnindex:
-                # Get another random spawn index
-                spawnindex = random.randint(0, len(spawnPoints) - 1)
-        except KeyError:
-            pass
-        
-        # Set the spawnindex as the last spawn point
-        lastSpawnPoint[userid] = spawnindex
-        
-        # Teleport the player
-        gamethread.delayed(dict_deathmatchVars['respawn_delay'] + 1, gungame.teleportPlayer, (int(userid), spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4]))
 
 # ==============================================================================
 #   Convertion commands

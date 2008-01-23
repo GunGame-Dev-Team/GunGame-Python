@@ -12,7 +12,7 @@ import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.77"
+gungameVersion = "1.0.83"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -2150,8 +2150,13 @@ def unload():
     global gungameWeaponOrderMenu
     #popuplib.delete('gungameWeaponOrderMenu.delete()
     global dict_gungameRegisteredAddons
+    global list_includedAddonsDir
+    global list_customAddonsDir
     for addonName in dict_gungameRegisteredAddons:
-        es.unload(addonName.replace('\\', '/'))
+        if addonName in list_includedAddonsDir:
+            es.unload('gungame/included_addons/%s' %addonName)
+        elif addonName in list_customAddonsDir:
+            es.unload('gungame/custom_addons/%s' %addonName)
         
     # Enable Buyzones
     userid = es.getuserid()

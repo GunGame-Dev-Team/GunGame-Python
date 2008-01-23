@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_knife_pro
-Version #:      12.01.08
+Version #:      1.0.83
 Description:    When one player knife kills another player, the attacker steals
                 a level from the victim.
 '''
@@ -17,7 +17,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_knife_pro Addon for GunGame: Python" 
-info.version  = "12.01.08"
+info.version  = "1.0.83"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_knife_pro" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
@@ -46,7 +46,9 @@ def gg_variable_changed(event_var):
     
 def player_death(event_var):
     # Check for knife kill, and not a team kill
-    if event_var['weapon'] != 'knife' or event_var['es_attackerteam'] == event_var['es_userteam']:
+    userteam = event_var['es_userteam']
+    attackerteam = event_var['es_attackerteam']
+    if event_var['weapon'] != 'knife' or attackerteam == userteam:
         return
 
     # Is warmup round?
@@ -87,12 +89,43 @@ def player_death(event_var):
     if ((gungameAttackerLevel - gungameVictimLevel) >= gg_knife_pro_limit) and gg_knife_pro_limit != 0:
         tell(attacker, 'The level difference between you and the victim is higher than the set limit.')
         return
+        
+    steamid = playerlib.uniqueid(userid, 1)
+    username = event_var['es_username']
+    gungameVictimNewLevel = gungameVictimLevel - 1
+    attackersteamid = playerlib.uniqueid(attacker, 1)
+    attackername = event_var['es_attackername']
+    gungameAttackerNewLevel = gungameAttackerLevel + 1
     
     # Trigger level down for the victim
-    gungame.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], gungameVictimLevel, gungameVictimLevel - 1, attacker, event_var['es_attackername'])
+    gungame.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
     
     # Trigger level up for the attacker
-    gungame.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerLevel + 1, userid, event_var['es_username'], 'knife')
+    gungame.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
+    
+    # BEGIN THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
+    # -----------------------------------------------------------------------------------------------------------
+    es.event('initialize', 'gg_knife_steal')
+    # The userid of the player that stole the level
+    es.event('setint', 'gg_knife_steal', 'userid', attacker)
+    # The steamid of player that stole the level (provided by uniqueid)
+    es.event('setstring', 'gg_knife_steal', 'steamid', attackersteamid)
+    # The name of the player that stole the level
+    es.event('setstring', 'gg_knife_steal', 'name', attackername)
+    # The team # of the player that stole the level up: team 2= Terrorists, 3= CT
+    es.event('setstring', 'gg_knife_steal', 'team', attackerteam)                                
+    # The new level of the player that stole the level
+    es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttackerNewLevel)
+    # The new level of the victim
+    es.event('setint', 'gg_knife_steal', 'victim_level', gungameVictimNewLevel)
+    # The userid of victim
+    es.event('setint', 'gg_knife_steal', 'victim', userid)
+    # The victim's name
+    es.event('setstring', 'gg_knife_steal', 'victimname', username)
+    # Fire the "gg_knife_steal" event
+    es.event('fire', 'gg_knife_steal')
+    # -----------------------------------------------------------------------------------------------------------
+    # END THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
     
     # Announce the level stealing
     levelStole(attacker, userid)

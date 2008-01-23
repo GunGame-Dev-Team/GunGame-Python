@@ -12,7 +12,7 @@ import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.83"
+gungameVersion = "1.0.86"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -40,6 +40,7 @@ def GetProfilerTime(storage):
 dict_afk = {}
 dict_gungame_core = {}
 dict_gungameVariables = {}
+dict_cfgSettings = {}
 dict_globals = {}
 list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
 list_secondaryWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven']
@@ -1285,6 +1286,8 @@ def setWeaponOrderFile(fileName):
 
 def loadConfig(configPath):
     global dict_gungameVariables
+    global dict_cfgSettings
+    
     # BEGIN READING THE  CONFIG OPTIONS
     # ---------------------------------------------------------
     if os.path.isfile(configPath):
@@ -1304,6 +1307,9 @@ def loadConfig(configPath):
                     if not dict_gungameVariables.has_key(list_variables[0]):
                         # Add the variable and value to the GunGame Variables Database
                         dict_gungameVariables[list_variables[0]] = list_variables[1]
+                        # Add the variable and value to the GunGame Config Settings Database
+                        if list_variables[0] not in list_includedAddonsDir:
+                            dict_cfgSettings[list_variables[0]] = list_variables[1]
                         # Create console variables
                         es.ServerVar(list_variables[0]).set(list_variables[1])
                         # See if this is our "gg_default_addons.cfg" and trigger the event "gg_variable_changed"
@@ -1386,16 +1392,6 @@ def load():
     # LOAD CUSTOM GUNGAME EVENTS
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
-    # Load the "../cstrike/cfg/gungame/gg_en_config.cfg"
-    loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg')
-    StopProfiling(g_Prof)
-    
-    # Load the "../cstrike/cfg/gungame/gg_default_addons.cfg"
-    loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg')
-    
-    # Load the "../cstrike/cfg/gungame/gg_map_vote.cfg"
-    gungame.loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_map_vote.cfg')
-    
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/included_addons" folder
     list_includedAddonsDir = []
     for includedAddon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/included_addons/'):
@@ -1408,6 +1404,16 @@ def load():
         if customAddon[0:3] == 'gg_':
             list_customAddonsDir.append(customAddon)
     
+    # Load the "../cstrike/cfg/gungame/gg_en_config.cfg"
+    loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg')
+    StopProfiling(g_Prof)
+    
+    # Load the "../cstrike/cfg/gungame/gg_default_addons.cfg"
+    loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg')
+    
+    # Load the "../cstrike/cfg/gungame/gg_map_vote.cfg"
+    gungame.loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_map_vote.cfg')
+        
     # See if we need to create a list of strip exceptions
     global list_stripExceptions
     if getGunGameVar('gg_map_strip_exceptions') != '0':

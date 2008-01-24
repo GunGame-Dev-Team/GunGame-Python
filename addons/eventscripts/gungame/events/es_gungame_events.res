@@ -76,4 +76,15 @@
 		// No event_vars for this event
 		// This event only fires when gungame is unloaded
     }
+	"gg_knife_steal"
+	{
+		"userid"	"short"		// The userid of the player that stole the level
+		"steamid"	"string"	// The steamid of player that stole the level
+        "name"		"string"	// The name of the player that stole the level
+        "team"		"byte"		// The team # of the player that stole the level up: team 2= Terrorists, 3= CT
+		"attacker_level" "byte"	// The new level of the player that stole the level
+		"victim_level" "byte"	// The new level of the victim
+        "victim"    "short"     // The userid of victim
+        "victimname" "string"	// The victim's name
+	}
 }

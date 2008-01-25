@@ -183,8 +183,10 @@ def es_map_start(event_var):
     
 def player_team(event_var):
     # Respawn the player
-    gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], event_var['userid'])))
-    gungame.msg(int(event_var['userid']), 'gg_deathmatch', 'ConnectRespawnIn')
+    if event_var['disconnect'] == '0':
+        userid = event_var['userid']
+        gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid)))
+        gungame.msg(userid, 'gg_deathmatch', 'ConnectRespawnIn')
 
 def player_death(event_var):
     # Remove their defuser
@@ -220,6 +222,12 @@ def player_spawn(event_var):
         # Teleport the player
         gungame.teleportPlayer(userid, spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4])
 
+def player_disconnect(event_var):
+    userid = event_var['userid']
+    if repeat.status('RespawnCounter%s' % userid):
+        repeat.delete('RespawnCounter%s' % userid)
+    
+    
 # ==============================================================================
 #   Spawnpoint functions
 # ==============================================================================
@@ -320,14 +328,16 @@ def removeSpawnPoint(index):
 def RespawnCountdown(userid, repeatInfo):
     # Is it in warmup?
     if int(gungame.getGlobal('isWarmup')) or int(gungame.getGlobal('voteActive')):
-        return
-    
-    # Is the counter 1?
-    if respawnCounters[userid] == 1:
-        gungame.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Singular')
-    else:
-        gungame.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Plural', {'time': respawnCounters[userid]})
-    
+        if respawnCounters[userid] > 1:
+            gungame.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Plural', {'time': respawnCounters[userid]})
+        # Is the counter 1?
+        elif respawnCounters[userid] == 1:
+            gungame.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Singular')
+            
+    # Respawn the player
+    if respawnCounters[userid] == 0:
+        es.server.cmd("%s %s" % (dict_deathmatchVars['respawn_cmd'], userid))
+        
     # Decrement the timer
     respawnCounters[userid] -= 1
 
@@ -335,10 +345,7 @@ def respawn(userid):
     # Tell the userid they are respawning
     respawnCounters[userid] = dict_deathmatchVars['respawn_delay']
     repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
-    repeat.start('RespawnCounter%s' % userid, 1, dict_deathmatchVars['respawn_delay'])
-    
-    # Respawn the player
-    gamethread.delayed(dict_deathmatchVars['respawn_delay'] + 1, es.server.cmd, "%s %s" % (dict_deathmatchVars['respawn_cmd'], userid))
+    repeat.start('RespawnCounter%s' % userid, 1, dict_deathmatchVars['respawn_delay'] + 1)
 
 # ==============================================================================
 #   Convertion commands

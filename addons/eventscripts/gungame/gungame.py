@@ -757,6 +757,24 @@ def ess_registerdependency():
         registerAddon(str(es.getargv(1)), es.getargv(2))
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 2'
+
+def ess_loadcustom():
+    #gg_loadcustom <addonName>
+    global dict_gungameRegisteredAddons
+    if int(es.getargc()) == 2:
+        # addonName = es.getargv(1)
+        loadCustom(es.getargv(1))
+    else:
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
+
+def ess_unloadcustom():
+    #gg_unloadcustom <addonName>
+    global dict_gungameRegisteredAddons
+    if int(es.getargc()) == 2:
+        # addonName = es.getargv(1)
+        unloadCustom(es.getargv(1))
+    else:
+        raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
 # ---------------------------------------------------
 # END ESS (OLDSCHOOL) COMMANDS
 
@@ -1034,6 +1052,12 @@ def getIncludedAddonsDirList():
 def getCustomAddonsDirList():
     global list_customAddonsDir
     return list_customAddonsDir
+    
+def loadCustom(addonName):
+    es.load('gungame/custom_addons/' + str(addonName))
+    
+def unloadCustom(addonName):
+    es.unload('gungame/custom_addons/' + str(addonName))
 # -----------------------------------------------
 # END Generic Gungame COMMANDS
 
@@ -1486,6 +1510,13 @@ def load():
     # GG_GETREGISTEREDADDONS
     if not es.exists('command', 'gg_getregisteredaddons'):
         es.regcmd('gg_getregisteredaddons', 'gungame/ess_getregisteredaddons', 'Retrieves a list of addons in a keygroup')
+    #gg_LOADCUSTOM
+    if not es.exists('command', 'gg_loadcustom'):
+        es.regcmd('gg_loadcustom', 'gungame/ess_loadcustom', 'Loads an addon \'from gungame/custom_addons\'')
+    #gg_UNLOADCUSTOM
+    if not es.exists('command', 'gg_unloadcustom'):
+        es.regcmd('gg_unloadcustom', 'gungame/ess_unloadcustom', 'Unloads an addon \'from gungame/custom_addons\'')
+
     # ---------------------------------------------------
     # END ESS COMMAND REGISTRATION
     
@@ -1761,9 +1792,10 @@ def player_disconnect(event_var):
     StartProfiling(g_Prof)
     global dict_reconnectingPlayers
     userid = int(event_var['userid'])
+    steamid = event_var['es_steamid']
     
     # Make sure the player is not a BOT
-    if not es.isbot(userid):
+    if steamid != 'BOT':
         # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
         if not dict_reconnectingPlayers.has_key(dict_gungame_core[userid].str_steamid):
             # Set this player up in the Reconnecting Players Dictionary
@@ -1771,7 +1803,7 @@ def player_disconnect(event_var):
     
     # BEGIN AFK CODE
     # ------------------------
-    if dict_afk.has_key(userid) and not es.isbot(userid):
+    if dict_afk.has_key(userid):
         del dict_afk[userid]
     # ---------------------
     # END AFK CODE
@@ -2353,7 +2385,7 @@ def getGameDir(dir):
 def update_afk_dict(userid):
     global dict_afk
     # check if player is a bot
-    if not es.isbot(userid):
+    if not es.isbot(userid) and es.exists('userid', userid):
         list_playerlocation = es.getplayerlocation(userid)
         afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[1]'))
         dict_afk[userid].int_afk_math_total = int(afk_math_total)

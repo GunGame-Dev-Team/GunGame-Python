@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_map_vote
-Version #:      1.0.56
+Version #:      1.0.93
 Description:    Adds map voting capabilities to gungame.
 '''
 
@@ -142,7 +142,7 @@ def gg_win(event_var):
     winningMap = dict_playerChoice['winningMap']
     if winningMap != None:
         es.set('nextlevel', winningMap)
-        announce('Next map is \4%s' % winningMap)
+        gungame.msg('#all', 'gg_map_vote', 'Nextmap', {'map': winningMap})
 
 def initiateVote():
     global dict_mapVoteVars

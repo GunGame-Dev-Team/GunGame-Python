@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_knife_pro
-Version #:      1.0.83
+Version #:      1.0.92
 Description:    When one player knife kills another player, the attacker steals
                 a level from the victim.
 '''
@@ -17,7 +17,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_knife_pro Addon for GunGame: Python" 
-info.version  = "1.0.83"
+info.version  = "1.0.92"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_knife_pro" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
@@ -52,7 +52,7 @@ def player_death(event_var):
         return
 
     # Is warmup round?
-    if gungame.getRegisteredAddons().has_key('gungame\\included_addons\\gg_warmup_round'):
+    if gungame.getRegisteredAddons().has_key('gg_warmup_round'):
         return
     
     # Get attacker info

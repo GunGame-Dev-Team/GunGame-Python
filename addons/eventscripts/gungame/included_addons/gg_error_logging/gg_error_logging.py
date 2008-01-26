@@ -11,7 +11,7 @@ dateFormat = '[%A, %B %d, %Y %H:%M:%S]'
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_error_logging Addon for GunGame: Python" 
-info.version  = "1.22.2008"
+info.version  = "1.0.92"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_error_logging" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisber"
@@ -19,12 +19,6 @@ info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisb
 def load():
     gungame.registerAddon('gg_error_logging', 'GG Error Logging')
     sys.excepthook = gungameExceptHook
-    if not os.path.isfile(gungameErrorLogPath):
-        # Create the Error Log
-        gungameErrorLog = open(gungameErrorLogPath, 'w')
-        gungameErrorLog.write('GunGame Version: %s\n' %es.ServerVar('eventscripts_ggp'))
-        gungameErrorLog.write('\n')
-        gungameErrorLog.close()
         
 def unload():
     gungame.unregisterAddon('gg_error_logging')
@@ -40,7 +34,7 @@ def gungameExceptHook(type, value, tb):
         if not os.path.isfile(gungameErrorLogPath):
             # Create the Error Log
             gungameErrorLog = open(gungameErrorLogPath, 'w')
-            gungameErrorLog.write('GunGame Version: %s\n' %es.ServerVar('eventscripts_ggp'))
+            gungameErrorLog.write('GunGame Version: %s\n' %str(es.ServerVar('eventscripts_ggp')))
             gungameErrorLog.write('\n')
         else:
             gungameErrorLog = open(gungameErrorLogPath, 'a')

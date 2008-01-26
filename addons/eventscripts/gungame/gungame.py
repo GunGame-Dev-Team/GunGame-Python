@@ -12,7 +12,7 @@ import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.86"
+gungameVersion = "1.0.92"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -1797,9 +1797,12 @@ def player_disconnect(event_var):
     # Make sure the player is not a BOT
     if steamid != 'BOT':
         # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
-        if not dict_reconnectingPlayers.has_key(dict_gungame_core[userid].str_steamid):
+        if not dict_reconnectingPlayers.has_key(dict_gungame_core[userid].str_steamid) and dict_gungame_core.has_key(userid):
             # Set this player up in the Reconnecting Players Dictionary
-            dict_reconnectingPlayers[dict_gungame_core[userid].str_steamid] = int(dict_gungame_core[userid].int_level) - int(getGunGameVar('gg_retry_punish'))
+            reconnectLevel = int(dict_gungame_core[userid].int_level) - int(getGunGameVar('gg_retry_punish'))
+            if reconnectLevel < 1:
+                reconnectLevel = 1
+            dict_reconnectingPlayers[dict_gungame_core[userid].str_steamid] = reconnectLevel
     
     # BEGIN AFK CODE
     # ------------------------

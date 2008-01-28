@@ -1889,7 +1889,8 @@ def player_spawn(event_var):
                     else:
                         HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), leaderLevel, getTotalLevels(), getLevelWeapon(leaderLevel))
                         
-                gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
+                    if not int(getGlobal('voteActive')) and not int(getGlobal('isWarmup')):
+                        gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
                 
             if int(getGunGameVar('gg_map_obj')) > 1:
                 # Check to see if this player is a CT
@@ -2158,8 +2159,9 @@ def gg_levelup(event_var):
                     HudHintText += ')'
             else:
                 HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), newLeaderLevel, getTotalLevels(), getLevelWeapon(newLeaderLevel))
-                
-            gamethread.delayed(0.5, usermsg.hudhint, (event_var['userid'], HudHintText))
+            
+            if not int(getGlobal('voteActive')) and not int(getGlobal('isWarmup')):
+                gamethread.delayed(0.5, usermsg.hudhint, (event_var['userid'], HudHintText))
         
         # BEGIN CODE FOR TRIGGERING CUSTOM EVENT "GG_VOTE"
         # ----------------------------------------------------------------------------------
@@ -2489,13 +2491,14 @@ class Message:
         
         # Return the string
         try:
-            # Format the string
-            string = self.langStrings(message, tokens, object.get('lang'))
-            string = string.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
-            string = string.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
+            # Get the string
+            rtnStr = self.langStrings(message, tokens, object.get('lang'))
+            rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
+            rtnStr = rtnStr.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
+            rtnStr = rtnStr.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
             
             # Return the string
-            return string
+            return rtnStr
         except:
             return self.langStrings(message, tokens)
         

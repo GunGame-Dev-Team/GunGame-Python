@@ -131,7 +131,7 @@ def player_spawn(event_var):
             if gungame.getGunGameVar('gg_warmup_weapon') != 'knife':
                 # Give the player the WarmUp Round Weapon
                 es.sexec(userid, 'use weapon_knife')
-                es.server.cmd('es_xgive %s weapon_%s' %(userid, gungame.getGunGameVar('gg_warmup_weapon')))
+                es.server.cmd('es_xgive %s weapon_%s' % (userid, gungame.getGunGameVar('gg_warmup_weapon')))
             else:
                 es.sexec(userid, 'use weapon_knife')
         else:

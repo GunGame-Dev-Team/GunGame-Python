@@ -178,13 +178,17 @@ def gg_variable_changed(event_var):
 def es_map_start(event_var):
     global mapName
     
+    # Get map name and spawnpoints for the respective map
     mapName = event_var['mapname']
     getSpawnPoints(event_var['mapname'])
     
 def player_team(event_var):
     # Respawn the player
     if event_var['disconnect'] == '0':
+        # Get the userid
         userid = event_var['userid']
+        
+        # Respawn the player
         gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid)))
         gungame.msg(userid, 'gg_deathmatch', 'ConnectRespawnIn')
 
@@ -209,6 +213,7 @@ def player_spawn(event_var):
         # Get a random spawn index
         spawnindex = random.randint(0, len(spawnPoints) - 1)
         
+        # Has the player spawned before? (catches error)
         try:
             if lastSpawnPoint[userid] == spawnindex:
                 # Get another random spawn index
@@ -222,11 +227,21 @@ def player_spawn(event_var):
         # Teleport the player
         gungame.teleportPlayer(userid, spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4])
 
+def round_start(event_var):
+    # Loop through the players
+    for userid in es.getUseridList():
+        # Does a respawn countdown exist?
+        if repeat.status('RespawnCounter%s' % userid):
+            # Delete the respawn counter
+            repeat.delete('RespawnCounter%s' % userid)
+
 def player_disconnect(event_var):
+    # Get userid
     userid = event_var['userid']
+    
+    # Remove the counter
     if repeat.status('RespawnCounter%s' % userid):
         repeat.delete('RespawnCounter%s' % userid)
-    
     
 # ==============================================================================
 #   Spawnpoint functions
@@ -327,7 +342,7 @@ def removeSpawnPoint(index):
 # ==============================================================================
 def RespawnCountdown(userid, repeatInfo):
     # Is it in warmup?
-    if int(gungame.getGlobal('isWarmup')) or int(gungame.getGlobal('voteActive')):
+    if not int(gungame.getGlobal('isWarmup')) and not int(gungame.getGlobal('voteActive')):
         if respawnCounters[userid] > 1:
             gungame.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Plural', {'time': respawnCounters[userid]})
         # Is the counter 1?

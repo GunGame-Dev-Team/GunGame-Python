@@ -36,7 +36,7 @@ def load():
         es.regsaycmd('!gguser', 'gungame/included_addons/gg_admin/sendUserMenu')
     if not es.exists('clientcommand', '!set_setting'):
         es.regclientcmd('!set_setting', 'gungame/included_addons/gg_admin/set_setting')
-		
+    
     gga.registerAddon('gungame/included_addons/gg_admin', 'GG Admin')
     regMenu('settingsmenu','GG Settings','admin','gg_admin')
     regMenu('defaultaddons','GG Included Addons','admin','gg_admin')
@@ -51,7 +51,8 @@ def unload():
 def regMenu(menuname,displayname,type,addon):
     es.dbgmsg(0,'*****regMenu')
     es.dbgmsg(0,'*****menuname=%s displayname=%s type=%s addon=%s' %(menuname,displayname,type,addon))
-	# types- admin, user
+    
+    # types- admin, user
     # gg_regMenu('mymenu','My Menu','admin','myaddon')
     if not dict_menus.has_key(menuname): 
         if type in ('admin','user'):
@@ -172,5 +173,3 @@ def _addons_select(userid,choice,popupid):
     elif choice[2] == 'unload':
         es.dbgmsg(0,'*****unload addon')
         es.unload('gungame/' + choice[1] + '/' + choice[0])
-		
-   

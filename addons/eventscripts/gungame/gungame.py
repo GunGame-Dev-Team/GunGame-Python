@@ -12,7 +12,7 @@ import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.94"
+gungameVersion = "1.0.96"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -1929,7 +1929,8 @@ def player_death(event_var):
         # If the attacker is not on the same team
         if int(event_var['es_userteam']) != int(event_var['es_attackerteam']):
             # If the weapon is the correct weapon
-            if event_var['weapon'] == gungameAttacker.get('weapon'):
+            weapon = event_var['weapon']
+            if weapon == gungameAttacker.get('weapon'):
                 # If the victim was not AFK
                 if not gungameVictim.get('isplayerafk'):
                     # Make sure that PreventLevel is not set to "1"
@@ -1944,7 +1945,10 @@ def player_death(event_var):
                                 # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
                                 triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
                             else:
-                                attackerMultiKillCount = gungameAttacker.get('multikill') + 1
+                                if weapon == 'knife' or weapon == 'hegrenade':
+                                    attackerMultiKillCount = int(getGunGameVar('gg_multikill'))
+                                else:
+                                    attackerMultiKillCount = gungameAttacker.get('multikill') + 1
                                 if attackerMultiKillCount == int(getGunGameVar('gg_multikill')):
                                     levelUpOldLevel = gungameAttacker.get('level')
                                     levelUpNewLevel = levelUpOldLevel + 1

@@ -5,7 +5,7 @@
 ================================================================================
     Name: gg_deathmatch
     Main Author: Saul Rennison
-    Version: 1.0.58 (21.01.2008)
+    Version: 1.0.100 (21.01.2008)
 ================================================================================
     This will respawn players after a specified amount of time after dying.
 ================================================================================
@@ -31,7 +31,7 @@ from gungame.gungame import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.58 (16.01.2008)"
+info.version  = "1.0.100 (16.01.2008)"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
@@ -46,6 +46,7 @@ dict_gungameVars = {}
 dict_gungameVars['turbo_mode_originally'] = int(gungame.getGunGameVar('gg_turbo'))
 dict_gungameVars['dead_strip_originally'] = int(gungame.getGunGameVar('gg_dead_strip'))
 dict_gungameVars['knife_elite_originally'] = int(gungame.getGunGameVar('gg_knife_elite'))
+dict_gungameVars['dissolver_originally'] = int(gungame.getGunGameVar('gg_dissolver'))
 dict_gungameVars['map_obj_originally'] = int(gungame.getGunGameVar('gg_map_obj'))
 
 # Globals
@@ -66,10 +67,12 @@ def load():
     # Register Dependencies
     gungame.registerDependency('gg_turbo', 'gg_deathmatch')
     gungame.registerDependency('gg_dead_strip', 'gg_deathmatch')
+    gungame.registerDependency('gg_dissolver', 'gg_deathmatch')
     
     # Enable turbo mode, and remove all objectives
     gungame.setGunGameVar('gg_turbo', '1')
     gungame.setGunGameVar('gg_dead_strip', '1')
+    gungame.setGunGameVar('gg_dissolver', '1')
     gungame.setGunGameVar('gg_map_obj', '0')
     
     # Check if gg_knife_elite is running
@@ -125,14 +128,18 @@ def unload():
     # UnRegister Dependencies
     gungame.unregisterDependency('gg_turbo', 'gg_deathmatch')
     gungame.unregisterDependency('gg_dead_strip', 'gg_deathmatch')
+    gungame.unregisterDependency('gg_dissolver', 'gg_deathmatch')
     
-    # Set turbo mode and knife elite back to what they originally were
+    # Set gungame addons back to what they originally were
     if not dict_gungameVars['turbo_mode_originally']:
         if not gungame.checkDependency('gg_turbo'):
             gungame.setGunGameVar('gg_turbo', 0)
     if not dict_gungameVars['dead_strip_originally']:
         if not gungame.checkDependency('gg_dead_strip'):
             gungame.setGunGameVar('gg_dead_strip', 0)
+    if not dict_gungameVars['dissolver_originally']:
+        if not gungame.checkDependency('dissolver'):
+            gungame.setGunGameVar('gg_dissolver', 0)
     
     # Return vars
     gungame.setGunGameVar('gg_knife_elite', dict_gungameVars['knife_elite_originally'])
@@ -143,14 +150,15 @@ def gg_variable_changed(event_var):
     if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) > 0:
         gungame.setGunGameVar('gg_map_obj', 0)
         es.msg('#lightgreen', 'WARNING: Map objectives must be removed while gg_deathmatch is enabled!')
-    
     if event_var['cvarname'] == 'gg_turbo' and int(event_var['newvalue']) == 0:
         gungame.setGunGameVar('gg_turbo', 1)
         es.msg('#lightgreen', 'WARNING: gg_turbo cannot be unloaded while gg_deathmatch is enabled!')
-    
     if event_var['cvarname'] == 'gg_dead_strip' and int(event_var['newvalue']) == 0:
         gungame.setGunGameVar('gg_dead_strip', 1)
         es.msg('#lightgreen', 'WARNING: gg_dead_strip cannot be unloaded while gg_deathmatch is enabled!')
+    if event_var['cvarname'] == 'gg_dissolver' and int(event_var['newvalue']) == 0:
+        gungame.setGunGameVar('gg_dissolver', 1)
+        es.msg('#lightgreen', 'WARNING: gg_dissolver cannot be unloaded while gg_deathmatch is enabled!')
         
     # Watch for changes in deathmatch variables
     if dict_deathmatchVars.has_key(event_var['cvarname']):

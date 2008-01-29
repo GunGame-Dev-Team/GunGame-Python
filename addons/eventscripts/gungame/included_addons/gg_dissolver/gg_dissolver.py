@@ -5,7 +5,7 @@
 ================================================================================
     Name: gg_dissolver
     Main Author: Saul Rennison
-    Version: 1.0.58 (21.01.2008)
+    Version: 1.0.100 (29.01.2008)
 ================================================================================
     When players die, their ragdoll will dissolve. With the added option to
     disable this addon.
@@ -17,6 +17,7 @@
 # Eventscripts imports
 import es
 import gamethread
+import random
 
 # Gungame import
 from gungame import gungame
@@ -24,14 +25,13 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_dissolver (for GunGame: Python)"
-info.version  = "1.0.58 (21.01.2008)"
+info.version  = "1.0.100 (29.01.2008)"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_dissolver"
 info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
 
 # Get the addon cvars
-addonCVars = {}
-addonCVars['ragdoll_effect'] = int(gungame.getGunGameVar('gg_dissolver_effect'))
+gg_dissolver_effect = int(gungame.getGunGameVar('gg_dissolver_effect'))
 
 def load():
     # Register this addon with GunGame
@@ -51,14 +51,18 @@ def player_death(event_var):
     userid = int(event_var['userid'])
     
     # Just remove the ragdoll?
-    if addonCVars['ragdoll_effect'] == 0:
+    if gg_dissolver_effect == 0:
         es.delayed('2', 'es_xfire %s cs_ragdoll Kill' % userid)
     else:
         # Give the entity dissolver and set its KeyValues
         es.server.cmd('es_xgive %s env_entity_dissolver' % userid)
         es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "target cs_ragdoll"' % userid)
         es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "magnitude 1"' % userid)
-        es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (userid, addonCVars['ragdoll_effect'] - 1))
+        # Check to see what effect to use
+        if gg_dissolver_effect == 5:
+            es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (userid, random.randint(0, 3)))
+        else:
+            es.server.cmd('es_xfire %s env_entity_dissolver AddOutput "dissolvetype %s"' % (userid, gg_dissolver_effect - 1))
         
         # Dissolve the ragdoll then kill the dissolver
         es.delayed('0.01', 'es_xfire %s env_entity_dissolver Dissolve' % userid)

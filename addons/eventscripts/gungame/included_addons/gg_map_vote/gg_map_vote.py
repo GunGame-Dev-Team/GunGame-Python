@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_map_vote
-Version #:      1.0.93
+Version #:      1.0.100
 Description:    Adds map voting capabilities to gungame.
 '''
 
@@ -19,7 +19,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_map_vote Addon for GunGame: Python" 
-info.version  = "1.0.56"
+info.version  = "1.0.100"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_map_vote" 
 info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008, Saul"
@@ -118,12 +118,17 @@ def es_map_start(event_var):
         # check size of recent map list
         if len(list_recentMaps) > dict_mapVoteVars['gg_dont_show_last_maps']:
             del list_recentMaps[0]
-
-    # get vote ready
+            
+    # delete popup
     if popuplib.exists('voteMenu'):
-        repeat.delete('voteCounter')
         popuplib.unsendname('voteMenu', es.getUseridList())
         popuplib.delete('voteMenu')
+        
+    #delete repeat
+    if repeat.status('voteCounter'):
+        repeat.delete('voteCounter')
+        
+    # get vote ready
     initiateVote()
 
 # fires with event gg_vote

@@ -12,7 +12,7 @@ import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.96"
+gungameVersion = "1.0.100"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -2513,7 +2513,7 @@ class Message:
             prefix = ''
         
         if self.userid:
-            es.tell(self.userid, '%s%s' % (prefix, self.getString(string, tokens)))
+            es.tell(self.userid, '#multi', '%s%s' % (prefix, self.getString(string, tokens)))
         else:
             # Loop through the players
             for userid in es.getUseridList():
@@ -2522,7 +2522,7 @@ class Message:
                 object = playerlib.getPlayer(userid)
                 
                 # Send it
-                es.tell(userid, '%s%s' % (prefix, self.getString(string, tokens)))
+                es.tell(userid, '#multi', '%s%s' % (prefix, self.getString(string, tokens)))
                 
     def hudhint(self, message, tokens = {}):
         # Get lang strings

@@ -1,8 +1,8 @@
 '''
-(c)2007 by the GunGame Coding Team
+(c) 2008 by the GunGame Coding Team
 
     Title:      gg_reload
-Version #:      12.16.2007
+Version #:      30.01.08
 Description:    When a player makes a kill the ammo in their clip is replenished.
 '''
 
@@ -13,10 +13,10 @@ import playerlib
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_reload Addon for GunGame: Python" 
-info.version  = "12.16.2007"
+info.version  = "30.01.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/reload" 
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+info.author   = "RideGuy, Saul, XE_ManUp, cagemonkey, GoodFelladeal, JoeyT2008"
 
 def load():
     # Register this addon with GunGame
@@ -27,9 +27,12 @@ def unload():
     gungame.unregisterAddon('gg_reload')
 
 def player_death(event_var):
+    # Get vars
     weapon = event_var['weapon']
-    playerlibPlayer = playerlib.getPlayer(event_var['attacker'])
-    if weapon == 'm3':
+    playerlibPlayer = playerlib.getPlayer(int(event_var['attacker']))
+    
+    # Check what weapon the attacker has
+    if weapon == 'm3' or weapon == 'xm1014':
         playerlibPlayer.set('clip', ['weapon_m3', 8])
     elif weapon == 'xm1014':
         playerlibPlayer.set('clip', ['weapon_xm1014', 8])

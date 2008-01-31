@@ -1,14 +1,9 @@
-#!/usr/bin/env python
 '''
-================================================================================
-    All content copyright (c) 2008, GunGame Coding Team
-================================================================================
-    Name: gg_deathmatch
-    Main Author: Saul Rennison
-    Version: 1.0.100 (21.01.2008)
-================================================================================
-    This will respawn players after a specified amount of time after dying.
-================================================================================
+(c)2007 by the GunGame Coding Team
+
+    Title:      gg_deathmatch
+Version #:      1.0.102
+Description:    This will respawn players after a specified amount of time after dying.
 '''
 
 # System imports
@@ -31,10 +26,10 @@ from gungame.gungame import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.100 (16.01.2008)"
+info.version  = "1.0.102"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
-info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
+info.author   = "GunGame Development Team"
 
 # Get some deathmatch vars
 dict_deathmatchVars = {}

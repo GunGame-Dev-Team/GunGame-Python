@@ -12,7 +12,7 @@ import string
 import keyvalues
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.100"
+gungameVersion = "1.0.102"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -22,7 +22,7 @@ info.name     = "GunGame: Python"
 info.version  = gungameVersion
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame" 
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+info.author   = "GunGame Development Team"
 
 # TEMP CODE FOR PROFILER
 import time

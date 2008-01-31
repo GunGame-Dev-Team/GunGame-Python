@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_elimination
-Version #:      1.0.40
+Version #:      1.0.102
 Description:    Players respawn after their killer is killed.
                 Originally for ES1.3 created by ichthy.
                 http://addons.eventscripts.com/addons/view/3972
@@ -15,10 +15,10 @@ import gamethread
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_elimination Addon for GunGame: Python" 
-info.version  = "1.0.40"
+info.version  = "1.0.102"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_elimination"
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+info.author   = "GunGame Development Team"
 
 # Set up variables for use throughout gg_elimination
 roundActive = 0

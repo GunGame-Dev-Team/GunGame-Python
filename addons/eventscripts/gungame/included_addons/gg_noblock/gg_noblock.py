@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_noblock
-Version #:      1.5.2008
+Version #:      1.0.102
 Description:    No player can block another, they are like ghosts.
 '''
 
@@ -12,10 +12,10 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_noblock Addon for GunGame: Python" 
-info.version  = "1.5.2008"
+info.version  = "1.0.102"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_noblock" 
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007, Chrisber"
+info.author   = "GunGame Development Team"
 
 def load():
     # Register this addon with GunGame

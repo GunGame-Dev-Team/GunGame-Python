@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_handicap
-Version #:      12.16.2007
+Version #:      1.0.102
 Description:    When a player joins they are given the average level.
 '''
 
@@ -15,10 +15,10 @@ import playerlib
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_handicap Addon for GunGame: Python" 
-info.version  = "12.16.2007"
+info.version  = "1.0.102"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_handicap" 
-info.author   = "cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2007"
+info.author   = "GunGame Development Team"
 
 gg_handicap_update = int(gungame.getGunGameVar('gg_handicap_update'))
 

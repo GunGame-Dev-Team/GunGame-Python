@@ -1,18 +1,11 @@
-#!/usr/bin/env python
 '''
-================================================================================
-    All content copyright (c) 2008, GunGame Coding Team
-================================================================================
-    Name: gg_dissolver
-    Main Author: Saul Rennison
-    Version: 1.0.100 (29.01.2008)
-================================================================================
-    When players die, their ragdoll will dissolve. With the added option to
-    disable this addon.
-================================================================================
-'''
+(c)2007 by the GunGame Coding Team
 
-# System imports
+    Title:      gg_dissolver
+Version #:      1.0.102
+Description:    When players die, their ragdoll will dissolve. With the added option to
+                disable this addon.
+'''
 
 # Eventscripts imports
 import es
@@ -25,10 +18,10 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_dissolver (for GunGame: Python)"
-info.version  = "1.0.100 (29.01.2008)"
+info.version  = "1.0.102"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_dissolver"
-info.author   = "Saul (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
+info.author   = "GunGame Development Team"
 
 # Get the addon cvars
 gg_dissolver_effect = int(gungame.getGunGameVar('gg_dissolver_effect'))

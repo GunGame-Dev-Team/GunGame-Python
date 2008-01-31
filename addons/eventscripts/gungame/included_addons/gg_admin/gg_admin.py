@@ -1,6 +1,10 @@
-###################################################
-#                 GunGame Admin                   #
-###################################################
+'''
+(c)2007 by the GunGame Coding Team
+
+    Title:      gg_admin
+Version #:      1.0.102
+Description:    Gives menu based admin control of gungame and it's addons.
+'''
 
 import es
 import os
@@ -11,10 +15,10 @@ from gungame import gungame as gga
 
 info = es.AddonInfo() 
 info.name     = "gg_admin (for GunGame: Python)"
-info.version  = ""
+info.version  = "1.0.102"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_admin"
-info.author   = "HTP (cagemonkey, XE_ManUp, GoodFelladeal, RideGuy, JoeyT2008)"
+info.author   = "GunGame Development Team"
 
 # This will hold all settings not including "addon toggles"
 dict_cfgSettings = {}

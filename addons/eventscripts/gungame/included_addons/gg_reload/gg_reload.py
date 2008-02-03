@@ -27,16 +27,17 @@ def unload():
     gungame.unregisterAddon('gg_reload')
 
 def player_death(event_var):
-    # Get vars
-    weapon = event_var['weapon']
-    playerlibPlayer = playerlib.getPlayer(event_var['attacker'])
+    if event_var['attacker'] != '0' and event_var['attacker'] != event_var['userid']:
+        # Get vars
+        weapon = event_var['weapon']
+        playerlibPlayer = playerlib.getPlayer(event_var['attacker'])
     
-    # Check what weapon the attacker has
-    if weapon == 'm3' or weapon == 'xm1014':
-        playerlibPlayer.set('clip', ['weapon_m3', 8])
-    elif weapon == 'xm1014':
-        playerlibPlayer.set('clip', ['weapon_xm1014', 8])
-    elif weapon == 'm249':
-        playerlibPlayer.set('clip', ['weapon_m249', 255])
-    else:
-        playerlibPlayer.set('clip', ['weapon_' + weapon, 30])
+        # Check what weapon the attacker has
+        if weapon == 'm3' or weapon == 'xm1014':
+            playerlibPlayer.set('clip', ['weapon_m3', 8])
+        elif weapon == 'xm1014':
+            playerlibPlayer.set('clip', ['weapon_xm1014', 8])
+        elif weapon == 'm249':
+            playerlibPlayer.set('clip', ['weapon_m249', 255])
+        else:
+            playerlibPlayer.set('clip', ['weapon_' + weapon, 30])

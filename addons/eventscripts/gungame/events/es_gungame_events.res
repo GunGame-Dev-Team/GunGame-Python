@@ -87,4 +87,16 @@
         "victim"    "short"     // The userid of victim
         "victimname" "string"	// The victim's name
 	}
+    "gg_new_leader"
+    {
+        "userid"	"short"		// The userid of the player that became the new leader
+    }
+    "gg_tied_leader"
+    {
+        "userid"	"short"		// The userid of the player that tied the leader(s)
+    }
+    "gg_leader_lostlevel"
+    {
+        "userid"	"short"		// The userid of the leader that lost a level
+    }
 }

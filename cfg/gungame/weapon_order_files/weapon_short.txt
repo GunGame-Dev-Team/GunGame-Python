@@ -32,26 +32,9 @@
 // Pick which ones you want and put them in order with level 1 being first in the list then level 2, level 3, etc.
 // ************************************************************ 
 
-glock
+glock              1
 usp
 p228
 deagle
 fiveseven
 elite
-m3
-xm1014
-tmp
-mac10
-mp5navy
-ump45
-p90
-galil
-famas
-ak47
-scout
-m4a1
-sg552
-aug
-m249
-hegrenade
-knife

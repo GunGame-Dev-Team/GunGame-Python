@@ -2,18 +2,19 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_dead_strip
-Version #:      1.0.102
+Version #:      02.19.08
 Description:    When a player dies all his weapons are imidiately removed from the game.
 '''
 
 import es
 import playerlib
+import gungamelib
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_dead_strip Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "02.19.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_dead_strip" 
 info.author   = "GunGame Development Team"
@@ -25,8 +26,6 @@ def load():
     global dict_playerWeapons
     gungame.registerAddon('gg_dead_strip', 'GG Dead Strip')
     es.addons.registerClientCommandFilter(filterDrop)
-    
-    # es.server.cmd('eventscripts_cmdprefixes = !d')
 
 def unload():
     # Unregister this addon with GunGame
@@ -38,8 +37,9 @@ def item_pickup(event_var):
     item = event_var['item']
     if item in list_allWeapons:
         userid = event_var['userid']
-        gungamePlayer = gungame.getPlayer(userid)
-        playerWeapon = gungamePlayer.get('weapon')
+        gungamePlayer = gungamelib.getPlayer(userid)
+        playerWeapon = gungamePlayer.getWeapon()
+        #playerWeapon = gungamePlayer.get('weapon')
         playerlibPlayer = playerlib.getPlayer(userid)
         if gungame.getRegisteredAddons().has_key('gg_warmup_round'):
             if item != gungame.getGunGameVar('gg_warmup_weapon') and gungame.getGunGameVar('gg_warmup_weapon') != '0':
@@ -51,9 +51,9 @@ def item_pickup(event_var):
 
 def filterDrop(userid, args):
     if args[0] == 'drop':
-        gungamePlayer = gungame.getPlayer(userid)
+        gungamePlayer = gungamelib.getPlayer(userid)
         playerlibPlayer = playerlib.getPlayer(userid)
-        if playerlibPlayer.attributes['weapon'] == 'weapon_%s' %gungamePlayer.get('weapon'):
+        if playerlibPlayer.attributes['weapon'] == 'weapon_%s' %gungamePlayer.getWeapon():
             return 0
     return 1
 

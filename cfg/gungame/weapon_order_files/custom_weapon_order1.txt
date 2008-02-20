@@ -33,25 +33,25 @@
 // ************************************************************ 
 
 glock
-usp
-p228
-deagle
-fiveseven
-elite
-m3
-xm1014
-tmp
-mac10
+usp 2
+p228 3
+deagle 4 
+fiveseven 5
+elite 1
+m3 2
+xm1014 3
+tmp 4
+mac10 5
 mp5navy
-ump45
-p90
-galil
-famas
-ak47
-scout
-m4a1
-sg552
-aug
-m249
-hegrenade
-knife
+ump45 2
+p90 3
+galil 4
+famas 5
+ak47 1
+scout 2
+m4a1 3
+sg552 4
+aug 5
+m249 1
+hegrenade 1
+knife 1

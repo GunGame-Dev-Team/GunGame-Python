@@ -1,18 +1,19 @@
 import es
 import os
-import random
+import ConfigParser
+import cPickle
+import string
+
 import gamethread
-import gungame
 import playerlib
 import langlib
 import usermsg
 import popuplib
-import cPickle
-import string
 import keyvalues
+import gungamelib
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.102"
+gungameVersion = "1.0.104"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -37,8 +38,6 @@ def GetProfilerTime(storage):
     return storage['stop'] - storage['start']
 
 # Global vars
-dict_afk = {}
-dict_gungame_core = {}
 dict_gungameVariables = {}
 dict_cfgSettings = {}
 dict_globals = {}
@@ -51,26 +50,13 @@ dict_gungameWinners = {}
 dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
 list_customAddonsDir = []
-
-# Class used in the dict_gungame_core
-class gungamePlayers:
-    "Class used to store core GunGame information"
-    int_level = 1
-    int_afk_rounds = 0
-    int_multikill = 0
-    int_triple_level = 0
-    int_prevent_level = 0
+list_leaderNames = []
 
 # Class used in dict_gungameWinners
 class gungameWinners:
     "Class used to store GunGame winner information"
     int_wins = 1
     int_timestamp = es.gettime()
-
-# Class used in dict_afk
-class afkPlayers:
-    "Class used in dictionary for AFK Players"
-    int_afk_math_total = 0
 
 # Begin Multiple Error Classes
 class _GunGameQueryError:
@@ -111,116 +97,10 @@ class VariableError(_GunGameQueryError):
 # ===================================================================================================
 # ===================================================================================================
 
-# GUNGAME WEAPON ORDER POPUP
-gungameWeaponOrderMenu = None
-
-# Handle the GunGame Weapon Order Popup
-def weaponOrderMenuHandler(userid, choice, popupname):
-    pass
-
 # Display the GunGame Weapon Order Popup to the player that requested it
 def displayWeaponOrderMenu():
-    popuplib.send('gungameWeaponOrderMenu_page1', es.getcmduserid())
-
-def buildWeaponOrderMenu():
-    global dict_gungameWeaponOrder
-    global gungameWeaponOrderMenu
-    # Create a list of level numbers to use for creating the popup
-    list_gungameLevels = dict_gungameWeaponOrder.keys()
-    # Create a list of weapon names to use for creating the popup
-    list_gungameWeapons = dict_gungameWeaponOrder.values()
-    # Find out how many menu pages there are going to be
-    totalMenuPages = int(round((int(getTotalLevels()) * 0.1) + 0.4))
-    # Create a variable to store the current page count
-    buildPageCount = 1
-    # Create a variable to keep track of the index number for pulling the level/weapon information from the list_gungameLevels and list_gungameWeapons
-    levelCountIndex = 0
-    # Create a variable to track the "max" or the "cap" of indexes to retrieve from the lists
-    levelCountMaxIndex = 0
-    # Do he following loop until we have reached the total number of pages that we have to create
-    while buildPageCount <= totalMenuPages:
-        # Set a Python variable so we don't have to keep on formatting text for the menu name
-        menuName = 'gungameWeaponOrderMenu_page%d' %buildPageCount
-        # Check to see if the popup "gungameWeaponOrderMenu" exists
-        if popuplib.exists('gungameWeaponOrderMenu'):
-            # The popup exists...let's unsend it
-            popuplib.unsendname(menuName, playerlib.getUseridList('#human'))
-            # Now, we need to delete it
-            popuplib.delete(menuName)
-        # Let's create the "gungameWeaponOrderMenu" popup and name it according to the page number
-        gungameWeaponOrderMenu = popuplib.create(menuName)
-        # Make sure there is more than 1 page of levels/weapons
-        if totalMenuPages > 1:
-            # Now, we add the "Title Text", along with the page number as well as the following line for aesthetic appearances, "--------"
-            gungameWeaponOrderMenu.addline('GunGame Weapon Order:  (%d/%d)\n----------------------------' %(buildPageCount, totalMenuPages))
-        # Wow. Only 1 page of levels/weapons...no page number needed, then.
-        else:
-            # Now we add the "Title Text" as well as the following line for aesthetic appearances, "--------"
-            gungameWeaponOrderMenu.addline('GunGame Weapon Order:\n----------------------------')
-        levelCountMaxIndex += 10
-        if levelCountMaxIndex > len(list_gungameLevels) - 1:
-            levelCountMaxIndex = len(list_gungameLevels)
-        for level in range(levelCountIndex, levelCountMaxIndex):
-            # For aesthetic purposes, I will be adding a "space" for weapons in the list below level 10
-            if int(list_gungameLevels[levelCountIndex]) < 10:
-                # Now, we add the weapons to the popup, as well as number them by level (with the extra "space")
-                gungameWeaponOrderMenu.addline('->%d.   %s' %(list_gungameLevels[levelCountIndex], list_gungameWeapons[levelCountIndex]))
-            else:
-                # Now, we add the weapons to the popup, as well as number them by level (without the extra "space")
-                gungameWeaponOrderMenu.addline('->%d. %s' %(list_gungameLevels[levelCountIndex], list_gungameWeapons[levelCountIndex]))
-            # Increment the index counter by 1 for the next for loop iteration
-            levelCountIndex += 1
-        # Once again, for aesthetic purposes (to keep the menu the same size), we will add blank lines if the listed levels in the menu do not = 10
-        # See if this is the final page of the menu
-        if buildPageCount == totalMenuPages:
-            # Calculate the number of needed blank lines in the menu
-            neededBlankLines = 10 - int(round((len(list_gungameLevels) * 0.1) + 0.4))
-            # Set a variable for the loop below to keep track of the number of blank lines left to add
-            blankLineCount = 0
-            # Loop to add the blank lines to the menu
-            while blankLineCount < neededBlankLines:
-                gungameWeaponOrderMenu.addline(' ')
-                blankLineCount += 1
-        # Add the "----------" separator at the bottom of the menu
-        gungameWeaponOrderMenu.addline('----------------------------')
-        # Add the "browsing pages" options at the bottom of the menu
-        # If this is NOT page #1 of the weapons menu
-        if buildPageCount != 1:
-            # If the current page number IS NOT == to the total number of pages
-            if buildPageCount != totalMenuPages:
-                gungameWeaponOrderMenu.addline('->8. Previous Page')
-                gungameWeaponOrderMenu.addline('->9. Next Page')
-                gungameWeaponOrderMenu.submenu(8, 'gungameWeaponOrderMenu_page%d' %(buildPageCount - 1))
-                gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page%d' %(buildPageCount + 1))
-            # The current page number IS == to the total number of pages
-            else:
-                gungameWeaponOrderMenu.addline('->8. Previous Page')
-                gungameWeaponOrderMenu.addline('->9. First Page')
-                gungameWeaponOrderMenu.submenu(8, 'gungameWeaponOrderMenu_page%d' %(buildPageCount - 1))
-                gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page1')
-        # This IS page #1 of the weapons menu
-        else:
-            # If the total number of pages is > 1
-            if totalMenuPages > 1:
-                # If the total number of pages is > 2
-                if totalMenuPages > 2:
-                    gungameWeaponOrderMenu.addline('->8. Last Page')
-                    gungameWeaponOrderMenu.addline('->9. Next Page')
-                    gungameWeaponOrderMenu.submenu(8, 'gungameWeaponOrderMenu_page%d' %totalMenuPages)
-                    gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page%d' %(buildPageCount + 1))
-                # The total number of pages == 2
-                else:
-                    gungameWeaponOrderMenu.addline('->9. Last Page')
-                    gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page%d' %(buildPageCount + 1))
-        # Make sure that the player can Exit out of the menu
-        gungameWeaponOrderMenu.select(10, weaponOrderMenuHandler)
-        # Finally, we add the "Exit" option to the menu
-        gungameWeaponOrderMenu.addline('0. Exit')
-        # Now, we end this whole menu-making debacle by making the menu "sticky"
-        gungameWeaponOrderMenu.displaymode = 'sticky'
-        # Increment the page count for the next while loop iteration to create another menu page
-        buildPageCount += 1
-
+    gungamelib.sendWeaponOrderMenu(es.getcmduserid())
+    
 # GUNGAME LEVEL POPUP
 gungameLevelMenu = None
 
@@ -264,22 +144,21 @@ def buildLevelMenu():
     gungameLevelMenu.timeout('view', 5)
 
 def prepGunGameLevelMenu(userid, popupid):
-    global list_leaderNames
     gungameLevelMenu = popuplib.find('gungameLevelMenu')
-    gungamePlayer = gungame.getPlayer(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
     if int(getGunGameVar('gg_multikill')) == 0:
-        gungameLevelMenu.modline(2, '   * You are on level %d' %int(gungamePlayer.get('level'))) # Line #2
-        gungameLevelMenu.modline(3, '   * You need a %s kill to advance' %gungamePlayer.get('weapon')) # Line #3
+        gungameLevelMenu.modline(2, '   * You are on level %d' %gungamePlayer['level']) # Line #2
+        gungameLevelMenu.modline(3, '   * You need a %s kill to advance' %gungamePlayer.getWeapon()) # Line #3
     else:
-        gungameLevelMenu.modline(2, '   * You are on level %d (%s)' %(int(gungamePlayer.get('level')), gungamePlayer.get('weapon'))) # Line #2
-        gungameLevelMenu.modline(3, '   * You have made %d/%d of your required kills' %(int(gungamePlayer.get('multikill')), int(getGunGameVar('gg_multikill')))) # Line #3
-    leaderLevel = int(getLeaderLevel())
-    playerLevel = int(gungamePlayer.get('level'))
+        gungameLevelMenu.modline(2, '   * You are on level %d (%s)' %(gungamePlayer['level'], gungamePlayer.getWeapon())) # Line #2
+        gungameLevelMenu.modline(3, '   * You have made %d/%d of your required kills' %(gungamePlayer.get('multikill'), int(getGunGameVar('gg_multikill')))) # Line #3
+    leaderLevel = gungamelib.getLeaderLevel()
+    playerLevel = gungamePlayer['level']
     if leaderLevel > 1:
         # See if the player is a leader:
         if playerLevel == leaderLevel:
             # See if there is more than 1 leader
-            if int(len(list_leaderNames)) > 1:
+            if gungamelib.getCurrentLeaderCount() > 1:
                 # This player is tied with other leaders
                 gungameLevelMenu.modline(4, '   * You are currently tied for the leader position') # Line #4
             else:
@@ -296,14 +175,14 @@ def prepGunGameLevelMenu(userid, popupid):
         # There are no leaders
         gungameLevelMenu.modline(4, '   * There currently is no leader') # Line #4
     if int(getGunGameVar('gg_save_winners')) > 0:
-        gungameLevelMenu.modline(6, '   * You have won %d time(s)' %gungamePlayer.get('Wins')) # Line #6
+        gungameLevelMenu.modline(6, '   * You have won %d time(s)' %12345) # Line #6
         if leaderLevel > 1:
-            gungameLevelMenu.modline(8, '   * Leader Level: %d (%s)' %(leaderLevel, getLevelWeapon(leaderLevel))) # Line #8
+            gungameLevelMenu.modline(8, '   * Leader Level: %d (%s)' %(leaderLevel, gungamelib.getLevelWeapon(leaderLevel))) # Line #8
         else:
             gungameLevelMenu.modline(8, '   * Leader Level: There are no leaders') # Line #8
     else:
         if leaderLevel > 1:
-            gungameLevelMenu.modline(6, '   * Leader Level: %d (%s)' %(leaderLevel, getLevelWeapon(leaderLevel))) # Line #6
+            gungameLevelMenu.modline(6, '   * Leader Level: %d (%s)' %(leaderLevel, gungamelib.getLevelWeapon(leaderLevel))) # Line #6
         else:
             gungameLevelMenu.modline(6, '   * Leader Level: There are no leaders') # Line #6
 
@@ -332,7 +211,10 @@ def buildLeaderMenu():
     gungameLeadersMenu.timeout('view', 5)
 
 def rebuildLeaderMenu():
-    global list_leaderNames
+    list_leaderNames = []
+    
+    for userid in gungamelib.getCurrentLeaderList():
+        list_leaderNames.append(removeReturnChars(es.getplayername(userid)))
     # Check to see if the popup "gungameLevelMenu" exists
     if popuplib.exists('gungameLeadersMenu'):
         # The popup exists...let's unsend it
@@ -340,11 +222,11 @@ def rebuildLeaderMenu():
         # Now, we need to delete it
         popuplib.delete('gungameLeadersMenu')
     # Get leader level
-    leaderLevel = int(getLeaderLevel())
+    leaderLevel = gungamelib.getLeaderLevel()
     # Let's create the "gungameLeadersMenu" popup
     gungameLeadersMenu = popuplib.create('gungameLeadersMenu')
     gungameLeadersMenu.addline('->1. Current Leaders:')
-    gungameLeadersMenu.addline('    Level %d (%s)' %(leaderLevel, getLevelWeapon(leaderLevel)))
+    gungameLeadersMenu.addline('    Level %d (%s)' %(leaderLevel, gungamelib.getLevelWeapon(leaderLevel)))
     gungameLeadersMenu.addline('--------------------------')
     for leaderName in list_leaderNames:
         gungameLeadersMenu.addline('   * %s' %leaderName)
@@ -366,173 +248,7 @@ def rebuildLeaderMenu():
 # ===================================================================================================
 # ===================================================================================================
 
-class Player:
-    "Class used for the get/set commands in GunGame"
-    userid = 0
-
-    global dict_gungameWeaponOrder
-    
-    # default initialization routine. Give us a userid.
-    def __init__(self, playerid):
-        try:
-            # We'll be nice and convert the playerid to an int in case they gave
-            # us a string userid.
-            self.userid = int(playerid)
-            # Check if it's a valid userid. Otherwise we throw.
-            if not es.exists('userid', self.userid):
-                raise UseridError, str(self.userid) + ' is an invalid userid'
-            # Maybe use es.createplayerlist(userid) to get initial values?
-            self.refreshAttributes()
-            # TODO: What else do we need to initialize?
-        except TypeError, e:
-            raise TypeError, 'Player argument expected a userid'
-
-    def refreshAttributes(self):
-        """
-        Refresh the attributes for this player from ES. These are cached in
-        the player object for performance.
-        """
-        # If this fails maybe they gave us the wrong userid, so maybe it should
-        # except all the way up? Probably need a cleaner exception, though.
-        try:
-            self.attributes = es.createplayerlist(self.userid)[self.userid]
-        except KeyError:
-            raise PlayerError, 'player has left the server'
-            
-            
-    # BEGIN "SET" COMMANDS:
-    # -------------------------------------
-    # myPlayer = gungame.setPlayer(event_var['userid'])
-    def set(self, param, value1, value2=None):
-        #global dict_gungame_core
-        param = str(param).lower()
-        
-        # SET LEVEL
-        # myPlayer.set('level', 6)
-        if param == 'level':
-            value1 = int(value1)
-            if value1 > 0:
-                if dict_gungame_core.has_key(self.userid):
-                    dict_gungame_core[self.userid].int_level = value1
-            else:
-                raise LevelValueError, 'Level value must be greater than 0'
-        
-        # SET AFK ROUNDS
-        # myPlayer.set('afkrounds', 2)
-        if param == 'afkrounds':
-            value1 = int(value1)
-            if value1 > 0:
-                if dict_gungame_core.has_key(self.userid):
-                    dict_gungame_core[self.userid].int_afk_rounds = value1
-            else:
-                raise AFKValueError, 'AFK Rounds value must be greater than 0'
-        
-        # SET TRIPLE LEVEL
-        # myPlayer.set('afkrounds', 2)
-        if param == 'triple':
-            value1 = int(value1)
-            if value1 >= 0:
-                if dict_gungame_core.has_key(self.userid):
-                    dict_gungame_core[self.userid].int_triple_level = value1
-            else:
-                raise TripleValueError, 'Triple Level value must be equal to or greater than 0'
-        
-        # SET MULTIKILL
-        # myPlayer.set('multikill', 3)
-        if param == 'multikill':
-            value1 = int(value1)
-            if value1 > -1:
-                if dict_gungame_core.has_key(self.userid):
-                    dict_gungame_core[self.userid].int_multikill = value1
-            else:
-                raise MultiKillValueError, 'MultiKill value must be greater than -1'
-        
-        # SET EYEANGLE
-        # myPlayer.set('eyeangle', #, #)
-        if param == 'eyeangle':
-            if value1 or value2:
-                #es.setang(self.userid, value1, value2) ?
-                es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
-            gamethread.delayed(0.6,update_afk_dict,str(self.userid))
-        
-        # SET PREVENT LEVEL
-        # myPlayer.set('PreventLevel', 1)
-        if param == 'preventlevel':
-            value1 = int(value1)
-            if value1 == 0 or value1 == 1:
-                if dict_gungame_core.has_key(self.userid):
-                    dict_gungame_core[self.userid].int_prevent_level = value1
-            else:
-                raise ArgumentError, self.value1 + ' must be either 0 or 1'
-    # ---------------------------------
-    # END "SET" COMMANDS
-
-    # BEGIN "GET" COMMANDS:
-    # -------------------------------------
-    # myPlayer = gungame.getPlayer(event_var['userid'])
-    def get(self, param):
-        #global dict_gungame_core
-        param = str(param).lower()
-        # GET ISPLAYERAFK
-        # myPlayer.get('isplayerafk')
-        if param == 'isplayerafk':
-            if not es.isbot(self.userid):
-                list_playerlocation = es.getplayerlocation(self.userid)
-                afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[1]'))
-                if int(afk_math_total) == int(dict_afk[self.userid].int_afk_math_total):
-                    return True
-                else:
-                    return False
-            else:
-                return False
-        
-        # GET AFK ROUNDS
-        # myPlayer.get('afkrounds')
-        if param == 'afkrounds':
-            if dict_gungame_core.has_key(self.userid):
-                return dict_gungame_core[self.userid].int_afk_rounds
-        
-        # GET TRIPLE LEVEL
-        # myPlayer.get('triple')
-        if param == 'triple':
-            if dict_gungame_core.has_key(self.userid):
-                return dict_gungame_core[self.userid].int_triple_level
-        
-        # GET LEVEL
-        # myPlayer.get('level')
-        if param == 'level':
-            if dict_gungame_core.has_key(self.userid):
-                return dict_gungame_core[self.userid].int_level
-        
-        # GET MULTIKILL
-        # myPlayer.get('multikill')
-        if param == 'multikill':
-            if dict_gungame_core.has_key(self.userid):
-                return dict_gungame_core[self.userid].int_multikill
-        
-# GET WEAPON
-        # myPlayer.get('weapon')
-        if param == 'weapon':
-            if dict_gungame_core.has_key(self.userid):
-                return dict_gungameWeaponOrder[self.get('level')]
-            
-        # GET PREVENT LEVEL
-        # myPlayer.get('PreventLevel')
-        if param == 'preventlevel':
-            if dict_gungame_core.has_key(self.userid):
-                return dict_gungame_core[self.userid].int_prevent_level
-        
-        # GET WINS
-        # myPlayer.get('Wins')
-        if param == 'wins':
-            steamid = playerlib.uniqueid(self.userid, 1)
-            if dict_gungameWinners.has_key(steamid):
-                return dict_gungameWinners[steamid].int_wins
-            else:
-                return 0
-    # ---------------------------------
-    # END "GET" COMMANDS
-
+'''
 # BEGIN ESS (OLDSCHOOL) COMMANDS
 # ------------------------------------------------------
 def ess_isafk():
@@ -541,7 +257,7 @@ def ess_isafk():
         userid = es.getargv(2)
         if es.exists('userid', userid):
             varName = es.getargv(1)
-            gungamePlayer = gungame.getPlayer(userid)
+            gungamePlayer = gungamelib.getPlayer(userid)
             if gungamePlayer.get('isPlayerAfk'):
                 es.set(varName,'1')
             else:
@@ -556,7 +272,7 @@ def ess_seteyeangle():
     if int(es.getargc()) == 4:
         userid = es.getargv(1)
         if es.exists('userid', userid):
-            gungamePlayer = gungame.getPlayer(userid)
+            gungamePlayer = gungamelib.getPlayer(userid)
             gungamePlayer.set('eyeangle', es.getargv(2), es.getargv(3))
         else:
             raise UseridError, str(userid) + ' is an invalid userid'
@@ -597,8 +313,8 @@ def ess_getlevel():
         userid = es.getargv(2)
         if es.exists('userid', userid):
             varName = es.getargv(1)
-            gungamePlayer = gungame.getPlayer(userid)
-            playerLevel = gungamePlayer.get('level')
+            gungamePlayer = gungamelib.getPlayer(userid)
+            playerLevel = gungamePlayer['level']
             es.set(varName, playerLevel)
         else:
             raise UseridError, str(userid) + ' is an invalid userid'
@@ -611,18 +327,18 @@ def ess_setlevel():
         userid = es.getargv(1)
         if es.exists('userid', userid):
             varName = es.getargv(2)
-            gungamePlayer = gungame.getPlayer(userid)
+            gungamePlayer = gungamelib.getPlayer(userid)
             gungamePlayer.set('level', es.getargv(2))
         else:
             raise UseridError, str(userid) + ' is an invalid userid'
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 2'
 
-def ess_getleaderlevel():
-    # gg_getleaderlevel <variable>
+def ess_gungamelib.getLeaderLevel():
+    # gg_gungamelib.getLeaderLevel <variable>
     if int(es.getargc()) == 2:
         varName = es.getargv(1)
-        leaderLevel = gungame.getLeaderLevel()
+        leaderLevel = gungame.gungamelib.getLeaderLevel()
         es.set(varName, leaderLevel)
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
@@ -650,7 +366,7 @@ def ess_getpreventlevel():
     if int(es.getargc()) == 3:
         varName = es.getargv(1)
         userid = es.getargv(2)
-        gungamePlayer = gungame.getPlayer(userid)
+        gungamePlayer = gungamelib.getPlayer(userid)
         es.set(varName, gungamePlayer.get('preventlevel'))
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 2'
@@ -660,7 +376,7 @@ def ess_setpreventlevel():
     if int(es.getargc()) == 3:
         userid = es.getargv(1)
         preventValue = int(es.getargv(2))
-        gungamePlayer = gungame.getPlayer(userid)
+        gungamePlayer = gungamelib.getPlayer(userid)
         gungamePlayer.set('preventlevel', preventValue)
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 2'
@@ -681,8 +397,8 @@ def ess_getweapon():
     if int(es.getargc()) == 3:
         userid = es.getargv(2)
         varName = es.getargv(1)
-        gungamePlayer = gungame.getPlayer(userid)
-        es.set(varName, gungamePlayer.get('weapon'))
+        gungamePlayer = gungamelib.getPlayer(userid)
+        es.set(varName, dict_gungameWeaponOrder[gungamePlayer['level']])
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 2'
     
@@ -694,10 +410,10 @@ def ess_giveweapon():
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
 
-def ess_gettotallevels():
+def ess_gungamelib.getTotalLevels():
     if int(es.getargc()) == 2:
         varName = es.getargv(1)
-        es.set(varName, getTotalLevels())
+        es.set(varName, gungamelib.getTotalLevels())
     else:
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
 
@@ -777,40 +493,7 @@ def ess_unloadcustom():
         raise ArgumentError, str(int(es.getargc()) - 1) + ' is the amount of arguments provided. Expected: 1'
 # ---------------------------------------------------
 # END ESS (OLDSCHOOL) COMMANDS
-
-# BEGIN Generic Gungame COMMANDS
-# ---------------------------------------------------
-def teleportPlayer(userid, x, y, z, eyeangle0=None, eyeangle1=None):
-    userid = int(userid)
-    # gungame.teleportPlayer(2, 1, 1, 1, 90, 180)
-    es.server.cmd('es_setpos %d %s %s %s' %(userid, x, y, z))
-    if eyeangle0 or eyeangle1:
-        es.server.cmd('es_setang %d %s %s' %(userid, eyeangle0, eyeangle1))
-    gamethread.delayed(0.6,update_afk_dict,userid)
-
-def resetPlayerAfk(userid):
-    # gungame.resetPlayerAfk(2)
-    update_afk_dict(userid)
-
-def getLeaderLevel():
-    global dict_gungame_core
-    leaderLevel = 0
-    for userid in dict_gungame_core:
-        if int(dict_gungame_core[userid].int_level) > leaderLevel:
-            leaderLevel = int(dict_gungame_core[userid].int_level)
-    return leaderLevel
-
-def getAverageLevel():
-    global dict_gungame_core
-    averageLevel = 0
-    averageDivider = 0
-    for userid in dict_gungame_core:
-        averageDivider += 1
-        averageLevel += int(dict_gungame_core[userid].int_level)
-    if averageDivider:
-        return int(round(averageLevel / averageDivider))
-    else:
-        return 0
+'''
 
 def getGunGameVar(variableName):
     # gungame.getGunGameVar('gg_afk_punish')
@@ -857,86 +540,10 @@ def getGlobal(variableName):
         return dict_globals[variableName]
     else:
         return '0'
-
-def giveWeapon(userid):
-    if es.exists('userid', userid):
-        gungamePlayer = gungame.getPlayer(userid)
-        if int(es.getplayerteam(userid)) > 1 and not gungamePlayer.attributes['isdead']:
-            playerWeapon = gungamePlayer.get('weapon')
-            if playerWeapon != 'knife':
-                es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' %(userid, playerWeapon))
-    else:
-        raise UseridError, str(userid) + ' is an invalid userid'
-
-def setWeapons(weaponOrder):
-    #gungame.setWeapons(string)
-    global dict_gungameWeapons
-    global dict_gungameWeaponOrder
-    global gungameWeaponOrderMenu
-    weaponOrderPath = os.getcwd() + '/cstrike/cfg/gungame/weapon_order/' + getGunGameVar('gg_weapon_order_file')
-    weaponOrder = str(weaponOrder.lower())
-    if weaponOrder == '#default':
-        dict_gungameWeaponOrder = {}
-        dict_gungameWeaponOrder = dict_gungameWeapons
-        logWeaponOrder('Loading', weaponOrderPath)
-        restartGunGame('Weapon Order Changed to \'\x03#default\x01\'...Restarting.')
-        buildWeaponOrderMenu()
-    elif weaponOrder == '#reversed':
-        dict_gungameWeaponOrder = {}
-        list_gungameLevels = dict_gungameWeapons.keys()
-        list_gungameWeapons = dict_gungameWeapons.values()
-        list_gungameWeapons.reverse()
-        weaponArrayNumber = 0
-        for level in list_gungameLevels:
-            dict_gungameWeaponOrder[level] = list_gungameWeapons[weaponArrayNumber]
-            weaponArrayNumber += 1
-        logWeaponOrder('Reversing', weaponOrderPath)
-        restartGunGame('Weapon Order Changed to \'\x03#reversed\x01\'...Restarting.')
-        buildWeaponOrderMenu()
-    elif weaponOrder == '#random':
-        dict_gungameWeaponOrder = {}
-        list_gungameLevels = dict_gungameWeapons.keys()
-        random.shuffle(list_gungameLevels)
-        list_gungameWeapons = dict_gungameWeapons.values()
-        random.shuffle(list_gungameWeapons)
-        weaponArrayNumber = 0
-        for level in list_gungameLevels:
-            dict_gungameWeaponOrder[level] = list_gungameWeapons[weaponArrayNumber]
-            weaponArrayNumber += 1
-        logWeaponOrder('Randomizing', weaponOrderPath)
-        restartGunGame('Weapon Order Changed to \'\x03#random\x01\'...Restarting.')
-        buildWeaponOrderMenu()
-    else:
-        es.dbgmsg(0, '[GunGame] \'%s\' is an invalid choice for the weapon order. Choices are: #default #reversed #random' %weaponOrder)
-
-def getLevelWeapon(levelNumber):
-    levelNumber = int(levelNumber)
-    if dict_gungameWeaponOrder.has_key(levelNumber):
-        return str(dict_gungameWeaponOrder[levelNumber])
         
-def getLevelUseridList(levelNumber):
-    global dict_gungame_core
-    levelNumber = int(levelNumber)
-    list_levelUserids = []
-    for userid in dict_gungame_core:
-        if dict_gungame_core[int(userid)].int_level == levelNumber:
-            list_levelUserids.append(userid)
-    return list_levelUserids
-
-def getTotalLevels():
-    global dict_gungameWeaponOrder
-    list_weaponOrderKeys = dict_gungameWeaponOrder.keys()
-    return int(len(list_weaponOrderKeys))
-
-def stripPlayer(userid):
-    playerlibPlayer = playerlib.getPlayer(userid)
-    playerlibPrimary = playerlibPlayer.get('primary')
-    playerlibSecondary = playerlibPlayer.get('secondary')
-    if playerlibPrimary:
-        es.server.cmd('es_xremove %d' %int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
-    if playerlibSecondary:
-        es.server.cmd('es_xremove %d' %int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
-
+# ============================================================================
+# ADDON REGISTRATION
+# ============================================================================
 def registerAddon(addonName, menuText):
     global dict_gungameRegisteredAddons
     addonName = addonName.replace('/', '\\')
@@ -1023,6 +630,9 @@ def unregisterDependency(dependencyName, addonName):
         # Send an error message to console stating that the addon is not a registered addon
         es.dbgmsg(0, '[GunGame] Dependency Unregistration Failed. \'%s\' is not a registered dependency.' %addonName)
 
+# ============================================================================
+# ADDON DEPENDENCIES
+# ============================================================================
 def checkDependency(dependencyName):
     global dict_gungameRegisteredDependencies
     dependencyName = dependencyName.replace('/','\\')
@@ -1046,41 +656,23 @@ def getRegisteredDependencies():
     return dict_gungameRegisteredDependencies
 
 def getIncludedAddonsDirList():
-    global list_includedAddonsDir
     return list_includedAddonsDir
     
 def getCustomAddonsDirList():
-    global list_customAddonsDir
     return list_customAddonsDir
     
+# ============================================================================
+# LOADING SHORTCUTS
+# ============================================================================
 def loadCustom(addonName):
     es.load('gungame/custom_addons/' + str(addonName))
     
 def unloadCustom(addonName):
     es.unload('gungame/custom_addons/' + str(addonName))
-# -----------------------------------------------
-# END Generic Gungame COMMANDS
 
-def logWeaponOrder(text, weaponOrderPath):
-    # The entire function of this module is to simply echo the weapon order to the log file
-    global dict_gungameWeaponOrder
-    es.dbgmsg(0, '')
-    es.dbgmsg(0, '[GunGame] %s Weapons from \'%s\':' %(text, weaponOrderPath))
-    for level in dict_gungameWeaponOrder:
-        if level < 10:
-            # Echo the GunGame Weapon Order text to the console
-            es.dbgmsg(0, '    0%d. %s' %(level, dict_gungameWeaponOrder[level]))
-        else:
-            # Echo the GunGame Weapon Order text to the console
-            es.dbgmsg(0, '    %d. %s' %(level, dict_gungameWeaponOrder[level]))
-    es.dbgmsg(0, '')
-    global list_weaponOrderErrors
-    # If there are any errors in the weapon order, we will echo them here
-    if len(list_weaponOrderErrors):
-        for errorText in list_weaponOrderErrors:
-            es.dbgmsg(0, list_weaponOrderErrors.pop())
-        es.dbgmsg(0, '')
-
+# ============================================================================
+# LEVEL UP AND DOWN TRIGGERING
+# ============================================================================
 def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
     # BEGIN THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_LEVELUP"
     # -----------------------------------------------------------------------------------------------------------
@@ -1126,13 +718,13 @@ def removeReturnChars(playerName):
     return playerName
 
 def afkPunishCheck(userid):
-    gungamePlayer = gungame.getPlayer(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
     afkMaxAllowed = int(getGunGameVar('gg_afk_rounds'))
     if afkMaxAllowed > 0:
         # Increment the "int_afk_rounds" for this player in the GunGame Core Dictionary
-        gungamePlayer.set('afkrounds', (int(gungamePlayer.get('afkrounds')) + 1))
+        gungamePlayer['afkrounds'] += 1
         # If they have been AFK for too many rounds, we proceed beyond the below check
-        if int(gungamePlayer.get('afkrounds')) >= afkMaxAllowed:
+        if gungamePlayer['afkrounds'] >= afkMaxAllowed:
             if int(getGunGameVar('gg_afk_action')) == 1:
                 # Kick the player from the server for being AFK for the maximum number of rounds
                 es.server.cmd('kickid %d \"AFK too long.\"' %userid)
@@ -1157,161 +749,77 @@ def equipPlayer():
     elif armorType == 1:
         es.server.cmd('es_xfire %s game_player_equip addoutput \"item_kevlar 1\"' %userid)
 
-def registerPlayers():
-    global dict_afk
-    global dict_gungame_core
-    global dict_reconnectingPlayers
-    global list_leaderNames
-    global dict_gungameWinners
-    
-    # Set Up/Clear the AFK Dictionary
-    dict_afk = {}
-    
-    # Set Up/Clear the GunGame Core Dictionary
-    dict_gungame_core = {}
-    
-    # Set Up/Clear the Reconnecting Players Dictionary
-    dict_reconnectingPlayers = {}
-    
-    # Reset the leader names list
-    list_leaderNames = []
-    
-    # Set up a custom variable for tracking the leader level in dict_gungameVariables
-    dict_gungameVariables['oldleaderlevel'] = 1
+def levelInfoHudHint(userid):
+    gungamePlayer = gungamelib.getPlayer(userid)
 
-    # BEGIN PLAYER SETUP CODE
-    # ---------------------------------------
-    for userid in es.getUseridList():
-        userid = int(userid)
-        steamid = playerlib.uniqueid(userid, 1)
-        # BEGIN AFK CODE
-        # ------------------------
-        if not dict_afk.has_key(userid) and not es.isbot(userid):
-            dict_afk[userid] = afkPlayers()
-            gamethread.delayed(1, update_afk_dict, userid)
-        # ---------------------
-        # END AFK CODE
-        
-        # BEGIN GUNGAME CORE DATABASE CODE
-        # ---------------------------------------------------------
-        if not dict_gungame_core.has_key(userid):
-            dict_gungame_core[userid] = gungamePlayers()
-            dict_gungame_core[userid].str_steamid = steamid
-        # ------------------------------------------------------
-        # END GUNGAME CORE DATABASE CODE
-        
-        # See if the player has won before
-        if int(getGunGameVar('gg_save_winners')) > 0:
-            if dict_gungameWinners.has_key(steamid):
-                # Yes, they have won before...let's be nice and update their timestamp
-                dict_gungameWinners[steamid].int_timestamp = es.gettime()
-
-    # -----------------------------------
-    # END PLAYER SETUP CODE
+    leaderLevel = gungamelib.getLeaderLevel()
+    # Get levels behind leader
+    levelsBehindLeader = leaderLevel - gungamePlayer['level']
+            
+    # Get list of leaders userids
+    list_leadersUserid = gungamelib.getCurrentLeaderList()
+            
+    multiKill = gungamelib.getLevelMultiKill(gungamePlayer['level'])
     
-    
-    
-    # Reset the leader names
-    buildLeaderMenu()
-
-def rebuildLeaderNameList():
-    global dict_gungame_core
-    global list_leaderNames
-    leaderLevel = int(getLeaderLevel())
-    list_leaderNames = []
-    for userid in dict_gungame_core:
-        if int(dict_gungame_core[userid].int_level) == leaderLevel:
-            list_leaderNames.append(es.getplayername(userid))
-
-def restartGunGame(reasonText=None):
-    if reasonText:
-        reasonText = '\x04[\x03GunGame\x04]\x01 ' + reasonText
-    registerPlayers()
-    setPreventLevelAll(1)
-    gamethread.delayedname(4.5, 'setPreventAll0', setPreventLevelAll, (0))
-    es.server.cmd('mp_restartgame 5')
-    # Check to see if the warmup round needs to be activated
-    if int(getGunGameVar('gg_warmup_timer')) > 0:
-        gamethread.delayed(5, es.load, ('gungame/included_addons/gg_warmup_round'))
+    if multiKill > 1:
+        multiKillText = '\nRequired Kills: %d/%d' %(gungamePlayer['multikill'], multiKill)
     else:
-        # Fire gg_start event
-        gamethread.delayed(5, es.event, ('initialize','gg_start'))
-        gamethread.delayed(5, es.event, ('fire','gg_start'))
-    es.msg(reasonText)
-    gamethread.delayed(2, es.centermsg, ('GunGame Restarting!!!'))
-
-def setPreventLevelAll(value):
-    for userid in es.getUseridList():
-        gungamePlayer = gungame.getPlayer(userid)
-        gungamePlayer.set('preventlevel', int(value))
-
-def setWeaponOrderFile(fileName):
-    # BEGIN READING THE "../cstrike/cfg/gungame/weapon_order/%FILENAME%" FOR THE WEAPON ORDER
-    # ----------------------------------------------------------------------------------------------------------------------------
-
-    # All globals go at the top. Initialize them outside of functions, if possible
-    global dict_gungameWeapons
-    global dict_gungameWeaponOrder
-    global list_weaponOrderErrors
-
-    # Generic Dictionary that holds the information from the '/cstrike/cfg/gungame/weapon_order.txt', level information and weapons
-    dict_gungameWeapons = {}
-    # Actual dictionary that holds the level information and weapons used in-game
-    dict_gungameWeaponOrder = {}
-    
-    weaponOrderPath = os.getcwd() + '/cstrike/cfg/gungame/weapon_order/' + fileName
-    
-    # Create a list of "valid weapons" to keep the admins from accidental typos, although this will never possibly happen. :p
-    list_validWeapons = ['glock','usp','p228','deagle','fiveseven','elite','m3','xm1014','tmp','mac10','mp5navy','ump45','p90','galil','famas','ak47','scout','m4a1','sg550','g3sg1','awp','sg552','aug','m249','hegrenade','knife']
-    if os.path.isfile(weaponOrderPath):
-        list_weaponOrderErrors = []
-        # Open the 'cstrike/cfg/gungame/weapon_order.txt'
-        weaponOrderFile = open(weaponOrderPath, 'r')
-        # Echo the GunGame Weapon Order text to the console
-        levelCount = 0
-        # Loop through each line in the 'cstrike/cfg/gungame/weapon_order.txt'
-        for line in weaponOrderFile.readlines():
-            # Strip the spaces from the beginning/end of each line and convert to lower case
-            line = line.strip().lower()
-            # Make sure that the line doesn't being with '//'
-            if not line.startswith('//'):
-                # Make sure that the admin didn't typo the weapons by checking against the list_validWeapons
-                if line in list_validWeapons:
-                    # Now that we have verified it is a valid weapon, increment the level counter
-                    levelCount += 1
-                    # Add the valid weapon to the GunGame Weapons Dictionary
-                    dict_gungameWeapons[levelCount] = line
-                else:
-                    # Let's not echo blank lines to the console as an "invalid weapon." That might confuse someone. ;)
-                    if line:
-                        # Uh-oh! The admin typoed a weapon name. Let's warn them by echoing this to the console.
-                        list_weaponOrderErrors.append('[GunGame] \'%s\' is not a valid weapon: skipping.' %line)
-        if not dict_gungameWeapons:
-            # Heh...the admin has deleted all valid weapons or typoed every last one of them. Let's echo this to the console and unload GunGame.
-            es.dbgmsg(0, '[GunGame] There are no valid weapons listed in \'%s\': Unloading GunGame.' %weaponOrderPath)
-            es.server.queuecmd('es_xunload gungame')
-        else:
-            setWeapons(getGunGameVar('gg_weapon_order'))
-            #dict_gungameWeaponOrder = dict_gungameWeapons
-            #logWeaponOrder('Loading', weaponOrderPath)
-        # Close the file and remove it from memory
-        weaponOrderFile.close()
-
+        multiKillText = '\n'
+            
+    if leaderLevel < 2:
+        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s' %(gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
     else:
-        # Oh boy...the admin of this server must have typoed or deleted the file. Let's echo that to console and unload GunGame.
-        if fileName != 'default_weapon_order.txt':
-            es.dbgmsg(0, 'Unable to open \'%s\' ::: File does not exist. ::: Attempting to load default weapon order file...' %weaponOrderPath)
-            setWeaponOrderFile('default_weapon_order.txt')
+        # Get levels behind leader
+        levelsBehindLeader = leaderLevel - gungamePlayer['level']
+        # Get list of leaders userids
+        list_leadersUserid = gungamelib.getLevelUseridList(leaderLevel)
+        
+    # How many levels behind the leader?
+    if levelsBehindLeader == 0:
+        # Is there more than 1 leader?
+        if gungamelib.getCurrentLeaderCount() == 1:    
+            HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\nYou are the leader.' % (gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
         else:
-            es.dbgmsg(0, 'Unable to open \'%s\' ::: File does not exist. ::: Unloading GunGame.' %weaponOrderPath)
-            es.server.queuecmd('es_xunload gungame')
-    # ------------------------------------------------------------------------------------------------------------------------
-    # END READING THE "../cstrike/cfg/gungame/weapon_order/%FILENAME%" FOR THE WEAPON ORDER
+            if leaderLevel != 1:
+                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\nYou are amongst the leaders (' % (gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
+            else:
+                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\nThere are no leaders' % (gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
+            leadersCount = 0
+                    
+            # Get the first 2 leaders
+            for leader in list_leadersUserid:
+                # Increment leader count
+                leadersCount += 1
+                        
+                # More than 2 leaders added?
+                if leadersCount == 3:
+                    HudHintText += '...'
+                    break
+                        
+                # Don't add the comma if there is 2 or less leaders
+                if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
+                    HudHintText += es.getplayername(leader)
+                    break
+                        
+                # Don't add our userid
+                if leader == userid:
+                    continue
+                        
+                # Add the name to the hudhint and increment the leaders count
+                HudHintText += es.getplayername(leader) + ', '
+                    
+                # Finish off the HudHint
+                HudHintText += ')'
+    else:
+        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText, es.getplayername(list_leadersUserid[0]), gungamelib.getLeaderLevel(), gungamelib.getTotalLevels(), gungamelib.getLevelWeapon(gungamelib.getLeaderLevel()))
+            
+    if not int(getGlobal('voteActive')) and not int(getGlobal('isWarmup')):
+        gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
 
+# ============================================================================
+# CONFIG HANDLING
+# ============================================================================
 def loadConfig(configPath):
-    global dict_gungameVariables
-    global dict_cfgSettings
-    
     # BEGIN READING THE  CONFIG OPTIONS
     # ---------------------------------------------------------
     if os.path.isfile(configPath):
@@ -1407,8 +915,6 @@ def unloadConfig(configPath):
 def load():
     StartProfiling(g_Prof)
     
-    global list_includedAddonsDir
-    global list_customAddonsDir
     global dict_gungameVariables
     global dict_gungameWinners
     global countBombDeathAsSuicide
@@ -1436,7 +942,7 @@ def load():
     loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg')
     
     # Load the "../cstrike/cfg/gungame/gg_map_vote.cfg"
-    gungame.loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_map_vote.cfg')
+    loadConfig(os.getcwd() + '/cstrike/cfg/gungame/gg_map_vote.cfg')
         
     # See if we need to create a list of strip exceptions
     global list_stripExceptions
@@ -1444,9 +950,25 @@ def load():
         # Create a list of stripping exceptions using the 'gg_map_strip_exceptions' variable
         list_stripExceptions = dict_gungameVariables['gg_map_strip_exceptions'].split(',')
     
-    # Open the weapon order file
-    setWeaponOrderFile(getGunGameVar('gg_weapon_order_file'))
     
+    # NEW NEW NEW
+    weaponOrderINI  = ConfigParser.ConfigParser()
+    gameDir         = es.ServerVar('eventscripts_gamedir')
+    # Loop through the Weapon Order INI and register their information with GunGame
+    weaponOrderINI.read('%s/cfg/gungame/gg_weapon_orders.ini' %gameDir)
+    for weaponOrderName in weaponOrderINI.sections():
+        weaponOrderFile = weaponOrderINI.get(weaponOrderName, 'fileName')
+        myWeaponOrder = gungamelib.getWeaponOrderFile(weaponOrderFile)
+        if weaponOrderINI.get(weaponOrderName, 'fileName') == getGunGameVar('gg_weapon_order_file'):
+            myWeaponOrder.setWeaponOrderFile()
+            if getGunGameVar('gg_weapon_order') != '#default':
+                myWeaponOrder.changeWeaponOrderType(getGunGameVar('gg_weapon_order'))
+            if int(getGunGameVar('gg_multikill')) > 1:
+                gungamelib.setMultiKillOverride(int(getGunGameVar('gg_multikill')))
+            myWeaponOrder.echo()
+    
+    
+    '''
     # BEGIN ESS COMMAND REGISTRATION
     # -------------------------------------------------------
     
@@ -1495,9 +1017,9 @@ def load():
     # GG_GETTOTALLEVELS
     if not es.exists('command', 'gg_gettotallevels'):
         es.regcmd('gg_gettotallevels', 'gungame/ess_gettotallevels', 'Returns the total number of levels in the GunGame database')
-    # GG_GETLEADERLEVEL
-    if not es.exists('command', 'gg_getleaderlevel'):
-        es.regcmd('gg_getleaderlevel', 'gungame/ess_getleaderlevel', 'Returns the leader level')
+    # GG_gungamelib.getLeaderLevel
+    if not es.exists('command', 'gg_gungamelib.getLeaderLevel'):
+        es.regcmd('gg_gungamelib.getLeaderLevel', 'gungame/ess_gungamelib.getLeaderLevel', 'Returns the leader level')
     # GG_SETWEAPONORDERFILE
     if not es.exists('command', 'gg_setweaponorderfile'):
         es.regcmd('gg_setweaponorderfile', 'gungame/ess_setweaponorderfile', 'Sets the weapon order file that is used by GunGame')
@@ -1519,7 +1041,7 @@ def load():
 
     # ---------------------------------------------------
     # END ESS COMMAND REGISTRATION
-    
+    '''
     # BEGIN POPUP COMMAND REGISTRATION
     # ----------------------------------------------------------
     
@@ -1572,13 +1094,13 @@ def load():
         # END CREATE WINNERSDATA.DB and LOAD INTO DICT_GUNGAMEWINNERS
     
     # Set Up Active Players
-    registerPlayers()
+    gungamelib.resetGunGame()
+    
+    # Reset the leader names list
+    list_leaderNames = []
     
     # Set Up a custom variable for voting in dict_gungameVariables
     dict_gungameVariables['gungame_voting_started'] = False
-    
-    # Set up a custom variable for tracking the leader level in dict_gungameVariables
-    dict_gungameVariables['oldleaderlevel'] = 1
 
     # If there is a current map listed, then the admin has loaded GunGame mid-round/mid-map
     if str(es.ServerVar('eventscripts_currentmap')) != '':
@@ -1628,10 +1150,12 @@ def es_map_start(event_var):
     # Reset the "gungame_voting_started" variable
     setGunGameVar('gungame_voting_started', False)
     
+    
     # See if the option to randomize weapons is turned on
     if getGunGameVar('gg_weapon_order') == '#random':
         # Randomize the weapon order
-        setWeapons('#random')
+        myWeaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getCurrentWeaponOrderFile())
+        myWeaponOrder.changeWeaponOrderType('#random')
     
     # Check to see if the warmup round needs to be activated
     if int(getGunGameVar('gg_warmup_timer')) > 0:
@@ -1642,12 +1166,16 @@ def es_map_start(event_var):
         es.event('fire','gg_start')
     
     # Reset the GunGame Round
-    registerPlayers()
+    gungamelib.resetGunGame()
+    es.msg('Leader Level = %d' %gungamelib.getLeaderLevel())
+    es.msg(gungamelib.getCurrentLeaderList())
+    
+    # Reset the leader names list
+    list_leaderNames = []
 
 def player_changename(event_var):
-    global list_leaderNames
     # Change the player's name in the leaderlist
-    if event_var['oldname'] in list_leaderNames:
+    if removeRetunChars(event_var['oldname']) in list_leaderNames:
         list_leaderNames[list_leaderNames.index(event_var['oldname'])] = removeReturnChars(event_var['newname'])
 
 def round_start(event_var):
@@ -1739,9 +1267,9 @@ def round_end(event_var):
             list_playerlist = playerlib.getUseridList('#alive,#human')
             # Now, we will loop through the userid list and run the AFK Punishment Checks on them
             for userid in list_playerlist:
-                gungamePlayer = gungame.getPlayer(userid)
+                gungamePlayer = gungamelib.getPlayer(userid)
                 # Check to see if the player was AFK
-                if gungamePlayer.get('isplayerafk'):
+                if gungamePlayer.isPlayerAFK():
                     # See if the player needs to be punished for being AFK
                     afkPunishCheck(int(userid))
     StopProfiling(g_Prof)
@@ -1751,21 +1279,8 @@ def player_activate(event_var):
     StartProfiling(g_Prof)
     global dict_gungameWinners
     userid = int(event_var['userid'])
-    steamid = playerlib.uniqueid(userid, 1)
-    # BEGIN AFK CODE
-    # ------------------------
-    if not dict_afk.has_key(userid) and not es.isbot(userid):
-        dict_afk[userid] = afkPlayers()
-    # ---------------------
-    # END AFK CODE
     
-    # BEGIN GUNGAME CORE DATABASE CODE
-    # ---------------------------------------------------------
-    if not dict_gungame_core.has_key(userid):
-        dict_gungame_core[userid] = gungamePlayers()
-        dict_gungame_core[userid].str_steamid = steamid
-    # ------------------------------------------------------
-    # END GUNGAME CORE DATABASE CODE
+    steamid = playerlib.uniqueid(userid, 1)
     
     # See if the player has won before
     if int(getGunGameVar('gg_save_winners')) > 0:
@@ -1773,18 +1288,14 @@ def player_activate(event_var):
             # Yes, they have won before...let's be nice and update their timestamp
             dict_gungameWinners[steamid].int_timestamp = es.gettime()
     
+    gungamePlayer = gungamelib.getPlayer(userid)
     # See if this player was set up in the Reconnecting Players Dictionary
     if dict_reconnectingPlayers.has_key(steamid):
         # Yes, they were. Therefore, we set their level to be whatever it needs to be
-        dict_gungame_core[userid].int_level = dict_reconnectingPlayers[steamid]
+        gungamePlayer['level'] = dict_reconnectingPlayers[steamid]
         # Delete the player from the Reconnecting Players Dictionary
         del dict_reconnectingPlayers[steamid]
     
-    if int(getGunGameVar('gg_save_winners')) > 0:
-        # See if the player has won before
-        if dict_gungameWinners.has_key(steamid):
-            # Update the player's timestamp since they have won before
-            dict_gungameWinners[steamid].int_timestamp = es.gettime()
     StopProfiling(g_Prof)
     #es.msg("Event player_activate benchmark: %f seconds" % GetProfilerTime(g_Prof))
     
@@ -1792,32 +1303,23 @@ def player_disconnect(event_var):
     StartProfiling(g_Prof)
     global dict_reconnectingPlayers
     userid = int(event_var['userid'])
+    gungamePlayer = gungamelib.getPlayer(userid)
+    
     steamid = event_var['es_steamid']
+    
     
     # Make sure the player is not a BOT
     if steamid != 'BOT' and dict_gungame_core.has_key(userid):
         # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
-        if not dict_reconnectingPlayers.has_key(dict_gungame_core[userid].str_steamid):
+        if not dict_reconnectingPlayers.has_key(gungamePlayer['steamid']):
             # Set this player up in the Reconnecting Players Dictionary
-            reconnectLevel = int(dict_gungame_core[userid].int_level) - int(getGunGameVar('gg_retry_punish'))
+            reconnectLevel = int(gungamePlayer['level']) - int(getGunGameVar('gg_retry_punish'))
             if reconnectLevel > 0:
-                dict_reconnectingPlayers[dict_gungame_core[userid].str_steamid] = reconnectLevel
+                dict_reconnectingPlayers[gungamePlayer['steamid']] = reconnectLevel
             else:
-                dict_reconnectingPlayers[dict_gungame_core[userid].str_steamid] = 1
+                dict_reconnectingPlayers[gungamePlayer['steamid']] = 1
+    gungamePlayer.removePlayer()
     
-    # BEGIN AFK CODE
-    # ------------------------
-    if dict_afk.has_key(userid):
-        del dict_afk[userid]
-    # ---------------------
-    # END AFK CODE
-    
-    # BEGIN GUNGAME CORE DATABASE CODE
-    # ----------------------------------------------------------
-    if dict_gungame_core.has_key(userid):
-        del dict_gungame_core[userid]
-    # ------------------------------------------------------
-    # END GUNGAME CORE DATABASE CODE
     StopProfiling(g_Prof)
     #es.msg("Event player_disconnect benchmark: %f seconds" % GetProfilerTime(g_Prof))
 
@@ -1825,145 +1327,104 @@ def player_spawn(event_var):
     StartProfiling(g_Prof)
     userid = int(event_var['userid'])
     
-    # Make sure the player exists in the GunGame Core Database
-    if dict_gungame_core.has_key(userid):
-        gungamePlayer = gungame.getPlayer(userid)
-        if int(event_var['es_userteam']) > 1:
-            # BEGIN AFK CODE
-            # ------------------------
-            gamethread.delayed(0.6, update_afk_dict, userid)
-            # ---------------------
-            # END AFK CODE
+    gungamePlayer = gungamelib.getPlayer(userid)
+        
+    if int(event_var['es_userteam']) > 1:
+        # Reset the player's location with GunGame's AFK Checker
+        gamethread.delayed(0.6, gungamePlayer.resetPlayerLocation, ())
+        
+        # Strip the player
+        '''
+        if int(getGunGameVar('gg_deathmatch')):
+            gungamePlayer.stripPlayer()
+        '''
+        
+        # Check to see if the WarmUp Round is Active
+        if not dict_gungameRegisteredAddons.has_key('gg_warmup_round'):
+            # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
+            gungamePlayer.giveWeapon()
             
-            # Strip the player
-            stripPlayer(userid)
+            levelInfoHudHint(userid)
             
-            # Check to see if the WarmUp Round is Active
-            if not dict_gungameRegisteredAddons.has_key('gg_warmup_round'):
-                # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
-                giveWeapon(userid)
-                
-                # Get leader level
-                leaderLevel = int(getLeaderLevel())
-                
-                if leaderLevel < 2:
-                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                else:
-                    # Get levels behind leader
-                    levelsBehindLeader = leaderLevel - gungamePlayer.get('level')
-                    # Get list of leaders userids
-                    list_leadersUserid = getLevelUseridList(leaderLevel)
-                    # How many levels behind the leader?
-                    if levelsBehindLeader == 0:
-                        # Is there more than 1 leader?
-                        if len(list_leadersUserid) == 1:    
-                            HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                        else:
-                            HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders (' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                            leadersCount = 0
+        if int(getGunGameVar('gg_map_obj')) > 1:
+            # Check to see if this player is a CT
+            if int(event_var['es_userteam']) == 3:
+                # Check to see if the map is a "de_*" map
+                if getGunGameVar('gungame_currentmap_prefix') == 'de':
+                    # See if the admin wants us to give them a defuser
+                    if int(getGunGameVar('gg_player_defuser')) > 0:
+                        playerlibPlayer = playerlib.getPlayer(userid)
                             
-                            # Get the first 2 leaders
-                            for leader in list_leadersUserid:
-                                # Increment leader count
-                                leadersCount += 1
-                                
-                                # Already 2 leaders added?
-                                if leadersCount == 3:
-                                    HudHintText += '...'
-                                    break
-                                
-                                # Don't add the comma if there is 2 or less leaders
-                                if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
-                                    HudHintText += es.getplayername(leader)
-                                    break
-                                
-                                # Don't add our userid
-                                if leader == userid:
-                                    continue
-                                
-                                # Add the name to the hudhint and increment the leaders count
-                                HudHintText += es.getplayername(leader) + ', '
-                            
-                            # Finish off the HudHint
-                            HudHintText += ')'
-                    else:
-                        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), leaderLevel, getTotalLevels(), getLevelWeapon(leaderLevel))
-                        
-                    if not int(getGlobal('voteActive')) and not int(getGlobal('isWarmup')):
-                        gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
-                
-            if int(getGunGameVar('gg_map_obj')) > 1:
-                # Check to see if this player is a CT
-                if int(event_var['es_userteam']) == 3:
-                    # Check to see if the map is a "de_*" map
-                    if getGunGameVar('gungame_currentmap_prefix') == 'de':
-                        # See if the admin wants us to give them a defuser
-                        if int(getGunGameVar('gg_player_defuser')) > 0:
-                            playerlibPlayer = playerlib.getPlayer(userid)
-                            
-                            # Make sure the player doesn't already have a defuser
-                            if not playerlibPlayer.get('defuser'):
-                                es.server.cmd('es_xgive %d item_defuser' %userid)
+                        # Make sure the player doesn't already have a defuser
+                        if not playerlibPlayer.get('defuser'):
+                            es.server.cmd('es_xgive %d item_defuser' %userid)
+
     StopProfiling(g_Prof)
     #es.msg("Event player_spawn benchmark: %f seconds" % GetProfilerTime(g_Prof))
 
 def player_jump(event_var):
-    global dict_afk
     userid = int(event_var['userid'])
+    gungamePlayer = gungamelib.getPlayer(userid)
     
     # Is player human?
     if not es.isbot(userid):
         # Here, we will make sure that the player isn't counted as AFK
-        dict_afk[userid].int_afk_math_total = 1
+        gungamePlayer.playerNotAFK()
 
 def player_death(event_var):
+    StartProfiling(g_Prof)
     global countBombDeathAsSuicide
     
     # Set vars
     userid = int(event_var['userid'])
-    gungameVictim = gungame.getPlayer(userid)
+    gungameVictim = gungamelib.getPlayer(userid)
     attacker = int(event_var['attacker'])
     
     # If the attacker is not "world"
     if attacker != 0:
-        gungameAttacker = gungame.getPlayer(attacker)
+        gungameAttacker = gungamelib.getPlayer(attacker)
         # If the attacker is not on the same team
         if int(event_var['es_userteam']) != int(event_var['es_attackerteam']):
             # If the weapon is the correct weapon
             weapon = event_var['weapon']
-            if weapon == gungameAttacker.get('weapon'):
+            if weapon == gungameAttacker.getWeapon():
                 # If the victim was not AFK
-                if not gungameVictim.get('isplayerafk'):
+                if not gungameVictim.isPlayerAFK():
                     # Make sure that PreventLevel is not set to "1"
-                    if int(gungameAttacker.get('preventlevel')) == 0:
+                    if int(gungameAttacker['preventlevel']) == 0:
                         # If multikill is active we need to set up for it
-                        if int(getGunGameVar('gg_multikill')) > 1:
-                            if int(getGunGameVar('gg_multikill')) < 2:
-                                setGunGameVar('gg_multikill', 0)
-                                levelUpOldLevel = gungameAttacker.get('level')
-                                levelUpNewLevel = attackerOldLevel + 1
-                                gungameAttacker.set('level', levelUpNewLevel)
+                        multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
+                        if multiKill > 1:
+                        
+                            if weapon == 'knife' or weapon == 'hegrenade':
+                                if int(getGunGameVar('gg_multikill')):
+                                    gungameAttacker['multikill'] = int(getGunGameVar('gg_multikill'))
+                                
+                            else:
+                                gungameAttacker['multikill'] += 1
+                                
+                            if gungameAttacker['multikill'] == multiKill:
+                                levelUpOldLevel = gungameAttacker['level']
+                                levelUpNewLevel = levelUpOldLevel + 1
+                                
                                 # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
                                 triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
+                                gungameAttacker['multikill'] = 0
                             else:
-                                if weapon == 'knife' or weapon == 'hegrenade':
-                                    attackerMultiKillCount = int(getGunGameVar('gg_multikill'))
-                                else:
-                                    attackerMultiKillCount = gungameAttacker.get('multikill') + 1
-                                if attackerMultiKillCount == int(getGunGameVar('gg_multikill')):
-                                    levelUpOldLevel = gungameAttacker.get('level')
-                                    levelUpNewLevel = levelUpOldLevel + 1
-                                    # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
-                                    triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
-                                else:
-                                    usermsg.hudhint(userid, 'Kills this level: %d of %d' %(attackerMultiKillCount, int(getGunGameVar('gg_multikill'))))
-                                    gungameAttacker.set('multikill', attackerMultiKillCount)
+                                # Message the Attacker
+                                usermsg.hudhint(attacker, 'Kills this level: %d of %d' %(gungameAttacker['multikill'], multiKill))
+                                # Message the victim:
+                                multiKill = gungamelib.getLevelMultiKill(gungameVictim['level'])
+                                usermsg.hudhint(userid, 'Kills this level: %d of %d' %(gungameVictim['multikill'], multiKill))
+                                
                         # Multikill was not active
                         else:
-                            levelUpOldLevel = gungameAttacker.get('level')
+                            levelUpOldLevel = gungameAttacker['level']
                             levelUpNewLevel = levelUpOldLevel + 1
+                            
                             # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
                             triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
+                            
                 # The victim was AFK
                 else:
                     usermsg.hudhint(attacker, '%s was AFK\nYour kill did not count!!!' %event_var['es_username'])
@@ -1981,13 +1442,14 @@ def player_death(event_var):
                 # Yep! They killed themselves. Now let's see if we are going to punish the dead...
                 if int(getGunGameVar('gg_suicide_punish')) > 0:
                     # Set vars
-                    levelDownOldLevel = int(gungameAttacker.get('level'))
+                    levelDownOldLevel = int(gungameAttacker['level'])
                     levelDownNewLevel = levelDownOldLevel - int(getGunGameVar('gg_suicide_punish'))
                     
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:
                         # LEVEL DOWN CODE
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
+                        
                     else:
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
             # Team Killer!!!
@@ -1995,67 +1457,68 @@ def player_death(event_var):
                 # Let's see if we get to punish the vile TK'er...
                 if int(getGunGameVar('gg_tk_punish')) > 0:
                     # Set vars
-                    levelDownOldLevel = gungameAttacker.get('level')
+                    levelDownOldLevel = gungameAttacker['level']
                     levelDownNewLevel = levelDownOldLevel - int(getGunGameVar('gg_tk_punish'))
                     
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
+                        
                     else:
                         triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
     else:
         # Killed by "world"
-        gungameAttacker = gungame.getPlayer(userid)
+        gungameAttacker = gungamelib.getPlayer(userid)
         
         if int(getGunGameVar('gg_suicide_punish')) > 0:
             # Make sure that the explosion of the bomb doesn't count as a suicide to punish
             if countBombDeathAsSuicide:
                 # Set vars
-                levelDownOldLevel = gungameAttacker.get('level')
+                levelDownOldLevel = gungameAttacker['level']
                 levelDownNewLevel = levelDownOldLevel - int(getGunGameVar('gg_suicide_punish'))
                 
                 # Let's not put them on a non-existant level 0...
                 if levelDownNewLevel > 0:
                     # LEVEL DOWN CODE
                     triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
-
+    StopProfiling(g_Prof)
+    #es.msg("Event player_death benchmark: %f seconds" % GetProfilerTime(g_Prof))
+    
 def bomb_defused(event_var):
     ## TODO: Should we put in an option to allow them to skip these levels by defusing?
     
     # Set vars
     userid = int(event_var['userid'])
-    gungamePlayer = gungame.getPlayer(userid)
-    playerWeapon = gungamePlayer.get('weapon')
+    gungamePlayer = gungamelib.getPlayer(userid)
+    playerWeapon = gungamePlayer.getWeapon()
     
     # Cant skip the last level
-    if int(gungamePlayer.get('level')) == int(getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
+    if int(gungamePlayer['level']) == int(gungamelib.getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
         es.tell(userid, '#multi', 'You can not skip the \4%s\1 level by defusing the bomb!' % playerWeapon)
     
     # Level them up
-    levelUpOldLevel = gungamePlayer.get('level')
+    levelUpOldLevel = gungamePlayer['level']
     levelUpNewLevel = levelUpOldLevel + 1
     triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
 
 def bomb_exploded(event_var):
     # Set vars
     userid = int(event_var['userid'])
-    gungamePlayer = gungame.getPlayer(userid)
-    playerWeapon = gungamePlayer.get('weapon')
+    gungamePlayer = gungamelib.getPlayer(userid)
+    playerWeapon = gungamePlayer.getWeapon()
     
     # Cant skip the last level
-    if int(gungamePlayer.get('level')) == int(getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
+    if int(gungamePlayer['level']) == int(gungamelib.getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
         es.tell(userid, '#multi', 'You can not skip the \4%s\1 level by planting the bomb!' % playerWeapon)
     
     # Level them up
-    levelUpOldLevel = gungamePlayer.get('level')
+    levelUpOldLevel = gungamePlayer['level']
     levelUpNewLevel = levelUpOldLevel + 1
     triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
 
 def gg_levelup(event_var):
-    global list_leaderNames
-    
     # Check for a winner first
-    if int(event_var['old_level']) == getTotalLevels():
+    if int(event_var['old_level']) == gungamelib.getTotalLevels():
         es.event('initialize', 'gg_win')
         es.event('setint', 'gg_win', 'userid', event_var['userid'])
         es.event('setint', 'gg_win', 'loser', event_var['victim'])
@@ -2068,104 +1531,24 @@ def gg_levelup(event_var):
         # BEGIN REGULAR LEVELUP CODE
         # --------------------------------------------
         userid = int(event_var['userid'])
-        gungamePlayer = gungame.getPlayer(userid)
+        gungamePlayer = gungamelib.getPlayer(userid)
         # Set the player's level in the GunGame Core Dictionary
-        gungamePlayer.set('level', int(event_var['new_level']))
+        gungamePlayer['level'] = int(event_var['new_level'])
         # Reset the player's multikill in the GunGame Core Dictionary
-        gungamePlayer.set('multikill', 0)
+        gungamePlayer['multikill'] = 0
         # -----------------------------------------
         # END REGULAR LEVELUP CODE
         
-        # BEGIN LEADER LEVEL COMPARISONS & MESSAGING
-        # -------------------------------------------------------------------------
-        
-        # Let's see if this player is the new leader
-        newLeaderLevel = int(getLeaderLevel())
-        oldLeaderLevel = int(getGunGameVar('oldleaderlevel'))
-        if newLeaderLevel == int(event_var['new_level']):
-            if len(getLevelUseridList(newLeaderLevel)) == 1:
-                # Congratulations, player! You have become the new leader.
-                # Now, let's add the new leader's name to the list "list_leaderNames"
-                list_leaderNames = []
-                list_leaderNames.append(removeReturnChars(event_var['name']))
-                # Rebuild the leaders menu
-                rebuildLeaderMenu()
-                # Set this new level to be the new oldLeaderLevel
-                setGunGameVar('oldleaderlevel', int(event_var['old_level']))
-                # Loop through the players and send a saytext2 message
-                for userid in es.getUseridList():
-                    usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\3%s\1 is now leading on level \4%d' % (event_var['name'], int(event_var['new_level'])))
-            # Let's see if the player has tied the other leaders
-            else:
-                # OK. They have tied someone else.
-                # Now we add their name to the leader list ("list_leaderNames")
-                list_leaderNames.append(removeReturnChars(event_var['name']))
-                # Let's find out how many people are on the leader level
-                leaderCount = int(len(list_leaderNames))
-                # There are 2 leaders
-                if leaderCount == 2:
-                    # Loop through the players and send a saytext2 message
-                    for userid in es.getUseridList():
-                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\4[2-way tie]\3 %s\1 has tied the other leader on level \4%d' % (event_var['name'], int(event_var['new_level'])))
-                # There are more than 2 leaders
-                elif leaderCount > 2:
-                    # Loop through the players and send a saytext2 message
-                    for userid in es.getUseridList():
-                        usermsg.saytext2(userid, gungamePlayer.attributes['index'], '\4[%d-way tie]\3 %s\1 has tied the other leaders on level \4%d' % (leaderCount, event_var['name'], int(event_var['new_level'])))
-                # Rebuild the leaders menu
-                rebuildLeaderMenu()
-        # ----------------------------------------------------------------------
-        # END LEADER LEVEL COMPARISONS & MESSAGING
-        
+        leaderLevel = gungamelib.getLeaderLevel()
+        if leaderLevel == int(event_var['new_level']):
+            rebuildLeaderMenu()
+
         if not dict_gungameRegisteredAddons.has_key('gg_warmup_round'):
-            # Get levels behind leader
-            levelsBehindLeader = newLeaderLevel - gungamePlayer.get('level')
-            
-            # Get list of leaders userids
-            list_leadersUserid = getLevelUseridList(newLeaderLevel)
-                
-            # How many levels behind the leader?
-            if levelsBehindLeader == 0:
-                # Is there more than 1 leader?
-                if len(list_leadersUserid) == 1:    
-                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are the leader.' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                else:
-                    HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nYou are amongst the leaders (' % (gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'))
-                    leadersCount = 0
-                    
-                    # Get the first 2 leaders
-                    for leader in list_leadersUserid:
-                        # Increment leader count
-                        leadersCount += 1
-                        
-                        # More than 2 leaders added?
-                        if leadersCount == 3:
-                            HudHintText += '...'
-                            break
-                        
-                        # Don't add the comma if there is 2 or less leaders
-                        if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
-                            HudHintText += es.getplayername(leader)
-                            break
-                        
-                        # Don't add our userid
-                        if leader == userid:
-                            continue
-                        
-                        # Add the name to the hudhint and increment the leaders count
-                        HudHintText += es.getplayername(leader) + ', '
-                    
-                    # Finish off the HudHint
-                    HudHintText += ')'
-            else:
-                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s\n\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer.get('level'), getTotalLevels(), gungamePlayer.get('weapon'), es.getplayername(list_leadersUserid[0]), newLeaderLevel, getTotalLevels(), getLevelWeapon(newLeaderLevel))
-            
-            if not int(getGlobal('voteActive')) and not int(getGlobal('isWarmup')):
-                gamethread.delayed(0.5, usermsg.hudhint, (event_var['userid'], HudHintText))
+            levelInfoHudHint(userid)
         
         # BEGIN CODE FOR TRIGGERING CUSTOM EVENT "GG_VOTE"
         # ----------------------------------------------------------------------------------
-        if newLeaderLevel == getTotalLevels() - int(getGunGameVar('gg_vote_trigger')):
+        if leaderLevel == gungamelib.getTotalLevels() - int(getGunGameVar('gg_vote_trigger')):
             # Only continue if no other script has set the next map
             if es.ServerVar('eventscripts_nextmapoverride') == '':
                 if not getGunGameVar('gungame_voting_started'):
@@ -2177,29 +1560,38 @@ def gg_levelup(event_var):
         # END CODE FOR TRIGGERING CUSTOM EVENT "GG_VOTE"
 
 def gg_leveldown(event_var):
-    global list_leaderNames
-    
     userid = int(event_var['userid'])
-    gungamePlayer = gungame.getPlayer(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
     
     # Set the player's level in the GunGame Core Dictionary
-    gungamePlayer.set('level', int(event_var['new_level']))
+    gungamePlayer['level'] = int(event_var['new_level'])
+            
+def gg_new_leader(event_var):
+    for playerID in es.getUseridList():
+        usermsg.saytext2(playerID, event_var['es_userindex'], '\3%s\1 is now leading on level \4%d' %(es.getplayername(event_var['userid']), gungamelib.getLeaderLevel()))
+    rebuildLeaderMenu()
     
-    # Remove the player's name from the leaderlist, since they are no longer a leader
-    name = removeReturnChars(event_var['name'])
-    if name in list_leaderNames:
-        list_leaderNames.remove(name)
-        rebuildLeaderNameList()
-        rebuildLeaderMenu()
-        if int(event_var['new_level']) == int(getLeaderLevel()):
-            setGunGameVar('oldleaderlevel', int(getGunGameVar('oldleaderlevel')) - 1)
+def gg_tied_leader(event_var):
+    leaderCount = gungamelib.getCurrentLeaderCount()
+    if leaderCount == 2:
+        # Loop through the players and send a saytext2 message
+        for playerID in es.getUseridList():
+            usermsg.saytext2(playerID, event_var['es_userindex'], '\4[2-way tie]\3 %s\1 has tied the other leader on level \4%d' % (es.getplayername(event_var['userid']), gungamelib.getLeaderLevel()))
+    # There are more than 2 leaders
+    elif leaderCount > 2:
+        # Loop through the players and send a saytext2 message
+        for playerID in es.getUseridList():
+            usermsg.saytext2(playerID, event_var['es_userindex'], '\4[%d-way tie]\3 %s\1 has tied the other leaders on level \4%d' % (leaderCount, es.getplayername(event_var['userid']), gungamelib.getLeaderLevel()))
 
+    rebuildLeaderMenu()
+    
+def gg_leader_lostlevel(event_var):
+    rebuildLeaderMenu()
+    
 def unload():
     global gungameWeaponOrderMenu
     #popuplib.delete('gungameWeaponOrderMenu.delete()
     global dict_gungameRegisteredAddons
-    global list_includedAddonsDir
-    global list_customAddonsDir
     for addonName in dict_gungameRegisteredAddons:
         if addonName in list_includedAddonsDir:
             es.unload('gungame/included_addons/%s' %addonName)
@@ -2266,6 +1658,8 @@ def unload():
     # Fire gg_unload event
     es.event('initialize','gg_unload')
     es.event('fire','gg_unload')
+    
+    gungamelib.clearGunGame()
 
 def gg_vote(event_var):
     setGunGameVar('gungame_voting_started', True)
@@ -2290,11 +1684,11 @@ def gg_win(event_var):
     # Enable alltalk
     es.server.cmd('sv_alltalk 1')
     
-    # Reset Players in the GunGame Core Database
-    registerPlayers()
-    
     # SayText2 the message to the world
     for pUserid in playerlib.getUseridList('#all'):
+        gungamePlayer = gungamelib.getPlayer(pUserid)
+        # Reset Players in the GunGame Core Database
+        gungamePlayer.resetPlayer()
         usermsg.saytext2(pUserid, event_var['es_userindex'], '\3%s\1 won the game!' % playerName)
     
     # Now centermessage it
@@ -2319,7 +1713,6 @@ def gg_win(event_var):
         winnersDataBaseFile.close()
 
 def gg_variable_changed(event_var):
-    global list_includedAddonsDir
     global dict_gungameRegisteredAddons
     global dict_gungameRegisteredDependencies
     global list_allWeapons
@@ -2391,14 +1784,6 @@ def getGameDir(dir):
     parts.append(dir)
     
     return string.join(parts, '\\')
-
-def update_afk_dict(userid):
-    global dict_afk
-    # check if player is a bot
-    if not es.isbot(userid) and es.exists('userid', userid):
-        list_playerlocation = es.getplayerlocation(userid)
-        afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(userid,'CCSPlayer.m_angEyeAngles[1]'))
-        dict_afk[userid].int_afk_math_total = int(afk_math_total)
 
 # ===================================================================================================
 #   MESSAGE WRAPPERS

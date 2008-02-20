@@ -2,11 +2,12 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_handicap
-Version #:      1.0.102
+Version #:      02.20.08
 Description:    When a player joins they are given the average level.
 '''
 
 import es
+import gungamelib
 from gungame import gungame
 from gungame.included_addons.gg_sounds import gg_sounds as gg_sound
 import repeat
@@ -15,7 +16,7 @@ import playerlib
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_handicap Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "02.20.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_handicap" 
 info.author   = "GunGame Development Team"
@@ -57,21 +58,21 @@ def es_map_start(event_var):
 
 def player_activate(event_var):
     userid = int(event_var['userid'])
-    averageLevel = gungame.getAverageLevel()
-    gungamePlayer = gungame.getPlayer(userid)
-    if gungamePlayer.get('level') < averageLevel:
-        gungamePlayer.set('level', averageLevel)
+    averageLevel = gungamelib.getAverageLevel()
+    gungamePlayer = gungamelib.getPlayer(userid)
+    if gungamePlayer['level'] < averageLevel:
+        gungamePlayer.['level'] = averageLevel
         if int(es.getplayerteam(userid)) > 1:
-            gungame.stripPlayer(userid)
-            gungame.giveWeapon(userid)
+            gungamePlayer.stripPlayer()
+            gungamePlayer.giveWeapon()
 
 def handicapUpdate(repeatInfo):
-    averageLevel = gungame.getAverageLevel()
+    averageLevel = gungamelib.getAverageLevel()
     allPlayers = playerlib.getUseridList("#all")
     for userid in allPlayers:
-        gungamePlayer = gungame.getPlayer(str(userid))
-        if gungamePlayer.get('level') < averageLevel:
-            gungamePlayer.set('level', averageLevel)
+        gungamePlayer = gungamelib.getPlayer(userid)
+        if gungamePlayer['level'] < averageLevel:
+            gungamePlayer['level'] = averageLevel
             if gg_sound.gg_sounds['handicap'] != '0':
                 es.playsound(userid, gg_sound.gg_sounds['handicap'], 1.0)
     

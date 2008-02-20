@@ -2,24 +2,25 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_friendlyfire
-Version #:      1.0.102
-Description:    Friendlyfire will activate when the last level is reached
+Version #:      02.20.08
+Description:    Friendly fire will activate when the last level is reached
 '''
 
 import es
 import gamethread
+import gungamelib
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_friendlyfire Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "02.20.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_friendlyfire" 
 info.author   = "GunGame Development Team"
 
 # Set Level where gg_friendlyfire has to be activate
-friendlyFireLevel = gungame.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
+friendlyFireLevel = gungamelib.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
 friendlyFireEnabled = 0
 mp_friendlyfireBackUp = 0
 
@@ -65,7 +66,7 @@ def gg_start():
     es.forcevalue("mp_friendlyfire", 0)
     
     # Get friendlyfireLevel again just incase the Total Levels have changed
-    friendlyFireLevel = gungame.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
+    friendlyFireLevel = gungamelib.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
     
 
 def gg_levelup(event_var):
@@ -73,7 +74,7 @@ def gg_levelup(event_var):
     global friendlyFireLevel
     
     # If the Leader is on the friendlyfire level?
-    if gungame.getLeaderLevel() >= friendlyFireLevel:
+    if gungamelib.getLeaderLevel() >= friendlyFireLevel:
         # Check whether friendlyfire is enabled
         if not friendlyFireEnabled:
             # Set friendlyfire to 1; Message and Sound

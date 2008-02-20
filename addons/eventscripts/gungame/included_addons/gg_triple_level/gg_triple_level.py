@@ -2,18 +2,21 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_triple_level
-Version #:      1.0.102
+Version #:      02.20.08
 Description:    When a player makes 3 levels in one round he get faster and have an effect for 10 secs
 '''
 
-import es, playerlib, gamethread
+import es
+import playerlib
+import gamethread
+import gungamelib
 from gungame import gungame
 from gungame.included_addons.gg_sounds import gg_sounds as gg_sound
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_triple_level Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "02.20.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_triple_level" 
 info.author   = "GunGame Development Team"
@@ -34,11 +37,11 @@ def unload():
 def gg_levelup(event_var):
     userid = event_var['userid']
     # Add 1 to triple level counter
-    tripler = gungame.getPlayer(userid)
-    tripler.set("triple", int(tripler.get("triple")) + 1)
+    gungamePlayer = gungamelib.getPlayer(userid)
+    gungamePlayer['triple'] += 1
     
     # If is it a Triple Level
-    if tripler.get("triple") == 3:
+    if gungamePlayer['triple'] == 3:
         # Add the player to the triple level list
         list_currentTripleLevel.append(userid)
         # Sound and Messages
@@ -63,7 +66,7 @@ def gg_levelup(event_var):
         es.server.cmd("es_xfire %s !self \"gravity 400\"" %userid)
 
         # Reset the level counter to 0 since they just tripled
-        tripler.set("triple", 0)
+        gungamePlayer['triple'] = 0
 		
         # Stop Triple Level Bonus after 10 secs
         gamethread.delayed(10, removeTriple, (userid))
@@ -71,10 +74,10 @@ def gg_levelup(event_var):
 def player_death(event_var):
     userid = event_var['userid']
     # Get deaths player
-    tripler = gungame.getPlayer(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
     
     # Reset the triple level counter on player death
-    tripler.set("triple", 0)
+    gungamePlayer['triple'] = 0
 
 def round_start(event_var):
     # Get all players
@@ -85,8 +88,8 @@ def round_start(event_var):
     
     # Reset the triple level counter at the beginning of each round for every player
     for userid in players:
-        tripler = gungame.getPlayer(userid)
-        tripler.set("triple", 0)
+        gungamePlayer = gungamelib.getPlayer(userid)
+        gungamePlayer['triple'] = 0
 
 def removeTriple(userid):
     # Remove the player from the current triple level list

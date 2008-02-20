@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_warmup_round
-Version #:      1.0.102
+Version #:      02.20.08
 Description:    GunGame WarmUp Round allows players to begin warming up for
                 the upcoming GunGame round without allowing them to level up,
                 also allowing connecting players to get a full connection to
@@ -12,6 +12,7 @@ Description:    GunGame WarmUp Round allows players to begin warming up for
 import es
 import gamethread
 import usermsg
+import gungamelib
 import playerlib
 import repeat
 
@@ -20,7 +21,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_warmup_round Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "02.20.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_warmup_round" 
 info.author   = "GunGame Development Team"
@@ -87,7 +88,7 @@ def unload():
     gungame.unregisterAddon('gg_warmup_round')
     
     # Set everyone's PreventLevel to 0
-    gungame.setPreventLevelAll(0)
+    gungamelib.setPreventLevelAll(0)
     
     # Cancel the "gungameWarmUpRound" delay
     gamethread.cancelDelayed('gungameWarmUpRound')
@@ -112,8 +113,8 @@ def player_activate(event_var):
     userid = int(event_var['userid'])
     
     # Set the PreventLevel to "1" for late joiners
-    gungamePlayer = gungame.getPlayer(userid)
-    gungamePlayer.set('PreventLevel', 1)
+    gungamePlayer = gungamelib.getPlayer(userid)
+    gungamePlayer['preventlevel'] = 1
 
 def player_spawn(event_var):
     # Is a spectator?
@@ -136,7 +137,8 @@ def player_spawn(event_var):
                 es.sexec(userid, 'use weapon_knife')
         else:
             # It looks like we are giving them the level 1 weapon...
-            gungame.giveWeapon(userid)
+            gungamePlayer = gungamelib.getPlayer(userid)
+            gungamePlayer.giveWeapon()
 
 def hegrenade_detonate(event_var):
     # Get player userid and player object

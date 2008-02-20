@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_knife_pro
-Version #:      1.0.102
+Version #:      02.20.08
 Description:    When one player knife kills another player, the attacker steals
                 a level from the victim.
 '''
@@ -10,6 +10,7 @@ Description:    When one player knife kills another player, the attacker steals
 # Imports
 import es
 import playerlib
+import gungamelib
 import usermsg
 
 from gungame import gungame
@@ -17,7 +18,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_knife_pro Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "02.20.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_knife_pro" 
 info.author   = "GunGame Development Team"
@@ -57,31 +58,31 @@ def player_death(event_var):
     
     # Get attacker info
     attacker = int(event_var['attacker'])
-    gungameAttacker = gungame.getPlayer(attacker)
-    gungameAttackerLevel = int(gungameAttacker.get('level'))
+    gungameAttacker = gungamelib.getPlayer(attacker)
+    gungameAttackerLevel = gungameAttacker['level']
     
     # Get victim info
     userid = event_var['userid']
-    gungameVictim = gungame.getPlayer(userid)
-    gungameVictimLevel = int(gungameVictim.get('level'))
+    gungameVictim = gungamelib.getPlayer(userid)
+    gungameVictimLevel = gungameVictim['level']
     
     # Can they levelup anyway?
-    if int(gungameAttacker.get('PreventLevel')) == 1:
+    if gungameAttacker['preventlevel'] == 1:
         tell(attacker, 'You cannot steal a level. You cannot levelup at the moment.')
         return
     
     # Is the attacker on the grenade level?
-    if gungameAttacker.get('weapon') == 'hegrenade':
+    if gungameAttacker.getWeapon() == 'hegrenade':
         tell(attacker, 'You cannot skip the grenade level!')
         return
     
     # Is the victim on level 1?
-    if int(gungameVictim.get('level')) == 1:
+    if gungameVictim['level'] == 1:
         tell(attacker, 'You cannot steal a level from the victim, they are on level 1.')
         return
     
     # Is the victim AFK?
-    if gungameVictim.get('isplayerafk'):
+    if gungameVictim.isPlayerAFK():
         tell(attacker, 'You cannot steal a level, the victim is AFK.')
         return
     

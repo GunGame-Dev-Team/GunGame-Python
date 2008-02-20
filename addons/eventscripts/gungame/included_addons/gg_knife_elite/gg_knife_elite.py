@@ -2,20 +2,21 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_knife_elite
-Version #:      1.0.102
+Version #:      02.20.08
 Description:    After a player levels up, they only get a knife until the next round.
                 THIS WILL OVERRIDE TURBO MODE!!
 '''
 
 import es
 import playerlib
+import gungamelib
 import gamethread
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_knife_elite Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "02.20.08"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_knife_elite" 
 info.author   = "GunGame Development Team"
@@ -86,8 +87,8 @@ def player_spawn(event_var):
     global dict_playerIsElite
     userid = event_var['userid']
     dict_playerIsElite[userid] = 0
-    gungamePlayer = gungame.getPlayer(userid)
-    es.sexec(userid, 'use weapon_%s' %gungamePlayer.get('weapon'))
+    gungamePlayer = gungamelib.getPlayer(userid)
+    es.sexec(userid, 'use weapon_%s' %gungamePlayer.getWeapon())
 
 def item_pickup(event_var):
     global dict_playerIsElite
@@ -101,10 +102,10 @@ def item_pickup(event_var):
 
 def gg_levelup(event_var):
     userid = event_var['userid']
-    gungamePlayer = gungame.getPlayer(userid)
-    if gungamePlayer.get('PreventLevel') == 0 and gungamePlayer.get('weapon') != 'knife':
+    gungamePlayer = gungamelib.getPlayer(userid)
+    if gungamePlayer['preventlevel'] == 0 and gungamePlayer.getWeapon() != 'knife':
         es.sexec(userid, 'use weapon_knife')
-        gungame.stripPlayer(userid)
+        gungamePlayer.stripPlayer()
         
         global dict_playerIsElite
         dict_playerIsElite[userid] = 1

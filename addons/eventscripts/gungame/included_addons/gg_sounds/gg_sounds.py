@@ -8,6 +8,7 @@ Description:    When a player makes 3 levels in one round he get faster and have
 
 import es, os
 import ConfigParser
+import gungamelib
 from gungame import gungame
 
 # Register this addon with EventScripts
@@ -95,8 +96,8 @@ def gg_levelup(event_var):
     else:
         if gg_sounds['levelup'] != '0':
             es.playsound(userid, gg_sounds['levelup'], 1.0)
-    gungamePlayer = gungame.getPlayer(userid)
-    playerWeapon = gungame.getLevelWeapon(gungamePlayer.get('level'))
+    gungamePlayer = gungamelib.getPlayer(userid)
+    playerWeapon = gungamePlayer.getWeapon()
     if playerWeapon == 'hegrenade':
         if gg_sounds['nadelevel'] != '0':
             es.playsound(userid, gg_sounds['nadelevel'], 1.0)

@@ -54,7 +54,7 @@ def load():
     gungame.registerAddon('gg_warmup_round', 'GG WarmUp Round')
     
     # Set PreventAll to "1" for everyone
-    gungame.setPreventLevelAll(1)
+    gungamelib.setPreventLevelAll(1)
     
     # Set a variable to hold the amount of WarmUp Time
     warmupTime = int(gungame.getGunGameVar('gg_warmup_timer')) + 1

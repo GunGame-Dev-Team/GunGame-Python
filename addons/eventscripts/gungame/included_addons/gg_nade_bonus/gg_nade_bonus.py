@@ -41,8 +41,9 @@ def gg_levelup(event_var):
         
 def checkBonus(userid):
     userid = int(userid)
-    gungamePlayer = gungamelib.getPlayer(userid)
-    if gungamePlayer.getWeapon() == 'hegrenade':
-        es.server.cmd('es_xdelayed 0.1 es_xgive %d %s' %(userid, bonusWeapon))
-        es.server.cmd('es_xdelayed 0.2 es_xsexec %d use weapon_hegrenade' %userid)
+    if int(es.getplayerteam(userid)) > 1:
+        gungamePlayer = gungamelib.getPlayer(userid)
+        if gungamePlayer.getWeapon() == 'hegrenade':
+            es.server.cmd('es_xdelayed 0.1 es_xgive %d %s' %(userid, bonusWeapon))
+            es.server.cmd('es_xdelayed 0.2 es_xsexec %d use weapon_hegrenade' %userid)
     

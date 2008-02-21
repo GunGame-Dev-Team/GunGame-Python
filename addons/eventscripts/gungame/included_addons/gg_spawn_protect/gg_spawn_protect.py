@@ -67,4 +67,8 @@ def player_spawn(event_var):
         # See if prevent level is already turned on
         if not gungamePlayer['preventlevel']:
             gungamePlayer['preventlevel'] = 1
-            gamethread.delayed(dict_SpawnProtectVars['delay'], gungamePlayer['preventlevel'] = 0)
+            gamethread.delayed(dict_SpawnProtectVars['delay'], setPreventLevelZero, (userid))
+            
+def setPreventLevelZero(userid):
+    gungamePlayer = gungamelib.getPlayer(userid)
+    gungamePlayer['preventlevel'] = 0

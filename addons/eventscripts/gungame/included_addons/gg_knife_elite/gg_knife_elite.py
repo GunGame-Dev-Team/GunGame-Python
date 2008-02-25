@@ -32,11 +32,11 @@ def load():
     gungame.registerDependency('gg_dead_strip', 'gg_knife_elite')
     
     # Check if turbo is running
-    if gungame.getGunGameVar('gg_turbo') == '1':
+    if gungamelib.getVariableValue('gg_turbo') == '1':
         # Check if gg_turbo is a dependency of any other addons
         if not gungame.checkDependency('gg_turbo'):
             # Unload gg_turbo
-            gungame.setGunGameVar('gg_turbo', '0')
+            gungamelib.setVariableValue('gg_turbo', '0')
         else:
             # gg_turbo has depencies, show message and unload gg_knife_pro
             es.dbgmsg(0, '***WARNING***')
@@ -46,11 +46,11 @@ def load():
                 es.dbgmsg(0, '*' + addon)
             es.dbgmsg(0, '* gg_knife_elite will be unloaded')
             es.dbgmsg(0, '*************')
-            gungame.setGunGameVar('gg_knife_elite', '0')
+            gungamelib.setVariableValue('gg_knife_elite', '0')
 
     # Check if gg_dead_strip is running
-    if gungame.getGunGameVar('gg_dead_strip') == '0':
-        gungame.setGunGameVar('gg_dead_strip', '1')
+    if gungamelib.getVariableValue('gg_dead_strip') == '0':
+        gungamelib.setVariableValue('gg_dead_strip', '1')
         
     global dict_playerIsElite
     players = playerlib.getUseridList("#all")
@@ -70,7 +70,7 @@ def gg_variable_changed(event_var):
         # Check if gg_turbo is a dependency of any other addons
         if not gungame.checkDependency('gg_turbo'):
             # Unload gg_turbo
-            gungame.setGunGameVar('gg_turbo', '0')
+            gungamelib.setVariableValue('gg_turbo', '0')
             es.dbgmsg(0, 'WARNING: gg_turbo cannot be loaded while gg_knife_elite is enabled!')
         else:
             # gg_turbo has depencies, show message and unload gg_knife_pro
@@ -81,7 +81,7 @@ def gg_variable_changed(event_var):
                 es.dbgmsg(0, '* ' + addon)
             es.dbgmsg(0, '* gg_knife_elite will be unloaded')
             es.dbgmsg(0, '*************')
-            gungame.setGunGameVar('gg_knife_elite', '0')
+            gungamelib.setVariableValue('gg_knife_elite', '0')
 
 def player_spawn(event_var):
     global dict_playerIsElite

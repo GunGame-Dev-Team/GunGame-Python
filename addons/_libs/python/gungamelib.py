@@ -22,6 +22,8 @@ dict_leaderInfo['currentLeaders'] = []
 dict_leaderInfo['oldLeaders'] = []
 dict_leaderInfo['leaderLevel'] = 1
 
+dict_cfgSettings = {}
+
 # ===================================================================================================
 #   GLOBAL LISTS
 # ===================================================================================================
@@ -31,9 +33,12 @@ list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
                     'm4a1','sg550','g3sg1','awp','sg552','aug',
                     'm249','hegrenade','knife']
 
+# If any configs in this list are missing when they call the config, GunGame will unload                    
+list_criticalConfigs = ['gg_en_config.cfg', 'gg_default_addons.cfg']
+
 # Set up variables used througout the gungamelib
 weaponOrderINI  = ConfigParser.ConfigParser()
-gameDir         = es.ServerVar('eventscripts_gamedir')
+gameDir         = str(es.ServerVar('eventscripts_gamedir'))
 dict_weaponOrderSettings['currentWeaponOrderFile'] = None
 
 
@@ -670,6 +675,96 @@ class WeaponOrder:
             
             
 # ===================================================================================================
+#   CONFIG CLASS
+# ===================================================================================================
+class Config:
+    "Class for Registration of Configs used by GunGame"
+    def __init__(self, configName):
+        self.configName = configName
+        self.configPath = '%s/cfg/gungame/%s' %(str(es.ServerVar('eventscripts_gamedir')), configName)
+        
+        # Check to see if it has been registered before
+        if not self.__isLoaded():
+            self.__load()
+            
+    def __isLoaded(self):
+        if dict_cfgSettings.has_key(self.configName):
+            return True
+        else:
+            return False
+            
+    def __load(self):
+        try:
+            # Open the Config
+            gungameConfig = open(self.configPath, 'r')
+            
+            # Loop through each line in the Config
+            for line in gungameConfig.readlines():
+                # Strip the spaces from the begninning and end of each line
+                line = line.strip().lower()
+                
+                # Make sure that the line doesn't begin with '//'
+                if not line.startswith('//'):
+                    # Change the text to lowercase and convert to a string
+                    if line:
+                        # Remove excess whitespace
+                        while '  ' in line:
+                            line = line.replace('  ', ' ')
+                            
+                        # Add the variables and values to dict_cfgSettings
+                        list_variables = line.split()
+                        
+                        variableName = list_variables[0]
+                        
+                        # If the variable has not been added to the GunGame Variables Database
+                        if not dict_cfgSettings.has_key(variableName):
+                            variableValue = list_variables[1]
+                            
+                            # Add the variable and value to the GunGame Variables Database
+                            dict_cfgSettings[variableName] = variableValue
+                            
+                            # Check to see if we can convert the value to an int
+                            if self.__isNumeric(variableValue):
+                                # Add the variable and value to the GunGame Config Settings Database as an int
+                                dict_cfgSettings[variableName] = int(variableValue)
+                                
+                            else:
+                                # Add the variable and value to the GunGame Config Settings Database as a str
+                                dict_cfgSettings[variableName] = variableValue
+                                
+                            # Create console variables
+                            es.ServerVar(variableName).set(variableValue)
+                            
+                            # Set the notify flag so that changing the variable's value will trigger the server_cvar event
+                            es.ServerVar(variableName).addFlag('notify')
+                            
+                        else:
+                            es.dbgmsg(0, '[GunGame] \'%s\' has already been added to the GunGame Variables Database...skipping.' %variableName)
+                            
+            es.dbgmsg(0, '')
+            es.dbgmsg(0, '[GunGame] \'%s\' has been successfully loaded.' %self.configPath)
+            es.dbgmsg(0, '')
+            
+        except IOError:
+            if not configName.lower() in list_criticalConfigs:
+                # We can't load it if it doesn't exist, silly rabbit!
+                raise FileError, 'Unable to load the Config: \'%s\' -> File does not exist.' %configPath
+                
+            else:
+                # Strange. I know that I provided them with these files...yet, they seem to have disappeared!
+                es.server.queuecmd('es_xunload gungame')
+                raise FileError, 'Unable to load the Config: \'%s\' -> File does not exist. ::: Unloading GunGame.' %configPath
+                
+    def __isNumeric(self, string):
+        try:
+            test = int(string)
+        except ValueError:
+            return False
+        else:
+            return True
+            
+        
+# ===================================================================================================
 #  CLASS WRAPPERS
 # ===================================================================================================
 def getPlayer(userid):
@@ -682,6 +777,12 @@ def getPlayer(userid):
 def getWeaponOrderFile(weaponOrderFile):
     try:
         return WeaponOrder(weaponOrderFile)
+    except TypeError, e:
+        raise e
+        
+def getConfig(configName):
+    try:
+        return Config(configName)
     except TypeError, e:
         raise e
         
@@ -722,9 +823,13 @@ def clearGunGame():
     
     # Reset the Player Information Database in the dict_gungameCore
     dict_gungameCore.clear()
+    '''
     for userid in es.getUseridList():
         gungamePlayer = getPlayer(userid)
-
+    '''
+    
+    # Reset the Player Information Database in the dict_cfgSettings
+    dict_cfgSettings.clear()
 # ===================================================================================================
 #   WEAPON RELATED COMMANDS
 # ===================================================================================================
@@ -855,4 +960,26 @@ def getCurrentLeaderCount():
 def getOldLeaderCount():
     return len(dict_leaderInfo['oldLeaders'])
     
-# The below code is only here for testing purposes --- this will be in the gungame.py
+# ===================================================================================================
+#   CONFIG RELATED COMMANDS
+# ===================================================================================================
+def getVariableValue(variableName):
+    if es.exists('variable', variableName):
+        if dict_cfgSettings.has_key(variableName):
+            return dict_cfgSettings[variableName]
+        else:
+            raise GunGameValueError, 'Unable to retrieve the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
+    else:
+        raise GunGameValueError, 'Unable to retrieve the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
+
+def setVariableValue(variableName, value):
+    if es.exists('variable', variableName):
+        if dict_cfgSettings.has_key(variableName):
+            dict_cfgSettings[variableName] = value
+        else:
+            raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
+    else:
+        raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
+        
+def getVariableList():
+    return dict_cfgSettings.keys()

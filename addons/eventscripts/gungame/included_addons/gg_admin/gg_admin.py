@@ -128,8 +128,8 @@ def buildSettingsMenu():
     settingsmenu = popuplib.easymenu('settingsmenu',None,_setting_select)
     settingsmenu.settitle('GunGame Settings:\n-Select to change')    
     for setting in gga.dict_cfgSettings:
-        es.dbgmsg(0,'*****setting=%s value= %s' %(setting,str(gga.getGunGameVar(setting))))
-        settingsmenu.addoption(setting, setting + ' ' + str(gga.getGunGameVar(setting)))
+        es.dbgmsg(0,'*****setting=%s value= %s' %(setting,str(gga.gungamelib.getVariableValue(setting))))
+        settingsmenu.addoption(setting, setting + ' ' + str(gga.gungamelib.getVariableValue(setting)))
 
 def _setting_select(userid,choice,popupid):
     es.dbgmsg(0,'*****_setting_select')
@@ -141,7 +141,7 @@ def set_setting():
     setting = str(es.ServerVar('_gg_temp_setting'))
     newvalue = es.getargv(1)
     es.dbgmsg(0,'*****setting=%s newvalue=%s' %(setting,es.getargv(1)))
-    gga.setGunGameVar(setting,newvalue)
+    gga.gungamelib.setVariableValue(setting,newvalue)
     gga.dict_cfgSettings[setting] = newvalue
 
 def buildAddonsMenu(type,userid):

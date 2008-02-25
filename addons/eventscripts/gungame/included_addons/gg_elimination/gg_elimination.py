@@ -24,7 +24,7 @@ info.author   = "GunGame Development Team"
 roundActive = 0
 currentRound = 0
 dict_playersEliminated = {}
-gg_dm_ragdoll_effect = int(gungame.getGunGameVar('gg_dm_ragdoll_effect'))
+gg_dm_ragdoll_effect = int(gungamelib.getVariableValue('gg_dm_ragdoll_effect'))
 
 def load():
     # Get userids of all connected players
@@ -36,8 +36,8 @@ def load():
     gungame.registerAddon('gg_elimination', 'GG Elimination')
     
     # Unload Elimination if gg_deathmatch is set to 1
-    if gungame.getGunGameVar('gg_deathmatch') == '1':
-        gungame.setGunGameVar('gg_elimination', 0)
+    if gungamelib.getVariableValue('gg_deathmatch') == '1':
+        gungamelib.setVariableValue('gg_elimination', 0)
 
 def unload():
     # Prevent players from spawning after gg_elimination is disabled
@@ -50,10 +50,10 @@ def unload():
 def gg_variable_changed(event_var):
     # Register change for gg_dm_ragdoll_effect
     if event_var['cvarname'] == 'gg_dm_ragdoll_effect':
-        gg_dm_ragdoll_effect = int(gungame.getGunGameVar('gg_dm_ragdoll_effect'))
+        gg_dm_ragdoll_effect = int(gungamelib.getVariableValue('gg_dm_ragdoll_effect'))
     # Turn off Elimination if DeathMatch is enabled
     if event_var['cvarname'] == 'gg_deathmatch' and event_var['newlevel'] == '1':
-        gungame.setGunGameVar('gg_elimination', 0)
+        gungamelib.setVariableValue('gg_elimination', 0)
 
 def es_map_start(event_var):
     global roundActive

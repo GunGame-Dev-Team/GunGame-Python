@@ -28,17 +28,17 @@ info.author   = "GunGame Development Team"
 dict_mapVoteVars = {}
 
 # custom map list for the end map vote
-dict_mapVoteVars['gg_map_list_file'] = gungame.getGunGameVar('gg_map_list_file')
+dict_mapVoteVars['gg_map_list_file'] = gungamelib.getVariableValue('gg_map_list_file')
 # file to use for the map vote
-dict_mapVoteVars['gg_map_list_source'] = int(gungame.getGunGameVar('gg_map_list_source'))
+dict_mapVoteVars['gg_map_list_source'] = int(gungamelib.getVariableValue('gg_map_list_source'))
 # number of maps in the end of map vote
-dict_mapVoteVars['gg_map_vote_size'] = int(gungame.getGunGameVar('gg_map_vote_size'))
+dict_mapVoteVars['gg_map_vote_size'] = int(gungamelib.getVariableValue('gg_map_vote_size'))
 # number of recently played maps excluded from vote
-dict_mapVoteVars['gg_dont_show_last_maps'] = int(gungame.getGunGameVar('gg_dont_show_last_maps'))
+dict_mapVoteVars['gg_dont_show_last_maps'] = int(gungamelib.getVariableValue('gg_dont_show_last_maps'))
 # the amount of time in seconds aloud for the vote
-dict_mapVoteVars['gg_vote_time'] = int(gungame.getGunGameVar('gg_vote_time'))
+dict_mapVoteVars['gg_vote_time'] = int(gungamelib.getVariableValue('gg_vote_time'))
 # shows player name and vote selection in the player chat
-dict_mapVoteVars['gg_show_player_vote'] = int(gungame.getGunGameVar('gg_show_player_vote'))
+dict_mapVoteVars['gg_show_player_vote'] = int(gungamelib.getVariableValue('gg_show_player_vote'))
 
 # dictionary for gg_map_list_source settings
 # 1 = mapcycle.txt

@@ -20,7 +20,7 @@ info.basename = "gungame/included_addons/gg_friendlyfire"
 info.author   = "GunGame Development Team"
 
 # Set Level where gg_friendlyfire has to be activate
-friendlyFireLevel = gungamelib.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
+friendlyFireLevel = gungamelib.getTotalLevels() - int(gungamelib.getVariableValue("gg_friendlyfire"))
 friendlyFireEnabled = 0
 mp_friendlyfireBackUp = 0
 
@@ -66,7 +66,7 @@ def gg_start():
     es.forcevalue("mp_friendlyfire", 0)
     
     # Get friendlyfireLevel again just incase the Total Levels have changed
-    friendlyFireLevel = gungamelib.getTotalLevels() - int(gungame.getGunGameVar("gg_friendlyfire"))
+    friendlyFireLevel = gungamelib.getTotalLevels() - int(gungamelib.getVariableValue("gg_friendlyfire"))
     
 
 def gg_levelup(event_var):

@@ -24,7 +24,7 @@ gg_sounds = {}
 
 soundPackINI                = ConfigParser.ConfigParser()
 gameDir                     = es.ServerVar('eventscripts_gamedir')
-soundPackName               = gungame.getGunGameVar('gg_soundpack')
+soundPackName               = gungamelib.getVariableValue('gg_soundpack')
 soundPackPath               = gameDir + '/cfg/gungame/sound_packs/' + soundPackName + '.ini'
 soundFolder                 = gameDir + '/sound/'
 list_validSoundPackOptions  = ['levelup',
@@ -48,7 +48,7 @@ def unload():
     gungame.unregisterAddon('gg_sounds')
 
 def readSoundPack():
-    soundPackName               = gungame.getGunGameVar('gg_soundpack')
+    soundPackName               = gungamelib.getVariableValue('gg_soundpack')
     soundPackPath               = gameDir + '/cfg/gungame/sound_packs/' + soundPackName + '.ini'
     soundPackINI.read(soundPackPath)
 
@@ -69,7 +69,7 @@ def readSoundPack():
                         # The sound does not exist ... let's let them know
                         es.dbgmsg(0, soundFolder + soundFile + ' does NOT exist...')
                         # Load defaults here if the sound pack has an error.
-                        gungame.setGunGameVar('gg_soundpack', 'default')
+                        gungamelib.setVariableValue('gg_soundpack', 'default')
                         # Notify them that we have changed the soundpack
                         es.dbgmsg(0, 'The sound pack \'%s\' is corrupted. Loading the GunGame default sounds.' %soundPackName)
                 else:
@@ -87,7 +87,7 @@ def addSounds():
     
 def gg_levelup(event_var):
     userid = event_var['userid']
-    if int(gungame.getGunGameVar('gg_knife_pro')) > 0:
+    if int(gungamelib.getVariableValue('gg_knife_pro')) > 0:
         if event_var['weapon'] == 'knife':
             if gg_sounds['levelsteal'] != '0':
                 es.playsound(userid, gg_sounds['levelsteal'], 1.0)

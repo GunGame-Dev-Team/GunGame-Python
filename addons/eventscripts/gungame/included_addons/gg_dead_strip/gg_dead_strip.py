@@ -42,10 +42,10 @@ def item_pickup(event_var):
         #playerWeapon = gungamePlayer.get('weapon')
         playerlibPlayer = playerlib.getPlayer(userid)
         if gungame.getRegisteredAddons().has_key('gg_warmup_round'):
-            if item != gungame.getGunGameVar('gg_warmup_weapon') and gungame.getGunGameVar('gg_warmup_weapon') != '0':
+            if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != '0':
                 es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
         else:
-            if playerWeapon != item and playerWeapon != 'hegrenade' or playerWeapon == 'hegrenade' and gungame.getGunGameVar('gg_nade_bonus') != item and item != 'hegrenade':
+            if playerWeapon != item and playerWeapon != 'hegrenade' or playerWeapon == 'hegrenade' and gungamelib.getVariableValue('gg_nade_bonus') != item and item != 'hegrenade':
                 es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
 
 

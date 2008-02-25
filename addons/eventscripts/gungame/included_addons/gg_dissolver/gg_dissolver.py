@@ -24,7 +24,7 @@ info.basename = "gungame/included_addons/gg_dissolver"
 info.author   = "GunGame Development Team"
 
 # Get the addon cvars
-gg_dissolver_effect = int(gungame.getGunGameVar('gg_dissolver_effect'))
+gg_dissolver_effect = int(gungamelib.getVariableValue('gg_dissolver_effect'))
 
 def load():
     # Register this addon with GunGame
@@ -37,7 +37,7 @@ def unload():
 def gg_variable_changed(event_var):
     # Register change for gg_dissolver_effect
     if event_var['cvarname'] == 'gg_dissolver_effect':
-        gg_dissolver_effect = int(gungame.getGunGameVar('gg_dissolver_effect'))
+        gg_dissolver_effect = int(gungamelib.getVariableValue('gg_dissolver_effect'))
 
 def player_death(event_var):
     # Set vars

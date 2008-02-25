@@ -31,7 +31,7 @@ def load():
     gungame.registerAddon('gg_knife_pro', 'GG Knife Pro')
     
     # Get gg_knife_pro_limit
-    gg_knife_pro_limit = int(gungame.getGunGameVar('gg_knife_pro_limit'))
+    gg_knife_pro_limit = int(gungamelib.getVariableValue('gg_knife_pro_limit'))
     
 def unload():
     # Register this addon with GunGame

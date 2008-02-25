@@ -21,8 +21,8 @@ info.basename = "gungame/included_addons/gg_nade_bonus"
 info.author   = "GunGame Development Team"
 
 # Set up the bonusWeapon variable
-bonusWeapon = gungame.getGunGameVar('gg_nade_bonus')
-if 'weapon_' not in gungame.getGunGameVar('gg_nade_bonus'):
+bonusWeapon = gungamelib.getVariableValue('gg_nade_bonus')
+if 'weapon_' not in gungamelib.getVariableValue('gg_nade_bonus'):
     bonusWeapon = 'weapon_' + str(bonusWeapon)
 
 def load():

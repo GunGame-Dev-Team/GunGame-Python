@@ -33,16 +33,16 @@ info.author   = "GunGame Development Team"
 
 # Get some deathmatch vars
 dict_deathmatchVars = {}
-dict_deathmatchVars['respawn_delay'] = int(gungame.getGunGameVar('gg_dm_respawn_delay'))
-dict_deathmatchVars['respawn_cmd'] = gungame.getGunGameVar('gg_dm_respawn_cmd')
+dict_deathmatchVars['respawn_delay'] = int(gungamelib.getVariableValue('gg_dm_respawn_delay'))
+dict_deathmatchVars['respawn_cmd'] = gungamelib.getVariableValue('gg_dm_respawn_cmd')
 
 # Get some gungame vars to restore later
 dict_gungameVars = {}
-dict_gungameVars['turbo_mode_originally'] = int(gungame.getGunGameVar('gg_turbo'))
-dict_gungameVars['dead_strip_originally'] = int(gungame.getGunGameVar('gg_dead_strip'))
-dict_gungameVars['knife_elite_originally'] = int(gungame.getGunGameVar('gg_knife_elite'))
-dict_gungameVars['dissolver_originally'] = int(gungame.getGunGameVar('gg_dissolver'))
-dict_gungameVars['map_obj_originally'] = int(gungame.getGunGameVar('gg_map_obj'))
+dict_gungameVars['turbo_mode_originally'] = int(gungamelib.getVariableValue('gg_turbo'))
+dict_gungameVars['dead_strip_originally'] = int(gungamelib.getVariableValue('gg_dead_strip'))
+dict_gungameVars['knife_elite_originally'] = int(gungamelib.getVariableValue('gg_knife_elite'))
+dict_gungameVars['dissolver_originally'] = int(gungamelib.getVariableValue('gg_dissolver'))
+dict_gungameVars['map_obj_originally'] = int(gungamelib.getVariableValue('gg_map_obj'))
 
 # Globals
 respawnCounters = {}
@@ -65,17 +65,17 @@ def load():
     gungame.registerDependency('gg_dissolver', 'gg_deathmatch')
     
     # Enable turbo mode, and remove all objectives
-    gungame.setGunGameVar('gg_turbo', '1')
-    gungame.setGunGameVar('gg_dead_strip', '1')
-    gungame.setGunGameVar('gg_dissolver', '1')
-    gungame.setGunGameVar('gg_map_obj', '0')
+    gungamelib.setVariableValue('gg_turbo', '1')
+    gungamelib.setVariableValue('gg_dead_strip', '1')
+    gungamelib.setVariableValue('gg_dissolver', '1')
+    gungamelib.setVariableValue('gg_map_obj', '0')
     
     # Check if gg_knife_elite is running
-    if gungame.getGunGameVar('gg_knife_elite') == '1':
+    if gungamelib.getVariableValue('gg_knife_elite') == '1':
         # Check if gg_knife_elite is a dependency of any other addons
         if not gungame.checkDependency('gg_knife_elite'):
             # Unload gg_knife_elite
-            gungame.setGunGameVar('gg_knife_elite', '0')
+            gungamelib.setVariableValue('gg_knife_elite', '0')
         else:
             # gg_knife_elite has depencies, show message and unload gg_deathmatch
             es.dbgmsg(0, '***WARNING***')
@@ -86,7 +86,7 @@ def load():
             es.dbgmsg(0, '* gg_deathmatch will be unloaded')
             es.dbgmsg(0, '*************')
             
-            gungame.setGunGameVar('gg_deathmatch', '0')
+            gungamelib.setVariableValue('gg_deathmatch', '0')
             
     # Create commands
     if not es.exists('command','dm_add'):
@@ -128,31 +128,31 @@ def unload():
     # Set gungame addons back to what they originally were
     if not dict_gungameVars['turbo_mode_originally']:
         if not gungame.checkDependency('gg_turbo'):
-            gungame.setGunGameVar('gg_turbo', 0)
+            gungamelib.setVariableValue('gg_turbo', 0)
     if not dict_gungameVars['dead_strip_originally']:
         if not gungame.checkDependency('gg_dead_strip'):
-            gungame.setGunGameVar('gg_dead_strip', 0)
+            gungamelib.setVariableValue('gg_dead_strip', 0)
     if not dict_gungameVars['dissolver_originally']:
         if not gungame.checkDependency('dissolver'):
-            gungame.setGunGameVar('gg_dissolver', 0)
+            gungamelib.setVariableValue('gg_dissolver', 0)
     
     # Return vars
-    gungame.setGunGameVar('gg_knife_elite', dict_gungameVars['knife_elite_originally'])
-    gungame.setGunGameVar('gg_map_obj', dict_gungameVars['map_obj_originally'])
+    gungamelib.setVariableValue('gg_knife_elite', dict_gungameVars['knife_elite_originally'])
+    gungamelib.setVariableValue('gg_map_obj', dict_gungameVars['map_obj_originally'])
 
 def gg_variable_changed(event_var):
     # Check required variables to see if they have changed
     if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) > 0:
-        gungame.setGunGameVar('gg_map_obj', 0)
+        gungamelib.setVariableValue('gg_map_obj', 0)
         es.msg('#lightgreen', 'WARNING: Map objectives must be removed while gg_deathmatch is enabled!')
     if event_var['cvarname'] == 'gg_turbo' and int(event_var['newvalue']) == 0:
-        gungame.setGunGameVar('gg_turbo', 1)
+        gungamelib.setVariableValue('gg_turbo', 1)
         es.msg('#lightgreen', 'WARNING: gg_turbo cannot be unloaded while gg_deathmatch is enabled!')
     if event_var['cvarname'] == 'gg_dead_strip' and int(event_var['newvalue']) == 0:
-        gungame.setGunGameVar('gg_dead_strip', 1)
+        gungamelib.setVariableValue('gg_dead_strip', 1)
         es.msg('#lightgreen', 'WARNING: gg_dead_strip cannot be unloaded while gg_deathmatch is enabled!')
     if event_var['cvarname'] == 'gg_dissolver' and int(event_var['newvalue']) == 0:
-        gungame.setGunGameVar('gg_dissolver', 1)
+        gungamelib.setVariableValue('gg_dissolver', 1)
         es.msg('#lightgreen', 'WARNING: gg_dissolver cannot be unloaded while gg_deathmatch is enabled!')
         
     # Watch for changes in deathmatch variables
@@ -164,7 +164,7 @@ def gg_variable_changed(event_var):
         # Check if gg_knife_elite is a dependency of any other addons
         if not gungame.checkDependency('gg_knife_elite'):
             # Unload gg_knife_elite
-            gungame.setGunGameVar('gg_knife_elite', '0')
+            gungamelib.setVariableValue('gg_knife_elite', '0')
         else:
             # gg_knife_elite has dependencies, show message and unload gg_deathmatch
             es.dbgmsg(0, '***WARNING***')
@@ -176,7 +176,7 @@ def gg_variable_changed(event_var):
                 es.dbgmsg(0, '* ' + addon)
             es.dbgmsg(0, '* gg_deathmatch will be unloaded')
             es.dbgmsg(0, '*************')
-            gungame.setGunGameVar('gg_deathmatch', '0')
+            gungamelib.setVariableValue('gg_deathmatch', '0')
 
 def es_map_start(event_var):
     global mapName

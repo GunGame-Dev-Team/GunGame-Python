@@ -24,11 +24,11 @@ info.author   = "GunGame Development Team"
 
 # Addon settings
 dict_SpawnProtectVars = {}
-dict_SpawnProtectVars['red'] = int(gungame.getGunGameVar('gg_spawn_protect_red'))
-dict_SpawnProtectVars['green'] = int(gungame.getGunGameVar('gg_spawn_protect_green'))
-dict_SpawnProtectVars['blue'] = int(gungame.getGunGameVar('gg_spawn_protect_blue'))
-dict_SpawnProtectVars['alpha'] = int(gungame.getGunGameVar('gg_spawn_protect_alpha'))
-dict_SpawnProtectVars['delay'] = int(gungame.getGunGameVar('gg_spawn_protect'))
+dict_SpawnProtectVars['red'] = int(gungamelib.getVariableValue('gg_spawn_protect_red'))
+dict_SpawnProtectVars['green'] = int(gungamelib.getVariableValue('gg_spawn_protect_green'))
+dict_SpawnProtectVars['blue'] = int(gungamelib.getVariableValue('gg_spawn_protect_blue'))
+dict_SpawnProtectVars['alpha'] = int(gungamelib.getVariableValue('gg_spawn_protect_alpha'))
+dict_SpawnProtectVars['delay'] = int(gungamelib.getVariableValue('gg_spawn_protect'))
 
 def load():
     # Register this addon with GunGame
@@ -43,7 +43,7 @@ def gg_variable_changed(event_var):
     
     # Register change in gg_map_list_file
     if event_var['cvarname'] == 'gg_spawn_protect':
-        dict_SpawnProtectVars['delay'] = int(gungame.getGunGameVar('gg_spawn_protect'))
+        dict_SpawnProtectVars['delay'] = int(gungamelib.getVariableValue('gg_spawn_protect'))
     # watch for changes in map vote variables
     elif dict_SpawnProtectVars.has_key(event_var['cvarname']):
         dict_SpawnProtectVars[event_var['cvarname']] = int(event_var['newvalue'])

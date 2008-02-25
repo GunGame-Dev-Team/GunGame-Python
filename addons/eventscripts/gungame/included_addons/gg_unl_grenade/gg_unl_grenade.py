@@ -26,8 +26,8 @@ def load():
     global dict_playerWeapons
     gungame.registerAddon('gg_unl_grenade', 'GG Unlimited Grenade')
     
-    if gungame.getGunGameVar('gg_earn_nade') == '1':
-        gungame.setGunGameVar('gg_earn_nade', '0')
+    if gungamelib.getVariableValue('gg_earn_nade') == '1':
+        gungamelib.setVariableValue('gg_earn_nade', '0')
         
         
 def unload():
@@ -38,7 +38,7 @@ def unload():
 def gg_variable_changed(event_var):
     # Watch for required addon load/unload
     if event_var['cvarname'] == 'gg_earn_nade' and event_var['newvalue'] == '1':
-        gungame.setGunGameVar('gg_earn_nade', 0)
+        gungamelib.setVariableValue('gg_earn_nade', 0)
         es.msg('#lightgreen', 'WARNING: gg_xtra_grenades cannot be loaded while gg_unl_grenade is enabled!')
         
         

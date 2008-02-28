@@ -14,6 +14,7 @@ import random
 
 # Gungame import
 from gungame import gungame
+import gungamelib
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 

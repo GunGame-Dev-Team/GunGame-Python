@@ -15,6 +15,7 @@ import usermsg
 import repeat
 
 from gungame import gungame
+import gungamelib
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 

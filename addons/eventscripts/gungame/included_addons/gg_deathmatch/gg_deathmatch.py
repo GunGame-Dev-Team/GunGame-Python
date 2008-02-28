@@ -18,6 +18,7 @@ import gamethread
 import repeat
 import usermsg
 import keyvalues
+import gungamelib
 
 # Gungame import
 from gungame import gungame

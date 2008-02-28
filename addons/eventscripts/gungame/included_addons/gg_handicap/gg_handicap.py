@@ -61,7 +61,7 @@ def player_activate(event_var):
     averageLevel = gungamelib.getAverageLevel()
     gungamePlayer = gungamelib.getPlayer(userid)
     if gungamePlayer['level'] < averageLevel:
-        gungamePlayer.['level'] = averageLevel
+        gungamePlayer['level'] = averageLevel
         if int(es.getplayerteam(userid)) > 1:
             gungamePlayer.stripPlayer()
             gungamePlayer.giveWeapon()

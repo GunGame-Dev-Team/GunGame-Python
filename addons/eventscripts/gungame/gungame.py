@@ -13,7 +13,7 @@ import keyvalues
 import gungamelib
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.104"
+gungameVersion = "1.0.108"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -51,6 +51,7 @@ dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
 list_customAddonsDir = []
 list_leaderNames = []
+list_stripExceptions = []
 
 mapPrefix = None
 
@@ -920,13 +921,13 @@ def load():
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/included_addons" folder
-    list_includedAddonsDir = []
+    # list_includedAddonsDir = []
     for includedAddon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/included_addons/'):
         if includedAddon[0:3] == 'gg_':
             list_includedAddonsDir.append(includedAddon)
     
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/custom_addons" folder
-    list_customAddonsDir = []
+    # list_customAddonsDir = []
     for customAddon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/custom_addons/'):
         if customAddon[0:3] == 'gg_':
             list_customAddonsDir.append(customAddon)
@@ -1121,7 +1122,7 @@ def load():
     countBombDeathAsSuicide = False
     
     # Load gg_sounds
-    es.load('gungame/included_addons/gg_sounds')
+    gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
     
     # Fire gg_load event
     es.event('initialize','gg_load')
@@ -1718,8 +1719,20 @@ def server_cvar(event_var):
     global dict_gungameRegisteredDependencies
     global list_allWeapons
     cvarName = event_var['cvarname']
-    newValue = event_var['newvalue']
+    newValue = event_var['cvarvalue']
     oldValue = event_var['oldvalue']
+    
+    if cvarName not in gungamelib.getVariableList():
+        return
+    
+    if newValue == gungamelib.getVariableValue(cvarName):
+        return
+    
+    # if cvarName in gungamelib.getDependencyList():
+    #     gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
+    #     return
+        
+    gungamelib.setVariableValue(cvarName, newValue)
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':

@@ -5,6 +5,7 @@ ToDo:
 
 import ConfigParser
 import random
+import os
 import es
 import playerlib
 import gamethread
@@ -23,6 +24,11 @@ dict_leaderInfo['oldLeaders'] = []
 dict_leaderInfo['leaderLevel'] = 1
 
 dict_cfgSettings = {}
+
+dict_gungameSounds = {}
+
+dict_RegisteredAddons = {}
+dict_registeredDependencies = {}
 
 # ===================================================================================================
 #   GLOBAL LISTS
@@ -87,8 +93,8 @@ class Player:
                 # When we "validate" the player, we are actually checking to see if they exist in the GunGame Core Dictionary
                 if self.__validatePlayer():
                     # When players are kicked, or disconnect, the check for their userid will fail...however, they are still in the GunGame Core Dictionary
-                    # We will allow this to pass so that we can remove them from the GunGame Core Dictionary via the removePlayer() method provided in this class
-                    pass
+                    if dict_gungameCore.has_key(self.userid):
+                        self.attributes = dict_gungameCore[self.userid]
                 else:
                     # If we reach this code, someone has given us an invalid userid
                     raise UseridError,  '\'%s\' is an invalid userid -> no matching userid found active on the server' %self.userid
@@ -738,6 +744,9 @@ class Config:
                             # Set the notify flag so that changing the variable's value will trigger the server_cvar event
                             es.ServerVar(variableName).addFlag('notify')
                             
+                            # Use a server command to fire the server_cvar event
+                            es.server.cmd('%s %s' %(variableName, variableValue))
+                            
                         else:
                             es.dbgmsg(0, '[GunGame] \'%s\' has already been added to the GunGame Variables Database...skipping.' %variableName)
                             
@@ -763,6 +772,66 @@ class Config:
         else:
             return True
             
+            
+# ===================================================================================================
+#   SOUND CLASS
+# ===================================================================================================
+class Sounds:
+    "Class that stores GunGame Sounds"
+    
+    def __init__(self, soundPackName):
+        self.soundPackName = soundPackName
+        
+        # Set up the sound pack path
+        if '.ini' in soundPackName:
+            self.soundPackPath = '%s/cfg/gungame/sound_packs/%s' %(gameDir, soundPackName)
+        else:
+            self.soundPackPath = '%s/cfg/gungame/sound_packs/%s.ini' %(gameDir, soundPackName)
+        
+        # Make sure that the sound pack INI exists
+        if self.__checkSoundPack():
+            self.__readSoundPack()
+        else:
+            raise 'This soundpack don\'t exists. All your sound are belong to us.'
+            
+    def __readSoundPack(self):
+        soundPackINI = ConfigParser.ConfigParser()
+        soundPackINI.read(self.soundPackPath)
+
+        # Loop through each section (should only be 1) in the soundpack INI
+        for section in soundPackINI.sections():
+            # Loop through each option in the soundpack INI
+            for option in soundPackINI.options(section):
+                soundFile = soundPackINI.get(section, option)
+                # Check to make sure they don't have the option set to "0" ... this means they want no sound for whatever event triggers it
+                if soundPackINI.get(section, option) != '0':
+                    # Check to make sure that the sound file exists
+                    if self.__checkSound(soundFile):
+                        # ADD THE SOUND HERE...
+                        dict_gungameSounds[option] = soundFile
+                    else:
+                        # The sound may not exist, so we warn them that we were unable to locate it
+                        es.dbgmsg(0, '[GunGame] Unable to locate: %s/sound/%s' %(gameDir, soundFile))
+                        # Add it anyway
+                        dict_gungameSounds[option] = soundFile
+                else:
+                    # They have the sound disabled for this option. We'll set it to "0" in the gg_sounds dictionary
+                    dict_gungameSounds[option] = 0
+        addDownloadableSounds()
+    
+    def __checkSoundPack(self):
+        if os.path.isfile(self.soundPackPath):
+            return True
+        else:
+            return False
+        
+    def __checkSound(self, soundFile):
+        soundPath = '%s/sound/%s' %(gameDir, soundFile)
+        if os.path.isfile(soundPath):
+            return True
+        else:
+            return False
+            
         
 # ===================================================================================================
 #  CLASS WRAPPERS
@@ -785,6 +854,13 @@ def getConfig(configName):
         return Config(configName)
     except TypeError, e:
         raise e
+        
+def getSoundPack(soundPackName):
+    try:
+        return Sounds(soundPackName)
+    except TypeError, e:
+        raise e
+        
         
 # ===================================================================================================
 # RESET GUNGAME --- WARNING: POWERFUL COMMAND
@@ -976,6 +1052,7 @@ def setVariableValue(variableName, value):
     if es.exists('variable', variableName):
         if dict_cfgSettings.has_key(variableName):
             dict_cfgSettings[variableName] = value
+            es.server.cmd('%s %s' %(variableName, value))
         else:
             raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
     else:
@@ -983,3 +1060,20 @@ def setVariableValue(variableName, value):
         
 def getVariableList():
     return dict_cfgSettings.keys()
+    
+# ===================================================================================================
+#   SOUND RELATED COMMANDS
+# ===================================================================================================
+def addDownloadableSounds():
+    for soundName in dict_gungameSounds:
+        if dict_gungameSounds[soundName] != 0:
+            es.stringtable('downloadables', 'sound/%s' %dict_gungameSounds[soundName])
+            
+def getSound(soundName):
+    if dict_gungameSounds.has_key(soundName):
+        return dict_gungameSounds[soundName]
+    else:
+        raise SoundError, 'The sound does not exist.'
+    
+    
+    

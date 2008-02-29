@@ -35,7 +35,7 @@ def unload():
     # UnRegister this addon with GunGame
     gungame.unregisterAddon('gg_dissolver')
     
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # Register change for gg_dissolver_effect
     if event_var['cvarname'] == 'gg_dissolver_effect':
         gg_dissolver_effect = int(gungamelib.getVariableValue('gg_dissolver_effect'))

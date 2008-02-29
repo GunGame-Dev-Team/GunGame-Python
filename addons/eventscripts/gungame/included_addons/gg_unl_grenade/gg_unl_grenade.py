@@ -35,9 +35,9 @@ def unload():
     gungame.unregisterAddon('gg_unl_grenade')
     
     
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # Watch for required addon load/unload
-    if event_var['cvarname'] == 'gg_earn_nade' and event_var['newvalue'] == '1':
+    if event_var['cvarname'] == 'gg_earn_nade' and event_var['cvarvalue'] == '1':
         gungamelib.setVariableValue('gg_earn_nade', 0)
         es.msg('#lightgreen', 'WARNING: gg_xtra_grenades cannot be loaded while gg_unl_grenade is enabled!')
         

@@ -44,11 +44,11 @@ def unload():
     # Return "mp_friendlyfire" to what it was originally
     es.server.cmd('mp_friendlyfire %d' %mp_friendlyfireBackUp)
     
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     global friendlyFireLevel
     # Watch for change in friendlyfire level
     if event_var['cvarname'] == 'gg_friendlyfire':
-        friendlyFireLevel = gungame.getTotalLevels() - int(event_var['newvalue'])
+        friendlyFireLevel = gungame.getTotalLevels() - int(event_var['cvarvalue'])
 
 def es_map_start(event_var):
     global friendlyFireEnabled

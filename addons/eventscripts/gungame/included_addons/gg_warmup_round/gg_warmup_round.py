@@ -104,9 +104,9 @@ def startTimer():
     # Create timeleft global
     gungame.setGlobal('warmupTimeLeft', warmupTime)
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # if the "gg_warmup_timer" is changed to 0, we need to unload this bad-boy
-    if event_var['cvarname'] == 'gg_warmup_timer' and event_var['newvalue'] == '0':
+    if event_var['cvarname'] == 'gg_warmup_timer' and event_var['cvarvalue'] == '0':
         es.unload('gungame/included_addons/gg_warmup_round')
 
 def player_activate(event_var):

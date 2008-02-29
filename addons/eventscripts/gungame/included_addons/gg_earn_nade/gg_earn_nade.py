@@ -28,8 +28,8 @@ def unload():
     # Unregister the addon with GunGame so that it will be automatically unloaded if GunGame is unloaded
     gungame.unregisterAddon('gg_earn_nade')
 
-def gg_variable_changed(event_var):
-    if event_var['cvarname'] == 'gg_earn_grenades' and event_var['newvalue'] == '0':
+def server_cvar(event_var):
+    if event_var['cvarname'] == 'gg_earn_grenades' and event_var['cvarvalue'] == '0':
         es.unload('gg_earn_nade')
 
 def player_death(event_var):

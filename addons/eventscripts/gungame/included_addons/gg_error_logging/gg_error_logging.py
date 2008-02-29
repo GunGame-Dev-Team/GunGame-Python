@@ -31,8 +31,8 @@ def load():
 def unload():
     gungame.unregisterAddon('gg_error_logging')
 
-def gg_variable_changed(event_var):
-    if event_var['cvarname'] == 'gg_error_logging' and event_var['newvalue'] == '0':
+def server_cvar(event_var):
+    if event_var['cvarname'] == 'gg_error_logging' and event_var['cvarvalue'] == '0':
         es.unload('gg_error_logging')
 
 def gungameExceptHook(type, value, tb):

@@ -64,9 +64,9 @@ def unload():
     #Register gg_deat_strip as a dependency
     gungame.unregisterDependency('gg_dead_strip', 'gg_knife_elite')
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # Watch for required addon load/unload
-    if event_var['cvarname'] == 'gg_turbo' and event_var['newvalue'] == '1':
+    if event_var['cvarname'] == 'gg_turbo' and event_var['cvarvalue'] == '1':
         # Check if gg_turbo is a dependency of any other addons
         if not gungame.checkDependency('gg_turbo'):
             # Unload gg_turbo

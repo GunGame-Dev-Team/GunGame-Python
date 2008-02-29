@@ -117,7 +117,7 @@ def player_team(event_var):
 def es_map_start(event_var):
     addSounds()
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     if event_var['cvarname'] == 'gg_soundpack':
         readSoundPack()
             

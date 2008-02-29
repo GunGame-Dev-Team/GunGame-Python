@@ -141,27 +141,27 @@ def unload():
     gungamelib.setVariableValue('gg_knife_elite', dict_gungameVars['knife_elite_originally'])
     gungamelib.setVariableValue('gg_map_obj', dict_gungameVars['map_obj_originally'])
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # Check required variables to see if they have changed
-    if event_var['cvarname'] == 'gg_map_obj' and int(event_var['newvalue']) > 0:
+    if event_var['cvarname'] == 'gg_map_obj' and int(event_var['cvarvalue']) > 0:
         gungamelib.setVariableValue('gg_map_obj', 0)
         es.msg('#lightgreen', 'WARNING: Map objectives must be removed while gg_deathmatch is enabled!')
-    if event_var['cvarname'] == 'gg_turbo' and int(event_var['newvalue']) == 0:
+    if event_var['cvarname'] == 'gg_turbo' and int(event_var['cvarvalue']) == 0:
         gungamelib.setVariableValue('gg_turbo', 1)
         es.msg('#lightgreen', 'WARNING: gg_turbo cannot be unloaded while gg_deathmatch is enabled!')
-    if event_var['cvarname'] == 'gg_dead_strip' and int(event_var['newvalue']) == 0:
+    if event_var['cvarname'] == 'gg_dead_strip' and int(event_var['cvarvalue']) == 0:
         gungamelib.setVariableValue('gg_dead_strip', 1)
         es.msg('#lightgreen', 'WARNING: gg_dead_strip cannot be unloaded while gg_deathmatch is enabled!')
-    if event_var['cvarname'] == 'gg_dissolver' and int(event_var['newvalue']) == 0:
+    if event_var['cvarname'] == 'gg_dissolver' and int(event_var['cvarvalue']) == 0:
         gungamelib.setVariableValue('gg_dissolver', 1)
         es.msg('#lightgreen', 'WARNING: gg_dissolver cannot be unloaded while gg_deathmatch is enabled!')
         
     # Watch for changes in deathmatch variables
     if dict_deathmatchVars.has_key(event_var['cvarname']):
-        dict_deathmatchVars[event_var['cvarname']] = int(event_var['newvalue'])
+        dict_deathmatchVars[event_var['cvarname']] = int(event_var['cvarvalue'])
         
     # Check if gg_knife_elite is running
-    if event_var['cvarname'] == 'gg_knife_elite' and int(event_var['newvalue']) == 1:
+    if event_var['cvarname'] == 'gg_knife_elite' and int(event_var['cvarvalue']) == 1:
         # Check if gg_knife_elite is a dependency of any other addons
         if not gungame.checkDependency('gg_knife_elite'):
             # Unload gg_knife_elite

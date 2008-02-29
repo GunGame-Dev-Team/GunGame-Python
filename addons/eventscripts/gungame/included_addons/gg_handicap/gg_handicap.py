@@ -38,7 +38,7 @@ def unload():
     if gg_handicap_update:
         repeat.delete('handicapUpdateLoop')
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # register change in gg_handicap_update
     if event_var['cvarname'] == 'gg_handicap_update':
         global gg_handicap_update

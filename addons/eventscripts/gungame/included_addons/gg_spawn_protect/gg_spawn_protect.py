@@ -38,7 +38,7 @@ def unload():
     # Unregister this addon with GunGame
     gungame.unregisterAddon('gg_spawn_protect')
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     global dict_SpawnProtectVars
     
     # Register change in gg_map_list_file
@@ -46,7 +46,7 @@ def gg_variable_changed(event_var):
         dict_SpawnProtectVars['delay'] = int(gungamelib.getVariableValue('gg_spawn_protect'))
     # watch for changes in map vote variables
     elif dict_SpawnProtectVars.has_key(event_var['cvarname']):
-        dict_SpawnProtectVars[event_var['cvarname']] = int(event_var['newvalue'])
+        dict_SpawnProtectVars[event_var['cvarname']] = int(event_var['cvarvalue'])
 
 def player_spawn(event_var):
     # If not warmup round...

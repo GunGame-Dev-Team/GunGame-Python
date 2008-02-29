@@ -47,7 +47,7 @@ def unload():
     # Unregister this addon with GunGame
     gungame.unregisterAddon('gg_elimination')
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # Register change for gg_dm_ragdoll_effect
     if event_var['cvarname'] == 'gg_dm_ragdoll_effect':
         gg_dm_ragdoll_effect = int(gungamelib.getVariableValue('gg_dm_ragdoll_effect'))

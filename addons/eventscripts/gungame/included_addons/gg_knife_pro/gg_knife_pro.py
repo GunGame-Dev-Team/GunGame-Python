@@ -37,13 +37,13 @@ def unload():
     # Register this addon with GunGame
     gungame.unregisterAddon('gg_knife_pro')
 
-def gg_variable_changed(event_var):
+def server_cvar(event_var):
     # Get the cvar name
     cvar = event_var['cvarname']
     
     # Register change in gg_knife_pro_limit
     if cvar == 'gg_knife_pro_limit':
-        gg_knife_pro_limit = int(event_var['newvalue'])
+        gg_knife_pro_limit = int(event_var['cvarvalue'])
     
 def player_death(event_var):
     # Check for knife kill, and not a team kill

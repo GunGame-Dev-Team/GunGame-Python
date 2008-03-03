@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_dead_strip
-Version #:      02.19.08
+Version #:      1.0.111
 Description:    When a player dies all his weapons are imidiately removed from the game.
 '''
 
@@ -14,7 +14,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_dead_strip Addon for GunGame: Python" 
-info.version  = "02.19.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_dead_strip" 
 info.author   = "GunGame Development Team"
@@ -23,13 +23,15 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp'
 
 def load():
     # Register this addon with GunGame
-    global dict_playerWeapons
-    gungame.registerAddon('gg_dead_strip', 'GG Dead Strip')
+    gg_dead_strip = gungamelib.registerAddon('gg_dead_strip')
+    gg_dead_strip.setMenuText('GG Dead Strip')
+    
     es.addons.registerClientCommandFilter(filterDrop)
 
 def unload():
     # Unregister this addon with GunGame
-    gungame.unregisterAddon('gg_dead_strip')
+    gungamelib.unregisterAddon('gg_dead_strip')
+    
     es.addons.unregisterClientCommandFilter(filterDrop)
 
 def item_pickup(event_var):
@@ -41,7 +43,7 @@ def item_pickup(event_var):
         playerWeapon = gungamePlayer.getWeapon()
         #playerWeapon = gungamePlayer.get('weapon')
         playerlibPlayer = playerlib.getPlayer(userid)
-        if gungame.getRegisteredAddons().has_key('gg_warmup_round'):
+        if gungamelib.getGlobal('isWarmup') != '1':
             if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != '0':
                 es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
         else:

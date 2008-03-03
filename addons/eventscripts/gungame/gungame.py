@@ -13,7 +13,7 @@ import keyvalues
 import gungamelib
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.108"
+gungameVersion = "1.0.111"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -525,6 +525,8 @@ def setVariableValue(variableName, variableValue):
         # Oops, this variable doesn't exist in the GunGame Variables Dictionary
         raise VariableError, str(variableName) + ' is not a valid GunGame variable'
 '''
+
+'''
 def setGlobal(variableName, variableValue):
     global dict_globals
     dict_globals[variableName] = str(variableValue)
@@ -536,7 +538,9 @@ def getGlobal(variableName):
         return dict_globals[variableName]
     else:
         return '0'
+'''
         
+'''
 # ===================================================================================================
 # ADDON REGISTRATION
 # ===================================================================================================
@@ -656,7 +660,8 @@ def getIncludedAddonsDirList():
     
 def getCustomAddonsDirList():
     return list_customAddonsDir
-    
+    '''
+
 # ===================================================================================================
 # LOADING SHORTCUTS
 # ===================================================================================================
@@ -809,7 +814,7 @@ def levelInfoHudHint(userid):
     else:
         HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText, es.getplayername(list_leadersUserid[0]), gungamelib.getLeaderLevel(), gungamelib.getTotalLevels(), gungamelib.getLevelWeapon(gungamelib.getLeaderLevel()))
             
-    if not int(getGlobal('voteActive')) and not int(getGlobal('isWarmup')):
+    if not int(gungamelib.getGlobal('voteActive')) and not int(gungamelib.getGlobal('isWarmup')):
         gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
 
 '''
@@ -1171,7 +1176,7 @@ def es_map_start(event_var):
 
 def player_changename(event_var):
     # Change the player's name in the leaderlist
-    if removeRetunChars(event_var['oldname']) in list_leaderNames:
+    if removeReturnChars(event_var['oldname']) in list_leaderNames:
         list_leaderNames[list_leaderNames.index(event_var['oldname'])] = removeReturnChars(event_var['newname'])
 
 def round_start(event_var):
@@ -1588,7 +1593,7 @@ def unload():
     global gungameWeaponOrderMenu
     #popuplib.delete('gungameWeaponOrderMenu.delete()
     global dict_gungameRegisteredAddons
-    for addonName in dict_gungameRegisteredAddons:
+    for addonName in gungamelib.getRegisteredAddonlist():
         if addonName in list_includedAddonsDir:
             es.unload('gungame/included_addons/%s' %addonName)
         elif addonName in list_customAddonsDir:
@@ -1649,7 +1654,7 @@ def unload():
         es.unregclientcmd('!leaders')
         
     # Unload gg_sounds
-    es.unload('gungame/included_addons/gg_sounds')
+    # es.unload('gungame/included_addons/gg_sounds')
     
     # Fire gg_unload event
     es.event('initialize','gg_unload')
@@ -1660,7 +1665,7 @@ def unload():
     for variable in list_gungameVariables:
         es.ServerVar(variable).removeFlag('notify')
         
-    gungamelib.clearGunGame()
+    gamethread.delayed(0.01, gungamelib.clearGunGame, ())
 
 def gg_vote(event_var):
     gungamelib.setVariableValue('gungame_voting_started', True)
@@ -1728,11 +1733,13 @@ def server_cvar(event_var):
     if newValue == gungamelib.getVariableValue(cvarName):
         return
     
-    # if cvarName in gungamelib.getDependencyList():
-    #     gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
-    #     return
+    if cvarName in gungamelib.getDependencyList():
+        if newValue != gungamelib.getDependencyValue(cvarName):
+            es.dbgmsg(0, '[GunGame] %s is a protected dependency' %cvarName)
+            gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
+            return
         
-    gungamelib.setVariableValue(cvarName, newValue)
+    gungamelib.__setCfgSettings(cvarName, newValue)
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':
@@ -1762,7 +1769,7 @@ def server_cvar(event_var):
     elif cvarName in list_includedAddonsDir:
         if newValue == '1':
             es.server.queuecmd('es_load gungame/included_addons/%s' %cvarName)
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('%s' %cvarName):
+        elif newValue == '0' and cvarName in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/%s' %cvarName)
 
 # ==========================================================================================================================

@@ -1,3 +1,5 @@
+# version 1.0.111
+
 '''
 ToDo:
     gungamePlayer.get('wins')
@@ -24,6 +26,7 @@ dict_leaderInfo['oldLeaders'] = []
 dict_leaderInfo['leaderLevel'] = 1
 
 dict_cfgSettings = {}
+dict_globals = {}
 
 dict_gungameSounds = {}
 
@@ -832,7 +835,110 @@ class Sounds:
         else:
             return False
             
+            
+# ===================================================================================================
+#   ADDON CLASS
+# ===================================================================================================
+
+class addonError(_GunGameLibError):
+    pass
+    
+class Addon:
+    def __init__(self, addonName):
+        self.addon = str(addonName)
+        if self.validateAddon():
+            # Set up default attributes for this addon
+            self.menuText = ''
+            self.dependencies = []
+            es.dbgmsg(0, '[GunGame] Addon Registered Successfully: \'%s\'' %addonName)
+        else:
+            raise addonError, '%s is not an included or custom addon' %(addonName)
+
+    def __del__(self):
+        for dependency in self.dependencies:
+            # Remove dependency
+            dict_registeredDependencies[dependency].delDependent(self.addon)
+        es.dbgmsg(0, '[GunGame] Addon Unregistered Successfully: \'%s\'' %self.addon)
+    
+    def validateAddon(self):
+        if self.addon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/included_addons/'):
+            self.addonType = 'included'
+            return True
+        elif self.addon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/custom_addons/'):
+            self.addonType = 'custom'
+            return True
+        return False
         
+    def setMenuText(self, menuText):
+        # SET MENUTEST
+        self.menuText = str(menuText)
+        
+    def addDependency(self, dependencyName, value):
+        # Check if dependency already exists
+        if not dict_registeredDependencies.has_key(dependencyName):
+            # Check if dependency is a valid gungame variable
+            if dict_cfgSettings.has_key(dependencyName):
+                # Set GunGame variable to dependents value
+                setVariableValue(dependencyName, value)
+                # Add dependency and original value to addon attributes
+                self.dependencies.append(dependencyName)
+                # Create dependency class
+                dict_registeredDependencies[dependencyName] = addonDependency(dependencyName, value, self.addon)
+            else:
+                raise addonError, '%s is not a valid dependency' %dependencyName
+        # Dependent is already registered
+        else:
+            # Add dependency and original value to addon attributes
+            self.dependencies.append(dependencyName)
+            # Add dependent to existing dependency
+            dict_registeredDependencies[dependencyName].addDependent(value, self.addon)
+    
+    def delDependency(self,dependencyName):
+        # check if dependency exits
+        if dict_registeredDependencies.has_key(dependencyName):
+            # delete dependency
+            dict_registeredDependencies[dependencyName].delDependent(self.addon)
+        else:
+            raise addonError, '%s is not a registered dependency' %dependencyName
+            
+class addonDependency:
+    def __init__(self, dependencyName, value, dependentName):
+        # setup dependency class vars
+        self.dependency = dependencyName
+        self.dependencyValue = value
+        self.dependencyOriginalValue = getVariableValue(dependencyName)
+        self.dependentList = [dependentName]
+        es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %self.dependency)
+        
+    def addDependent(self, value, dependentName):
+        # Check if dependents value is the same as the previous dependents value
+        if self.dependencyValue == value:
+            # add dependent to list of dependencies dependents
+            self.dependentList.append(dependentName)
+            es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %self.dependency)
+        # Dependent has a different value
+        else:
+            # Unload addon since it conflicts with existant dependents
+            if dict_RegisteredAddons[dependentName].addonType == 'included':
+                setVariableValue(dependentName, 0)
+            else:
+                es.unload('gungame/custom_addons/%s' %dependentName)
+            es.dbgmsg(0, '[GunGame] Dependency Registered Failed. \'%s\' previously registered with a different value' %self.dependency)
+            es.dbgmsg(0, '[GunGame] Dependency Registered Failed. \'%s\' has been unloaded' %dependentName)
+            
+    def delDependent(self, dependentName):
+        # Remove dependent from dependents list
+        if dependentName in self.dependentList:
+            self.dependentList.remove(dependentName)
+            es.dbgmsg(0, '[GunGame] Dependency Unregistered Successfully: \'%s\'' %self.dependency)
+            # Check if there are any more dependents
+            if not self.dependentList:
+                # Set Variable back to it's original value
+                setVariableValue(self.dependency, self.dependencyOriginalValue)
+                # Delete depdency
+                del dict_registeredDependencies[self.dependency]
+
+
 # ===================================================================================================
 #  CLASS WRAPPERS
 # ===================================================================================================
@@ -860,6 +966,19 @@ def getSoundPack(soundPackName):
         return Sounds(soundPackName)
     except TypeError, e:
         raise e
+        
+def registerAddon(addonName):
+    if not dict_RegisteredAddons.has_key(addonName):
+        dict_RegisteredAddons[addonName] = Addon(addonName)
+        return dict_RegisteredAddons[addonName]
+    else:
+        raise addonError, '%s has already been registered.' %addonName
+
+def unregisterAddon(addonName):
+    if dict_RegisteredAddons.has_key(addonName):
+        del dict_RegisteredAddons[addonName]
+    else:
+        raise addonError, '%s has not been previously registered.' %addonName
         
         
 # ===================================================================================================
@@ -906,6 +1025,14 @@ def clearGunGame():
     
     # Reset the Player Information Database in the dict_cfgSettings
     dict_cfgSettings.clear()
+    
+    # Clear the gungame globals
+    dict_globals.clear()
+    
+    # Reset the Addon Information Database
+    dict_RegisteredAddons.clear()
+    dict_registeredDependencies.clear()
+
 # ===================================================================================================
 #   WEAPON RELATED COMMANDS
 # ===================================================================================================
@@ -1051,12 +1178,14 @@ def getVariableValue(variableName):
 def setVariableValue(variableName, value):
     if es.exists('variable', variableName):
         if dict_cfgSettings.has_key(variableName):
-            dict_cfgSettings[variableName] = value
             es.server.cmd('%s %s' %(variableName, value))
         else:
             raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
     else:
         raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
+        
+def __setCfgSettings(variableName, value):
+    dict_cfgSettings[variableName] = value
         
 def getVariableList():
     return dict_cfgSettings.keys()
@@ -1075,5 +1204,31 @@ def getSound(soundName):
     else:
         raise SoundError, 'The sound does not exist.'
     
+# ===================================================================================================
+#   ADDON RELATED COMMANDS
+# ===================================================================================================
+
+def getRegisteredAddonlist():
+    return dict_RegisteredAddons.keys()
     
+def getDependencyList():
+    return dict_registeredDependencies.keys()
     
+def getDependencyValue(dependencyName):
+    return dict_registeredDependencies[dependencyName].dependencyValue
+    
+# ===================================================================================================
+#   GLOBALS RELATED COMMANDS
+# ===================================================================================================
+
+def setGlobal(variableName, variableValue):
+    global dict_globals
+    dict_globals[variableName] = str(variableValue)
+
+def getGlobal(variableName):
+    global dict_globals
+    # Does the variable exist?
+    if dict_globals.has_key(variableName):
+        return dict_globals[variableName]
+    else:
+        return '0'

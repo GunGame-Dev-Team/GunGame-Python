@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_knife_pro
-Version #:      02.20.08
+Version #:      1.0.111
 Description:    When one player knife kills another player, the attacker steals
                 a level from the victim.
 '''
@@ -12,13 +12,12 @@ import es
 import playerlib
 import gungamelib
 import usermsg
-
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_knife_pro Addon for GunGame: Python" 
-info.version  = "02.20.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_knife_pro" 
 info.author   = "GunGame Development Team"
@@ -27,15 +26,16 @@ info.author   = "GunGame Development Team"
 gg_knife_pro_limit = 0
 
 def load():    
-    # Register this addon with GunGame
-    gungame.registerAddon('gg_knife_pro', 'GG Knife Pro')
+    # Register addon with gungamelib
+    gg_knife_pro = gungamelib.registerAddon('gg_knife_pro')
+    gg_knife_pro.setMenuText('GG Knife Pro')
     
     # Get gg_knife_pro_limit
     gg_knife_pro_limit = int(gungamelib.getVariableValue('gg_knife_pro_limit'))
     
 def unload():
-    # Register this addon with GunGame
-    gungame.unregisterAddon('gg_knife_pro')
+    # Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_knife_pro')
 
 def server_cvar(event_var):
     # Get the cvar name
@@ -53,7 +53,7 @@ def player_death(event_var):
         return
 
     # Is warmup round?
-    if gungame.getRegisteredAddons().has_key('gg_warmup_round'):
+    if gungamelib.getGlobal('isWarmup') == '1':
         return
     
     # Get attacker info

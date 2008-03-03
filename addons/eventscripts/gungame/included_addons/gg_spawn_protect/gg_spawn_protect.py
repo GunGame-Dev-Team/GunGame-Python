@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_spawn_protection
-Version #:      02.20.08
+Version #:      1.0.111
 Description:    This will make players invincable and marked with color when
                 ever a player spawns.  Protected players cannot level up during
                 spawn protection.
@@ -17,7 +17,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_spawn_protection Addon for GunGame: Python" 
-info.version  = "02.20.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_spawn_protect"
 info.author   = "GunGame Development Team"
@@ -31,12 +31,13 @@ dict_SpawnProtectVars['alpha'] = int(gungamelib.getVariableValue('gg_spawn_prote
 dict_SpawnProtectVars['delay'] = int(gungamelib.getVariableValue('gg_spawn_protect'))
 
 def load():
-    # Register this addon with GunGame
-    gungame.registerAddon('gg_spawn_protect', 'GG Spawn Protection')
+    # Register addon with gungamelib
+    gg_spawn_protect = gungamelib.registerAddon('gg_spawn_protect')
+    gg_spawn_protect.setMenuText('GG Spawn Protection')
 
 def unload():
-    # Unregister this addon with GunGame
-    gungame.unregisterAddon('gg_spawn_protect')
+    # Unregister this addon with bunbamelib
+    gungamelib.unregisterAddon('gg_spawn_protect')
 
 def server_cvar(event_var):
     global dict_SpawnProtectVars
@@ -50,7 +51,7 @@ def server_cvar(event_var):
 
 def player_spawn(event_var):
     # If not warmup round...
-    if not gungame.getRegisteredAddons().has_key('gungame\\included_addons\\gg_warmup_round'):
+    if gungamelib.getGlobal('isWarmup') != '1':
         # Get userid and player objects
         userid = int(event_var['userid'])
         gungamePlayer = gungamelib.getPlayer(userid)

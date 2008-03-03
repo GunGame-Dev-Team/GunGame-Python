@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_friendlyfire
-Version #:      02.20.08
+Version #:      1.0.111
 Description:    Friendly fire will activate when the last level is reached
 '''
 
@@ -14,7 +14,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_friendlyfire Addon for GunGame: Python" 
-info.version  = "02.20.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_friendlyfire" 
 info.author   = "GunGame Development Team"
@@ -25,10 +25,9 @@ friendlyFireEnabled = 0
 mp_friendlyfireBackUp = 0
 
 def load():
-    global mp_friendlyfireBackUp
-    
-    # Register this addon with GunGame
-    gungame.registerAddon("gg_friendlyfire", "GG FriendlyFire")
+    # Register addon with gungamelib
+    gg_friendlyfire = gungamelib.registerAddon('gg_friendlyfire')
+    gg_friendlyfire.setMenuText('GG FriendlyFire')
     
     # Get backup of mp_friendlyfire
     mp_friendlyfireBackUp = int(es.ServerVar('mp_friendlyfire'))
@@ -36,31 +35,23 @@ def load():
     es.forcevalue("mp_friendlyfire", 0)
 
 def unload():
-    global mp_friendlyfireBackUp
-    
-    # Unregister this addon with GunGame
-    gungame.unregisterAddon("gg_friendlyfire")
+    # Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_friendlyfire')
     
     # Return "mp_friendlyfire" to what it was originally
     es.server.cmd('mp_friendlyfire %d' %mp_friendlyfireBackUp)
     
 def server_cvar(event_var):
-    global friendlyFireLevel
     # Watch for change in friendlyfire level
     if event_var['cvarname'] == 'gg_friendlyfire':
-        friendlyFireLevel = gungame.getTotalLevels() - int(event_var['cvarvalue'])
+        friendlyFireLevel = gungamelib.getTotalLevels() - int(event_var['cvarvalue'])
 
 def es_map_start(event_var):
-    global friendlyFireEnabled
-    
     friendlyFireEnabled = 0
     # Set mp_friendlyfire to 0
     es.forcevalue("mp_friendlyfire", 0)
     
 def gg_start():
-    global friendlyFireEnabled
-    global friendlyFireLevel
-    
     friendlyFireEnabled = 0
     # Set mp_friendlyfire to 0
     es.forcevalue("mp_friendlyfire", 0)
@@ -70,9 +61,6 @@ def gg_start():
     
 
 def gg_levelup(event_var):
-    global friendlyFireEnabled
-    global friendlyFireLevel
-    
     # If the Leader is on the friendlyfire level?
     if gungamelib.getLeaderLevel() >= friendlyFireLevel:
         # Check whether friendlyfire is enabled

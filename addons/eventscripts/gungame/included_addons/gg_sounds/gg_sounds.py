@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_sounds
-Version #:      1.0.102
+Version #:      1.0.111
 Description:    When a player makes 3 levels in one round he get faster and have an effect for 10 secs
 '''
 
@@ -14,7 +14,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_sounds Addon for GunGame: Python" 
-info.version  = "1.0.102"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_sounds" 
 info.author   = "GunGame Development Team"
@@ -38,14 +38,15 @@ list_validSoundPackOptions  = ['levelup',
                                'handicap']
 
 def load():
-    # Register this addon with GunGame
-    gungame.registerAddon('gg_sounds', 'GG Sounds')
+    # Register addon with gungamelib
+    gg_sounds = gungamelib.registerAddon('gg_sounds')
+    gg_sounds.setMenuText('GG Sounds')
     
     readSoundPack()
     
 def unload():
-    # Unregister this addon with GunGame
-    gungame.unregisterAddon('gg_sounds')
+    # Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_sounds')
 
 def readSoundPack():
     soundPackName               = gungamelib.getVariableValue('gg_soundpack')

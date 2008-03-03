@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_triple_level
-Version #:      02.20.08
+Version #:      1.0.111
 Description:    When a player makes 3 levels in one round he get faster and have an effect for 10 secs
 '''
 
@@ -10,13 +10,11 @@ import es
 import playerlib
 import gamethread
 import gungamelib
-from gungame import gungame
-from gungame.included_addons.gg_sounds import gg_sounds as gg_sound
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_triple_level Addon for GunGame: Python" 
-info.version  = "02.20.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_triple_level" 
 info.author   = "GunGame Development Team"
@@ -27,12 +25,13 @@ global list_currentTripleLevel
 list_currentTripleLevel = []
 
 def load():
-    # Register this addon with GunGame
-    gungame.registerAddon("gg_triple_level", "GG Triple Level")
+    # Register addon with gungamelib
+    gg_triple_level = gungamelib.registerAddon('gg_triple_level')
+    gg_triple_level.setMenuText('GG Triple Level')
     
 def unload():
-    # Unregister this addon with GunGame
-    gungame.unregisterAddon("gg_triple_level")
+    # Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_triple_level')
 
 def gg_levelup(event_var):
     userid = event_var['userid']
@@ -45,7 +44,7 @@ def gg_levelup(event_var):
         # Add the player to the triple level list
         list_currentTripleLevel.append(userid)
         # Sound and Messages
-        es.emitsound('player', userid, gg_sound.gg_sounds['triplelevel'], 1.0, 1.0)
+        es.emitsound('player', userid, gungamelib.getSound('triplelevel'), 1.0, 1.0)
         announce("\4%s\1 triple levelled!" % event_var["name"])
         es.centermsg("%s triple levelled!" % event_var["name"])
         
@@ -108,7 +107,7 @@ def removeTriple(userid):
         es.server.cmd("es_xfire %s !self \"gravity 800\"" %userid)
         
         # Stop the sound playing for the triple
-        es.stopsound(userid, gg_sound.gg_sounds['triplelevel'])
+        es.stopsound(userid, gungamelib.getSound('triplelevel'))
         
 def announce(message):
     es.msg("#multi", "\4[GG:Triple Level]\1 %s" % message)

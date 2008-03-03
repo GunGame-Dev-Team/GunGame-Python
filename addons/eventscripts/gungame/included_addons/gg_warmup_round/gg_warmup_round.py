@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_warmup_round
-Version #:      02.20.08
+Version #:      1.0.111
 Description:    GunGame WarmUp Round allows players to begin warming up for
                 the upcoming GunGame round without allowing them to level up,
                 also allowing connecting players to get a full connection to
@@ -21,7 +21,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_warmup_round Addon for GunGame: Python" 
-info.version  = "02.20.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_warmup_round" 
 info.author   = "GunGame Development Team"
@@ -39,25 +39,21 @@ class WarmUpWeaponError(_GunGameQueryError):
 
 list_allWeapons = ['knife', 'glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
 mp_freezetimeBackUp = 0
+warmupTime = int(gungamelib.getVariableValue('gg_warmup_timer')) + 1
 
 def load():
-    global mp_freezetimeBackUp
-    global warmupTime
-    
+    # Register addon with gungamelib
+    gg_warmup_round = gungamelib.registerAddon('gg_warmup_round')
+    gg_warmup_round.setMenuText('GG Warmup Round')
+
     # Set "isWarmup" global
-    gungame.setGlobal('isWarmup', 1)
+    gungamelib.setGlobal('isWarmup', 1)
     
     # Cancel the delay to set PreventLevel for everyone to "0"
     gamethread.cancelDelayed('setPreventAll0')
     
-    # Register this addon with GunGame
-    gungame.registerAddon('gg_warmup_round', 'GG WarmUp Round')
-    
     # Set PreventAll to "1" for everyone
     gungamelib.setPreventLevelAll(1)
-    
-    # Set a variable to hold the amount of WarmUp Time
-    warmupTime = int(gungamelib.getVariableValue('gg_warmup_timer')) + 1
     
     # Retrieve the warmup weapon
     warmupWeapon = gungamelib.getVariableValue('gg_warmup_weapon')
@@ -82,10 +78,8 @@ def load():
     es.server.cmd('mp_freezetime 0')
 
 def unload():
-    global mp_freezetimeBackUp
-    
-    # Unregister this addon with GunGame
-    gungame.unregisterAddon('gg_warmup_round')
+    # Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_warmup_round')
     
     # Set everyone's PreventLevel to 0
     gungamelib.setPreventLevelAll(0)
@@ -102,7 +96,7 @@ def startTimer():
     repeat.start('WarmupTimer', 1, 0)
     
     # Create timeleft global
-    gungame.setGlobal('warmupTimeLeft', warmupTime)
+    gungamelib.setGlobal('warmupTimeLeft', warmupTime)
 
 def server_cvar(event_var):
     # if the "gg_warmup_timer" is changed to 0, we need to unload this bad-boy
@@ -151,7 +145,6 @@ def hegrenade_detonate(event_var):
 
 def countDown(repeatInfo):
     global warmupTime
-    
     # If the remaining time is greater than 1
     if warmupTime >= 1:
         # Loop through the players
@@ -160,7 +153,7 @@ def countDown(repeatInfo):
             usermsg.hudhint(userid, 'Warmup round timer: %d' % warmupTime)
             
             # Set timeleft global
-            gungame.setGlobal('warmupTimeLeft', warmupTime)
+            gungamelib.setGlobal('warmupTimeLeft', warmupTime)
             
             # Countdown 5 or less?
             if warmupTime <= 5:
@@ -183,7 +176,7 @@ def countDown(repeatInfo):
         # Stop the timer
         repeat.stop('WarmupTimer')
         
-        gungame.setGlobal('isWarmup', 0)
+        gungamelib.setGlobal('isWarmup', 0)
         
         # Unload "gungame/included_addons/gg_warmup_round"
         es.unload('gungame/included_addons/gg_warmup_round')

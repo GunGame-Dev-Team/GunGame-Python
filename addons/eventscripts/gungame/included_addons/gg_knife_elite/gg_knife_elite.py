@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_knife_elite
-Version #:      02.20.08
+Version #:      1.0.111
 Description:    After a player levels up, they only get a knife until the next round.
                 THIS WILL OVERRIDE TURBO MODE!!
 '''
@@ -11,12 +11,11 @@ import es
 import playerlib
 import gungamelib
 import gamethread
-from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_knife_elite Addon for GunGame: Python" 
-info.version  = "02.20.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_knife_elite" 
 info.author   = "GunGame Development Team"
@@ -25,76 +24,29 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp'
 dict_playerIsElite = {}
 
 def load():
-    # Register this addon with GunGame
-    gungame.registerAddon('gg_knife_elite', 'GG Knife Elite')
+    # Register addon with gungamelib
+    gg_knife_elite = gungamelib.registerAddon('gg_knife_elite')
+    gg_knife_elite.setMenuText('GG Knife Elite')
+    gg_knife_elite.addDependency('gg_dead_strip', '1')
+    gg_knife_elite.addDependency('gg_turbo', '0')
     
-    #Register gg_dead_strip as a dependency
-    gungame.registerDependency('gg_dead_strip', 'gg_knife_elite')
-    
-    # Check if turbo is running
-    if gungamelib.getVariableValue('gg_turbo') == '1':
-        # Check if gg_turbo is a dependency of any other addons
-        if not gungame.checkDependency('gg_turbo'):
-            # Unload gg_turbo
-            gungamelib.setVariableValue('gg_turbo', '0')
-        else:
-            # gg_turbo has depencies, show message and unload gg_knife_pro
-            es.dbgmsg(0, '***WARNING***')
-            es.dbgmsg(0, '* gg_knife_elite cannot unload gg_turbo')
-            es.dbgmsg(0, '* is a dependency of the following addons:')
-            for addon in gungame.getAddonDependencyList('gg_turbo'):
-                es.dbgmsg(0, '*' + addon)
-            es.dbgmsg(0, '* gg_knife_elite will be unloaded')
-            es.dbgmsg(0, '*************')
-            gungamelib.setVariableValue('gg_knife_elite', '0')
-
-    # Check if gg_dead_strip is running
-    if gungamelib.getVariableValue('gg_dead_strip') == '0':
-        gungamelib.setVariableValue('gg_dead_strip', '1')
-        
-    global dict_playerIsElite
-    players = playerlib.getUseridList("#all")
-    for tempid in players:
-        userid = str(tempid)
+    for userid in es.getUseridList():
+        userid = str(userid)
         dict_playerIsElite[userid] = 0
 
 def unload():
-    #Unregister this addon with GunGame
-    gungame.unregisterAddon('gg_knife_elite')
-    #Register gg_deat_strip as a dependency
-    gungame.unregisterDependency('gg_dead_strip', 'gg_knife_elite')
-
-def server_cvar(event_var):
-    # Watch for required addon load/unload
-    if event_var['cvarname'] == 'gg_turbo' and event_var['cvarvalue'] == '1':
-        # Check if gg_turbo is a dependency of any other addons
-        if not gungame.checkDependency('gg_turbo'):
-            # Unload gg_turbo
-            gungamelib.setVariableValue('gg_turbo', '0')
-            es.dbgmsg(0, 'WARNING: gg_turbo cannot be loaded while gg_knife_elite is enabled!')
-        else:
-            # gg_turbo has depencies, show message and unload gg_knife_pro
-            es.dbgmsg(0, '***WARNING***')
-            es.dbgmsg(0, '* gg_knife_elite cannot stop gg_turbo from loading')
-            es.dbgmsg(0, '* gg_turbo is a dependency of the following addons:')
-            for addon in gungame.getAddonDependencyList('gg_turbo'):
-                es.dbgmsg(0, '* ' + addon)
-            es.dbgmsg(0, '* gg_knife_elite will be unloaded')
-            es.dbgmsg(0, '*************')
-            gungamelib.setVariableValue('gg_knife_elite', '0')
+    #Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_knife_elite')
 
 def player_spawn(event_var):
-    global dict_playerIsElite
     userid = event_var['userid']
     dict_playerIsElite[userid] = 0
     gungamePlayer = gungamelib.getPlayer(userid)
     es.sexec(userid, 'use weapon_%s' %gungamePlayer.getWeapon())
 
 def item_pickup(event_var):
-    global dict_playerIsElite
     userid = event_var['userid']
     if dict_playerIsElite[userid]:
-        global list_allWeapons
         item = event_var['item']
         if item in list_allWeapons:
             playerlibPlayer = playerlib.getPlayer(userid)
@@ -106,6 +58,4 @@ def gg_levelup(event_var):
     if gungamePlayer['preventlevel'] == 0 and gungamePlayer.getWeapon() != 'knife':
         es.sexec(userid, 'use weapon_knife')
         gungamePlayer.stripPlayer()
-        
-        global dict_playerIsElite
         dict_playerIsElite[userid] = 1

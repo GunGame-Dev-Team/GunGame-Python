@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_nade_bonus
-Version #:      02.19.08
+Version #:      1.0.111
 Description:    When players are on grenade level, by default, they are just given
                 an hegrenade. This addon will give them an additional weapon of the
                 admin's choice.
@@ -10,12 +10,11 @@ Description:    When players are on grenade level, by default, they are just giv
 
 import es
 import gungamelib
-from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_nade_bonus Addon for GunGame: Python" 
-info.version  = "02.19.08"
+info.version  = "1.0.111"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_nade_bonus" 
 info.author   = "GunGame Development Team"
@@ -26,12 +25,13 @@ if 'weapon_' not in gungamelib.getVariableValue('gg_nade_bonus'):
     bonusWeapon = 'weapon_' + str(bonusWeapon)
 
 def load():
-    # Register this addon with GunGame
-    gungame.registerAddon('gg_nade_bonus', 'GG Nade Bonus')
+    # Register addon with gungamelib
+    gg_nade_bonus = gungamelib.registerAddon('gg_nade_bonus')
+    gg_nade_bonus.setMenuText('GG Nade Bonus')
 
 def unload():
-    # Unregister this addon with GunGame
-    gungame.unregisterAddon('gg_nade_bonus')
+    # Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_nade_bonus')
 
 def player_spawn(event_var):
     checkBonus(event_var['userid'])

@@ -6,10 +6,12 @@ Version #:      1.0.111
 Description:    When a player dies all his weapons are imidiately removed from the game.
 '''
 
+# Eventscripts imports
 import es
 import playerlib
+
+# GunGame  imports
 import gungamelib
-from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
@@ -44,7 +46,7 @@ def item_pickup(event_var):
         #playerWeapon = gungamePlayer.get('weapon')
         playerlibPlayer = playerlib.getPlayer(userid)
         if gungamelib.getGlobal('isWarmup') != '1':
-            if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != '0':
+            if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
                 es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
         else:
             if playerWeapon != item and playerWeapon != 'hegrenade' or playerWeapon == 'hegrenade' and gungamelib.getVariableValue('gg_nade_bonus') != item and item != 'hegrenade':

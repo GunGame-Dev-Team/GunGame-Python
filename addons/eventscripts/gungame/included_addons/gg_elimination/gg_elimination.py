@@ -4,13 +4,16 @@
     Title:      gg_elimination
 Version #:      1.0.111
 Description:    Players respawn after their killer is killed.
-                Originally for ES1.3 created by ichthy.
+                Originally for ES1.3 created by ichthys.
                 http://addons.eventscripts.com/addons/view/3972
 '''
 
+# EventScripts imports
 import es
-import gungamelib
 import gamethread
+
+# GunGame imports
+import gungamelib
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
@@ -24,7 +27,7 @@ info.author   = "GunGame Development Team"
 dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
 dict_addonVars['currentRound'] = 0
-dict_addonVars['gg_dissolver_effect'] = int(gungamelib.getVariableValue('gg_dissolver_effect'))
+dict_addonVars['gg_dissolver_effect'] = gungamelib.getVariableValue('gg_dissolver_effect')
 
 # Player Database
 dict_playersEliminated = {}
@@ -53,7 +56,7 @@ def unload():
 def server_cvar(event_var):
     # Register change for gg_dissolver_effect
     if event_var['cvarname'] == 'gg_dissolver_effect':
-        dict_addonVars['gg_dissolver_effect'] = int(gungamelib.getVariableValue('gg_dissolver_effect'))
+        dict_addonVars['gg_dissolver_effect'] = gungamelib.getVariableValue('gg_dissolver_effect')
 
 def es_map_start(event_var):
     # reset round tracking

@@ -6,10 +6,12 @@ Version #:      1.0.111
 Description:    Friendly fire will activate when the last level is reached
 '''
 
+# EventScripts imports
 import es
 import gamethread
+
+# GunGame imports
 import gungamelib
-from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
@@ -20,7 +22,7 @@ info.basename = "gungame/included_addons/gg_friendlyfire"
 info.author   = "GunGame Development Team"
 
 # Set Level where gg_friendlyfire has to be activate
-friendlyFireLevel = gungamelib.getTotalLevels() - int(gungamelib.getVariableValue("gg_friendlyfire"))
+friendlyFireLevel = gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_friendlyfire')
 friendlyFireEnabled = 0
 mp_friendlyfireBackUp = 0
 
@@ -57,7 +59,7 @@ def gg_start():
     es.forcevalue("mp_friendlyfire", 0)
     
     # Get friendlyfireLevel again just incase the Total Levels have changed
-    friendlyFireLevel = gungamelib.getTotalLevels() - int(gungamelib.getVariableValue("gg_friendlyfire"))
+    friendlyFireLevel = gungamelib.getTotalLevels() - gungamelib.getVariableValue("gg_friendlyfire")
     
 
 def gg_levelup(event_var):

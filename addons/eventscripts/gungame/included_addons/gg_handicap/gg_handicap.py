@@ -6,10 +6,13 @@ Version #:      1.0.111
 Description:    When a player joins they are given the average level.
 '''
 
+# EventScripts imports
 import es
-import gungamelib
 import repeat
 import playerlib
+
+# GunGame imports
+import gungamelib
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
@@ -19,7 +22,7 @@ info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_handicap" 
 info.author   = "GunGame Development Team"
 
-gg_handicap_update = int(gungamelib.getVariableValue('gg_handicap_update'))
+gg_handicap_update = gungamelib.getVariableValue('gg_handicap_update')
 
 def load():
     # Register addon with gungamelib
@@ -40,7 +43,7 @@ def unload():
 def server_cvar(event_var):
     # register change in gg_handicap_update
     if event_var['cvarname'] == 'gg_handicap_update':
-        gg_handicap_update = int(gungamelib.getVariableValue('gg_handicap_update'))
+        gg_handicap_update = gungamelib.getVariableValue('gg_handicap_update')
         if gg_handicap_update:
             repeat.create('handicapUpdateLoop', handicapUpdate)
             repeat.start('handicapUpdateLoop', gg_handicap_update, 0)

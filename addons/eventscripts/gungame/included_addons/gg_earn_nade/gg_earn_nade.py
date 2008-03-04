@@ -9,7 +9,6 @@ Description:    When a player is on "hegrenade" level and they get a kill with a
 
 import es
 import gungamelib
-from gungame import gungame
 import playerlib
 
 # Register this addon with EventScripts

@@ -7,14 +7,14 @@ Description:    When players die, their ragdoll will dissolve. With the added op
                 disable this addon.
 '''
 
+# Python imports
+import random
+
 # Eventscripts imports
 import es
 import gamethread
-import random
-import gungamelib
 
 # Gungame import
-from gungame import gungame
 import gungamelib
 
 # Register this addon with EventScripts
@@ -26,7 +26,7 @@ info.basename = "gungame/included_addons/gg_dissolver"
 info.author   = "GunGame Development Team"
 
 # Get the addon cvars
-gg_dissolver_effect = int(gungamelib.getVariableValue('gg_dissolver_effect'))
+gg_dissolver_effect = gungamelib.getVariableValue('gg_dissolver_effect')
 
 def load():
     # Register addon with gungamelib
@@ -40,7 +40,7 @@ def unload():
 def server_cvar(event_var):
     # Register change for gg_dissolver_effect
     if event_var['cvarname'] == 'gg_dissolver_effect':
-        gg_dissolver_effect = int(gungamelib.getVariableValue('gg_dissolver_effect'))
+        gg_dissolver_effect = gungamelib.getVariableValue('gg_dissolver_effect')
 
 def player_death(event_var):
     # Set vars

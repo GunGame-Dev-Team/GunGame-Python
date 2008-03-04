@@ -1178,7 +1178,12 @@ def getVariableValue(variableName):
 def setVariableValue(variableName, value):
     if es.exists('variable', variableName):
         if dict_cfgSettings.has_key(variableName):
-            es.server.cmd('%s %s' %(variableName, value))
+            if __isNumeric(value):
+                value = int(value)
+            if es.ServerVar(variableName) != str(value):
+                es.server.cmd('%s %s' %(variableName, value))
+            if getVariableValue(variableName) != value:
+                dict_cfgSettings[variableName] = value    
         else:
             raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
     else:
@@ -1222,13 +1227,23 @@ def getDependencyValue(dependencyName):
 # ===================================================================================================
 
 def setGlobal(variableName, variableValue):
-    global dict_globals
-    dict_globals[variableName] = str(variableValue)
+    if __isNumeric(variableValue):
+        variableValue = int(variableValue)
+    dict_globals[variableName] = variableValue
 
 def getGlobal(variableName):
-    global dict_globals
-    # Does the variable exist?
     if dict_globals.has_key(variableName):
         return dict_globals[variableName]
     else:
         return '0'
+        
+# ===================================================================================================
+# OTHER FUNCTIONS (INTERNAL GUNGAMELIB USE)
+# ===================================================================================================
+def __isNumeric(string):
+    try:
+        test = int(string)
+    except ValueError:
+        return False
+    else:
+        return True

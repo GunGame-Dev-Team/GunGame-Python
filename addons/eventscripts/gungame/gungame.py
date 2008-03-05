@@ -17,16 +17,16 @@ import keyvalues
 import gungamelib
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.117"
+gungameVersion = "1.0.119"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
 # Register the addon with EventScripts
-info = es.AddonInfo() 
-info.name     = "GunGame: Python" 
+info = es.AddonInfo()
+info.name     = "GunGame: Python"
 info.version  = gungameVersion
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame" 
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame"
 info.author   = "GunGame Development Team"
 
 # TEMP CODE FOR PROFILER
@@ -514,48 +514,6 @@ def loadCustom(addonName):
     
 def unloadCustom(addonName):
     es.unload('gungame/custom_addons/' + str(addonName))
-
-# ===================================================================================================
-# LEVEL UP AND DOWN TRIGGERING
-# ===================================================================================================
-def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
-    # BEGIN THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_LEVELUP"
-    # -----------------------------------------------------------------------------------------------------------
-    es.event('initialize', 'gg_levelup')
-    # The userid of the player that levelled up
-    es.event('setint', 'gg_levelup', 'userid', levelUpUserid)
-    # The steamid of player that levelled up (provided by uniqueid)
-    es.event('setstring', 'gg_levelup', 'steamid', levelUpSteamid)
-    # The name of the player that levelled up
-    es.event('setstring', 'gg_levelup', 'name', levelUpName)
-    # The team # of the player that levelled up: team 2= Terrorists, 3= CT
-    es.event('setstring', 'gg_levelup', 'team', levelUpTeam)                                
-    # The old level of the player that levelled up
-    es.event('setint', 'gg_levelup', 'old_level', levelUpOldLevel)
-    # The new level of the player that levelled up
-    es.event('setint', 'gg_levelup', 'new_level', levelUpNewLevel)
-    # The userid of victim
-    es.event('setint', 'gg_levelup', 'victim', victimUserid)
-    # The victim's name
-    es.event('setstring', 'gg_levelup', 'victimname', victimName)
-    # The attackers weapon
-    es.event('setstring', 'gg_levelup', 'weapon', weapon)
-    # Fire the "GG_LEVELUP" event
-    es.event('fire', 'gg_levelup')
-    # --------------------------------------------------------------------------------------------------------
-    # END THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_LEVELUP"
-    
-def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, attackerName=None):
-    es.event('initialize', 'gg_leveldown')
-    es.event('setint', 'gg_leveldown', 'userid', levelDownUserid)
-    es.event('setstring', 'gg_leveldown', 'steamid', levelDownSteamid)
-    es.event('setstring', 'gg_leveldown', 'name', levelDownName)
-    es.event('setint', 'gg_leveldown', 'team', levelDownTeam)
-    es.event('setint', 'gg_leveldown', 'old_level', levelDownOldLevel)
-    es.event('setint', 'gg_leveldown', 'new_level', levelDownNewLevel)
-    es.event('setint', 'gg_leveldown', 'attacker', attackerUserid)
-    es.event('setstring', 'gg_leveldown', 'attackername', attackerName)
-    es.event('fire', 'gg_leveldown')
 
 def removeReturnChars(playerName):
     playerName = playerName.strip('\n')
@@ -1164,7 +1122,7 @@ def player_death(event_var):
                                 levelUpNewLevel = levelUpOldLevel + 1
                                 
                                 # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
-                                triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
+                                gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
                                 gungameAttacker['multikill'] = 0
                             else:
                                 # Message the Attacker
@@ -1179,7 +1137,7 @@ def player_death(event_var):
                             levelUpNewLevel = levelUpOldLevel + 1
                             
                             # triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid, victimName)
-                            triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
+                            gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
                             
                 # The victim was AFK
                 else:
@@ -1204,10 +1162,10 @@ def player_death(event_var):
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:
                         # LEVEL DOWN CODE
-                        triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
+                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
                         
                     else:
-                        triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
+                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
             # Team Killer!!!
             else:
                 # Let's see if we get to punish the vile TK'er...
@@ -1218,10 +1176,10 @@ def player_death(event_var):
                     
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:
-                        triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
+                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
                         
                     else:
-                        triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
+                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
     else:
         # Killed by "world"
         gungameAttacker = gungamelib.getPlayer(userid)
@@ -1236,7 +1194,7 @@ def player_death(event_var):
                 # Let's not put them on a non-existant level 0...
                 if levelDownNewLevel > 0:
                     # LEVEL DOWN CODE
-                    triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
+                    gungamelib.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
     StopProfiling(g_Prof)
     #es.msg("Event player_death benchmark: %f seconds" % GetProfilerTime(g_Prof))
     
@@ -1255,7 +1213,7 @@ def bomb_defused(event_var):
     # Level them up
     levelUpOldLevel = gungamePlayer['level']
     levelUpNewLevel = levelUpOldLevel + 1
-    triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
+    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
 
 def bomb_exploded(event_var):
     # Set vars
@@ -1270,7 +1228,7 @@ def bomb_exploded(event_var):
     # Level them up
     levelUpOldLevel = gungamePlayer['level']
     levelUpNewLevel = levelUpOldLevel + 1
-    triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
+    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
 
 def gg_levelup(event_var):
     # Check for a winner first

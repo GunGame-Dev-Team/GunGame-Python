@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_knife_pro
-Version #:      1.0.117
+Version #:      1.0.119
 Description:    When one player knife kills another player, the attacker steals
                 a level from the victim.
 '''
@@ -14,12 +14,11 @@ import usermsg
 
 # GunGame imports
 import gungamelib
-from gungame import gungame
 
 # Register this addon with EventScripts
-info = es.AddonInfo() 
+info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = "1.0.117"
+info.version  = "1.0.119"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -101,10 +100,10 @@ def player_death(event_var):
     gungameAttackerNewLevel = gungameAttackerLevel + 1
     
     # Trigger level down for the victim
-    gungame.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
+    gungamelib.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
     
     # Trigger level up for the attacker
-    gungame.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
+    gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
     
     # BEGIN THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
     # -----------------------------------------------------------------------------------------------------------

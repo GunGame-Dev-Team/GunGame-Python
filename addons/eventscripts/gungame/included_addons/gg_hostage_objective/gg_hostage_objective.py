@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_hostage_objective
-Version #:      1.0.117
+Version #:      1.0.119
 Description:    Adds rewards for rescuing or preventing the rescuing of hostages.
 '''
 
@@ -12,12 +12,11 @@ import playerlib
 
 # GunGame imports
 import gungamelib
-from gungame import gungame
 
 # Register this addon with EventScripts
-info = es.AddonInfo() 
+info = es.AddonInfo()
 info.name     = "gg_hostage_objective Addon for GunGame: Python"
-info.version  = "1.0.117"
+info.version  = "1.0.119"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_hostage_objective"
 info.author   = "GunGame Development Team"
@@ -57,7 +56,7 @@ def hostage_killed(event_var):
     if es.exists('userid', userid):
         gungamePlayer = gungamelib.getPlayer(userid)
         gungamePlayerLevel = gungamePlayer['level']
-        gungame.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], gungamePlayerLevel, gungamePlayerLevel - 1, 0, 0)
+        gungamelib.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], gungamePlayerLevel, gungamePlayerLevel - 1, 0, 0)
         
 def hostage_rescued(event_var):
     userid = event_var['userid']
@@ -65,7 +64,7 @@ def hostage_rescued(event_var):
     if dict_hostageTracker[userid]['rescues'] >= 2:
         gungamePlayer = gungamelib.getPlayer(userid)
         gungamePlayerLevel = gungamePlayer['level']
-        gungame.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], gungamePlayerLevel, gungamePlayerLevel + 1, 0, 0)
+        gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], gungamePlayerLevel, gungamePlayerLevel + 1, 0, 0)
         dict_hostageTracker[userid]['rescues'] = 0
         
         
@@ -77,5 +76,5 @@ def player_death(event_var):
         attacker = event_var['attacker']
         gungameAttacker = gungame.getPlayer(attacker)
         gungameAttackerLevel = int(gungameAttacker.get('level'))
-        gungame.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerLevel + 1, userid, event_var['es_username'])
+        gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerLevel + 1, userid, event_var['es_username'])
         dict_hostageTracker[userid].clear()

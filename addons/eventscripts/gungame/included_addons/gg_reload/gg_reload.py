@@ -2,7 +2,7 @@
 (c) 2008 by the GunGame Coding Team
 
     Title:      gg_reload
-Version #:      1.0.117
+Version #:      1.0.119
 Description:    When a player makes a kill the ammo in their clip is replenished.
 '''
 
@@ -14,9 +14,9 @@ import playerlib
 import gungamelib
 
 # Register this addon with EventScripts
-info = es.AddonInfo() 
+info = es.AddonInfo()
 info.name     = "gg_reload Addon for GunGame: Python"
-info.version  = "1.0.117"
+info.version  = "1.0.119"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/reload"
 info.author   = "GunGame Development Team"

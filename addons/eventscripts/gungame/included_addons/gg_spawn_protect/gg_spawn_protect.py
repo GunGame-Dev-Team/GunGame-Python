@@ -2,33 +2,36 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_spawn_protection
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    This will make players invincable and marked with color when
                 ever a player spawns.  Protected players cannot level up during
                 spawn protection.
 '''
 
+# EventScripts imports
 import es
-import gungamelib
 import playerlib
 import gamethread
+
+# GunGame imports
+import gungamelib
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
-info.name     = "gg_spawn_protection Addon for GunGame: Python" 
-info.version  = "1.0.111"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
+info.name     = "gg_spawn_protection Addon for GunGame: Python"
+info.version  = "1.0.117"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_spawn_protect"
 info.author   = "GunGame Development Team"
 
 # Addon settings
 dict_SpawnProtectVars = {}
-dict_SpawnProtectVars['red'] = int(gungamelib.getVariableValue('gg_spawn_protect_red'))
-dict_SpawnProtectVars['green'] = int(gungamelib.getVariableValue('gg_spawn_protect_green'))
-dict_SpawnProtectVars['blue'] = int(gungamelib.getVariableValue('gg_spawn_protect_blue'))
-dict_SpawnProtectVars['alpha'] = int(gungamelib.getVariableValue('gg_spawn_protect_alpha'))
-dict_SpawnProtectVars['delay'] = int(gungamelib.getVariableValue('gg_spawn_protect'))
+dict_SpawnProtectVars['red'] = gungamelib.getVariableValue('gg_spawn_protect_red')
+dict_SpawnProtectVars['green'] = gungamelib.getVariableValue('gg_spawn_protect_green')
+dict_SpawnProtectVars['blue'] = gungamelib.getVariableValue('gg_spawn_protect_blue')
+dict_SpawnProtectVars['alpha'] = gungamelib.getVariableValue('gg_spawn_protect_alpha')
+dict_SpawnProtectVars['delay'] = gungamelib.getVariableValue('gg_spawn_protect')
 
 def load():
     # Register addon with gungamelib
@@ -40,11 +43,9 @@ def unload():
     gungamelib.unregisterAddon('gg_spawn_protect')
 
 def server_cvar(event_var):
-    global dict_SpawnProtectVars
-    
     # Register change in gg_map_list_file
     if event_var['cvarname'] == 'gg_spawn_protect':
-        dict_SpawnProtectVars['delay'] = int(gungamelib.getVariableValue('gg_spawn_protect'))
+        dict_SpawnProtectVars['delay'] = gungamelib.getVariableValue('gg_spawn_protect')
     # watch for changes in map vote variables
     elif dict_SpawnProtectVars.has_key(event_var['cvarname']):
         dict_SpawnProtectVars[event_var['cvarname']] = int(event_var['cvarvalue'])

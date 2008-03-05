@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_error_logging
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    Logs all errors from gungame and it's addons.
 '''
 
@@ -22,11 +22,11 @@ gungameErrorLogPath = es.ServerVar('eventscripts_gamedir') + '/addons/eventscrip
 dateFormat = '[%A, %B %d, %Y %H:%M:%S]'
 
 # Register this addon with EventScripts
-info = es.AddonInfo() 
-info.name     = "gg_error_logging Addon for GunGame: Python" 
-info.version  = "1.0.111"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_error_logging" 
+info = es.AddonInfo()
+info.name     = "gg_error_logging Addon for GunGame: Python"
+info.version  = "1.0.117"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame/included_addons/gg_error_logging"
 info.author   = "GunGame Development Team"
 
 def load():

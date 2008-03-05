@@ -2,24 +2,26 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_knife_pro
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    When one player knife kills another player, the attacker steals
                 a level from the victim.
 '''
 
-# Imports
+# EventScripts imports
 import es
 import playerlib
-import gungamelib
 import usermsg
+
+# GunGame imports
+import gungamelib
 from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
-info.name     = "gg_knife_pro Addon for GunGame: Python" 
-info.version  = "1.0.111"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_knife_pro" 
+info.name     = "gg_knife_pro Addon for GunGame: Python"
+info.version  = "1.0.117"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
 
 # Globals
@@ -31,7 +33,7 @@ def load():
     gg_knife_pro.setMenuText('GG Knife Pro')
     
     # Get gg_knife_pro_limit
-    gg_knife_pro_limit = int(gungamelib.getVariableValue('gg_knife_pro_limit'))
+    gg_knife_pro_limit = gungamelib.getVariableValue('gg_knife_pro_limit')
     
 def unload():
     # Unregister this addon with gungamelib
@@ -91,10 +93,10 @@ def player_death(event_var):
         tell(attacker, 'The level difference between you and the victim is higher than the set limit.')
         return
         
-    steamid = playerlib.uniqueid(userid, 1)
+    steamid = gungameVictim['steamid']
     username = event_var['es_username']
     gungameVictimNewLevel = gungameVictimLevel - 1
-    attackersteamid = playerlib.uniqueid(attacker, 1)
+    attackersteamid = gungameAttacker['steamid']
     attackername = event_var['es_attackername']
     gungameAttackerNewLevel = gungameAttackerLevel + 1
     

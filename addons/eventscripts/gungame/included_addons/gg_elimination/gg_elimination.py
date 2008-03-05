@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_elimination
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    Players respawn after their killer is killed.
                 Originally for ES1.3 created by ichthys.
                 http://addons.eventscripts.com/addons/view/3972
@@ -18,7 +18,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_elimination Addon for GunGame: Python" 
-info.version  = "1.0.111"
+info.version  = "1.0.117"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_elimination"
 info.author   = "GunGame Development Team"
@@ -36,11 +36,11 @@ def load():
     # Register addon with gungamelib
     gg_elimination = gungamelib.registerAddon('gg_elimination')
     gg_elimination.setMenuText('GG Elimination')
-    gg_elimination.addDependency('gg_turbo', '1')
-    gg_elimination.addDependency('gg_dead_strip', '1')
-    gg_elimination.addDependency('gg_dissolver', '1')
-    gg_elimination.addDependency('gg_knife_elite', '0')
-    gg_elimination.addDependency('gg_deathmatch', '0')
+    gg_elimination.addDependency('gg_turbo', 1)
+    gg_elimination.addDependency('gg_dead_strip', 1)
+    gg_elimination.addDependency('gg_dissolver', 1)
+    gg_elimination.addDependency('gg_knife_elite', 0)
+    gg_elimination.addDependency('gg_deathmatch', 0)
 
     # Get userids of all connected players
     for userid in es.getUseridList():

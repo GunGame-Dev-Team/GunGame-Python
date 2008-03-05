@@ -2,28 +2,29 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_warmup_round
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    GunGame WarmUp Round allows players to begin warming up for
                 the upcoming GunGame round without allowing them to level up,
                 also allowing connecting players to get a full connection to
                 the server prior to the GunGame Round starting.
 '''
 
+# EventScripts imports
 import es
 import gamethread
 import usermsg
-import gungamelib
 import playerlib
 import repeat
 
-from gungame import gungame
+# GunGame imports
+import gungamelib
 
 # Register this addon with EventScripts
-info = es.AddonInfo() 
-info.name     = "gg_warmup_round Addon for GunGame: Python" 
-info.version  = "1.0.111"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_warmup_round" 
+info = es.AddonInfo()
+info.name     = "gg_warmup_round Addon for GunGame: Python"
+info.version  = "1.0.117"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame/included_addons/gg_warmup_round"
 info.author   = "GunGame Development Team"
 
 # Begin Multiple Error Classes
@@ -37,9 +38,15 @@ class _GunGameQueryError:
 class WarmUpWeaponError(_GunGameQueryError):
     pass
 
-list_allWeapons = ['knife', 'glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
+list_allWeapons = ['knife', 'glock', 'usp', 'p228', 'deagle',
+                   'elite', 'fiveseven', 'awp', 'scout', 'aug',
+                   'mac10', 'tmp', 'mp5navy', 'ump45', 'p90',
+                   'galil', 'famas', 'ak47', 'sg552', 'sg550',
+                   'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1',
+                   'hegrenade', 'flashbang', 'smokegrenade']
+                   
 mp_freezetimeBackUp = 0
-warmupTime = int(gungamelib.getVariableValue('gg_warmup_timer')) + 1
+warmupTime = gungamelib.getVariableValue('gg_warmup_timer') + 1
 
 def load():
     # Register addon with gungamelib
@@ -66,7 +73,7 @@ def load():
         # Make sure the warmup weapon is a valid weapon choice
         if warmupWeapon not in list_allWeapons:
             # Nope, the admin typoed it. Let's set it to 0 so that we don't have to worry about this later
-            gungamelib.setVariableValue('gg_warmup_weapon', '0')
+            gungamelib.setVariableValue('gg_warmup_weapon', 0)
             
             # Kick out an error due to the typo by the admin
             raise WarmUpWeaponError, warmupWeapon + ' is not a valid weapon. Setting \'gg_warmup_weapon\' to level 1\'s weapon.'
@@ -75,7 +82,7 @@ def load():
     mp_freezetimeBackUp = int(es.ServerVar('mp_freezetime'))
     
     # Set "mp_freezetime" to 0
-    es.server.cmd('mp_freezetime 0')
+    es.forcevalue('mp_freezetime 0')
 
 def unload():
     # Unregister this addon with gungamelib
@@ -88,7 +95,7 @@ def unload():
     gamethread.cancelDelayed('gungameWarmUpRound')
     
     # Return "mp_freezetime" to what it was originally
-    es.server.cmd('mp_freezetime %d' %mp_freezetimeBackUp)
+    es.forcevalue('mp_freezetime %d' %mp_freezetimeBackUp)
 
 def startTimer():
     # Create a repeat
@@ -121,7 +128,7 @@ def player_spawn(event_var):
     
     # See if the admin wants to give something other than the level 1 weapon
     if event_var['es_userteam'] > 1 and not playerlibPlayer.get('isdead'):
-        if str(gungamelib.getVariableValue('gg_warmup_weapon')) != '0':
+        if gungamelib.getVariableValue('gg_warmup_weapon') != 0:
             # Check to make sure that the WarmUp Weapon is not a knife
             if gungamelib.getVariableValue('gg_warmup_weapon') != 'knife':
                 # Give the player the WarmUp Round Weapon
@@ -140,7 +147,7 @@ def hegrenade_detonate(event_var):
     playerlibPlayer = playerlib.getPlayer(userid)
     
     # Give user a hegrenade, if eligable
-    if event_var['es_userteam'] > 1 and not playerlibPlayer.get('isdead') and gungamelib.getVariableValue('gg_warmup_weapon') == 'hegrenade':
+    if int(event_var['es_userteam']) > 1 and not playerlibPlayer.get('isdead') and gungamelib.getVariableValue('gg_warmup_weapon') == 'hegrenade':
         es.server.cmd('es_xgive %s weapon_hegrenade' % userid)
 
 def countDown(repeatInfo):

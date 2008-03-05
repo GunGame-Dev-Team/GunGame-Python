@@ -2,33 +2,42 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_knife_elite
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    After a player levels up, they only get a knife until the next round.
                 THIS WILL OVERRIDE TURBO MODE!!
 '''
 
+# EventScripts imports
 import es
 import playerlib
-import gungamelib
 import gamethread
+
+# GunGame imports
+import gungamelib
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
-info.name     = "gg_knife_elite Addon for GunGame: Python" 
-info.version  = "1.0.111"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_knife_elite" 
+info.name     = "gg_knife_elite Addon for GunGame: Python"
+info.version  = "1.0.117"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame/included_addons/gg_knife_elite"
 info.author   = "GunGame Development Team"
 
-list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
+list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite',
+                   'fiveseven', 'awp', 'scout', 'aug', 'mac10',
+                   'tmp', 'mp5navy', 'ump45', 'p90', 'galil',
+                   'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
+                   'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade',
+                   'flashbang', 'smokegrenade']
+                   
 dict_playerIsElite = {}
 
 def load():
     # Register addon with gungamelib
     gg_knife_elite = gungamelib.registerAddon('gg_knife_elite')
     gg_knife_elite.setMenuText('GG Knife Elite')
-    gg_knife_elite.addDependency('gg_dead_strip', '1')
-    gg_knife_elite.addDependency('gg_turbo', '0')
+    gg_knife_elite.addDependency('gg_dead_strip', 1)
+    gg_knife_elite.addDependency('gg_turbo', 0)
     
     for userid in es.getUseridList():
         userid = str(userid)

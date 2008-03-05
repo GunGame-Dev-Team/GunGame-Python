@@ -2,23 +2,23 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_welcome_msg
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    This will show a simple popup message to every player that connects.
 '''
 
-# Eventscripts imports
+# EventScripts imports
 import es
 import playerlib
 import gamethread
 import popuplib
 
-# Gungame import
-from gungame import gungame
+# GunGame imports
+import gungamelib
 
 # Register this addon with EventScripts
-info = es.AddonInfo() 
+info = es.AddonInfo()
 info.name     = "gg_welcome_msg (for GunGame: Python)"
-info.version  = "1.0.111"
+info.version  = "1.0.117"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_welcome_msg"
 info.author   = "GunGame Development Team"
@@ -39,4 +39,3 @@ def unload():
 def player_connect(event_var):
     # Send the popup in 10 seconds
     gamethread.delayed(9, popuplib.send, ('gg_welcome_msg', event_var['userid']))
-    

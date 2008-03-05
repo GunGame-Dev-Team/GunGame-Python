@@ -2,19 +2,22 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_noblock
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    No player can block another, they are like ghosts.
 '''
 
+# EventScripts imports
 import es
+
+# GunGame imports
 import gungamelib
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
-info.name     = "gg_noblock Addon for GunGame: Python" 
-info.version  = "1.0.111"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_noblock" 
+info.name     = "gg_noblock Addon for GunGame: Python"
+info.version  = "1.0.117"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame/included_addons/gg_noblock"
 info.author   = "GunGame Development Team"
 
 def load():

@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_dead_strip
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    When a player dies all his weapons are imidiately removed from the game.
 '''
 
@@ -16,12 +16,17 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_dead_strip Addon for GunGame: Python" 
-info.version  = "1.0.111"
+info.version  = "1.0.117"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
 info.basename = "gungame/included_addons/gg_dead_strip" 
 info.author   = "GunGame Development Team"
 
-list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
+list_allWeapons = ['glock', 'usp', 'p228', 'deagle',
+                   'elite', 'fiveseven', 'awp', 'scout',
+                   'aug', 'mac10', 'tmp', 'mp5navy', 'ump45',
+                   'p90', 'galil', 'famas', 'ak47', 'sg552',
+                   'sg550', 'g3sg1', 'm249', 'm3', 'xm1014',
+                   'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
 
 def load():
     # Register this addon with GunGame
@@ -37,7 +42,6 @@ def unload():
     es.addons.unregisterClientCommandFilter(filterDrop)
 
 def item_pickup(event_var):
-    global list_allWeapons
     item = event_var['item']
     if item in list_allWeapons:
         userid = event_var['userid']

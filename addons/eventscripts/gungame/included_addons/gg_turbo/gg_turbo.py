@@ -8,16 +8,18 @@ Description:    GunGame Turbo is allows players to recieve the weapon for their 
                 This addon makes the GunGame round a little more fast-paced.
 '''
 
+# EventScripts imports
 import es
+
+# GunGame imports
 import gungamelib
-from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo() 
-info.name     = "gg_turbo Addon for GunGame: Python" 
-info.version  = "02.19.08"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45" 
-info.basename = "gungame/included_addons/gg_turbo" 
+info.name     = "gg_turbo Addon for GunGame: Python"
+info.version  = "1.0.117"
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame/included_addons/gg_turbo"
 info.author   = "GunGame Development Team"
 
 def load():

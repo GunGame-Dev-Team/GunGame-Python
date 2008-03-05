@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_deathmatch
-Version #:      1.0.111
+Version #:      1.0.117
 Description:    This will respawn players after a specified amount of time after dying.
 '''
 
@@ -27,7 +27,7 @@ from gungame.gungame import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo() 
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.111"
+info.version  = "1.0.117"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "GunGame Development Team"

@@ -13,7 +13,7 @@ import keyvalues
 import gungamelib
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.111"
+gungameVersion = "1.0.116"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -1663,7 +1663,7 @@ def unload():
     for variable in list_gungameVariables:
         es.ServerVar(variable).removeFlag('notify')
         
-    gamethread.delayed(0.01, gungamelib.clearGunGame, ())
+    gungamelib.clearGunGame()
 
 def gg_vote(event_var):
     gungamelib.setVariableValue('gungame_voting_started', True)
@@ -1724,7 +1724,7 @@ def server_cvar(event_var):
     if cvarName not in gungamelib.getVariableList():
         return
     
-    if newValue == gungamelib.getVariableValue(cvarName):
+    if newValue == str(gungamelib.getVariableValue(cvarName)):
         return
     
     if cvarName in gungamelib.getDependencyList():

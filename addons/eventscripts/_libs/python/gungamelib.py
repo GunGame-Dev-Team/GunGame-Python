@@ -1,4 +1,4 @@
-# version 1.0.111
+# version 1.0.116
 
 '''
 ToDo:
@@ -879,6 +879,8 @@ class Addon:
         if not dict_registeredDependencies.has_key(dependencyName):
             # Check if dependency is a valid gungame variable
             if dict_cfgSettings.has_key(dependencyName):
+                if self.__isNumeric(value):
+                    value = int(value)
                 # Set GunGame variable to dependents value
                 setVariableValue(dependencyName, value)
                 # Add dependency and original value to addon attributes
@@ -894,14 +896,22 @@ class Addon:
             # Add dependent to existing dependency
             dict_registeredDependencies[dependencyName].addDependent(value, self.addon)
     
-    def delDependency(self,dependencyName):
+    def delDependency(self, dependencyName):
         # check if dependency exits
         if dict_registeredDependencies.has_key(dependencyName):
             # delete dependency
             dict_registeredDependencies[dependencyName].delDependent(self.addon)
         else:
             raise addonError, '%s is not a registered dependency' %dependencyName
-            
+    
+    def __isNumeric(self, string):
+        try:
+            test = int(string)
+        except ValueError:
+            return False
+        else:
+            return True
+    
 class addonDependency:
     def __init__(self, dependencyName, value, dependentName):
         # setup dependency class vars
@@ -934,11 +944,11 @@ class addonDependency:
             es.dbgmsg(0, '[GunGame] Dependency Unregistered Successfully: \'%s\'' %self.dependency)
             # Check if there are any more dependents
             if not self.dependentList:
-                # Set Variable back to it's original value
-                setVariableValue(self.dependency, self.dependencyOriginalValue)
-                # Delete depdency
-                del dict_registeredDependencies[self.dependency]
-
+                if dict_cfgSettings:
+                    # Set Variable back to it's original value
+                    setVariableValue(self.dependency, self.dependencyOriginalValue)
+                    # Delete depdency
+                    del dict_registeredDependencies[self.dependency]
 
 # ===================================================================================================
 #  CLASS WRAPPERS
@@ -1029,10 +1039,6 @@ def clearGunGame():
     
     # Clear the gungame globals
     dict_globals.clear()
-    
-    # Reset the Addon Information Database
-    dict_RegisteredAddons.clear()
-    dict_registeredDependencies.clear()
 
 # ===================================================================================================
 #   WEAPON RELATED COMMANDS

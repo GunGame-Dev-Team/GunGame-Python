@@ -82,7 +82,7 @@ def load():
     mp_freezetimeBackUp = int(es.ServerVar('mp_freezetime'))
     
     # Set "mp_freezetime" to 0
-    es.forcevalue('mp_freezetime 0')
+    es.forcevalue('mp_freezetime', 0)
 
 def unload():
     # Unregister this addon with gungamelib
@@ -95,7 +95,7 @@ def unload():
     gamethread.cancelDelayed('gungameWarmUpRound')
     
     # Return "mp_freezetime" to what it was originally
-    es.forcevalue('mp_freezetime %d' %mp_freezetimeBackUp)
+    es.forcevalue('mp_freezetime', mp_freezetimeBackUp)
 
 def startTimer():
     # Create a repeat

@@ -45,9 +45,15 @@ def GetProfilerTime(storage):
 dict_gungameVariables = {}
 dict_cfgSettings = {}
 dict_globals = {}
-list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
+list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
+                       'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
+                       'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
 list_secondaryWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven']
-list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven', 'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
+list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
+                   'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45',
+                   'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
+                   'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
+                   'smokegrenade']
 dict_gungameRegisteredAddons = {}
 dict_reconnectingPlayers = {}
 dict_gungameWinners = {}
@@ -499,128 +505,6 @@ def ess_unloadcustom():
 # ---------------------------------------------------
 # END ESS (OLDSCHOOL) COMMANDS
 '''
-        
-'''
-# ===================================================================================================
-# ADDON REGISTRATION
-# ===================================================================================================
-def registerAddon(addonName, menuText):
-    global dict_gungameRegisteredAddons
-    addonName = addonName.replace('/', '\\')
-    menuText = str(menuText)
-    # Make sure that this addon has not already been registered as a GunGame Addon
-    if not dict_gungameRegisteredAddons.has_key(addonName):
-        if menuText != '':
-            # Add the addon to the GunGame Registered Addons List
-            dict_gungameRegisteredAddons[addonName] = menuText
-            # Send a message to console stating that the addon has been successfully registered with GunGame
-            es.dbgmsg(0, '[GunGame] Addon Registered Successfully: \'%s\'' %addonName)
-    else:
-        # Send an error message to console stating that the addon has been previously registered with GunGame
-        es.dbgmsg(0, '[GunGame] Addon Registration Failed. \'%s\' has already been registered.' %addonName)
-
-def unregisterAddon(addonName):
-    global dict_gungameRegisteredAddons
-    addonName = addonName.replace('/', '\\')
-    # Make sure that this addon has been registered as a GunGame Addon
-    if dict_gungameRegisteredAddons.has_key(addonName):
-        # Remove the addon to the GunGame Registered Addons List
-        del dict_gungameRegisteredAddons[addonName]
-        # Send a message to console stating that the addon has been successfully unregistered with GunGame
-        es.dbgmsg(0, '[GunGame] Addon Unregistered Successfully: \'%s\'' %addonName)
-    else:
-        # Send an error message to console stating that the addon has not been previously registered with GunGame
-        es.dbgmsg(0, '[GunGame] Addon Unregistration Failed. \'%s\' has not been previously registered.' %addonName)
-
-def checkRegisteredAddon(addonName):
-    global dict_gungameRegisteredAddons
-    addonName = addonName.replace('/', '\\')
-    # Check if this addon is registered as a GunGame Addon
-    if dict_gungameRegisteredAddons.has_key(addonName):
-        return 1
-    return 0
-
-def getRegisteredAddons():
-    global dict_gungameRegisteredAddons
-    return dict_gungameRegisteredAddons
-    
-def registerDependency(dependencyName, addonName):
-    global dict_gungameRegisteredAddons
-    global dict_gungameRegisteredDependencies
-    dependencyName = dependencyName.replace('/','\\')
-    addonName = addonName.replace('/', '\\')
-    # Make sure that this addon is registered as a GunGame Addon
-    if dict_gungameRegisteredAddons.has_key(addonName):
-        # Check if addon is already a registered as a GunGame Dependency
-        if dict_gungameRegisteredDependencies.has_key(dependencyName):
-            # Check if this addon already registered this dependency
-            if addonName not in dict_gungameRegisteredDependencies[dependencyName]:
-                dict_gungameRegisteredDependencies[dependencyName].append(addonName)
-                # Send a message to console stating that the depenency has been successfully unregistered with GunGame
-                es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %dependencyName)
-            else:
-                # Send an error message to console stating that the addon has been previously registered to this depependency
-                es.dbgmsg(0, '[GunGame] Dependency Registered Failed. \'%s\' has already been registered to \'%s\'' %(addonName,dependencyName))
-        else:
-            dict_gungameRegisteredDependencies[dependencyName] = [addonName]
-            # Send a message to console stating that the depenency has been successfully unregistered with GunGame
-            es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %dependencyName)
-    else:
-        # Send an error message to console stating that the addon is not a registered addon
-        es.dbgmsg(0, '[GunGame] Dependency Registration Failed. \'%s\' is not a registered addon.' %addonName)
-
-def unregisterDependency(dependencyName, addonName):
-    global dict_gungameRegisteredDependencies
-    dependencyName = dependencyName.replace('/','\\')
-    addonName = addonName.replace('/', '\\')
-    # Check if addon is already a registered as a GunGame Dependency
-    if dict_gungameRegisteredDependencies.has_key(dependencyName):
-        # Check if this addon already registered this dependency
-        if addonName in dict_gungameRegisteredDependencies[dependencyName]:
-            dict_gungameRegisteredDependencies[dependencyName].remove(addonName)
-            # Send a message to console stating that the depenency has been successfully unregistered with GunGame
-            es.dbgmsg(0, '[GunGame] Dependency Unregistered Successfully: \'%s\'' %dependencyName)
-            # Remove dependency from dict if it has no more addons
-            if not len(dict_gungameRegisteredDependencies[dependencyName]):
-                del dict_gungameRegisteredDependencies[dependencyName]
-        else:
-            # Send an error message to console stating that the addon has been previously registered to this depependency
-            es.dbgmsg(0, '[GunGame] Dependency Unregistered Failed. \'%s\' is not registered to \'%s\'' %(addonName,dependencyName))
-    else:
-        # Send an error message to console stating that the addon is not a registered addon
-        es.dbgmsg(0, '[GunGame] Dependency Unregistration Failed. \'%s\' is not a registered dependency.' %addonName)
-
-# ===================================================================================================
-# ADDON DEPENDENCIES
-# ===================================================================================================
-def checkDependency(dependencyName):
-    global dict_gungameRegisteredDependencies
-    dependencyName = dependencyName.replace('/','\\')
-    # Check to see if addon is a registered dependency
-    if dict_gungameRegisteredDependencies.has_key(dependencyName):
-        return 1
-    else:
-        return 0
-
-def getAddonDependencyList(dependencyName):
-    global dict_gungameRegisteredDependencies
-    dependencyName = dependencyName.replace('/','\\')
-    dependencyList = []
-    if dict_gungameRegisteredDependencies.has_key(dependencyName):
-        for addon in dict_gungameRegisteredDependencies[dependencyName]:
-            dependencyList.append(addon)
-    return dependencyList
-
-def getRegisteredDependencies():
-    global dict_gungameRegisteredDependencies
-    return dict_gungameRegisteredDependencies
-
-def getIncludedAddonsDirList():
-    return list_includedAddonsDir
-    
-def getCustomAddonsDirList():
-    return list_customAddonsDir
-    '''
 
 # ===================================================================================================
 # LOADING SHORTCUTS
@@ -777,92 +661,6 @@ def levelInfoHudHint(userid):
     if not int(gungamelib.getGlobal('voteActive')) and not int(gungamelib.getGlobal('isWarmup')):
         gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
 
-'''
-# ===================================================================================================
-# CONFIG HANDLING
-# ===================================================================================================
-def loadConfig(configPath):
-    # BEGIN READING THE  CONFIG OPTIONS
-    # ---------------------------------------------------------
-    if os.path.isfile(configPath):
-        # Open the Config
-        gungameConfig = open(configPath, 'r')
-        # Loop through each line in the Config
-        for line in gungameConfig.readlines():
-            # Strip the spaces from the begninning and end of each line
-            line = line.strip().lower()
-            # Make sure that the line doesn't begin with '//'
-            if not line.startswith('//'):
-                # Change the text to lowercase and convert to a string
-                if line:
-                    # Add the variables and values to dict_gungameVariables
-                    list_variables = line.split()
-                    # If the variable has not been added to the GunGame Variables Database
-                    if not dict_gungameVariables.has_key(list_variables[0]):
-                        # Add the variable and value to the GunGame Variables Database
-                        dict_gungameVariables[list_variables[0]] = list_variables[1]
-                        # Add the variable and value to the GunGame Config Settings Database
-                        if list_variables[0] not in list_includedAddonsDir:
-                            dict_cfgSettings[list_variables[0]] = list_variables[1]
-                        # Create console variables
-                        es.ServerVar(list_variables[0]).set(list_variables[1])
-                        # See if this is our "gg_default_addons.cfg" and trigger the event "gg_variable_changed"
-                        if configPath == os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg' or configPath == os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg':
-                            # Initialize the event "gg_variable_changed"
-                            es.event('initialize', 'gg_variable_changed')
-                            # Set the cvar name that is being changed
-                            es.event('setstring', 'gg_variable_changed', 'cvarname', list_variables[0])
-                            # Set the old value of the variable that is being changed
-                            es.event('setstring', 'gg_variable_changed', 'oldvalue', list_variables[1])
-                            # Set the new value of the variable being changed
-                            es.event('setstring', 'gg_variable_changed', 'newvalue', list_variables[1])
-                            # Fire the event "gg_variable_changed"
-                            es.event('fire', 'gg_variable_changed')
-                    else:
-                        es.dbgmsg(0, '[GunGame] \'%s\' has already been added to the GunGame Variables Database...skipping.' %list_variables[0])
-        es.dbgmsg(0, '')
-        es.dbgmsg(0, '[GunGame] \'%s\' has been successfully loaded.' %configPath)
-        es.dbgmsg(0, '')
-    else:
-        if configPath != os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg' or configPath != os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg':
-            # We can't load it if it doesn't exist, silly rabbit!
-            es.dbgmsg(0, '[GunGame] Unable to load the Config: \'%s\' ::: File does not exist. :::' %configPath)
-        else:
-            # Strange. I know that I provided them with these files...yet, they seem to have disappeared!
-            es.dbgmsg(0, '[GunGame] Unable to load the Config: \'%s\' ::: File does not exist. ::: Unloading GunGame.' %configPath)
-            es.server.queuecmd('es_xunload gungame')
-    # -----------------------------------------------------
-    # END READING THE CONFIG OPTIONS
-
-def unloadConfig(configPath):
-    # BEGIN READING THE  CONFIG OPTIONS
-    # ---------------------------------------------------------
-    try:
-        if configPath != os.getcwd() + '/cstrike/cfg/gungame/gg_en_config.cfg' or configPath != os.getcwd() + '/cstrike/cfg/gungame/gg_default_addons.cfg':
-            # Open the Config
-            gungameConfig = open(configPath, 'r')
-            # Loop through each line in the Config
-            for line in gungameConfig:
-                # Strip the spaces from the begninning and end of each line
-                line = line.strip().lower()
-                # Make sure that the line doesn't begin with '//'
-                if not line.startswith('//'):
-                    if line != '':
-                        # Add the variables and values to dict_gungameVariables
-                        list_variables = line.split()
-                        # If the variable exists in the GunGame Variables Database
-                        if dict_gungameVariables.has_key(str(list_variables[0])):
-                            # Add the variable and value to the GunGame Variables Database
-                            del dict_gungameVariables[str(list_variables[0])]
-                            # Set Console Variable to "unloaded"
-                            es.set(str(list_variables[0]), 'unloaded')
-            es.dbgmsg(0, '')
-            es.dbgmsg(0, '[GunGame] \'%s\' has been successfully unloaded.' %configPath)
-            es.dbgmsg(0, '')
-    except IOError:
-        # We can't unload the config from GunGame if it doesn't exist, now can we?
-        es.dbgmsg(0, '[GunGame] Unable to unload Config: \'%s\' ::: File does not exist. :::' %configPath)
-'''
 # ==========================================================================================================================
 # ==========================================================================================================================
 #          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! END GUNGAME COMMANDS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -885,13 +683,11 @@ def load():
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/included_addons" folder
-    # list_includedAddonsDir = []
     for includedAddon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/included_addons/'):
         if includedAddon[0:3] == 'gg_':
             list_includedAddonsDir.append(includedAddon)
     
     # Get the scripts in the "../cstrike/addons/eventscripts/gungame/custom_addons" folder
-    # list_customAddonsDir = []
     for customAddon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/custom_addons/'):
         if customAddon[0:3] == 'gg_':
             list_customAddonsDir.append(customAddon)
@@ -910,7 +706,6 @@ def load():
     if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:
         # Create a list of stripping exceptions using the 'gg_map_strip_exceptions' variable
         list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')
-    
     
     # NEW NEW NEW
     weaponOrderINI  = ConfigParser.ConfigParser()
@@ -1686,21 +1481,26 @@ def server_cvar(event_var):
     if cvarName not in gungamelib.getVariableList():
         return
     
+    # I had to remove this because server_cvar was not triggering.
+    # However, the line below: if str(gungamelib.getVariableValue(cvarName)) != newValue: ... should take care of it
+    '''
     if newValue == str(gungamelib.getVariableValue(cvarName)):
         return
+    '''
     
     if cvarName in gungamelib.getDependencyList():
         if newValue != gungamelib.getDependencyValue(cvarName):
             es.dbgmsg(0, '[GunGame] %s is a protected dependency' %cvarName)
-            gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
+            if str(gungamelib.getVariableValue(cvarName)) != newValue:
+                gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
             return
-    
+            
     if str(gungamelib.getVariableValue(cvarName)) != newValue:
         gungamelib.setVariableValue(cvarName, newValue)
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':
-        if newValue == '1' and  not dict_gungameRegisteredAddons.has_key('gg_map_vote'):
+        if newValue == '1' and not dict_gungameRegisteredAddons.has_key('gg_map_vote'):
             es.server.queuecmd('es_load gungame/included_addons/gg_map_vote')
         elif newValue != '1' and dict_gungameRegisteredAddons.has_key('gg_map_vote'):
             es.unload('gungame/included_addons/gg_map_vote')
@@ -1712,13 +1512,13 @@ def server_cvar(event_var):
             es.unload('gungame/included_addons/gg_nade_bonus')
     # GG_SPAWN_PROTECTION
     elif cvarName == 'gg_spawn_protect':
-        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gg_spawn_protect'):
+        if int(newValue) > 0 and not dict_gungameRegisteredAddons.has_key('gg_spawn_protect'):
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
         elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_spawn_protect'):
             es.unload('gungame/included_addons/gg_spawn_protect')
     # GG_FRIENDLYFIRE
     elif cvarName == 'gg_friendlyfire':
-        if int(newValue) > 0 and  not dict_gungameRegisteredAddons.has_key('gg_friendlyfire'):
+        if int(newValue) > 0 and not dict_gungameRegisteredAddons.has_key('gg_friendlyfire'):
             es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
         elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_friendlyfire'):
             es.unload('gungame/included_addons/gg_friendlyfire')

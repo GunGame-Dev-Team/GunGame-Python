@@ -734,12 +734,11 @@ class Config:
                             
                             # Check to see if we can convert the value to an int
                             if self.__isNumeric(variableValue):
-                                # Add the variable and value to the GunGame Config Settings Database as an int
-                                es.dbgmsg(0, '%s is an int' %variableName)
+                                # Add the variable and value to the GunGame Config Settings Database as an integer
                                 dict_cfgSettings[variableName] = int(variableValue)
                                 
                             else:
-                                # Add the variable and value to the GunGame Config Settings Database as a str
+                                # Add the variable and value to the GunGame Config Settings Database as a string
                                 dict_cfgSettings[variableName] = variableValue
                                 
                             # Create console variables
@@ -824,6 +823,7 @@ class Sounds:
         addDownloadableSounds()
     
     def __checkSoundPack(self):
+        es.msg(self.soundPackPath)
         if os.path.isfile(self.soundPackPath):
             return True
         else:
@@ -1029,10 +1029,6 @@ def clearGunGame():
     
     # Reset the Player Information Database in the dict_gungameCore
     dict_gungameCore.clear()
-    '''
-    for userid in es.getUseridList():
-        gungamePlayer = getPlayer(userid)
-    '''
     
     # Reset the Player Information Database in the dict_cfgSettings
     dict_cfgSettings.clear()
@@ -1174,6 +1170,7 @@ def getOldLeaderCount():
 #   CONFIG RELATED COMMANDS
 # ===================================================================================================
 def getVariableValue(variableName):
+    variableName = variableName.lower()
     if es.exists('variable', variableName):
         if dict_cfgSettings.has_key(variableName):
             return dict_cfgSettings[variableName]
@@ -1183,10 +1180,10 @@ def getVariableValue(variableName):
         raise GunGameValueError, 'Unable to retrieve the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
 
 def setVariableValue(variableName, value):
+    variableName = variableName.lower()
     if es.exists('variable', variableName):
         if dict_cfgSettings.has_key(variableName):
             if __isNumeric(value):
-                es.dbgmsg(0, '%s is an int (setVariableValue())' %variableName)
                 value = int(value)
             if es.ServerVar(variableName) != str(value):
                 es.server.cmd('%s %s' %(variableName, value))
@@ -1237,11 +1234,13 @@ def getDependencyValue(dependencyName):
 # ===================================================================================================
 
 def setGlobal(variableName, variableValue):
+    variableName = variableName.lower()
     if __isNumeric(variableValue):
         variableValue = int(variableValue)
     dict_globals[variableName] = variableValue
 
 def getGlobal(variableName):
+    variableName = variableName.lower()
     if dict_globals.has_key(variableName):
         return dict_globals[variableName]
     else:

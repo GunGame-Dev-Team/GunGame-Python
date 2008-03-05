@@ -53,8 +53,6 @@ list_customAddonsDir = []
 list_leaderNames = []
 list_stripExceptions = []
 
-mapPrefix = None
-
 # Class used in dict_gungameWinners
 class gungameWinners:
     "Class used to store GunGame winner information"
@@ -918,7 +916,6 @@ def unloadConfig(configPath):
 def load():
     StartProfiling(g_Prof)
     
-    global dict_gungameVariables
     global dict_gungameWinners
     global countBombDeathAsSuicide
     
@@ -1118,10 +1115,11 @@ def load():
     es.server.cmd('mp_restartgame 2')
     es.msg('#multi', '\x04[\x03GunGame\x04]\x01 Loaded')
     
-    # GET MAP PREFIX
+    # Split the map name into a list separated by "_"
     list_mapPrefix = str(es.ServerVar('eventscripts_currentmap')).split('_')
-    mapPrefix = list_mapPrefix[0]
-    #dict_gungameVariables['gungame_currentmap_prefix'] = list_mapPrefix[0]
+    
+    # Insert the new map prefix into the GunGame Variables
+    gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
 
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
@@ -1146,7 +1144,7 @@ def es_map_start(event_var):
     list_mapPrefix = event_var['mapname'].split('_')
     
     # Insert the new map prefix into the GunGame Variables
-    gungamelib.setVariableValue('gungame_currentmap_prefix', list_mapPrefix[0])
+    gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
     
     # Reset the "gungame_voting_started" variable
     gungamelib.setVariableValue('gungame_voting_started', False)
@@ -1207,7 +1205,7 @@ def round_start(event_var):
     mapObjectives = int(gungamelib.getVariableValue('gg_map_obj'))
     
     # Get the map prefix for the following checks
-    #mapPrefix = gungamelib.getVariableValue('gungame_currentmap_prefix')
+    mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
     
     # If both the BOMB and HOSTAGE objectives are enabled, we don't do anything else
     if mapObjectives < 3:
@@ -1351,7 +1349,7 @@ def player_spawn(event_var):
             # Check to see if this player is a CT
             if int(event_var['es_userteam']) == 3:
                 # Check to see if the map is a "de_*" map
-                if gungamelib.getVariableValue('gungame_currentmap_prefix') == 'de':
+                if gungamelib.getGlobal('gungame_currentmap_prefix') == 'de':
                     # See if the admin wants us to give them a defuser
                     if int(gungamelib.getVariableValue('gg_player_defuser')) > 0:
                         playerlibPlayer = playerlib.getPlayer(userid)
@@ -1607,7 +1605,7 @@ def unload():
     mapObjectives = int(gungamelib.getVariableValue('gg_map_obj'))
     
     # Get the map prefix for the following checks
-    #mapPrefix = gungamelib.getVariableValue('gungame_currentmap_prefix')
+    mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
     
     # If both the BOMB and HOSTAGE objectives were enabled, we don't do anything else
     if mapObjectives < 3:
@@ -1720,12 +1718,8 @@ def gg_win(event_var):
 
 
 def server_cvar(event_var):
-    global dict_gungameRegisteredAddons
-    global dict_gungameRegisteredDependencies
-    global list_allWeapons
     cvarName = event_var['cvarname']
     newValue = event_var['cvarvalue']
-    oldValue = event_var['oldvalue']
     
     if cvarName not in gungamelib.getVariableList():
         return
@@ -1738,8 +1732,9 @@ def server_cvar(event_var):
             es.dbgmsg(0, '[GunGame] %s is a protected dependency' %cvarName)
             gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
             return
-        
-    gungamelib.__setCfgSettings(cvarName, newValue)
+    
+    if str(gungamelib.getVariableValue(cvarName)) != newValue:
+        gungamelib.setVariableValue(cvarName, newValue)
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':

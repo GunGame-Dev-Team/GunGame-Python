@@ -6,12 +6,17 @@ Version #:      1.0.111
 Description:    Logs all errors from gungame and it's addons.
 '''
 
+# Python imports
 import sys
 import traceback
-import es
 import os
 import time
-from gungame import gungame
+
+# EventScripts imports
+import es
+
+# GunGame imports
+import gungamelib
 
 gungameErrorLogPath = es.ServerVar('eventscripts_gamedir') + '/addons/eventscripts/gungame/errorlog/errors.log'
 dateFormat = '[%A, %B %d, %Y %H:%M:%S]'

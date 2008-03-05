@@ -735,6 +735,7 @@ class Config:
                             # Check to see if we can convert the value to an int
                             if self.__isNumeric(variableValue):
                                 # Add the variable and value to the GunGame Config Settings Database as an int
+                                es.dbgmsg(0, '%s is an int' %variableName)
                                 dict_cfgSettings[variableName] = int(variableValue)
                                 
                             else:
@@ -1179,6 +1180,7 @@ def setVariableValue(variableName, value):
     if es.exists('variable', variableName):
         if dict_cfgSettings.has_key(variableName):
             if __isNumeric(value):
+                es.dbgmsg(0, '%s is an int (setVariableValue())' %variableName)
                 value = int(value)
             if es.ServerVar(variableName) != str(value):
                 es.server.cmd('%s %s' %(variableName, value))
@@ -1189,8 +1191,10 @@ def setVariableValue(variableName, value):
     else:
         raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
         
+'''
 def __setCfgSettings(variableName, value):
     dict_cfgSettings[variableName] = value
+'''
         
 def getVariableList():
     return dict_cfgSettings.keys()

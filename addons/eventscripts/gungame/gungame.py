@@ -1377,6 +1377,7 @@ def unload():
     list_gungameVariables = gungamelib.getVariableList()
     for variable in list_gungameVariables:
         es.ServerVar(variable).removeFlag('notify')
+        es.server.cmd('%s 0' %variable)
         
     gungamelib.clearGunGame()
 
@@ -1435,16 +1436,12 @@ def gg_win(event_var):
 def server_cvar(event_var):
     cvarName = event_var['cvarname']
     newValue = event_var['cvarvalue']
+
+    if gungamelib.__isNumeric(newValue):
+        newValue = int(newValue)
     
     if cvarName not in gungamelib.getVariableList():
         return
-    
-    # I had to remove this because server_cvar was not triggering.
-    # However, the line below: if str(gungamelib.getVariableValue(cvarName)) != newValue: ... should take care of it
-    '''
-    if newValue == str(gungamelib.getVariableValue(cvarName)):
-        return
-    '''
     
     if cvarName in gungamelib.getDependencyList():
         if newValue != gungamelib.getDependencyValue(cvarName):
@@ -1458,33 +1455,33 @@ def server_cvar(event_var):
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':
-        if newValue == '1' and not dict_gungameRegisteredAddons.has_key('gg_map_vote'):
+        if newValue == 1 and 'gg_map_vote' not in gungamelib.getRegisteredAddonlist():
             es.server.queuecmd('es_load gungame/included_addons/gg_map_vote')
-        elif newValue != '1' and dict_gungameRegisteredAddons.has_key('gg_map_vote'):
+        elif newValue != 1 and 'gg_map_vote' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_map_vote')
     # GG_NADE_BONUS
     elif cvarName == 'gg_nade_bonus':
-        if newValue != '0' and newValue != 'knife' and newValue in list_allWeapons:
+        if newValue != 0 and newValue != 'knife' and newValue in list_allWeapons:
             es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_nade_bonus'):
+        elif newValue == 0 and 'gg_nade_bonus' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_nade_bonus')
     # GG_SPAWN_PROTECTION
     elif cvarName == 'gg_spawn_protect':
-        if int(newValue) > 0 and not dict_gungameRegisteredAddons.has_key('gg_spawn_protect'):
+        if int(newValue) > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonlist():
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_spawn_protect'):
+        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_spawn_protect')
     # GG_FRIENDLYFIRE
     elif cvarName == 'gg_friendlyfire':
-        if int(newValue) > 0 and not dict_gungameRegisteredAddons.has_key('gg_friendlyfire'):
+        if int(newValue) > 0 and 'gg_friendlyfire' not in gungamelib.getRegisteredAddonlist():
             es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
-        elif newValue == '0' and dict_gungameRegisteredAddons.has_key('gg_friendlyfire'):
+        elif newValue == 0 and 'gg_friendlyfire' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_friendlyfire')
     # All other included addons
     elif cvarName in list_includedAddonsDir:
-        if newValue == '1':
+        if newValue == 1:
             es.server.queuecmd('es_load gungame/included_addons/%s' %cvarName)
-        elif newValue == '0' and cvarName in gungamelib.getRegisteredAddonlist():
+        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/%s' %cvarName)
 
 # ==========================================================================================================================

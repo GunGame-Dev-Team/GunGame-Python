@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_map_vote
-Version #:      1.0.119
+Version #:      1.0.120
 Description:    Adds map voting capabilities to gungame.
 '''
 
@@ -55,16 +55,22 @@ dict_mapListFile[1] = '/cstrike/mapcycle.txt'
 dict_mapListFile[2] = '/cstrike/maplist.txt'
 dict_mapListFile[3] = dict_mapVoteVars['gg_map_list_file']
 
-# list of recent maps - maps here are for testing only
-list_recentMaps = []
 # dictionary of Player Vote Choices
 dict_playerChoice = {}
+
+dict_addonVars = {}
+# list of recent maps - maps here are for testing only
+dict_addonVars['recentMaps'] = []
 # list of potential vote maps
-list_mapList = []
+dict_addonVars['mapList'] = []
 # list of Maps being voted for
-list_voteList = []
+dict_addonVars['voteList'] = []
 # check to see if vote is active
-voteActive = 0
+dict_addonVars['voteActive'] = 0
+# stores the value of the vote timer
+dict_addonVars['voteTimer'] = 0
+
+
 # get old eventscripts_maphandler value
 oldEventscriptsMaphandler = es.ServerVar('eventscripts_maphandler')
 es.ServerVar('eventscripts_maphandler').set(1)
@@ -113,10 +119,10 @@ def server_cvar(event_var):
 def es_map_start(event_var):
     # add current map to list of recent maps
     if dict_mapVoteVars['gg_dont_show_last_maps']:
-        list_recentMaps.append(event_var['mapName'])
+        dict_addonVars['recentMaps'].append(event_var['mapName'])
         # check size of recent map list
-        if len(list_recentMaps) > dict_mapVoteVars['gg_dont_show_last_maps']:
-            del list_recentMaps[0]
+        if len(dict_addonVars['recentMaps']) > dict_mapVoteVars['gg_dont_show_last_maps']:
+            del dict_addonVars['recentMaps'][0]
             
     # delete popup
     if popuplib.exists('voteMenu'):
@@ -132,12 +138,12 @@ def es_map_start(event_var):
 
 # fires with event gg_vote
 def gg_vote(event_var):
-    if not voteActive and popuplib.exists('voteMenu'):
+    if not dict_addonVars['voteActive'] and popuplib.exists('voteMenu'):
         startVote()
 
 # fires with event gg_win
 def gg_win(event_var):
-    if voteActive:
+    if dict_addonVars['voteActive']:
         repeat.delete('voteCounter')
         voteResults()
     winningMap = dict_playerChoice['winningMap']
@@ -157,29 +163,29 @@ def initiateVote():
     # create a of maps for voting
     if dict_mapVoteVars['gg_map_list_source'] == 4:
         # get list of maps from /cstrike/maps
-        list_mapList = list_mapDir
+        dict_addonVars['mapList'] = list_mapDir
     else:
         # get list of maps from mapcycle.txt, maplist.txt or gg_maplist.txt
-        list_mapList = []
+        dict_addonVars['mapList'] = []
         list_mapListFile = open(os.getcwd() + dict_mapListFile[dict_mapVoteVars['gg_map_list_source']], 'r')
         for line in list_mapListFile:
             line = line.strip()
             if not line.startswith('//') and line != '' and line in list_mapDir:
-                list_mapList.append(line)
+                dict_addonVars['mapList'].append(line)
     
     # remove maps in the RecentMaps list
-    for map in list_recentMaps:
-        if map in list_mapList and len(list_mapList) > dict_mapVoteVars['gg_map_vote_size']:
-            list_mapList.remove(map)
+    for map in dict_addonVars['recentMaps']:
+        if map in dict_addonVars['mapList'] and len(dict_addonVars['mapList']) > dict_mapVoteVars['gg_map_vote_size']:
+            dict_addonVars['mapList'].remove(map)
     setVoteList()
 
 def setVoteList():
     # Set the size of the vote list
-    mapsQuantity = len(list_mapList)
+    mapsQuantity = len(dict_addonVars['mapList'])
     if dict_mapVoteVars['gg_map_vote_size'] and mapsQuantity > dict_mapVoteVars['gg_map_vote_size']:
-        list_voteList = random.sample(list_mapList, dict_mapVoteVars['gg_map_vote_size'])
+        dict_addonVars['voteList'] = random.sample(dict_addonVars['mapList'], dict_mapVoteVars['gg_map_vote_size'])
     else:
-        list_voteList = list_mapList
+        dict_addonVars['voteList'] = dict_addonVars['mapList']
     
     # Create the menu popup
     votePopup = popuplib.easymenu('voteMenu', '_popup_choice', voteMenuSelect)
@@ -188,7 +194,7 @@ def setVoteList():
     votePopup.settitle('Next Map?')
     
     # Loop through maps to build list
-    for map in list_voteList:
+    for map in dict_addonVars['voteList']:
         votePopup.addoption(map, map)
         
     # Reset the player choice dict
@@ -207,18 +213,18 @@ def startVote():
     es.cexec_all('play admin_plugin/actions/startyourvoting.mp3')
     
     # Start the countdown
-    voteTimer = dict_mapVoteVars['gg_vote_time']
+    dict_addonVars['voteTimer'] = dict_mapVoteVars['gg_vote_time']
     repeat.create('voteCounter', VoteCountdown)
     repeat.start('voteCounter', 1, 0)
     
     # Set the active vars
-    voteActive = 1
+    dict_addonVars['voteActive'] = 1
     gungamelib.setGlobal('voteActive', 1)
 
 def VoteCountdown(repeatInfo):
-    if voteTimer:
+    if dict_addonVars['voteTimer']:
         # Countdown 5 or less?
-        if voteTimer <= 5:
+        if dict_addonVars['voteTimer'] <= 5:
             # Beep :)
             es.cexec_all('playgamesound hl1/fvox/beep.wav')
             
@@ -228,10 +234,10 @@ def VoteCountdown(repeatInfo):
             voteInfo += '\n%s (%d votes)' % (map, dict_playerChoice['votedMaps'][map])
 
         # Send the HudHint
-        if voteTimer == 1:
+        if dict_addonVars['voteTimer'] == 1:
             gungame.hudhint('#all', 'gg_map_vote', 'Countdown_Singular', {'voteInfo': voteInfo})
         else:
-            gungame.hudhint('#all', 'gg_map_vote', 'Countdown_Plural', {'time': voteTimer, 'voteInfo': voteInfo})
+            gungame.hudhint('#all', 'gg_map_vote', 'Countdown_Plural', {'time': dict_addonVars['voteTimer'], 'voteInfo': voteInfo})
     else:
         # Play beep sound
         es.cexec_all('playgamesound hl1/fvox/beep.wav')
@@ -243,14 +249,14 @@ def VoteCountdown(repeatInfo):
         repeat.delete('voteCounter')
         
     # Decrement timer
-    voteTimer -= 1
+    dict_addonVars['voteTimer'] -= 1
     
 def voteMenuSelect(userid, mapChoice, popupid):
     # Get index of userid
     index = playerlib.getPlayer(userid).attributes['index']
     
     # Loop through the map choices
-    if mapChoice in list_voteList:
+    if mapChoice in dict_addonVars['voteList']:
         # Announce players choice if enabled
         if dict_mapVoteVars['gg_show_player_vote']:
             # Get player name
@@ -275,9 +281,9 @@ def voteMenuSelect(userid, mapChoice, popupid):
 
 def voteResults():
     # Set vars
-    voteActive = 0
+    dict_addonVars['voteActive'] = 0
     gungamelib.setGlobal('voteActive', 0)
-    list_voteList = []
+    dict_addonVars['voteList'] = []
     
     # Close and delete popup
     popuplib.unsendname('voteMenu', es.getUseridList())
@@ -300,8 +306,8 @@ def voteResults():
 
 # console command gg_vote_cancel
 def cancelVote():
-    if voteActive:
-        voteActive = 0
+    if dict_addonVars['voteActive']:
+        dict_addonVars['voteActive'] = 0
         repeat.delete('voteCounter')
         popuplib.unsendname('voteMenu', es.getUseridList())
         popuplib.delete('voteMenu')
@@ -312,12 +318,12 @@ def cancelVote():
 
 # console command gg_vote_list
 def getVoteList():
-    if list_voteList != []:
+    if dict_addonVars['voteList'] != []:
         gungame.echo(0, 'gg_map_vote', 'ListOfMaps')
         msgFormat = str()
         
         # Get maps
-        for map in list_voteList:
+        for map in dict_addonVars['voteList']:
             msgFormat += '%s ' % map
         
         es.dbgmsg(0, msgFormat)
@@ -326,19 +332,19 @@ def getVoteList():
 
 # console command gg_vote_shuffle
 def shuffleVoteList():
-    if not voteActive:
+    if not dict_addonVars['voteActive']:
         setVoteList()
         gungame.echo(0, 'gg_map_vote', 'NewMapList')
         msgFormat = ''
-        for map in list_voteList:
+        for map in dict_addonVars['voteList']:
             msgFormat = '%s%s ' % (msgFormat, map)
-        echo(msgFormat)
+        es.dbgmsg(0, msgFormat)
     else:
         gungame.echo(0, 'gg_map_vote', 'VoteAlreadyInProgress')
 
 # console command gg_vote_start
 def voteStart():
-    if not voteActive:
+    if not dict_addonVars['voteActive']:
         if not popuplib.exists('voteMenu'):
             setVoteList()
         startVote()

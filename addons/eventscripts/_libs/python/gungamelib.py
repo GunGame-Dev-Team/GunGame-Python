@@ -881,12 +881,12 @@ class Addon:
             if dict_cfgSettings.has_key(dependencyName):
                 if self.__isNumeric(value):
                     value = int(value)
-                # Set GunGame variable to dependents value
-                setVariableValue(dependencyName, value)
                 # Add dependency and original value to addon attributes
                 self.dependencies.append(dependencyName)
                 # Create dependency class
                 dict_registeredDependencies[dependencyName] = addonDependency(dependencyName, value, self.addon)
+                # Set GunGame variable to dependents value
+                setVariableValue(dependencyName, value)
             else:
                 raise addonError, '%s is not a valid dependency' %dependencyName
         # Dependent is already registered
@@ -947,8 +947,8 @@ class addonDependency:
                 if dict_cfgSettings:
                     # Set Variable back to it's original value
                     setVariableValue(self.dependency, self.dependencyOriginalValue)
-                    # Delete depdency
-                    del dict_registeredDependencies[self.dependency]
+                # Delete depdency
+                del dict_registeredDependencies[self.dependency]
 
 # ===================================================================================================
 #  CLASS WRAPPERS

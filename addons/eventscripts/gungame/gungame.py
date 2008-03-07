@@ -2,13 +2,11 @@
 import os
 import ConfigParser
 import cPickle
-import string
 
 # EventScripts imports
 import es
 import gamethread
 import playerlib
-import langlib
 import usermsg
 import popuplib
 import keyvalues
@@ -17,7 +15,7 @@ import keyvalues
 import gungamelib
 
 # Create a public CVAR for GunGame seen as "eventscripts_ggp"
-gungameVersion = "1.0.119"
+gungameVersion = "1.0.121"
 es.set('eventscripts_ggp', gungameVersion)
 es.makepublic('eventscripts_ggp')
 
@@ -1501,6 +1499,7 @@ def getPlayer(userid):
     except (UseridError, TypeError), e:
         raise e
 
+        '''
 def getGameDir(dir):
     # Get the gungame addon path
     addonPath = es.getAddonPath('gungame')
@@ -1726,3 +1725,4 @@ class Message:
                 
                 # Send it
                 usermsg.echo(userid, '%s%s' % (prefix, self.getString(string, tokens)))
+                '''

@@ -1,4 +1,4 @@
-# version 1.0.116
+# version 1.0.121
 
 '''
 ToDo:
@@ -12,6 +12,9 @@ import es
 import playerlib
 import gamethread
 import popuplib
+import string
+import langlib
+import usermsg
 
 # ===================================================================================================
 #   GLOBAL DICTIONARIES
@@ -950,6 +953,179 @@ class addonDependency:
                 # Delete depdency
                 del dict_registeredDependencies[self.dependency]
 
+
+# ==========================================================================================================================
+#   MESSAGE CLASS
+# ==========================================================================================================================
+class Message:
+    def __init__(self, userid = None):
+        # Set vars
+        self.userid = 0
+        self.object = None
+        
+        # Is userid console?
+        if userid == 0:
+            # Set userid and object
+            self.userid = 0
+            self.object = None
+            
+            # Ignore the rest of init
+            return
+        
+        # Set the player object
+        if userid:
+            self.object = playerlib.getPlayer(userid)
+            self.userid = userid
+    
+    def getLangStrings(self, message):
+        # Set some vars
+        file = message.split(':')[0]
+        string = message.split(':')[1]
+        
+        # Set lang strings
+        if file == 'core':
+            self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/strings.ini' % os.getcwd())
+        else:
+            # Does the folder exist in included_addons?
+            if os.path.isfile(getGameDir('addons\\eventscripts\\gungame\\included_addons\\%s\\strings.ini' % file)):
+                # Load file from included_addons
+                self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/included_addons/%s/strings.ini' % (os.getcwd(), file))
+            elif os.path.isfile(getGameDir('addons\\eventscripts\\gungame\\custom_addons\\%s\\strings.ini' % file)):
+                # Load file from custom_addons
+                self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/custom_addons/%s/strings.ini' % (os.getcwd(), file))
+            else:
+                # Raise error
+                raise NameError, 'Could not find %s/strings.ini in either the included_addons or custom_addons folder.' % file
+        
+        # Format the string then return it
+        return string
+    
+    def getString(self, message, tokens = None, object = None):
+        # If no object set, use the class default
+        if not object and self.userid != 0 and self.object != None:
+            object = self.object
+        
+        # Return the string
+        try:
+            # Get the string
+            rtnStr = self.langStrings(message, tokens, object.get('lang'))
+            rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
+            rtnStr = rtnStr.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
+            rtnStr = rtnStr.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
+            
+            # Return the string
+            return rtnStr
+        except:
+            return self.langStrings(message, tokens)
+        
+    def msg(self, message, tokens = {}, usePrefix=True):
+        # Get string
+        string = self.getLangStrings(message)
+        
+        # Set prefix
+        if usePrefix:
+            prefix = '\4[%s]\1 ' % (self.langStrings('Prefix', {}, 'en'))
+        else:
+            prefix = ''
+        
+        if self.userid:
+            es.tell(self.userid, '#multi', '%s%s' % (prefix, self.getString(string, tokens)))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                es.tell(userid, '#multi', '%s%s' % (prefix, self.getString(string, tokens)))
+                
+    def hudhint(self, message, tokens = {}):
+        # Get lang strings
+        string = self.getLangStrings(message)
+        
+        # Is a userid set?
+        if self.userid:
+            # Send HudHint
+            usermsg.hudhint(self.userid, self.getString(string, tokens))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                usermsg.hudhint(userid, self.getString(string, tokens, object))
+                
+    def saytext2(self, index, message, tokens = {}, usePrefix=True):
+        # Get lang strings
+        string = self.getLangStrings(message)
+        
+        # Set prefix
+        if usePrefix:
+            prefix = '\4[%s]\1 ' % (self.langStrings('Prefix', {}, 'en'))
+        else:
+            prefix = ''
+        
+        # Is a userid set?
+        if self.userid:
+            # Send SayText2 message
+            usermsg.saytext2(self.userid, index, '%s%s' % (prefix, self.getString(string, tokens)))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                usermsg.saytext2(userid, index, '%s%s' % (prefix, self.getString(string, tokens, object)))
+                
+    def centermsg(self, message, tokens={}):
+        # Get lang strings
+        string = self.getLangStrings(message)
+        
+        # Is a userid set?
+        if self.userid:
+            # Send CenterMsg
+            es.centermsg(self.userid, self.getString(string, tokens))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                es.centermsg(userid, self.getString(string, tokens, object))
+            
+    def echo(self, message, tokens={}, usePrefix=True):
+        # Get string
+        string = self.getLangStrings(message)
+        
+        # Set prefix
+        if usePrefix:
+            prefix = '%s: ' % (self.langStrings('Prefix', {}, 'en'))
+        else:
+            prefix = ''
+        
+        if self.userid == 0:
+            # Print to console
+            es.dbgmsg(0, '%s%s' % (prefix, self.getString(string, tokens)))
+        elif self.userid:
+            # Send echo message
+            usermsg.echo(self.userid, '%s%s' % (prefix, self.getString(string, tokens)))
+        else:
+            # Loop through the players
+            for userid in es.getUseridList():
+                # Get some vars
+                userid = int(userid)
+                object = playerlib.getPlayer(userid)
+                
+                # Send it
+                usermsg.echo(userid, '%s%s' % (prefix, self.getString(string, tokens)))
+
 # ===================================================================================================
 #  CLASS WRAPPERS
 # ===================================================================================================
@@ -990,6 +1166,41 @@ def unregisterAddon(addonName):
         del dict_RegisteredAddons[addonName]
     else:
         raise addonError, '%s has not been previously registered.' %addonName
+        
+def msg(userid, addon, msg, opts={}, usePrefix=True):
+    # Create message
+    if userid == '#all':
+        Message().msg('%s:%s' % (addon, msg), opts, usePrefix)
+    else:
+        Message(userid).msg('%s:%s' % (addon, msg), opts, usePrefix)
+
+def saytext2(userid, addon, index, msg, opts={}, usePrefix=True):
+    # Create message
+    if userid == '#all':
+        Message().saytext2(index, '%s:%s' % (addon, msg), opts, usePrefix)
+    else:
+        Message(userid).saytext2(index, '%s:%s' % (addon, msg), opts, usePrefix)
+
+def echo(userid, addon, msg, opts={}, usePrefix=True):
+    # Create message
+    if userid == '#all':
+        Message().echo('%s:%s' % (addon, msg), opts, usePrefix)
+    else:
+        Message(userid).echo('%s:%s' % (addon, msg), opts, usePrefix)
+
+def hudhint(userid, addon, msg, opts={}):
+    # Create message
+    if userid == '#all':
+        Message().hudhint('%s:%s' % (addon, msg), opts)
+    else:
+        Message(userid).hudhint('%s:%s' % (addon, msg), opts)
+
+def centermsg(userid, addon, msg, opts={}):
+    # Create message
+    if userid == '#all':
+        Message().centermsg('%s:%s' % (addon, msg), opts)
+    else:
+        Message(userid).centermsg('%s:%s' % (addon, msg), opts)
         
 # ===================================================================================================
 # LEVEL UP AND DOWN TRIGGERING
@@ -1283,3 +1494,19 @@ def __isNumeric(string):
         return False
     else:
         return True
+
+def getGameDir(dir):
+    # Get the gungame addon path
+    addonPath = es.getAddonPath('gungame')
+    
+    # Split using the path seperator
+    parts = addonPath.split('\\')
+    
+    # Pop the last 2 items in the list
+    parts.pop()
+    parts.pop()
+    
+    # Append cfg then join
+    parts.append(dir)
+    
+    return string.join(parts, '\\')

@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_elimination
-Version #:      1.0.119
+Version #:      1.0.124
 Description:    Players respawn after their killer is killed.
                 Originally for ES1.3 created by ichthys.
                 http://addons.eventscripts.com/addons/view/3972
@@ -11,6 +11,8 @@ Description:    Players respawn after their killer is killed.
 # EventScripts imports
 import es
 import gamethread
+import playerlib
+import usermsg
 
 # GunGame imports
 import gungamelib
@@ -18,7 +20,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_elimination Addon for GunGame: Python"
-info.version  = "1.0.119"
+info.version  = "1.0.124"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_elimination"
 info.author   = "GunGame Development Team"
@@ -96,41 +98,55 @@ def player_death(event_var):
     # Check to see if the round has ended
     if dict_addonVars['roundActive']:
         attacker = event_var['attacker']
+        
         # Set up victim message
         respawnMsgFormat = ''
+        
         # Check if death was a suicide and respawn player
         if userid == attacker or attacker == '0':
             gamethread.delayed(5, respawnPlayer, (userid, dict_addonVars['currentRound']))
             es.tell(userid, '#multi', '#green[Elimination] #lightgreenSuicide auto respawn: 5 seconds')
+            
         # Check if death was a teamkill and respawn victim
         elif event_var['es_userteam'] == event_var['es_attackerteam']:
             gamethread.delayed(5, respawnPlayer, (userid, dict_addonVars['currentRound']))
             es.tell(userid, '#multi', '#green[Elimination] #lightgreenTeamkill auto respawn: 5 seconds')
-        # Add victim to the Attackers Eliminated players
         else:
+            # Add victim to the Attackers Eliminated players
             dict_playersEliminated[attacker].append(userid)
-            es.tell(userid, '#multi', '#green[Elimination] #lightgreenYou will respawn when #default%s #lightgreendies.' %event_var['es_attackername'])
+            
+            index = playerlib.getPlayer(attacker).attributes['index']
+            usermsg.saytext2(userid, index, '\4[Elimination]\1 You will respawn when \3%s\1 dies' %event_var['es_attackername'])
+            
         # Check if victim had any Eliminated players
         gamethread.delayed(1, respawnEliminated, (userid, dict_addonVars['currentRound']))
 
 def respawnPlayer(userid, respawnRound):
     # Check if the round is over and respawn player
     if dict_addonVars['roundActive'] and dict_addonVars['currentRound'] == respawnRound:
+        index = playerlib.getPlayer(userid).attributes['index']
+        for sendid in es.getUseridList():
+            usermsg.saytext2(sendid, index, '\4[Elimination]\1 Respawning: \3%s\1' %es.getplayername(userid))
         es.server.cmd('est_spawn %s' %userid)
-        es.msg('#multi', '#green[Elimination] #lightgreenRespawning: #default%s' %es.getplayername(userid))
 
 def respawnEliminated(userid, respawnRound):
     # Format respawning message
-    msgFormat = ''
+    msgFormat = None
     # Check if round is over
     if dict_addonVars['roundActive'] and dict_addonVars['currentRound'] == respawnRound:
+        index = 0
+        
         # Respawn all victims eliminated players
         for player in dict_playersEliminated[userid]:
             if es.exists('userid', player):
                 es.server.cmd('est_spawn %s' %player)
-                msgFormat = '%s%s, ' %(msgFormat, es.getplayername(player))
+                msgFormat = '%s\3%s\1, ' %(msgFormat, es.getplayername(player))
+                if not index:
+                    index = playerlib.getPlayer(player).attributes['index']
         # Show respawning players
-        if msgFormat != '':
-            es.msg('#multi', '#green[Elimination] #lightgreenRespawning: #default%s' %msgFormat[0:-2])
+        if msgFormat:
+            # es.msg('#multi', '#green[Elimination] #lightgreenRespawning: #default%s' %msgFormat[0:-2])
+            for sendid in es.getUseridList():
+                usermsg.saytext2(sendid, index, '\4[Elimination]\1 Respawning: %s' %msgFormat[0:-2])
         # Clear victims eliminated player list
         dict_playersEliminated[userid] = []

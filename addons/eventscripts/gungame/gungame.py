@@ -41,8 +41,6 @@ def GetProfilerTime(storage):
 
 # Global vars
 dict_gungameVariables = {}
-dict_cfgSettings = {}
-dict_globals = {}
 list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
                        'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
                        'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
@@ -860,7 +858,7 @@ def es_map_start(event_var):
     gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
     
     # Reset the "gungame_voting_started" variable
-    gungamelib.setVariableValue('gungame_voting_started', False)
+    dict_gungameVariables['gungame_voting_started'] = False
     
     
     # See if the option to randomize weapons is turned on
@@ -1263,7 +1261,7 @@ def gg_levelup(event_var):
         if leaderLevel == gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_vote_trigger'):
             # Only continue if no other script has set the next map
             if es.ServerVar('eventscripts_nextmapoverride') == '':
-                if not gungamelib.getVariableValue('gungame_voting_started'):
+                if not dict_gungameVariables['gungame_voting_started']:
                     es.event('initialize', 'gg_vote')
                     es.event('fire', 'gg_vote')
             else:
@@ -1380,7 +1378,7 @@ def unload():
     gungamelib.clearGunGame()
 
 def gg_vote(event_var):
-    gungamelib.setVariableValue('gungame_voting_started', True)
+    dict_gungameVariables['gungame_voting_started'] = True
     if gungamelib.getVariableValue('gg_map_vote') == 2:
         es.server.cmd('ma_voterandom end %s' %gungamelib.getVariableValue('gg_map_vote_size'))
 

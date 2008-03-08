@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_dead_strip
-Version #:      1.0.119
+Version #:      1.0.123
 Description:    When a player dies all his weapons are imidiately removed from the game.
 '''
 
@@ -16,7 +16,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_dead_strip Addon for GunGame: Python"
-info.version  = "1.0.119"
+info.version  = "1.0.123"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_dead_strip"
 info.author   = "GunGame Development Team"
@@ -49,7 +49,7 @@ def item_pickup(event_var):
         playerWeapon = gungamePlayer.getWeapon()
         #playerWeapon = gungamePlayer.get('weapon')
         playerlibPlayer = playerlib.getPlayer(userid)
-        if gungamelib.getGlobal('isWarmup') != '1':
+        if gungamelib.getGlobal('isWarmup') == '1':
             if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
                 es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
         else:

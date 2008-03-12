@@ -1,18 +1,25 @@
-# version 1.0.121
+''' (c) 2008 by the GunGame Coding Team
 
-'''
-ToDo:
-    gungamePlayer.get('wins')
+    Title: gungamelib
+    Version: 1.0.121
+    Description:
+    
+    Todo:
+     * gungamePlayer.get('wins')
 '''
 
-import ConfigParser
+# ===================================================================================================
+#   IMPORTS
+# ===================================================================================================
+import string
 import random
 import os
+
 import es
+import ConfigParser
 import playerlib
 import gamethread
 import popuplib
-import string
 import langlib
 import usermsg
 
@@ -22,6 +29,7 @@ import usermsg
 dict_gungameCore = {}
 dict_gungameWeaponOrders = {}
 dict_weaponOrderSettings = {}
+dict_weaponOrderSettings['currentWeaponOrderFile'] = None
 
 dict_leaderInfo = {}
 dict_leaderInfo['currentLeaders'] = []
@@ -48,11 +56,11 @@ list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
 # If any configs in this list are missing when they call the config, GunGame will unload                    
 list_criticalConfigs = ['gg_en_config.cfg', 'gg_default_addons.cfg']
 
-# Set up variables used througout the gungamelib
-weaponOrderINI  = ConfigParser.ConfigParser()
-gameDir         = str(es.ServerVar('eventscripts_gamedir'))
-dict_weaponOrderSettings['currentWeaponOrderFile'] = None
-
+# ===================================================================================================
+#   GLOBAL VARIABLES
+# ===================================================================================================
+weaponOrderINI = ConfigParser.ConfigParser()
+gameDir = str(es.ServerVar('eventscripts_gamedir'))
 
 # ===================================================================================================
 #   ERROR CLASSES
@@ -82,12 +90,17 @@ class DeadError(_GunGameLibError):
 class FileError(_GunGameLibError):
     pass
 
+# ===================================================================================================
+#   CONVARS
+# ===================================================================================================
+gungameDebugLevel = es.ServerVar('gg_debuglevel')
+gungameDebugLevel.makepublic()
 
 # ===================================================================================================
 #   PLAYER CLASS
 # ===================================================================================================
 class Player:
-    "Class used in altering the GunGame Core Dictionary"
+    '''Class used in altering the GunGame Core Dictionary'''
     
     # Here, we define the __init__ method. This will execute every time the gungamelib.getPlayer() is called
     def __init__(self, playerID):
@@ -415,7 +428,8 @@ class Player:
 #   WEAPON ORDER CLASS
 # ===================================================================================================
 class WeaponOrder:
-    "Class used in altering GunGame Weapon Order"
+    '''Class used in altering GunGame Weapon Order.'''
+    
     def __init__(self, fileName):
         # Check to see if it has been registered before
         filePath = '%s/cfg/gungame/weapon_order_files/%s' %(str(es.ServerVar('eventscripts_gamedir')), str(fileName))
@@ -690,7 +704,7 @@ class WeaponOrder:
 #   CONFIG CLASS
 # ===================================================================================================
 class Config:
-    "Class for Registration of Configs used by GunGame"
+    '''Class for Registration of Configs used by GunGame.'''
     def __init__(self, configName):
         self.configName = configName
         self.configPath = '%s/cfg/gungame/%s' %(str(es.ServerVar('eventscripts_gamedir')), configName)
@@ -756,10 +770,8 @@ class Config:
                         else:
                             es.dbgmsg(0, '[GunGame] \'%s\' has already been added to the GunGame Variables Database...skipping.' %variableName)
                             
-            es.dbgmsg(0, '')
             es.dbgmsg(0, '[GunGame] \'%s\' has been successfully loaded.' %self.configPath)
-            es.dbgmsg(0, '')
-            
+
         except IOError:
             if not configName.lower() in list_criticalConfigs:
                 # We can't load it if it doesn't exist, silly rabbit!
@@ -782,8 +794,11 @@ class Config:
 # ===================================================================================================
 #   SOUND CLASS
 # ===================================================================================================
+class InvalidSoundPack(_GunGameLibError):
+    pass
+
 class Sounds:
-    "Class that stores GunGame Sounds"
+    '''Class that stores GunGame Sounds.'''
     
     def __init__(self, soundPackName):
         self.soundPackName = soundPackName
@@ -798,9 +813,10 @@ class Sounds:
         if self.__checkSoundPack():
             self.__readSoundPack()
         else:
-            raise 'This soundpack don\'t exists. All your sound are belong to us.'
+            raise InvalidSoundPack('The soundpack %s doesn\'t exist.')
             
     def __readSoundPack(self):
+        # Open the INI file
         soundPackINI = ConfigParser.ConfigParser()
         soundPackINI.read(self.soundPackPath)
 
@@ -823,10 +839,13 @@ class Sounds:
                 else:
                     # They have the sound disabled for this option. We'll set it to "0" in the gg_sounds dictionary
                     dict_gungameSounds[option] = 0
+        
+        # Add downloadables
         addDownloadableSounds()
     
     def __checkSoundPack(self):
         es.msg(self.soundPackPath)
+        
         if os.path.isfile(self.soundPackPath):
             return True
         else:
@@ -843,8 +862,7 @@ class Sounds:
 # ===================================================================================================
 #   ADDON CLASS
 # ===================================================================================================
-
-class addonError(_GunGameLibError):
+class AddonError(_GunGameLibError):
     pass
     
 class Addon:
@@ -854,27 +872,33 @@ class Addon:
             # Set up default attributes for this addon
             self.menuText = ''
             self.dependencies = []
-            es.dbgmsg(0, '[GunGame] Addon Registered Successfully: \'%s\'' %addonName)
+            echo('gungame', 0, 0, 'AddonRegistered', {'name': addonName})
+            #es.dbgmsg(0, '[GunGame] Addon Registered Successfully: \'%s\'' % addonName)
         else:
-            raise addonError, '%s is not an included or custom addon' %(addonName)
+            raise AddonError('%s is not an included or custom addon' % addonName)
 
     def __del__(self):
         for dependency in self.dependencies:
             # Remove dependency
             dict_registeredDependencies[dependency].delDependent(self.addon)
-        es.dbgmsg(0, '[GunGame] Addon Unregistered Successfully: \'%s\'' %self.addon)
+            echo('gungame', 0, 2, 'AddonDependencyRemoved', {'name': self.addon, 'dependency': depencency})
+        echo('gungame', 0, 0, 'AddonUnregistered', {'name': self.addon})
+        #es.dbgmsg(0, '[GunGame] Addon Unregistered Successfully: \'%s\'' % self.addon)
     
     def validateAddon(self):
-        if self.addon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/included_addons/'):
+        if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % self.addon)):
+            # Is an included addon
             self.addonType = 'included'
             return True
-        elif self.addon in os.listdir(os.getcwd() + '/cstrike/addons/eventscripts/gungame/custom_addons/'):
+        elif os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % self.addon)):
+            # Is a custom addon
             self.addonType = 'custom'
             return True
-        return False
+        else:
+            return False
         
     def setMenuText(self, menuText):
-        # SET MENUTEST
+        # Set menu text (test!)
         self.menuText = str(menuText)
         
     def addDependency(self, dependencyName, value):
@@ -891,7 +915,7 @@ class Addon:
                 # Set GunGame variable to dependents value
                 setVariableValue(dependencyName, value)
             else:
-                raise addonError, '%s is not a valid dependency' %dependencyName
+                raise AddonError('%s is not a valid dependency' % dependencyName)
         # Dependent is already registered
         else:
             # Add dependency and original value to addon attributes
@@ -900,12 +924,12 @@ class Addon:
             dict_registeredDependencies[dependencyName].addDependent(value, self.addon)
     
     def delDependency(self, dependencyName):
-        # check if dependency exits
+        # Check if dependency exists first
         if dict_registeredDependencies.has_key(dependencyName):
-            # delete dependency
+            # Delete dependency
             dict_registeredDependencies[dependencyName].delDependent(self.addon)
         else:
-            raise addonError, '%s is not a registered dependency' %dependencyName
+            raise AddonError('%s is not a registered dependency!' % dependencyName)
     
     def __isNumeric(self, string):
         try:
@@ -953,11 +977,158 @@ class addonDependency:
                 # Delete depdency
                 del dict_registeredDependencies[self.dependency]
 
-
 # ==========================================================================================================================
 #   MESSAGE CLASS
 # ==========================================================================================================================
 class Message:
+    def __init__(self, addonName, filter):
+        self.filter = filter
+        self.addonName = addonName
+        self.strings = None
+
+    def __loadStrings(self):
+        # Does the language file exist?
+        if os.path.isfile(getGameDir('cfg/gungame/language_files/%s.ini' % self.addonName)):
+            self.strings = langlib.Strings(getGameDir('cfg/gungame/language_files/%s.ini' % self.addonName))
+        else:
+            raise FileError('No string file exists for: %s' % self.addonName)
+    
+    def __formatString(self, string, tokens, player = None):
+        # Parse the string
+        try:
+            # Get the string
+            rtnStr = self.strings(string, tokens, player.get('lang'))
+        except:
+            rtnStr = self.strings(string, tokens)
+
+        # Format it
+        rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
+        rtnStr = rtnStr.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
+        rtnStr = rtnStr.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
+           
+        # Return the string
+        return rtnStr
+    
+    def msg(self, string, tokens, showPrefix = False):
+        # Load the strings
+        self.__loadStrings()
+        
+        # Format the message
+        if showPrefix:
+            message = '\4[%s]\1 ' % (self.addonName)
+        else:
+            message = ''
+        
+        # Loop through the players in the filter
+        if type(self.filter) == int:
+            # Get player object
+            player = playerlib.getPlayer(self.filter)
+            
+            # Send message
+            es.msg(self.filter, '%s%s' % (message, self.__formatString(string, tokens, player)))
+        else:
+            # Get player list
+            players = playerlib.getUseridList(self.filter)
+            
+            for player in players:
+                # Send message
+                es.msg(int(player), '%s%s' % (message, self.__formatString(string, tokens, player)))
+                
+    def hudhint(self, string, tokens):
+        # Load the strings
+        self.__loadStrings()
+        
+        # Loop through the players in the filter
+        if type(self.filter) == int:
+            # Get player object
+            player = playerlib.getPlayer(self.filter)
+            
+            # Send message
+            usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
+        else:
+            # Get player list
+            players = playerlib.getUseridList(self.filter)
+            
+            for player in players:
+                # Send message
+                usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
+    
+    def saytext2(self, index, string, tokens, showPrefix = False):
+        # Load the strings
+        self.__loadStrings()
+        
+        # Format the message
+        if showPrefix:
+            message = '\4[%s]\1 ' % (self.addonName)
+        else:
+            message = ''
+        
+        # Loop through the players in the filter
+        if type(self.filter) == int:
+            # Get player object
+            player = playerlib.getPlayer(self.filter)
+            
+            # Send message
+            usermsg.saytext2(int(player), index, '%s%s' % (message, self.__formatString(string, tokens, player)))
+        else:
+            # Get player list
+            players = playerlib.getUseridList(self.filter)
+            
+            for player in players:
+                # Send message
+                usermsg.saytext2(int(player), index, '%s%s' % (message, self.__formatString(string, tokens, player)))
+    
+    def centermsg(self, string, tokens):
+        # Load the strings
+        self.__loadStrings()
+        
+        # Loop through the players in the filter
+        if type(self.filter) == int:
+            # Get player object
+            player = playerlib.getPlayer(self.filter)
+            
+            # Send message
+            usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
+        else:
+            # Get player list
+            players = playerlib.getUseridList(self.filter)
+            
+            for player in players:
+                # Send message
+                usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
+    
+    def echo(self, level, string, tokens, showPrefix = False):
+        # Load the strings
+        self.__loadStrings()
+        
+        # Is the debug level high enough?
+        if int(gungameDebugLevel) < level:
+            return
+        
+        # Format the message
+        if showPrefix:
+            message = '[%s] ' % (self.addonName)
+        else:
+            message = ''
+        
+        # Loop through the players in the filter
+        if type(self.filter) == int and self.filter != 0:
+            # Get player object
+            player = playerlib.getPlayer(self.filter)
+            
+            # Send message
+            usermsg.echo(int(player), '%s%s' % (message, self.__formatString(string, tokens, player)))
+        elif self.filter == 0:
+            es.dbgmsg(0, '%s%s' % (message, self.__formatString(string, tokens, None)))
+        else:
+            # Get player list
+            players = playerlib.getUseridList(self.filter)
+            
+            for player in players:
+                # Send message
+                usermsg.echo(int(player), '%s%s' % (message, self.__formatString(string, tokens, player)))
+
+class Message_old:
     def __init__(self, userid = None):
         # Set vars
         self.userid = 0
@@ -1153,20 +1324,26 @@ def getSoundPack(soundPackName):
         return Sounds(soundPackName)
     except TypeError, e:
         raise e
-        
-def registerAddon(addonName):
-    if not dict_RegisteredAddons.has_key(addonName):
-        dict_RegisteredAddons[addonName] = Addon(addonName)
-        return dict_RegisteredAddons[addonName]
-    else:
-        raise addonError, '%s has already been registered.' %addonName
 
-def unregisterAddon(addonName):
-    if dict_RegisteredAddons.has_key(addonName):
-        del dict_RegisteredAddons[addonName]
-    else:
-        raise addonError, '%s has not been previously registered.' %addonName
-        
+# ===================================================================================================
+#  MESSAGE FUNCTIONS
+# ===================================================================================================
+def msg(addon, filter, string, tokens={}, showPrefix=True):
+    Message(addon, filter).msg(string, tokens, showPrefix)
+    
+def echo(addon, filter, level, string, tokens={}, showPrefix=True):
+    Message(addon, filter).echo(level, string, tokens, showPrefix)
+
+def saytext2(addon, filter, index, string, tokens={}, showPrefix=True):
+    Message(addon, filter).saytext2(index, string, tokens, showPrefix)
+
+def hudhint(addon, filter, string, tokens={}):
+    Message(addon, filter).hudhint(string, tokens)
+    
+def centermsg(addon, filter, string, tokens={}):
+    Message(addon, filter).centermsg(string, tokens)
+
+''' OLD MESSAGE CODE:
 def msg(userid, addon, msg, opts={}, usePrefix=True):
     # Create message
     if userid == '#all':
@@ -1200,10 +1377,10 @@ def centermsg(userid, addon, msg, opts={}):
     if userid == '#all':
         Message().centermsg('%s:%s' % (addon, msg), opts)
     else:
-        Message(userid).centermsg('%s:%s' % (addon, msg), opts)
+        Message(userid).centermsg('%s:%s' % (addon, msg), opts)'''
         
 # ===================================================================================================
-# LEVEL UP AND DOWN TRIGGERING
+#   LEVEL UP AND DOWN TRIGGERING
 # ===================================================================================================
 def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
     es.event('initialize', 'gg_levelup')
@@ -1231,7 +1408,7 @@ def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, leve
     es.event('fire', 'gg_leveldown')
     
 # ===================================================================================================
-# RESET GUNGAME --- WARNING: POWERFUL COMMAND
+#   RESET GUNGAME --- WARNING: POWERFUL COMMAND
 # ===================================================================================================
 def resetGunGame():
     # Reset the Leader Information Database in the dict_leaderInfo
@@ -1304,11 +1481,10 @@ def getLevelWeapon(levelNumber):
         
 def sendWeaponOrderMenu(userid):
     popuplib.send('gungameWeaponOrderMenu_page1', userid)
-    
-# Handles the GunGame Weapon Order Popup
+
 def weaponOrderMenuHandler(userid, choice, popupname):
     pass
-        
+
 # ===================================================================================================
 #   LEVEL RELATED COMMANDS
 # ===================================================================================================
@@ -1457,6 +1633,24 @@ def getSound(soundName):
 # ===================================================================================================
 #   ADDON RELATED COMMANDS
 # ===================================================================================================
+def registerAddon(addonName):
+    if not dict_RegisteredAddons.has_key(addonName):
+        dict_RegisteredAddons[addonName] = Addon(addonName)
+        return dict_RegisteredAddons[addonName]
+    else:
+        raise AddonError('%s has already been registered.' % addonName)
+
+def getAddon(addonName):
+    if dict_RegisteredAddons.has_key(addonName):
+        return dict_RegisteredAddons[addonName]
+    else:
+        raise AddonError('Cannot getAddon -> %s doesn\'t exist!' % addonName)
+
+def unregisterAddon(addonName):
+    if dict_RegisteredAddons.has_key(addonName):
+        del dict_RegisteredAddons[addonName]
+    else:
+        raise AddonError('%s has not been previously registered.' % addonName)
 
 def getRegisteredAddonlist():
     return dict_RegisteredAddons.keys()
@@ -1470,7 +1664,6 @@ def getDependencyValue(dependencyName):
 # ===================================================================================================
 #   GLOBALS RELATED COMMANDS
 # ===================================================================================================
-
 def setGlobal(variableName, variableValue):
     variableName = variableName.lower()
     if __isNumeric(variableValue):
@@ -1485,7 +1678,7 @@ def getGlobal(variableName):
         return '0'
         
 # ===================================================================================================
-# OTHER FUNCTIONS (INTERNAL GUNGAMELIB USE)
+#   OTHER FUNCTIONS (INTERNAL GUNGAMELIB USE)
 # ===================================================================================================
 def __isNumeric(string):
     try:

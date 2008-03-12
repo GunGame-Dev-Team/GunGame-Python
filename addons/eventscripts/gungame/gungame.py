@@ -14,10 +14,10 @@ import keyvalues
 # GunGame imports
 import gungamelib
 
-# Create a public CVAR for GunGame seen as "eventscripts_ggp"
+# Initialize some CVars
 gungameVersion = "1.0.121"
-es.set('eventscripts_ggp', gungameVersion)
-es.makepublic('eventscripts_ggp')
+gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
+gungameVersionVar.makepublic()
 
 # Register the addon with EventScripts
 info = es.AddonInfo()

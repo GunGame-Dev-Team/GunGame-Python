@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_deathmatch
-Version #:      1.0.121
+Version #:      1.0.128
 Description:    This will respawn players after a specified amount of time after dying.
 '''
 
@@ -26,7 +26,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.119"
+info.version  = "1.0.128"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "GunGame Development Team"
@@ -110,7 +110,7 @@ def player_team(event_var):
         
         # Respawn the player
         gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid)))
-        gungamelib.msg(userid, 'gg_deathmatch', 'ConnectRespawnIn')
+        gungamelib.msg('gg_deathmatch' ,userid, 'ConnectRespawnIn')
 
 def player_death(event_var):
     # Remove their defuser
@@ -145,7 +145,7 @@ def player_spawn(event_var):
         lastSpawnPoint[userid] = spawnindex
         
         # Teleport the player
-        gungamelib.teleportPlayer(userid, spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4])
+        gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4])
 
 def round_start(event_var):
     # Loop through the players
@@ -264,10 +264,10 @@ def RespawnCountdown(userid, repeatInfo):
     # Is it in warmup?
     if not int(gungamelib.getGlobal('isWarmup')) and not int(gungamelib.getGlobal('voteActive')):
         if respawnCounters[userid] > 1:
-            gungamelib.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Plural', {'time': respawnCounters[userid]})
+            gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Plural', {'time': respawnCounters[userid]})
         # Is the counter 1?
         elif respawnCounters[userid] == 1:
-            gungamelib.Message(userid).hudhint('gg_deathmatch:RespawnCountdown_Singular')
+            gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Singular')
             
     # Respawn the player
     if respawnCounters[userid] == 0:
@@ -297,7 +297,7 @@ def cmd_convert():
         
         if name.startswith('es_') and name.endswith('_db') and ext == '.txt':
             # Announce we are parsing it
-            gungamelib.echo(0, 'gg_deathmatch', 'ConvertingFile', {'file': f})
+            gungamelib.echo('gg_deathmatch', 0, 0, 'ConvertingFile', {'file': f})
             
             # Parse it
             points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\legacy\\') + f)
@@ -313,7 +313,7 @@ def cmd_convert():
             newFile.close()
             
     # Announce that all files have been converted
-    gungamelib.echo(0, 'gg_deathmatch', 'ConvertingCompleted')
+    gungamelib.echo('gg_deathmatch',0, 0, 'ConvertingCompleted')
 
 def parseLegacySpawnpoint(file):
     # Create vars
@@ -355,7 +355,7 @@ def cmd_addSpawnPoint():
     
     # Does the userid exist?
     if not es.exists('userid', userid):
-        gungamelib.echo(0, 'gg_deathmatch', 'CannotCreateSpawnpoint', {'userid': userid})
+        gungamelib.echo('gg_deathmatch',0, 0, 'CannotCreateSpawnpoint', {'userid': userid})
         return
     
     # Is a map loaded?
@@ -372,7 +372,7 @@ def cmd_addSpawnPoint():
         es.server.cmd('est_effect 11 %d 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, playerLoc[0], playerLoc[1], float(playerLoc[2]) + 50))
         
         # Tell the user where the spawnpoint is, and the index
-        gungamelib.msg(userid, 'gg_deathmatch', 'AddedSpawnpoint', {'index': len(spawnPoints) - 1})
+        gungamelib.msg('gg_deathmatch', userid, 'AddedSpawnpoint', {'index': len(spawnPoints) - 1})
 
 def cmd_delAllSpawnPoints():
     # Enough arguments?
@@ -395,7 +395,7 @@ def cmd_printSpawnPoints():
         raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
     
     # Send message
-    gungamelib.echo(0, 'gg_deathmatch', 'SpawnpointsFor', {'map': mapName})
+    gungamelib.echo('gg_deathmatch', 0, 0, 'SpawnpointsFor', {'map': mapName})
     
     # Loop through the spawnpoints
     for index in spawnPoints:
@@ -403,10 +403,10 @@ def cmd_printSpawnPoints():
         spawnLoc = spawnPoints[index]
         
         # Print to console
-        gungamelib.echo(0, 'gg_deathmatch', 'SpawnpointInfo', {'index': index, 'x': spawnLoc[0], 'y': spawnLoc[1], 'z': spawnLoc[2]})
+        gungamelib.echo('gg_deathmatch',0, 0, 'SpawnpointInfo', {'index': index, 'x': spawnLoc[0], 'y': spawnLoc[1], 'z': spawnLoc[2]})
     
     # Send end message
-    gungamelib.echo(0, 'gg_deathmatch', 'SpawnpointsEnd')
+    gungamelib.echo('gg_deathmatch', 0, 0, 'SpawnpointsEnd')
 
 def cmd_delSpawnPoint():
     # Enough arguments?
@@ -418,7 +418,7 @@ def cmd_delSpawnPoint():
     removeSpawnPoint(int(es.getargv(1)))
     
     # Print to console
-    gungamelib.echo(0, 'gg_deathmatch', 'RemovedSpawnpoint', {'index': es.getargv(1)})
+    gungamelib.echo('gg_deathmatch', 0, 0, 'RemovedSpawnpoint', {'index': es.getargv(1)})
 
 def cmd_showSpawnPoints():
     # Do we have enough arguments?

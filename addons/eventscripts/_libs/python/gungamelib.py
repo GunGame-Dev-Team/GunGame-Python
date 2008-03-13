@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.121
+    Version: 1.0.127
     Description:
     
     Todo:
@@ -88,6 +88,9 @@ class DeadError(_GunGameLibError):
     pass
     
 class FileError(_GunGameLibError):
+    pass
+    
+class ArgumentError(_GunGameLibError):
     pass
 
 # ===================================================================================================
@@ -881,7 +884,7 @@ class Addon:
         for dependency in self.dependencies:
             # Remove dependency
             dict_registeredDependencies[dependency].delDependent(self.addon)
-            echo('gungame', 0, 2, 'AddonDependencyRemoved', {'name': self.addon, 'dependency': depencency})
+            echo('gungame', 0, 2, 'AddonDependencyRemoved', {'name': self.addon, 'dependency': dependency})
         echo('gungame', 0, 0, 'AddonUnregistered', {'name': self.addon})
         #es.dbgmsg(0, '[GunGame] Addon Unregistered Successfully: \'%s\'' % self.addon)
     

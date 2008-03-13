@@ -69,27 +69,27 @@ def player_death(event_var):
     
     # Can they levelup anyway?
     if gungameAttacker['preventlevel'] == 1:
-        tell(attacker, 'You cannot steal a level. You cannot levelup at the moment.')
+        gungamelib.msg('gg_deathmatch', attacker, 'AttackerPreventLevel')
         return
     
     # Is the attacker on the grenade level?
     if gungameAttacker.getWeapon() == 'hegrenade':
-        tell(attacker, 'You cannot skip the grenade level!')
+        gungamelib.msg('gg_deathmatch', attacker, 'AttackerNadeLevel')
         return
     
     # Is the victim on level 1?
     if gungameVictim['level'] == 1:
-        tell(attacker, 'You cannot steal a level from the victim, they are on level 1.')
+        gungamelib.msg('gg_deathmatch', attacker, 'VictimLevel1')
         return
     
     # Is the victim AFK?
     if gungameVictim.isPlayerAFK():
-        tell(attacker, 'You cannot steal a level, the victim is AFK.')
+        gungamelib.msg('gg_deathmatch', attacker, 'VictimAFK')
         return
     
     # Is the level difference higher than the limit?
     if ((gungameAttackerLevel - gungameVictimLevel) >= gg_knife_pro_limit) and gg_knife_pro_limit != 0:
-        tell(attacker, 'The level difference between you and the victim is higher than the set limit.')
+        gungamelib.msg('gg_deathmatch', attacker, 'LevelDifferenceLimit')
         return
         
     steamid = gungameVictim['steamid']
@@ -130,22 +130,6 @@ def player_death(event_var):
     # END THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
     
     # Announce the level stealing
-    levelStole(attacker, userid)
-    
-def announce(message):
-    es.msg('#multi', '\4[GG:Knife Pro]\1 %s' % message)
-    
-def tell(userid, message):
-    es.tell(userid, '#multi', '\4[GG:Knife Pro]\1 %s' % message)
-
-def levelStole(attackerUserid, victimUserid):
-    # Get attacker index
     index = playerlib.getPlayer(attackerUserid).attributes['index']
+    gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': attackername, 'victim': username})
     
-    # Get attacker username and victim username
-    attacker = es.getplayername(attackerUserid)
-    victim = es.getplayername(victimUserid)
-    
-    # Loop through the players
-    for userid in es.getUseridList():
-        usermsg.saytext2(userid, index, '\3%s\1 stole a level from \4%s' % (attacker, victim))

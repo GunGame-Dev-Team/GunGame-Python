@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_friendlyfire
-Version #:      1.0.119
+Version #:      1.0.130
 Description:    Friendly fire will activate when the last level is reached
 '''
 
@@ -16,7 +16,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_friendlyfire Addon for GunGame: Python"
-info.version  = "1.0.119"
+info.version  = "1.0.130"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_friendlyfire"
 info.author   = "GunGame Development Team"
@@ -34,13 +34,13 @@ def load():
     # Get backup of mp_friendlyfire
     mp_friendlyfireBackUp = int(es.ServerVar('mp_friendlyfire'))
     # Set mp_friendlyfire to 0
-    es.forcevalue("mp_friendlyfire", 0)
+    es.forcevalue('mp_friendlyfire', 0)
 
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_friendlyfire')
     
-    # Return "mp_friendlyfire" to what it was originally
+    # Return 'mp_friendlyfire' to what it was originally
     es.server.cmd('mp_friendlyfire %d' %mp_friendlyfireBackUp)
     
 def server_cvar(event_var):
@@ -51,15 +51,15 @@ def server_cvar(event_var):
 def es_map_start(event_var):
     friendlyFireEnabled = 0
     # Set mp_friendlyfire to 0
-    es.forcevalue("mp_friendlyfire", 0)
+    es.forcevalue('mp_friendlyfire', 0)
     
 def gg_start():
     friendlyFireEnabled = 0
     # Set mp_friendlyfire to 0
-    es.forcevalue("mp_friendlyfire", 0)
+    es.forcevalue('mp_friendlyfire', 0)
     
     # Get friendlyfireLevel again just incase the Total Levels have changed
-    friendlyFireLevel = gungamelib.getTotalLevels() - gungamelib.getVariableValue("gg_friendlyfire")
+    friendlyFireLevel = gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_friendlyfire')
     
 
 def gg_levelup(event_var):
@@ -68,16 +68,7 @@ def gg_levelup(event_var):
         # Check whether friendlyfire is enabled
         if not friendlyFireEnabled:
             # Set friendlyfire to 1; Message and Sound
-            es.forcevalue("mp_friendlyfire", 1)
-            announce("Friendly fire is now on. Watch your fire.")
-            es.cexec_all("play npc/roller/mine/rmine_tossed1.wav")
+            es.forcevalue('mp_friendlyfire', 1)
+            gungamelib.msg('gg_friendlyfire', '#all', 'WatchYourFire')
+            es.cexec_all('play npc/roller/mine/rmine_tossed1.wav')
             friendlyFireEnabled = 1
-
-def announce(message):
-    es.msg("#multi", "\4[GG:Friendly Fire]\1 %s" % message)
-   
-def tell(userid, message):
-    es.tell(userid, "#multi", "\4[GG:Friendly Fire]\1 %s" % message)
-
-def echo(message):
-    es.dbgmsg(0, "[GG:Friendly Fire] %s" % message)

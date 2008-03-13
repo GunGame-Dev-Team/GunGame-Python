@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.128
+    Version: 1.0.129
     Description:
     
     Todo:
@@ -369,7 +369,7 @@ class Player:
                     es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
                 gamethread.delayed(0.6, self.resetPlayerLocation, ())
             else:
-                raise DeadError, 'Unable to teleport player -> userid \'%s\' is not alive' %self.useri
+                raise DeadError, 'Unable to teleport player -> userid \'%s\' is not alive' %self.userid
         else:
             raise TeamError, 'Unable to teleport player -> userid \'%s\' is not a team' %self.userid
         

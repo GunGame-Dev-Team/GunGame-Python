@@ -366,7 +366,7 @@ def cmd_addSpawnPoint():
         playerViewAngle = playerlibPlayer.get('viewangle')
         
         # Add spawn point
-        addSpawnPoint(playerLoc[0], playerLoc[1], playerLoc[2], playerViewAngle[0])
+        addSpawnPoint(playerLoc[0], playerLoc[1], playerLoc[2], playerViewAngle[1])
         
         # Show a sprite at the new spawnpoint location
         es.server.cmd('est_effect 11 %d 0 sprites/greenglow1.vmt %s %s %f 5 1 255' % (userid, playerLoc[0], playerLoc[1], float(playerLoc[2]) + 50))

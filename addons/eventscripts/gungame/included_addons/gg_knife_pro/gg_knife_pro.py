@@ -130,6 +130,6 @@ def player_death(event_var):
     # END THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
     
     # Announce the level stealing
-    index = playerlib.getPlayer(attackerUserid).attributes['index']
+    index = playerlib.getPlayer(attacker).attributes['index']
     gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': attackername, 'victim': username})
     

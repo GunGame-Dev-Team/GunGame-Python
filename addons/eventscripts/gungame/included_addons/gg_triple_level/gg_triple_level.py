@@ -42,13 +42,14 @@ def gg_levelup(event_var):
     
     # If is it a Triple Level
     if gungamePlayer['triple'] == 3:
+        name = event_var['name']
         # Add the player to the triple level list
         list_currentTripleLevel.append(userid)
         # Sound and Messages
         if gungamelib.getSound('triplelevel') != '0':
             es.emitsound('player', userid, gungamelib.getSound('triplelevel'), 1.0, 1.0)
-        announce("\4%s\1 triple levelled!" % event_var["name"])
-        es.centermsg("%s triple levelled!" % event_var["name"])
+        gungamelib.msg('gg_triple_level', '#all', 'MsgTripleLevelled', {'name': name})
+        gungamelib.centermsg('gg_triple_level', '#all', 'CenterTripleLevelled', {'name': name})
         
         # Effect to player
         es.server.cmd("es_xgive %s env_spark" %userid)
@@ -111,12 +112,3 @@ def removeTriple(userid):
         # Stop the sound playing for the triple
         if gungamelib.getSound('triplelevel') != '0':
             es.stopsound(userid, gungamelib.getSound('triplelevel'))
-        
-def announce(message):
-    es.msg("#multi", "\4[GG:Triple Level]\1 %s" % message)
-   
-def tell(userid, message):
-    es.tell(userid, "#multi", "\4[GG:Triple Level]\1 %s" % message)
-
-def echo(message):
-    es.dbgmsg(0, "[GG:Triple Level] %s" % message)

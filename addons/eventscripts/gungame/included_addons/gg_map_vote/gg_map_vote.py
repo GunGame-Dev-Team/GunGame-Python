@@ -294,7 +294,7 @@ def voteResults():
         es.ServerVar('eventscripts_nextmapoverride').set(dict_playerChoice['winningMap'])
         
         # Announce the winning map
-        gungamelib.msg('gg_map_vote','#all', 'WinningMap', {'map': dict_playerChoice['winningMap'], 'votes': dict_playerChoice['winningMapVotes'], 'totalVotes': dict_playerChoice['totalVotes']})
+        gungamelib.msg('gg_map_vote', '#all', 'WinningMap', {'map': dict_playerChoice['winningMap'], 'votes': dict_playerChoice['winningMapVotes'], 'totalVotes': dict_playerChoice['totalVotes']})
         gungamelib.hudhint('gg_map_vote', '#all', 'Nextmap', {'map': dict_playerChoice['winningMap']})
     else:
         # Announce not enough votes

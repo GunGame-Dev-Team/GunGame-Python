@@ -1,9 +1,8 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_deathmatch
-Version #:      1.0.128
-Description:    This will respawn players after a specified amount of time after dying.
+    Title: gg_deathmatch
+    Version: 1.0.129
+    Description: Deathmatch addon for GunGame:Python
 '''
 
 # System imports
@@ -40,14 +39,11 @@ dict_deathmatchVars['respawn_cmd'] = gungamelib.getVariableValue('gg_dm_respawn_
 respawnCounters = {}
 lastSpawnPoint = {}
 spawnPoints = {}
-mapName = 0
 
 # ==============================================================================
 #   Event functions
 # ==============================================================================
 def load():
-    global mapName
-    
     # Register addon with gungamelib
     gg_deathmatch = gungamelib.registerAddon('gg_deathmatch')
     gg_deathmatch.setMenuText('GG Deathmatch')
@@ -73,11 +69,9 @@ def load():
         es.regcmd('dm_convert','gungame/included_addons/gg_deathmatch/cmd_convert', 'Converts legacy GGv3 spawnpoints into CSS:DM format.')
     
     # Has map loaded?
-    currentMap = str(es.ServerVar('eventscripts_currentmap'))
-    if currentMap != '0':
+    if gungamelib.inLevel():
         # Get spawn points, map loaded
-        mapName = currentMap
-        getSpawnPoints(currentMap)
+        getSpawnPoints(gungamelib.getLevelName())
     
     # Get a player list of dead players then spawn them
     for userid in playerlib.getUseridList('#dead'):
@@ -96,10 +90,6 @@ def server_cvar(event_var):
         dict_deathmatchVars[event_var['cvarname']] = int(event_var['cvarvalue'])
 
 def es_map_start(event_var):
-    global mapName
-    
-    # Get map name and spawnpoints for the respective map
-    mapName = event_var['mapname']
     getSpawnPoints(event_var['mapname'])
     
 def player_team(event_var):
@@ -120,12 +110,13 @@ def player_death(event_var):
     respawn(event_var['userid'])
     
 def player_spawn(event_var):
+    global spawnPoints
+    
     # Is a spectator?
     if int(event_var['es_userteam']) <= 1:
         return
     
     # Set vars
-    global spawnPoints
     userid = int(event_var['userid'])
     
     # Do we have a spawn point file?
@@ -201,8 +192,9 @@ def getSpawnPoints(_mapName):
         i += 1
 
 def addSpawnPoint(posX, posY, posZ, eyeYaw):
-    global mapName
     global spawnFile
+    
+    mapName = gungamelib.getLevelName()
     
     # Do we have a spawn point file?
     if not spawnPointsExist:
@@ -255,7 +247,7 @@ def removeSpawnPoint(index):
     spawnPointFile.close()
 
     # Get spawnpoints again
-    getSpawnPoints(mapName)
+    getSpawnPoints(gungamelib.getLevelName())
 
 # ==============================================================================
 #   Respawn code
@@ -271,7 +263,7 @@ def RespawnCountdown(userid, repeatInfo):
             
     # Respawn the player
     if respawnCounters[userid] == 0:
-        es.server.cmd("%s %s" % (dict_deathmatchVars['respawn_cmd'], userid))
+        es.server.cmd('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid))
         
     # Decrement the timer
     respawnCounters[userid] -= 1
@@ -305,6 +297,11 @@ def cmd_convert():
             # Now write it to a file
             newFile = open(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\') + f.strip('es_').strip('_db'), 'w')
             
+            # Are there any points?
+            if points.count() == 0:
+                gungamelib.echo('gg_deathmatch', 0, 0, 'CannotConvert_Skipping')
+                continue
+            
             # Loop through the points
             for point in points:
                 newFile.write('%s %s %s 0.000000 0.000000 0.000000\n' % (points[point][0], points[point][1], points[point][2]))
@@ -313,7 +310,7 @@ def cmd_convert():
             newFile.close()
             
     # Announce that all files have been converted
-    gungamelib.echo('gg_deathmatch',0, 0, 'ConvertingCompleted')
+    gungamelib.echo('gg_deathmatch', 0, 0, 'ConvertingCompleted')
 
 def parseLegacySpawnpoint(file):
     # Create vars
@@ -324,7 +321,11 @@ def parseLegacySpawnpoint(file):
     kv.load(file)
     
     # Get the total points
-    totalVals = kv['total']['total']
+    try:
+        totalVals = kv['total']['total']
+    except KeyError:
+        gungamelib.echo('gg_deathmatch', 0, 0, 'CannotConvert_NoTotal')
+        return {}
     
     # Loop through the values
     i = 0
@@ -332,8 +333,14 @@ def parseLegacySpawnpoint(file):
         # Increment
         i += 1
         
-        # Get the point and split it
-        toSplit = kv['points'][str(i)]
+        # Try to get the points
+        try:
+            toSplit = kv['points'][str(i)]
+        except KeyError:
+            gungamelib.echo('gg_deathmatch', 0, 0, 'CannotConvert_InvalidTotal')
+            return {}
+        
+        # Split it
         points[i] = toSplit.split(',')
     
     # Return
@@ -354,12 +361,12 @@ def cmd_addSpawnPoint():
     userid = int(es.getargv(1))
     
     # Does the userid exist?
-    if not es.exists('userid', userid):
-        gungamelib.echo('gg_deathmatch',0, 0, 'CannotCreateSpawnpoint', {'userid': userid})
+    if not gungamelib.clientInServer(userid):
+        gungamelib.echo('gg_deathmatch', 0, 0, 'CannotCreateSpawnpoint', {'userid': userid})
         return
     
     # Is a map loaded?
-    if mapName != 0:
+    if gungamelib.inLevel():
         # Get player location and viewing angles
         playerlibPlayer = playerlib.getPlayer(userid)
         playerLoc = es.getplayerlocation(userid)
@@ -375,13 +382,15 @@ def cmd_addSpawnPoint():
         gungamelib.msg('gg_deathmatch', userid, 'AddedSpawnpoint', {'index': len(spawnPoints) - 1})
 
 def cmd_delAllSpawnPoints():
+    mapName = gungamelib.getLevelName()
+    
     # Enough arguments?
     if int(es.getargc()) != 1:
         # Raise argument error
         raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
     
     # Check if a map is loaded
-    if mapName != 0:
+    if gungamelib.inLevel():
         # Clear the spawnpoint file
         spawnFile = open(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName), 'w').close()
         
@@ -389,6 +398,8 @@ def cmd_delAllSpawnPoints():
         getSpawnPoints(mapName)
 
 def cmd_printSpawnPoints():
+    mapName = gungamelib.getLevelName()
+    
     # Enough arguments?
     if int(es.getargc()) != 1:
         # Raise argument error
@@ -403,7 +414,7 @@ def cmd_printSpawnPoints():
         spawnLoc = spawnPoints[index]
         
         # Print to console
-        gungamelib.echo('gg_deathmatch',0, 0, 'SpawnpointInfo', {'index': index, 'x': spawnLoc[0], 'y': spawnLoc[1], 'z': spawnLoc[2]})
+        gungamelib.echo('gg_deathmatch', 0, 0, 'SpawnpointInfo', {'index': index, 'x': spawnLoc[0], 'y': spawnLoc[1], 'z': spawnLoc[2]})
     
     # Send end message
     gungamelib.echo('gg_deathmatch', 0, 0, 'SpawnpointsEnd')

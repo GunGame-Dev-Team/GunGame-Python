@@ -369,9 +369,11 @@ class Player:
                     es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
                 gamethread.delayed(0.6, self.resetPlayerLocation, ())
             else:
-                raise DeadError, 'Unable to teleport player -> userid \'%s\' is not alive' %self.userid
+                # TODO: RideGuy or XE, can you take a look at this, it produces an error
+                # when the server starts with GG:Dm with bots.
+                raise DeadError, 'Unable to teleport player -> userid \'%s\' is not alive' % self.userid
         else:
-            raise TeamError, 'Unable to teleport player -> userid \'%s\' is not a team' %self.userid
+            raise TeamError, 'Unable to teleport player -> userid \'%s\' is not a team' % self.userid
         
     def setPlayerEyeAngles(self, eyeAngle0, eyeAngle1):
         # Make sure the player is on a team
@@ -1131,175 +1133,6 @@ class Message:
                 # Send message
                 usermsg.echo(int(player), '%s%s' % (message, self.__formatString(string, tokens, player)))
 
-class Message_old:
-    def __init__(self, userid = None):
-        # Set vars
-        self.userid = 0
-        self.object = None
-        
-        # Is userid console?
-        if userid == 0:
-            # Set userid and object
-            self.userid = 0
-            self.object = None
-            
-            # Ignore the rest of init
-            return
-        
-        # Set the player object
-        if userid:
-            self.object = playerlib.getPlayer(userid)
-            self.userid = userid
-    
-    def getLangStrings(self, message):
-        # Set some vars
-        file = message.split(':')[0]
-        string = message.split(':')[1]
-        
-        # Set lang strings
-        if file == 'core':
-            self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/strings.ini' % os.getcwd())
-        else:
-            # Does the folder exist in included_addons?
-            if os.path.isfile(getGameDir('addons\\eventscripts\\gungame\\included_addons\\%s\\strings.ini' % file)):
-                # Load file from included_addons
-                self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/included_addons/%s/strings.ini' % (os.getcwd(), file))
-            elif os.path.isfile(getGameDir('addons\\eventscripts\\gungame\\custom_addons\\%s\\strings.ini' % file)):
-                # Load file from custom_addons
-                self.langStrings = langlib.Strings('%s/cstrike/addons/eventscripts/gungame/custom_addons/%s/strings.ini' % (os.getcwd(), file))
-            else:
-                # Raise error
-                raise NameError, 'Could not find %s/strings.ini in either the included_addons or custom_addons folder.' % file
-        
-        # Format the string then return it
-        return string
-    
-    def getString(self, message, tokens = None, object = None):
-        # If no object set, use the class default
-        if not object and self.userid != 0 and self.object != None:
-            object = self.object
-        
-        # Return the string
-        try:
-            # Get the string
-            rtnStr = self.langStrings(message, tokens, object.get('lang'))
-            rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
-            rtnStr = rtnStr.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
-            rtnStr = rtnStr.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
-            
-            # Return the string
-            return rtnStr
-        except:
-            return self.langStrings(message, tokens)
-        
-    def msg(self, message, tokens = {}, usePrefix=True):
-        # Get string
-        string = self.getLangStrings(message)
-        
-        # Set prefix
-        if usePrefix:
-            prefix = '\4[%s]\1 ' % (self.langStrings('Prefix', {}, 'en'))
-        else:
-            prefix = ''
-        
-        if self.userid:
-            es.tell(self.userid, '#multi', '%s%s' % (prefix, self.getString(string, tokens)))
-        else:
-            # Loop through the players
-            for userid in es.getUseridList():
-                # Get some vars
-                userid = int(userid)
-                object = playerlib.getPlayer(userid)
-                
-                # Send it
-                es.tell(userid, '#multi', '%s%s' % (prefix, self.getString(string, tokens)))
-                
-    def hudhint(self, message, tokens = {}):
-        # Get lang strings
-        string = self.getLangStrings(message)
-        
-        # Is a userid set?
-        if self.userid:
-            # Send HudHint
-            usermsg.hudhint(self.userid, self.getString(string, tokens))
-        else:
-            # Loop through the players
-            for userid in es.getUseridList():
-                # Get some vars
-                userid = int(userid)
-                object = playerlib.getPlayer(userid)
-                
-                # Send it
-                usermsg.hudhint(userid, self.getString(string, tokens, object))
-                
-    def saytext2(self, index, message, tokens = {}, usePrefix=True):
-        # Get lang strings
-        string = self.getLangStrings(message)
-        
-        # Set prefix
-        if usePrefix:
-            prefix = '\4[%s]\1 ' % (self.langStrings('Prefix', {}, 'en'))
-        else:
-            prefix = ''
-        
-        # Is a userid set?
-        if self.userid:
-            # Send SayText2 message
-            usermsg.saytext2(self.userid, index, '%s%s' % (prefix, self.getString(string, tokens)))
-        else:
-            # Loop through the players
-            for userid in es.getUseridList():
-                # Get some vars
-                userid = int(userid)
-                object = playerlib.getPlayer(userid)
-                
-                # Send it
-                usermsg.saytext2(userid, index, '%s%s' % (prefix, self.getString(string, tokens, object)))
-                
-    def centermsg(self, message, tokens={}):
-        # Get lang strings
-        string = self.getLangStrings(message)
-        
-        # Is a userid set?
-        if self.userid:
-            # Send CenterMsg
-            es.centermsg(self.userid, self.getString(string, tokens))
-        else:
-            # Loop through the players
-            for userid in es.getUseridList():
-                # Get some vars
-                userid = int(userid)
-                object = playerlib.getPlayer(userid)
-                
-                # Send it
-                es.centermsg(userid, self.getString(string, tokens, object))
-            
-    def echo(self, message, tokens={}, usePrefix=True):
-        # Get string
-        string = self.getLangStrings(message)
-        
-        # Set prefix
-        if usePrefix:
-            prefix = '%s: ' % (self.langStrings('Prefix', {}, 'en'))
-        else:
-            prefix = ''
-        
-        if self.userid == 0:
-            # Print to console
-            es.dbgmsg(0, '%s%s' % (prefix, self.getString(string, tokens)))
-        elif self.userid:
-            # Send echo message
-            usermsg.echo(self.userid, '%s%s' % (prefix, self.getString(string, tokens)))
-        else:
-            # Loop through the players
-            for userid in es.getUseridList():
-                # Get some vars
-                userid = int(userid)
-                object = playerlib.getPlayer(userid)
-                
-                # Send it
-                usermsg.echo(userid, '%s%s' % (prefix, self.getString(string, tokens)))
-
 # ===================================================================================================
 #  CLASS WRAPPERS
 # ===================================================================================================
@@ -1346,42 +1179,6 @@ def hudhint(addon, filter, string, tokens={}):
 def centermsg(addon, filter, string, tokens={}):
     Message(addon, filter).centermsg(string, tokens)
 
-''' OLD MESSAGE CODE:
-def msg(userid, addon, msg, opts={}, usePrefix=True):
-    # Create message
-    if userid == '#all':
-        Message().msg('%s:%s' % (addon, msg), opts, usePrefix)
-    else:
-        Message(userid).msg('%s:%s' % (addon, msg), opts, usePrefix)
-
-def saytext2(userid, addon, index, msg, opts={}, usePrefix=True):
-    # Create message
-    if userid == '#all':
-        Message().saytext2(index, '%s:%s' % (addon, msg), opts, usePrefix)
-    else:
-        Message(userid).saytext2(index, '%s:%s' % (addon, msg), opts, usePrefix)
-
-def echo(userid, addon, msg, opts={}, usePrefix=True):
-    # Create message
-    if userid == '#all':
-        Message().echo('%s:%s' % (addon, msg), opts, usePrefix)
-    else:
-        Message(userid).echo('%s:%s' % (addon, msg), opts, usePrefix)
-
-def hudhint(userid, addon, msg, opts={}):
-    # Create message
-    if userid == '#all':
-        Message().hudhint('%s:%s' % (addon, msg), opts)
-    else:
-        Message(userid).hudhint('%s:%s' % (addon, msg), opts)
-
-def centermsg(userid, addon, msg, opts={}):
-    # Create message
-    if userid == '#all':
-        Message().centermsg('%s:%s' % (addon, msg), opts)
-    else:
-        Message(userid).centermsg('%s:%s' % (addon, msg), opts)'''
-        
 # ===================================================================================================
 #   LEVEL UP AND DOWN TRIGGERING
 # ===================================================================================================
@@ -1610,12 +1407,7 @@ def setVariableValue(variableName, value):
             raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
     else:
         raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
-        
-'''
-def __setCfgSettings(variableName, value):
-    dict_cfgSettings[variableName] = value
-'''
-        
+
 def getVariableList():
     return dict_cfgSettings.keys()
     
@@ -1706,3 +1498,18 @@ def getGameDir(dir):
     parts.append(dir)
     
     return string.join(parts, '\\')
+
+def clientInServer(userid):
+    return es.exists('userid', userid)
+
+def inLevel():
+    currentMap = str(es.ServerVar('eventscripts_currentmap'))
+    return (currentMap != '0')
+
+def getLevelName():
+    return str(es.ServerVar('eventscripts_currentmap'))
+
+def isSpectator(userid):
+    if not clientInServer(userid):
+        return
+    return (es.getplayerteam(userid) <= 1)

@@ -100,7 +100,10 @@ def player_team(event_var):
         
         # Respawn the player
         gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid)))
-        gungamelib.msg('gg_deathmatch' ,userid, 'ConnectRespawnIn')
+        
+        # Bug fix
+        if userid != 0:
+            gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
 
 def player_death(event_var):
     # Remove their defuser

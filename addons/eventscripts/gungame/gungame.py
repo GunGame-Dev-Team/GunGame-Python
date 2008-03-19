@@ -1058,7 +1058,6 @@ def player_death(event_var):
                             if weapon == 'knife' or weapon == 'hegrenade':
                                 if gungamelib.getVariableValue('gg_multikill'):
                                     gungameAttacker['multikill'] = gungamelib.getVariableValue('gg_multikill')
-                                
                             else:
                                 gungameAttacker['multikill'] += 1
                                 
@@ -1095,9 +1094,7 @@ def player_death(event_var):
                             # Run the AFK punishment code
                             afkPunishCheck(userid)
         else:
-            # Must be a team kill or a suicide...let's see, shall we?
-            
-            # Check to see if the player was suicidal
+            # Must be a team kill or a suicide
             if userid == attacker:
                 # Yep! They killed themselves. Now let's see if we are going to punish the dead...
                 if gungamelib.getVariableValue('gg_suicide_punish') > 0:
@@ -1108,7 +1105,6 @@ def player_death(event_var):
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:
                         gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
-                        
                     else:
                         gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
             else:

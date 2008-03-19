@@ -1547,7 +1547,7 @@ def getLevelName():
 
 def isSpectator(userid):
     if not clientInServer(userid):
-        return
+        return 0
     return (es.getplayerteam(userid) <= 1)
 
 def hasEST():
@@ -1561,3 +1561,6 @@ def getESTVersion():
         return float(es.ServerVar('est_version'))
     else:
         return 0.000
+
+def isDead(userid):
+    return bool(int(es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag')))

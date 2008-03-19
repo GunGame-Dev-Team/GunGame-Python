@@ -56,8 +56,7 @@ def load():
     
     # Do we have EST?
     if not gungamelib.hasEST():
-        gungamelib.echo('gg_deathmatch', 0, 0, 'ESTRequired')
-        gungamelib.unregisterAddon('gg_deathmatch')
+        gungamelib.echo('gg_deathmatch', 0, 0, 'ESTWarning')
     
     # Create commands
     if not es.exists('command','dm_add'):
@@ -84,6 +83,7 @@ def load():
         
     # Set freezetime
     es.server.cmd('mp_freezetime 0')
+    es.server.cmd('mp_roundtime 0')
 
 def unload():
     # Unregister this addon with GunGame
@@ -99,16 +99,17 @@ def es_map_start(event_var):
     
 def player_team(event_var):
     # Respawn the player
-    if event_var['disconnect'] == '0':
-        # Get the userid
-        userid = event_var['userid']
-        
-        # Respawn the player
-        gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid)))
-        
-        # Bug fix
-        if userid != 0:
-            gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
+    if event_var['disconnect'] != '0':
+        return
+    
+    # Get the userid
+    userid = event_var['userid']
+    
+    # Respawn the player
+    gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid)))
+    
+    # Tell them they will respawn soon
+    gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
 
 def player_death(event_var):
     # Remove their defuser
@@ -116,7 +117,7 @@ def player_death(event_var):
     
     # Respawn the player
     respawn(event_var['userid'])
-    
+
 def player_spawn(event_var):
     global spawnPoints
     
@@ -124,7 +125,7 @@ def player_spawn(event_var):
     userid = int(event_var['userid'])
     
     # Is a spectator?
-    if int(event_var['es_userteam']) <= 1 or es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag'):
+    if gungamelib.isSpectator(userid) or gungamelib.isDead(userid):
         return
     
     # Do we have a spawn point file?
@@ -212,7 +213,6 @@ def addSpawnPoint(posX, posY, posZ, eyeYaw):
         
         # Rehash spawnpoints
         getSpawnPoints(mapName)
-        
     
     # Open the spawnpoint file
     spawnPointFile = open(spawnFile, 'a')
@@ -293,7 +293,7 @@ def cmd_convert():
     
     # Loop through the files in the legacy folder
     for f in os.listdir(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\legacy')):
-        name, ext = os.path.splitext(f) # Handles no-extension files, etc.
+        name, ext = os.path.splitext(f)
         
         if name.startswith('es_') and name.endswith('_db') and ext == '.txt':
             # Announce we are parsing it
@@ -362,8 +362,8 @@ def cmd_addSpawnPoint():
     
     # Do we have enough arguments?
     if int(es.getargc()) != 2:
-        # Raise argument error
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
+        gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_show', 'syntax': '<userid>'})
+        return
     
     # Get executor userid and 1st argument
     userid = int(es.getargv(1))
@@ -394,8 +394,8 @@ def cmd_delAllSpawnPoints():
     
     # Enough arguments?
     if int(es.getargc()) != 1:
-        # Raise argument error
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
+        gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_del_all', 'syntax': ''})
+        return
     
     # Check if a map is loaded
     if gungamelib.inLevel():
@@ -410,8 +410,8 @@ def cmd_printSpawnPoints():
     
     # Enough arguments?
     if int(es.getargc()) != 1:
-        # Raise argument error
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
+        gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_print', 'syntax': ''})
+        return
     
     # Send message
     gungamelib.echo('gg_deathmatch', 0, 0, 'SpawnpointsFor', {'map': mapName})
@@ -429,9 +429,9 @@ def cmd_printSpawnPoints():
 
 def cmd_delSpawnPoint():
     # Enough arguments?
-    if int(es.getargc()) == 2:
-        # Raise argument error
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
+    if int(es.getargc()) != 2:
+        gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_del', 'syntax': '<index>'})
+        return
     
     # Delete the spawn point
     removeSpawnPoint(int(es.getargv(1)))
@@ -442,8 +442,8 @@ def cmd_delSpawnPoint():
 def cmd_showSpawnPoints():
     # Do we have enough arguments?
     if int(es.getargc()) != 2:
-        # Raise argument error
-        raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 1'
+        gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_show', 'syntax': '<userid>'})
+        return
     
     # Set vars
     userid = es.getargv(1)

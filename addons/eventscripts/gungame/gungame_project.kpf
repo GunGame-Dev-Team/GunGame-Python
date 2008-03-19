@@ -5,10 +5,16 @@
 </file>
 <file id="7c2e111e-2b05-4e00-950e-489a4a76cc03" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="gungamelib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/gungamelib.py">
 </file>
+<file id="afc30579-0736-4093-8938-079fc7ebbebf" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="usermsg.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/usermsg.py">
+</file>
+<file id="79d588fc-6aa4-4725-91fc-e2c377c893b4" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="playerlib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/playerlib.py">
+</file>
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
 </folder>
 <livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/language_files" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="language_files" url="file:///D:/srcds/cstrike/cfg/gungame/language_files">
 </livefolder>
+<file id="3c5ea7ee-f3df-4e46-903b-bc96cc2a4244" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="es.py" url="file:///D:/srcds/cstrike/addons/eventscripts/es.py">
+</file>
 <preference-set idref="0651bb49-f501-4ccc-aaea-20751ee88255/included_addons/gg_deathmatch/gg_deathmatch.py">
   <string id="lastInvocation">default</string>
 <preference-set id="Invocations">
@@ -16,10 +22,10 @@
   <string id="postparams"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
-  <boolean id="show-dialog">1</boolean>
   <boolean id="use-console">0</boolean>
-  <string id="mpostparams"></string>
   <string relative="path" id="filename">included_addons/gg_deathmatch/gg_deathmatch.py</string>
+  <string id="mpostparams"></string>
+  <boolean id="show-dialog">1</boolean>
   <string id="request-method">GET</string>
   <string id="params"></string>
   <string id="executable-params"></string>
@@ -40,10 +46,10 @@
   <string id="postparams"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
-  <boolean id="use-console">0</boolean>
-  <string id="filename">D:\srcds\cstrike\addons\eventscripts\_libs\python\gungamelib.py</string>
-  <string id="mpostparams"></string>
   <boolean id="show-dialog">1</boolean>
+  <boolean id="use-console">0</boolean>
+  <string id="mpostparams"></string>
+  <string id="filename">D:\srcds\cstrike\addons\eventscripts\_libs\python\gungamelib.py</string>
   <string id="request-method">GET</string>
   <string id="params"></string>
   <string id="executable-params"></string>
@@ -64,10 +70,10 @@
   <string id="postparams"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
-  <boolean id="use-console">0</boolean>
-  <string relative="path" id="filename">included_addons/gg_warmup_round/gg_warmup_round.py</string>
-  <string id="mpostparams"></string>
   <boolean id="show-dialog">1</boolean>
+  <boolean id="use-console">0</boolean>
+  <string id="mpostparams"></string>
+  <string relative="path" id="filename">included_addons/gg_warmup_round/gg_warmup_round.py</string>
   <string id="request-method">GET</string>
   <string id="params"></string>
   <string id="executable-params"></string>

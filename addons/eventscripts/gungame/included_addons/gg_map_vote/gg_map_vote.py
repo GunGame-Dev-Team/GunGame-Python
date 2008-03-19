@@ -262,7 +262,7 @@ def voteMenuSelect(userid, mapChoice, popupid):
             name = es.getplayername(userid)
             
             # Announce to the world
-            gungamelib.saytext2('gg_map_vote','#all', index, 'VotedFor', {'name': name, 'map': mapChoice})
+            gungamelib.saytext2('gg_map_vote', '#all', index, 'VotedFor', {'name': name, 'map': mapChoice})
         
         # Register the vote
         if mapChoice not in dict_playerChoice['votedMaps']:
@@ -281,8 +281,8 @@ def voteMenuSelect(userid, mapChoice, popupid):
 def voteResults():
     # Set vars
     dict_addonVars['voteActive'] = 0
-    gungamelib.setGlobal('voteActive', 0)
     dict_addonVars['voteList'] = []
+    gungamelib.setGlobal('voteActive', 0)
     
     # Close and delete popup
     popuplib.unsendname('voteMenu', es.getUseridList())

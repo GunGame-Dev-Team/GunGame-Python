@@ -54,6 +54,11 @@ def load():
     gg_deathmatch.addDependency('gg_knife_elite', '0')
     gg_deathmatch.addDependency('gg_elimination', '0')
     
+    # Do we have EST?
+    if not gungamelib.hasEST():
+        gungamelib.echo('gg_deathmatch', 0, 0, 'ESTRequired')
+        gungamelib.unregisterAddon('gg_deathmatch')
+    
     # Create commands
     if not es.exists('command','dm_add'):
         es.regcmd('dm_add','gungame/included_addons/gg_deathmatch/cmd_addSpawnPoint', 'Adds a spawnpoint at <userid>\'s location on the current map.')

@@ -3,14 +3,11 @@
     Title: gungamelib
     Version: 1.0.135
     Description:
-    
-    Todo:
-     * gungamePlayer.get('wins')
 '''
 
-# ===================================================================================================
+# ==============================================================================
 #   IMPORTS
-# ===================================================================================================
+# ==============================================================================
 import string
 import random
 import os
@@ -23,9 +20,9 @@ import popuplib
 import langlib
 import usermsg
 
-# ===================================================================================================
+# ==============================================================================
 #   GLOBAL DICTIONARIES
-# ===================================================================================================
+# ==============================================================================
 dict_gungameCore = {}
 dict_gungameWeaponOrders = {}
 dict_weaponOrderSettings = {}
@@ -44,9 +41,9 @@ dict_gungameSounds = {}
 dict_RegisteredAddons = {}
 dict_registeredDependencies = {}
 
-# ===================================================================================================
+# ==============================================================================
 #   GLOBAL LISTS
-# ===================================================================================================
+# ==============================================================================
 list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
                     'elite','m3','xm1014','tmp','mac10','mp5navy',
                     'ump45','p90','galil','famas','ak47','scout',
@@ -56,15 +53,15 @@ list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
 # If any configs in this list are missing when they call the config, GunGame will unload                    
 list_criticalConfigs = ['gg_en_config.cfg', 'gg_default_addons.cfg']
 
-# ===================================================================================================
+# ==============================================================================
 #   GLOBAL VARIABLES
-# ===================================================================================================
+# ==============================================================================
 weaponOrderINI = ConfigParser.ConfigParser()
 gameDir = str(es.ServerVar('eventscripts_gamedir'))
 
-# ===================================================================================================
+# ==============================================================================
 #   ERROR CLASSES
-# ===================================================================================================
+# ==============================================================================
 class _GunGameLibError:
     def __init__(self, message):
         self.message = message
@@ -93,15 +90,15 @@ class FileError(_GunGameLibError):
 class ArgumentError(_GunGameLibError):
     pass
 
-# ===================================================================================================
+# ==============================================================================
 #   CONVARS
-# ===================================================================================================
+# ==============================================================================
 gungameDebugLevel = es.ServerVar('gg_debuglevel')
 gungameDebugLevel.makepublic()
 
-# ===================================================================================================
+# ==============================================================================
 #   PLAYER CLASS
-# ===================================================================================================
+# ==============================================================================
 class Player:
     '''Class used in altering the GunGame Core Dictionary'''
     
@@ -283,18 +280,7 @@ class Player:
                 'steamid']
         values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(self.userid, 1)]
         self.attributes = dict(zip(names, values))
-        '''
-        self.attributes                 = {}
 
-        # This is also where we set the default attributes for the player
-        self.attributes['level']        = 1
-        self.attributes['afkrounds']    = 0
-        self.attributes['multikill']    = 0
-        self.attributes['triple']       = 0
-        self.attributes['preventlevel'] = 0
-        self.attributes['afkmathtotal'] = 0
-        self.attributes['steamid']      = playerlib.uniqueid(self.userid, 1)
-        '''
         # We now create the player in the GunGame Core Dictionary
         # NOTE: Any time the player's attributes change, so will the GunGame Core Dictionary
         dict_gungameCore[self.userid] = self.attributes
@@ -365,15 +351,15 @@ class Player:
         if int(es.getplayerteam(self.userid)) > 1:
             if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
                 es.server.cmd('es_setpos %d %s %s %s' %(self.userid, x, y, z))
+                
                 if eyeangle0 or eyeangle1:
                     es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
+                
                 gamethread.delayed(0.6, self.resetPlayerLocation, ())
             else:
-                # TODO: RideGuy or XE, can you take a look at this, it produces an error
-                # when the server starts with GG:Dm with bots.
-                raise DeadError, 'Unable to teleport player -> userid \'%s\' is not alive' % self.userid
+                echo('gungame', 0, 0, 'Player:TeleportPlayer:NotAlive', {'userid': self.userid, 'name': es.getplayername(self.userid)})
         else:
-            raise TeamError, 'Unable to teleport player -> userid \'%s\' is not a team' % self.userid
+            echo('gungame', 0, 0, 'Player:TeleportPlayer:NoTeam', {'userid': self.userid, 'name': es.getplayername(self.userid)})
         
     def setPlayerEyeAngles(self, eyeAngle0, eyeAngle1):
         # Make sure the player is on a team
@@ -429,20 +415,21 @@ class Player:
             return 0
             
 
-# ===================================================================================================
+# ==============================================================================
 #   WEAPON ORDER CLASS
-# ===================================================================================================
+# ==============================================================================
 class WeaponOrder:
     '''Class used in altering GunGame Weapon Order.'''
     
     def __init__(self, fileName):
-        # Check to see if it has been registered before
-        filePath = '%s/cfg/gungame/weapon_order_files/%s' %(str(es.ServerVar('eventscripts_gamedir')), str(fileName))
+        filePath = getGameDir('/cfg/gungame/weapon_order_files/%s' % fileName)
         self.fileName = fileName
+        
+        # Check to see if it has been registered before
         if not self.__isRegistered(fileName):
             self.__parse(fileName, filePath)
         else:
-            es.dbgmsg(0, '%s already registered.' %fileName)
+            echo('gungame', 0, 0, 'WeaponOrder:AlreadyRegistered', {'file': fileName})
     
     def __parse(self, fileName, filePath):
         try:
@@ -456,6 +443,7 @@ class WeaponOrder:
             for line in weaponOrderFile:
                 # Remove spaces from the ends of the lines and convert characters to lower case
                 line = line.strip().lower()
+                
                 # Make sure that the line contains some sort of text, and that the line does not begin with "//"
                 if line and (not line.startswith('//')):
                     # Remove double spacing
@@ -464,32 +452,34 @@ class WeaponOrder:
                         
                     # We use the split() method on the line to separate weapon names from multikill values
                     list_splitLine = line.split(" ")
+                    
                     # Just in case someone got space happy, we will loop through the list and remove any entries == ''
                     # Set the weapon name to the first index (0) in the split list
                     weaponName = str(list_splitLine[0])
                     if weaponName in list_validWeapons:
                         if len(list_splitLine) > 1:
-                            try:
-                                # We attempt to convert the multikill value to an integer
+                            if isNumeric(list_splitLine[1]):
                                 multiKillValue = int(list_splitLine[1])
+                                
                                 # Make sure that the level counter comes AFTER the potential exception above
                                 levelCounter += 1
                                 list_splitLine[1] = int(list_splitLine[1])
                                 
                                 dict_tempWeaponOrder[levelCounter] = list_splitLine
-                                
-                            except ValueError:
-                                es.dbgmsg(0, 'Unable to set multkill value for \'%s\' -> \'%s\' is not a numeric value...skipping' %(weaponName, list_splitLine[1]))
+                            else:
+                                echo('gungame', 0, 0, 'WeaponOrder:MultikillNotNumeric', {'weapon': weaponName, 'to': list_splitLine[1]})
+                                #es.dbgmsg(0, 'Unable to set multkill value for \'%s\' -> \'%s\' is not a numeric value...skipping' %(weaponName, list_splitLine[1]))
                         else:
                             levelCounter += 1
                             list_splitLine.append(1)
                             dict_tempWeaponOrder[levelCounter] = list_splitLine
                     else:
-                        es.dbgmsg(0, 'Could not add weapon to weapon order -> \'%s\' is not a valid weapon...skipping' %weaponName)
-                        
+                        echo('gungame', 0, 0, 'WeaponOrder:InvalidWeapon', {'weapon': weaponName})
+            
             # Close the weapon order file, since we are done parsing it
             weaponOrderFile.close()
             dict_tempWeaponOrderSettings = {}
+            
             # Open the INI to find out the "Display Name" for this weapon order
             weaponOrderINI.read('%s/cfg/gungame/gg_weapon_orders.ini' %gameDir)
             
@@ -506,7 +496,6 @@ class WeaponOrder:
             # Save the temporary dictionarys to the persistent dictionarys
             dict_weaponOrderSettings[fileName] = dict_tempWeaponOrderSettings
             dict_gungameWeaponOrders[fileName] = dict_tempWeaponOrder
-            
         except IOError:
             raise FileError, ('Unable to load weapon order file -> \'%s\' does not exist' %fileName)
         
@@ -518,24 +507,28 @@ class WeaponOrder:
         
     def echo(self):
         weaponOrder = dict_gungameWeaponOrders[self.fileName]
+        
         es.dbgmsg(0, ' ')
         es.dbgmsg(0, 'Weapon Order File Name:    %s' %self.fileName)
         es.dbgmsg(0, 'Weapon Order Display Name: %s' %dict_weaponOrderSettings[self.fileName]['displayName'])
         es.dbgmsg(0, 'Weapon Order Type:         %s' %self.getWeaponOrderType())
-        es.dbgmsg(0, '---------------------------------')
-        es.dbgmsg(0, 'Level #   MultiKill   Weapon')
-        es.dbgmsg(0, '~~~~~~~   ~~~~~~~~~   ~~~~~~')
+        es.dbgmsg(0, ' ')
+        es.dbgmsg(0, '+-------+-----------+----------------')
+        es.dbgmsg(0, '| Level | MultiKill | Weapon         ')
+        es.dbgmsg(0, '+-------+-----------+----------------')
         
         for level in dict_gungameWeaponOrders[self.fileName]:
             weaponName = dict_gungameWeaponOrders[self.fileName][level][0]
             multiKillValue = dict_gungameWeaponOrders[self.fileName][level][1]
+            
             if level < 10:
-                levelInfoText = '  0%d.        (%d)      %s' %(level, multiKillValue, weaponName)
+                levelInfoText = '|  0%d   |     %d     | %s' %(level, multiKillValue, weaponName)
             else:
-                levelInfoText = '  %d.        (%d)      %s' %(level, multiKillValue, weaponName)    
+                levelInfoText = '|  %d   |     %d     | %s' %(level, multiKillValue, weaponName)
+            
             es.dbgmsg(0, levelInfoText)
             
-        es.dbgmsg(0, '---------------------------------')
+        es.dbgmsg(0, '+-------+-----------+----------------')
         es.dbgmsg(0, ' ')
         
     def setMultiKillOverride(self, value):
@@ -545,22 +538,27 @@ class WeaponOrder:
                 dict_tempWeaponOrder[level][1] = int(value)
                 
         dict_gungameWeaponOrders[self.fileName] = dict_tempWeaponOrder
-        es.msg('\x04[\x03GunGame\x04]\x01 Weapon Order MultiKill Values Changed to: \x03%d\x01 ...Restarting' %value)
+        
+        msg('gungame', '#all', 'WeaponOrder:MultikillValuesChanged', {'to': value})
         es.server.cmd('mp_restartgame 2')
     
     def setMultiKillDefaults(self):
         filePath = '%s/cfg/gungame/weapon_order_files/%s' %(str(gameDir), self.fileName)
         self.__parse(self.fileName, filePath)
-        es.msg('\x04[\x03GunGame\x04]\x01 Weapon Order MultiKill Values Reset to Default ...Restarting')
+        
+        msg('gungame', '#all', 'WeaponOrder:MultikillReset')
         es.server.cmd('mp_restartgame 2')
         
     def setWeaponOrderFile(self):
-        if dict_weaponOrderSettings['currentWeaponOrderFile'] != self.fileName:
-            dict_weaponOrderSettings['currentWeaponOrderFile'] = self.fileName
-            self.buildWeaponOrderMenu()
-            es.msg('\x04[\x03GunGame\x04]\x01 Weapon Order File Changed to: \x03%s\x01 ...Restarting' %self.fileName)
-            es.server.cmd('mp_restartgame 2')
-            
+        if dict_weaponOrderSettings['currentWeaponOrderFile'] == self.fileName:
+            return
+        
+        dict_weaponOrderSettings['currentWeaponOrderFile'] = self.fileName
+        self.buildWeaponOrderMenu()
+        
+        msg('gungame', '#all', 'WeaponOrder:FileChanged', {'to': self.fileName})
+        es.server.cmd('mp_restartgame 2')
+    
     def getWeaponOrderType(self):
         return dict_weaponOrderSettings[self.fileName]['weaponOrder']
         
@@ -582,12 +580,14 @@ class WeaponOrder:
                 weaponArrayNumber += 1
             dict_gungameWeaponOrders[self.fileName] = dict_tempWeaponOrder
             self.__setWeaponOrder('#random')
-            es.msg('\x04[\x03GunGame\x04]\x01 Weapon Order Changed to \x03#random\x01 ...Restarting')
+            
+            msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#random'})
         elif self.getWeaponOrderType() != str(weaponOrder):
             if weaponOrder == '#default':
                 filePath = '%s/cfg/gungame/weapon_order_files/%s' %(str(gameDir), self.fileName)
                 self.__parse(self.fileName, filePath)
-                es.msg('\x04[\x03GunGame\x04]\x01 Weapon Order Changed to \x03#default\x01 ...Restarting')
+                
+                msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#default'})
             elif weaponOrder == '#reversed':
                 dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
                 list_gungameLevels = dict_tempWeaponOrder.keys()
@@ -599,24 +599,31 @@ class WeaponOrder:
                     weaponArrayNumber += 1
                 dict_gungameWeaponOrders[self.fileName] = dict_tempWeaponOrder
                 self.__setWeaponOrder('#reversed')
-                es.msg('\x04[\x03GunGame\x04]\x01 Weapon Order Changed to \x03#reversed\x01 ...Restarting')
+                
+                msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#reversed'})
             else:
                 raise GunGameValueError, 'Invalid argument for changeWeaponOrder() -> \'%s\'' %weaponOrder
         else:
             raise GunGameValueError, 'Unable to change the weapon order -> \'%s\' is the current weapon order' %weaponOrder
-            
+    
     def buildWeaponOrderMenu(self):
         dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
+        
         # Create a list of level numbers to use for creating the popup
         list_gungameLevels = dict_tempWeaponOrder.keys()
+        
         # Create a list of weapon names to use for creating the popup
         list_gungameWeapons = dict_tempWeaponOrder.values()
+        
         # Find out how many menu pages there are going to be
         totalMenuPages = int(round((int(getTotalLevels()) * 0.1) + 0.4))
+        
         # Create a variable to store the current page count
         buildPageCount = 1
+        
         # Create a variable to keep track of the index number for pulling the level/weapon information from the list_gungameLevels and list_gungameWeapons
         levelCountIndex = 0
+        
         # Create a variable to track the "max" or the "cap" of indexes to retrieve from the lists
         levelCountMaxIndex = 0
         
@@ -624,14 +631,18 @@ class WeaponOrder:
         while buildPageCount <= totalMenuPages:
             # Set a Python variable so we don't have to keep on formatting text for the menu name
             menuName = 'gungameWeaponOrderMenu_page%d' %buildPageCount
+            
             # Check to see if the popup "gungameWeaponOrderMenu" exists
             if popuplib.exists('gungameWeaponOrderMenu'):
                 # The popup exists...let's unsend it
                 popuplib.unsendname(menuName, playerlib.getUseridList('#human'))
+                
                 # Now, we need to delete it
                 popuplib.delete(menuName)
+            
             # Let's create the "gungameWeaponOrderMenu" popup and name it according to the page number
             gungameWeaponOrderMenu = popuplib.create(menuName)
+            
             # Make sure there is more than 1 page of levels/weapons
             if totalMenuPages > 1:
                 # Now, we add the "Title Text", along with the page number as well as the following line for aesthetic appearances, "--------"
@@ -640,9 +651,11 @@ class WeaponOrder:
             else:
                 # Now we add the "Title Text" as well as the following line for aesthetic appearances, "--------"
                 gungameWeaponOrderMenu.addline('GunGame Weapon Order:\n----------------------------')
+            
             levelCountMaxIndex += 10
             if levelCountMaxIndex > len(list_gungameLevels) - 1:
                 levelCountMaxIndex = len(list_gungameLevels)
+                
             for level in range(levelCountIndex, levelCountMaxIndex):
                 # For aesthetic purposes, I will be adding a "space" for weapons in the list below level 10
                 if int(list_gungameLevels[levelCountIndex]) < 10:
@@ -651,21 +664,27 @@ class WeaponOrder:
                 else:
                     # Now, we add the weapons to the popup, as well as number them by level (without the extra "space")
                     gungameWeaponOrderMenu.addline('->%d. [%d] %s' %(list_gungameLevels[levelCountIndex], list_gungameWeapons[levelCountIndex][1],list_gungameWeapons[levelCountIndex][0]))
+                    
                 # Increment the index counter by 1 for the next for loop iteration
                 levelCountIndex += 1
+                
             # Once again, for aesthetic purposes (to keep the menu the same size), we will add blank lines if the listed levels in the menu do not = 10
             # See if this is the final page of the menu
             if buildPageCount == totalMenuPages:
                 # Calculate the number of needed blank lines in the menu
                 neededBlankLines = 10 - int(round((len(list_gungameLevels) * 0.1) + 0.4))
+                
                 # Set a variable for the loop below to keep track of the number of blank lines left to add
                 blankLineCount = 0
+                
                 # Loop to add the blank lines to the menu
                 while blankLineCount < neededBlankLines:
                     gungameWeaponOrderMenu.addline(' ')
                     blankLineCount += 1
+                    
             # Add the "----------" separator at the bottom of the menu
             gungameWeaponOrderMenu.addline('----------------------------')
+            
             # Add the "browsing pages" options at the bottom of the menu
             # If this is NOT page #1 of the weapons menu
             if buildPageCount != 1:
@@ -697,17 +716,20 @@ class WeaponOrder:
                         gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page%d' %(buildPageCount + 1))
             # Make sure that the player can Exit out of the menu
             gungameWeaponOrderMenu.select(10, weaponOrderMenuHandler)
+            
             # Finally, we add the "Exit" option to the menu
             gungameWeaponOrderMenu.addline('0. Exit')
+            
             # Now, we end this whole menu-making debacle by making the menu "sticky"
             gungameWeaponOrderMenu.displaymode = 'sticky'
+            
             # Increment the page count for the next while loop iteration to create another menu page
             buildPageCount += 1
             
             
-# ===================================================================================================
+# ==============================================================================
 #   CONFIG CLASS
-# ===================================================================================================
+# ==============================================================================
 class Config:
     '''Class for Registration of Configs used by GunGame.'''
     def __init__(self, configName):
@@ -755,7 +777,7 @@ class Config:
                             dict_cfgSettings[variableName] = variableValue
                             
                             # Check to see if we can convert the value to an int
-                            if self.__isNumeric(variableValue):
+                            if self.isNumeric(variableValue):
                                 # Add the variable and value to the GunGame Config Settings Database as an integer
                                 dict_cfgSettings[variableName] = int(variableValue)
                                 
@@ -773,21 +795,17 @@ class Config:
                             es.server.cmd('%s %s' %(variableName, variableValue))
                             
                         else:
-                            es.dbgmsg(0, '[GunGame] \'%s\' has already been added to the GunGame Variables Database...skipping.' %variableName)
-                            
-            es.dbgmsg(0, '[GunGame] \'%s\' has been successfully loaded.' %self.configPath)
-
+                            echo('gungame', 0, 2, 'Config:AlreadyAdded', {'name': variableName})
+            
+            echo('gungame', 0, 0, 'Config:Loaded', {'name': self.configPath})
         except IOError:
             if not configName.lower() in list_criticalConfigs:
-                # We can't load it if it doesn't exist, silly rabbit!
                 raise FileError, 'Unable to load the Config: \'%s\' -> File does not exist.' %configPath
-                
             else:
-                # Strange. I know that I provided them with these files...yet, they seem to have disappeared!
                 es.server.queuecmd('es_xunload gungame')
-                raise FileError, 'Unable to load the Config: \'%s\' -> File does not exist. ::: Unloading GunGame.' %configPath
+                raise FileError, 'Unable to load the Config: \'%s\' -> File does not exist... unloading GunGame.' %configPath
                 
-    def __isNumeric(self, string):
+    def isNumeric(self, string):
         try:
             test = int(string)
         except ValueError:
@@ -796,15 +814,14 @@ class Config:
             return True
             
             
-# ===================================================================================================
+# ==============================================================================
 #   SOUND CLASS
-# ===================================================================================================
+# ==============================================================================
 class InvalidSoundPack(_GunGameLibError):
     pass
 
 class Sounds:
     '''Class that stores GunGame Sounds.'''
-    
     def __init__(self, soundPackName):
         self.soundPackName = soundPackName
         
@@ -834,11 +851,12 @@ class Sounds:
                 if soundPackINI.get(section, option) != '0':
                     # Check to make sure that the sound file exists
                     if self.__checkSound(soundFile):
-                        # ADD THE SOUND HERE...
+                        # Add sound here
                         dict_gungameSounds[option] = soundFile
                     else:
                         # The sound may not exist, so we warn them that we were unable to locate it
-                        es.dbgmsg(0, '[GunGame] Unable to locate: %s/sound/%s' %(gameDir, soundFile))
+                        echo('gungame', 0, 0, 'Sounds:CannotAdd', {'file': soundFile})
+                        
                         # Add it anyway
                         dict_gungameSounds[option] = soundFile
                 else:
@@ -862,11 +880,10 @@ class Sounds:
             return True
         else:
             return False
-            
-            
-# ===================================================================================================
+
+# ==============================================================================
 #   ADDON CLASS
-# ===================================================================================================
+# ==============================================================================
 class AddonError(_GunGameLibError):
     pass
     
@@ -877,8 +894,7 @@ class Addon:
             # Set up default attributes for this addon
             self.menuText = ''
             self.dependencies = []
-            echo('gungame', 0, 0, 'AddonRegistered', {'name': addonName})
-            #es.dbgmsg(0, '[GunGame] Addon Registered Successfully: \'%s\'' % addonName)
+            echo('gungame', 0, 0, 'Addon:Registered', {'name': addonName})
         else:
             raise AddonError('%s is not an included or custom addon' % addonName)
 
@@ -886,9 +902,8 @@ class Addon:
         for dependency in self.dependencies:
             # Remove dependency
             dict_registeredDependencies[dependency].delDependent(self.addon)
-            echo('gungame', 0, 2, 'AddonDependencyRemoved', {'name': self.addon, 'dependency': dependency})
-        echo('gungame', 0, 0, 'AddonUnregistered', {'name': self.addon})
-        #es.dbgmsg(0, '[GunGame] Addon Unregistered Successfully: \'%s\'' % self.addon)
+            echo('gungame', 0, 2, 'Addon:DependencyRemoved', {'name': self.addon, 'dependency': dependency})
+        echo('gungame', 0, 0, 'Addon:Unregistered', {'name': self.addon})
     
     def validateAddon(self):
         if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % self.addon)):
@@ -911,7 +926,7 @@ class Addon:
         if not dict_registeredDependencies.has_key(dependencyName):
             # Check if dependency is a valid gungame variable
             if dict_cfgSettings.has_key(dependencyName):
-                if self.__isNumeric(value):
+                if self.isNumeric(value):
                     value = int(value)
                 # Add dependency and original value to addon attributes
                 self.dependencies.append(dependencyName)
@@ -936,7 +951,7 @@ class Addon:
         else:
             raise AddonError('%s is not a registered dependency!' % dependencyName)
     
-    def __isNumeric(self, string):
+    def isNumeric(self, string):
         try:
             test = int(string)
         except ValueError:
@@ -951,14 +966,15 @@ class addonDependency:
         self.dependencyValue = value
         self.dependencyOriginalValue = getVariableValue(dependencyName)
         self.dependentList = [dependentName]
-        es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %self.dependency)
+        
+        echo('gungame', 0, 2, 'Dependency:Registered', {'name': self.dependency})
         
     def addDependent(self, value, dependentName):
         # Check if dependents value is the same as the previous dependents value
         if self.dependencyValue == value:
-            # add dependent to list of dependencies dependents
+            # Add dependent to list of dependencies dependents
             self.dependentList.append(dependentName)
-            es.dbgmsg(0, '[GunGame] Dependency Registered Successfully: \'%s\'' %self.dependency)
+            echo('gungame', 0, 1, 'Dependency:Registered', {'name': self.dependency})
         # Dependent has a different value
         else:
             # Unload addon since it conflicts with existant dependents
@@ -966,25 +982,26 @@ class addonDependency:
                 setVariableValue(dependentName, 0)
             else:
                 es.unload('gungame/custom_addons/%s' %dependentName)
-            es.dbgmsg(0, '[GunGame] Dependency Registered Failed. \'%s\' previously registered with a different value' %self.dependency)
-            es.dbgmsg(0, '[GunGame] Dependency Registered Failed. \'%s\' has been unloaded' %dependentName)
+            echo('gungame', 0, 0, 'Dependency:Failed', {'name': self.dependency})
             
     def delDependent(self, dependentName):
         # Remove dependent from dependents list
         if dependentName in self.dependentList:
             self.dependentList.remove(dependentName)
-            es.dbgmsg(0, '[GunGame] Dependency Unregistered Successfully: \'%s\'' %self.dependency)
-            # Check if there are any more dependents
+            echo('gungame', 0, 1, 'Dependency:Unregistered', {'name': self.dependency})
+            
+            # Check if there are any more dependencies
             if not self.dependentList:
                 if dict_cfgSettings:
                     # Set Variable back to it's original value
                     setVariableValue(self.dependency, self.dependencyOriginalValue)
+                    
                 # Delete depdency
                 del dict_registeredDependencies[self.dependency]
 
-# ==========================================================================================================================
+# ==============================================================================
 #   MESSAGE CLASS
-# ==========================================================================================================================
+# ==============================================================================
 class Message:
     def __init__(self, addonName, filter):
         self.filter = filter
@@ -998,6 +1015,10 @@ class Message:
         else:
             raise FileError('No string file exists for: %s' % self.addonName)
     
+    def __cleanString(self, string):
+        string = string.replace('\3', '').replace('\4', '').replace('\1', '')
+        return string
+    
     def __formatString(self, string, tokens, player = None):
         # Parse the string
         try:
@@ -1005,12 +1026,12 @@ class Message:
             rtnStr = self.strings(string, tokens, player.get('lang'))
         except:
             rtnStr = self.strings(string, tokens)
-
+        
         # Format it
         rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
         rtnStr = rtnStr.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
         rtnStr = rtnStr.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
-           
+        
         # Return the string
         return rtnStr
     
@@ -1025,26 +1046,31 @@ class Message:
             message = ''
         
         # Loop through the players in the filter
-        if type(self.filter) == int:
+        if isinstance(self.filter, int):
             # Get player object
             player = playerlib.getPlayer(self.filter)
             
             # Send message
-            es.msg(self.filter, '%s%s' % (message, self.__formatString(string, tokens, player)))
+            es.tell(self.filter, '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
         else:
+            if self.filter == '#all':
+                # Show in console
+                self.echo(0, string, tokens, showPrefix)
+            
             # Get player list
             players = playerlib.getUseridList(self.filter)
             
-            for player in players:
-                # Send message
-                es.msg(int(player), '%s%s' % (message, self.__formatString(string, tokens, player)))
+            for userid in players:
+                player = playerlib.getPlayer(userid)
+                
+                es.tell(int(player), '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
                 
     def hudhint(self, string, tokens):
         # Load the strings
         self.__loadStrings()
         
         # Loop through the players in the filter
-        if type(self.filter) == int:
+        if isinstance(self.filter, int):
             # Get player object
             player = playerlib.getPlayer(self.filter)
             
@@ -1054,7 +1080,9 @@ class Message:
             # Get player list
             players = playerlib.getUseridList(self.filter)
             
-            for player in players:
+            for userid in players:
+                player = playerlib.getPlayer(userid)
+                
                 # Send message
                 usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
     
@@ -1069,26 +1097,30 @@ class Message:
             message = ''
         
         # Loop through the players in the filter
-        if type(self.filter) == int:
+        if isinstance(self.filter, int):
             # Get player object
             player = playerlib.getPlayer(self.filter)
             
             # Send message
-            usermsg.saytext2(int(player), index, '%s%s' % (message, self.__formatString(string, tokens, player)))
+            usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
         else:
             # Get player list
-            players = playerlib.getUseridList(self.filter)
+            players = playerlib.getPlayerList(self.filter)
+            
+            if self.filter == '#all':
+                # Show in console
+                self.echo(0, string, tokens, showPrefix)
             
             for player in players:
                 # Send message
-                usermsg.saytext2(int(player), index, '%s%s' % (message, self.__formatString(string, tokens, player)))
+                usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
     
     def centermsg(self, string, tokens):
         # Load the strings
         self.__loadStrings()
         
         # Loop through the players in the filter
-        if type(self.filter) == int:
+        if isinstance(self.filter, int):
             # Get player object
             player = playerlib.getPlayer(self.filter)
             
@@ -1098,7 +1130,9 @@ class Message:
             # Get player list
             players = playerlib.getUseridList(self.filter)
             
-            for player in players:
+            for userid in players:
+                player = playerlib.getPlayer(userid)
+                
                 # Send message
                 usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
     
@@ -1121,21 +1155,33 @@ class Message:
             # Get player object
             player = playerlib.getPlayer(self.filter)
             
+            # Get clean string
+            cleanStr = self.__cleanString(self.__formatString(string, tokens, player))
+            
             # Send message
-            usermsg.echo(int(player), '%s%s' % (message, self.__formatString(string, tokens, player)))
+            usermsg.echo(int(player), '%s%s' % (message, cleanStr))
         elif self.filter == 0:
-            es.dbgmsg(0, '%s%s' % (message, self.__formatString(string, tokens, None)))
+            # Get clean string
+            cleanStr = self.__cleanString(self.__formatString(string, tokens, None))
+            
+            # Print message
+            es.dbgmsg(0, '%s%s' % (message, cleanStr))
         else:
             # Get player list
             players = playerlib.getUseridList(self.filter)
             
-            for player in players:
+            for userid in players:
+                player = playerlib.getPlayer(userid)
+                
+                # Get clean string
+                cleanStr = self.__cleanString(self.__formatString(string, tokens, player))
+                
                 # Send message
-                usermsg.echo(int(player), '%s%s' % (message, self.__formatString(string, tokens, player)))
+                usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
-# ===================================================================================================
+# ==============================================================================
 #  CLASS WRAPPERS
-# ===================================================================================================
+# ==============================================================================
 def getPlayer(userid):
     userid = int(userid)
     try:
@@ -1161,9 +1207,9 @@ def getSoundPack(soundPackName):
     except TypeError, e:
         raise e
 
-# ===================================================================================================
+# ==============================================================================
 #  MESSAGE FUNCTIONS
-# ===================================================================================================
+# ==============================================================================
 def msg(addon, filter, string, tokens={}, showPrefix=True):
     Message(addon, filter).msg(string, tokens, showPrefix)
     
@@ -1179,9 +1225,9 @@ def hudhint(addon, filter, string, tokens={}):
 def centermsg(addon, filter, string, tokens={}):
     Message(addon, filter).centermsg(string, tokens)
 
-# ===================================================================================================
+# ==============================================================================
 #   LEVEL UP AND DOWN TRIGGERING
-# ===================================================================================================
+# ==============================================================================
 def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
     es.event('initialize', 'gg_levelup')
     es.event('setint', 'gg_levelup', 'userid', levelUpUserid)
@@ -1207,9 +1253,9 @@ def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, leve
     es.event('setstring', 'gg_leveldown', 'attackername', attackerName)
     es.event('fire', 'gg_leveldown')
     
-# ===================================================================================================
+# ==============================================================================
 #   RESET GUNGAME --- WARNING: POWERFUL COMMAND
-# ===================================================================================================
+# ==============================================================================
 def resetGunGame():
     # Reset the Leader Information Database in the dict_leaderInfo
     dict_leaderInfo.clear()
@@ -1251,9 +1297,9 @@ def clearGunGame():
     # Clear the gungame globals
     dict_globals.clear()
 
-# ===================================================================================================
+# ==============================================================================
 #   WEAPON RELATED COMMANDS
-# ===================================================================================================
+# ==============================================================================
 def getCurrentWeaponOrderFile():
     return dict_weaponOrderSettings['currentWeaponOrderFile']
     
@@ -1285,9 +1331,9 @@ def sendWeaponOrderMenu(userid):
 def weaponOrderMenuHandler(userid, choice, popupname):
     pass
 
-# ===================================================================================================
+# ==============================================================================
 #   LEVEL RELATED COMMANDS
-# ===================================================================================================
+# ==============================================================================
 def getTotalLevels():
     list_weaponOrderKeys = dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].keys()
     return int(len(list_weaponOrderKeys))
@@ -1344,9 +1390,9 @@ def createScoreList(keyGroupName=None):
         return sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
         # Returns [ (userid, level), (userid, level), (userid, level) ] ... highest level to lowest
     
-# ===================================================================================================
+# ==============================================================================
 #   LEADER RELATED COMMANDS
-# ===================================================================================================
+# ==============================================================================
 def getCurrentLeaderList():
     return dict_leaderInfo['currentLeaders']
     
@@ -1380,9 +1426,9 @@ def getCurrentLeaderCount():
 def getOldLeaderCount():
     return len(dict_leaderInfo['oldLeaders'])
     
-# ===================================================================================================
+# ==============================================================================
 #   CONFIG RELATED COMMANDS
-# ===================================================================================================
+# ==============================================================================
 def getVariableValue(variableName):
     variableName = variableName.lower()
     if es.exists('variable', variableName):
@@ -1397,7 +1443,7 @@ def setVariableValue(variableName, value):
     variableName = variableName.lower()
     if es.exists('variable', variableName):
         if dict_cfgSettings.has_key(variableName):
-            if __isNumeric(value):
+            if isNumeric(value):
                 value = int(value)
             if es.ServerVar(variableName) != str(value):
                 es.server.cmd('%s %s' %(variableName, value))
@@ -1411,9 +1457,9 @@ def setVariableValue(variableName, value):
 def getVariableList():
     return dict_cfgSettings.keys()
     
-# ===================================================================================================
+# ==============================================================================
 #   SOUND RELATED COMMANDS
-# ===================================================================================================
+# ==============================================================================
 def addDownloadableSounds():
     for soundName in dict_gungameSounds:
         if dict_gungameSounds[soundName] != 0:
@@ -1425,9 +1471,9 @@ def getSound(soundName):
     else:
         raise SoundError, 'The sound does not exist.'
     
-# ===================================================================================================
+# ==============================================================================
 #   ADDON RELATED COMMANDS
-# ===================================================================================================
+# ==============================================================================
 def registerAddon(addonName):
     if not dict_RegisteredAddons.has_key(addonName):
         dict_RegisteredAddons[addonName] = Addon(addonName)
@@ -1456,55 +1502,45 @@ def getDependencyList():
 def getDependencyValue(dependencyName):
     return dict_registeredDependencies[dependencyName].dependencyValue
     
-# ===================================================================================================
+# ==============================================================================
 #   GLOBALS RELATED COMMANDS
-# ===================================================================================================
+# ==============================================================================
 def setGlobal(variableName, variableValue):
+    '''Set a global variable (name case insensitive)'''
     variableName = variableName.lower()
-    if __isNumeric(variableValue):
+    if isNumeric(variableValue):
         variableValue = int(variableValue)
     dict_globals[variableName] = variableValue
 
 def getGlobal(variableName):
+    '''Returns a global variable (name case insensitive)'''
     variableName = variableName.lower()
     if dict_globals.has_key(variableName):
         return dict_globals[variableName]
     else:
         return 0
         
-# ===================================================================================================
-#   OTHER FUNCTIONS (INTERNAL GUNGAMELIB USE)
-# ===================================================================================================
-def __isNumeric(string):
+# ==============================================================================
+#  HELPER FUNCTIONS
+# ==============================================================================
+def isNumeric(string):
+    '''Check to see if a string is an integer.'''
     try:
-        test = int(string)
+        int(string)
     except ValueError:
         return False
-    else:
-        return True
+    
+    return True
 
 def getGameDir(dir):
-    # Get the gungame addon path
-    addonPath = es.getAddonPath('gungame')
-    
-    # Split using the path seperator
-    parts = addonPath.split('\\')
-    
-    # Pop the last 2 items in the list
-    parts.pop()
-    parts.pop()
-    
-    # Append cfg then join
-    parts.append(dir)
-    
-    return string.join(parts, '\\')
+    gamePath = str(es.ServerVar('eventscripts_gamedir'))
+    return '%s\\%s' % (gamePath, dir)
 
 def clientInServer(userid):
     return es.exists('userid', userid)
 
 def inLevel():
-    currentMap = str(es.ServerVar('eventscripts_currentmap'))
-    return (currentMap != '0')
+    return (str(es.ServerVar('eventscripts_currentmap')) != '0')
 
 def getLevelName():
     return str(es.ServerVar('eventscripts_currentmap'))
@@ -1513,3 +1549,15 @@ def isSpectator(userid):
     if not clientInServer(userid):
         return
     return (es.getplayerteam(userid) <= 1)
+
+def hasEST():
+    if str(es.ServerVar('est_version')) != '0':
+        return True
+    else:
+        return False
+    
+def getESTVersion():
+    if hasEST():
+        return float(es.ServerVar('est_version'))
+    else:
+        return 0.000

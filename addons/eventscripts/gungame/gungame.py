@@ -15,7 +15,7 @@ import keyvalues
 import gungamelib
 
 # Initialize some CVars
-gungameVersion = "1.0.121"
+gungameVersion = "1.0.123"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 
@@ -610,7 +610,11 @@ def levelInfoHudHint(userid):
                 # Finish off the HudHint
                 HudHintText += ')'
     else:
-        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\nLeader (%s) level: %d of %d (%s)' %(gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText, es.getplayername(list_leadersUserid[0]), gungamelib.getLeaderLevel(), gungamelib.getTotalLevels(), gungamelib.getLevelWeapon(gungamelib.getLeaderLevel()))
+        HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\nLeader (%s) level: %d of %d (%s)' \
+                            %(gungamePlayer['level'], gungamelib.getTotalLevels(),gungamePlayer.getWeapon(),
+                            multiKillText, es.getplayername(gungamelib.getCurrentLeaderList()[0]),
+                            gungamelib.getLeaderLevel(), gungamelib.getTotalLevels(),
+                            gungamelib.getLevelWeapon(gungamelib.getLeaderLevel()))
             
     if not int(gungamelib.getGlobal('voteActive')) and not int(gungamelib.getGlobal('isWarmup')):
         gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))

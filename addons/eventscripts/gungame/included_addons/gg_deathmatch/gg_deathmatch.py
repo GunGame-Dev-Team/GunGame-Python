@@ -115,12 +115,12 @@ def player_death(event_var):
 def player_spawn(event_var):
     global spawnPoints
     
-    # Is a spectator?
-    if int(event_var['es_userteam']) <= 1:
-        return
-    
     # Set vars
     userid = int(event_var['userid'])
+    
+    # Is a spectator?
+    if int(event_var['es_userteam']) <= 1 or es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag'):
+        return
     
     # Do we have a spawn point file?
     if spawnPoints != 0:

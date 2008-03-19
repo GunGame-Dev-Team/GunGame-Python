@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_knife_pro
-Version #:      1.0.119
+Version #:      1.0.136
 Description:    When one player knife kills another player, the attacker steals
                 a level from the victim.
 '''
@@ -18,7 +18,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = "1.0.119"
+info.version  = "1.0.136"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -54,7 +54,7 @@ def player_death(event_var):
         return
 
     # Is warmup round?
-    if gungamelib.getGlobal('isWarmup') == '1':
+    if gungamelib.getGlobal('isWarmup') == 1:
         return
     
     # Get attacker info
@@ -69,27 +69,27 @@ def player_death(event_var):
     
     # Can they levelup anyway?
     if gungameAttacker['preventlevel'] == 1:
-        gungamelib.msg('gg_deathmatch', attacker, 'AttackerPreventLevel')
+        gungamelib.msg('gg_knife_pro', attacker, 'AttackerPreventLevel')
         return
     
     # Is the attacker on the grenade level?
     if gungameAttacker.getWeapon() == 'hegrenade':
-        gungamelib.msg('gg_deathmatch', attacker, 'AttackerNadeLevel')
+        gungamelib.msg('gg_knife_pro', attacker, 'AttackerNadeLevel')
         return
     
     # Is the victim on level 1?
     if gungameVictim['level'] == 1:
-        gungamelib.msg('gg_deathmatch', attacker, 'VictimLevel1')
+        gungamelib.msg('gg_knife_pro', attacker, 'VictimLevel1')
         return
     
     # Is the victim AFK?
     if gungameVictim.isPlayerAFK():
-        gungamelib.msg('gg_deathmatch', attacker, 'VictimAFK')
+        gungamelib.msg('gg_knife_pro', attacker, 'VictimAFK')
         return
     
     # Is the level difference higher than the limit?
     if ((gungameAttackerLevel - gungameVictimLevel) >= gg_knife_pro_limit) and gg_knife_pro_limit != 0:
-        gungamelib.msg('gg_deathmatch', attacker, 'LevelDifferenceLimit')
+        gungamelib.msg('gg_knife_pro', attacker, 'LevelDifferenceLimit')
         return
         
     steamid = gungameVictim['steamid']

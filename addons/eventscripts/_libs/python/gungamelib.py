@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.129
+    Version: 1.0.135
     Description:
     
     Todo:
@@ -1470,7 +1470,7 @@ def getGlobal(variableName):
     if dict_globals.has_key(variableName):
         return dict_globals[variableName]
     else:
-        return '0'
+        return 0
         
 # ===================================================================================================
 #   OTHER FUNCTIONS (INTERNAL GUNGAMELIB USE)

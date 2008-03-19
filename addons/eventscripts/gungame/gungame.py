@@ -15,7 +15,7 @@ import keyvalues
 import gungamelib
 
 # Initialize some CVars
-gungameVersion = "1.0.123"
+gungameVersion = "1.0.136"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 
@@ -678,7 +678,8 @@ def load():
             if gungamelib.getVariableValue('gg_weapon_order') != '#default':
                 myWeaponOrder.changeWeaponOrderType(gungamelib.getVariableValue('gg_weapon_order'))
             if gungamelib.getVariableValue('gg_multikill') > 1:
-                gungamelib.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill'))
+                # gungamelib.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill'))
+                continue
             myWeaponOrder.echo()
     
     
@@ -825,7 +826,7 @@ def load():
             # Fire gg_start event
             es.event('initialize','gg_start')
             es.event('fire','gg_start')
-    
+                
     # RESTART CURRENT MAP
     es.server.cmd('mp_restartgame 2')
     es.msg('#multi', '\x04[\x03GunGame\x04]\x01 Loaded')
@@ -864,7 +865,6 @@ def es_map_start(event_var):
     # Reset the "gungame_voting_started" variable
     dict_gungameVariables['gungame_voting_started'] = False
     
-    
     # See if the option to randomize weapons is turned on
     if gungamelib.getVariableValue('gg_weapon_order') == '#random':
         # Randomize the weapon order
@@ -878,7 +878,7 @@ def es_map_start(event_var):
         # Fire gg_start event
         es.event('initialize','gg_start')
         es.event('fire','gg_start')
-    
+            
     # Reset the GunGame Round
     gungamelib.resetGunGame()
     es.msg('Leader Level = %d' %gungamelib.getLeaderLevel())
@@ -1054,7 +1054,7 @@ def player_spawn(event_var):
         '''
         
         # Check to see if the WarmUp Round is Active
-        if not dict_gungameRegisteredAddons.has_key('gg_warmup_round'):
+        if not gungamelib.getGlobal('isWarmup'):
             # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
             gungamePlayer.giveWeapon()
             

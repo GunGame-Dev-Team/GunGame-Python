@@ -83,7 +83,7 @@ def load():
         
     # Set freezetime
     es.server.cmd('mp_freezetime 0')
-    es.server.cmd('mp_roundtime 0')
+    es.server.cmd('mp_roundtime 999')
 
 def unload():
     # Unregister this addon with GunGame

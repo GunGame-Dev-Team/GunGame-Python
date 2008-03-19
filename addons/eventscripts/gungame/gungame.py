@@ -1225,7 +1225,7 @@ def gg_tied_leader(event_var):
     leaderLevel = gungamelib.getLeaderLevel()
     
     if leaderCount == 2:
-        gungamelib.saytext2('gungame', '#all', index, 'TiedLeader_Singular', {'player': playerName, 'level': leaderLevel}, Falses)
+        gungamelib.saytext2('gungame', '#all', index, 'TiedLeader_Singular', {'player': playerName, 'level': leaderLevel}, False)
     else:
         gungamelib.saytext2('gungame', '#all', index, 'TiedLeader_Plural', {'count': leaderCount, 'player': playerName, 'level': leaderLevel}, False)
 

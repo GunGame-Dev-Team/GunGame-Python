@@ -34,23 +34,16 @@ dict_SpawnProtectVars['alpha'] = gungamelib.getVariableValue('gg_spawn_protect_a
 dict_SpawnProtectVars['delay'] = gungamelib.getVariableValue('gg_spawn_protect')
 
 playerCounters = {}
-originalNoisy = 0
 
 def load():
     # Register
     gg_spawn_protect = gungamelib.registerAddon('gg_spawn_protect')
     gg_spawn_protect.setMenuText('GG Spawn Protection')
     
-    # Set noisy to 1
-    originalNoisy = int(es.ServerVar('eventscripts_noisy'))
-    es.ServerVar('eventscripts_noisy').set(1)
-
 def unload():
     # Unregister
     gungamelib.unregisterAddon('gg_spawn_protect')
     
-    es.ServerVar('eventscripts_noisy').set(originalNoisy)
-
 def server_cvar(event_var):
     # Register change in gg_map_list_file
     if event_var['cvarname'] == 'gg_spawn_protect':
@@ -79,6 +72,9 @@ def player_disconnect(event_var):
     # Is the player invincible?
     if repeat.status('CombatCounter%s' % userid):
         repeat.delete('CombatCounter%s' % userid)
+        
+    if playerCounters.has_key(userid):
+        del playerCounters[userid]
 
 def player_death(event_var):
     # Get userid
@@ -110,7 +106,7 @@ def combatCountdown(userid, repeatInfo):
     # Decrement the timer
     playerCounters[userid] -= 1
 
-def finishCountdown(userid, announce=True):
+def finishCountdown(userid):
     # Init vars
     userid = int(userid)
     player = playerlib.getPlayer(userid)
@@ -122,8 +118,7 @@ def finishCountdown(userid, announce=True):
     gungamePlayer['preventlevel'] = 0
     
     # Tell them they are uninvicible
-    if announce:
-        gungamelib.centermsg('gg_spawn_protect', userid, 'CombatStarted')
+    gungamelib.centermsg('gg_spawn_protect', userid, 'CombatStarted')
     
     # Remove them from the counters
     repeat.delete('CombatCounter%s' % userid)

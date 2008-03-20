@@ -59,7 +59,7 @@ def player_spawn(event_var):
     gungamePlayer = gungamelib.getPlayer(userid)
     
     # Is player alive?
-    if not gungamelib.isAlive(userid) or not gungamelib.isSpectator(userid):
+    if gungamelib.isDead(userid) or gungamelib.isSpectator(userid):
         return
     
     # Start countdown
@@ -89,8 +89,13 @@ def player_death(event_var):
         repeat.delete('CombatCounter%s' % userid)
 
 def combatCountdown(userid, repeatInfo):
+    # Get player
+    try:
+        player = playerlib.getPlayer(userid)
+    except UseridError:
+        repeat.delete('CombatCounter%s' % userid)
+    
     # Set health
-    player = playerlib.getPlayer(userid)
     player.set('health', 999)
     
     # Is plural
@@ -101,11 +106,8 @@ def combatCountdown(userid, repeatInfo):
     elif playerCounters[userid] == 1:
         gungamelib.centermsg('gg_spawn_protect', userid, 'CombatCountdown_Singular')
     
-    print 'Timer, userid: %s' % userid
-    
     # Set the players health back and return
     if playerCounters[userid] == 0:
-        print 'Fired 1.'
         # Finish the countdown
         finishCountdown(userid)
         return
@@ -119,6 +121,10 @@ def finishCountdown(userid):
     player = playerlib.getPlayer(userid)
     gungamePlayer = gungamelib.getPlayer(userid)
 
+    # Remove them from the counters
+    repeat.delete('CombatCounter%s' % userid)
+    del playerCounters[userid]
+
     # Set color and health and preventLevel
     player.set('health', 100)
     player.set('color', (255, 255, 255, 255))
@@ -126,10 +132,6 @@ def finishCountdown(userid):
     
     # Tell them they are uninvicible
     gungamelib.centermsg('gg_spawn_protect', userid, 'CombatStarted')
-    
-    # Remove them from the counters
-    repeat.delete('CombatCounter%s' % userid)
-    del playerCounters[userid]
 
 def startCountdown(userid):
     # Is it warmup round?
@@ -141,11 +143,12 @@ def startCountdown(userid):
     player = playerlib.getPlayer(userid)
     delay = dict_SpawnProtectVars['delay']
     
+    # Set player counter
     playerCounters[userid] = delay
 
     # Set color and health
     player.set('health', 999)
-    player.set('color', (dict_SpawnProtectVars['red'], dict_SpawnProtectVars['green'], dict_SpawnProtectVars['blue'],               dict_SpawnProtectVars['alpha']))
+    player.set('color', (dict_SpawnProtectVars['red'], dict_SpawnProtectVars['green'], dict_SpawnProtectVars['blue'], dict_SpawnProtectVars['alpha']))
     
     # Start counter
     repeat.create('CombatCounter%s' % userid, combatCountdown, (userid))

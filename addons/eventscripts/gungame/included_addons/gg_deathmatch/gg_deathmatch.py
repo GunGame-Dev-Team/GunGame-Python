@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.129
+    Version: 1.0.144
     Description: Deathmatch addon for GunGame:Python
 '''
 
@@ -25,7 +25,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.128"
+info.version  = "1.0.144"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "GunGame Development Team"

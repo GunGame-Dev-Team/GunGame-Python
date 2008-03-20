@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_turbo
-Version #:      1.0.119
+Version #:      1.0.144
 Description:    GunGame Turbo is allows players to recieve the weapon for their new
                 level immediately, instead of having to wait for the following round.
                 This addon makes the GunGame round a little more fast-paced.
@@ -17,7 +17,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_turbo Addon for GunGame: Python"
-info.version  = "1.0.119"
+info.version  = "1.0.144"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_turbo"
 info.author   = "GunGame Development Team"

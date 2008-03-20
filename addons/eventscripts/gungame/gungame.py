@@ -8,17 +8,20 @@
 # ==============================================================================
 #   IMPORTS
 # ==============================================================================
+# Python Imports
 import os
 import cPickle
+import ConfigParser
 
+# EventScripts Imports
 import es
 import gamethread
 import playerlib
 import usermsg
 import popuplib
 import keyvalues
-import ConfigParser
 
+# GunGame Imports
 import gungamelib
 
 reload(gungamelib)
@@ -27,7 +30,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.136"
+gungameVersion = "1.0.144"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 

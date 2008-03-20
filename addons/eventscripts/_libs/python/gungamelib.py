@@ -1536,7 +1536,7 @@ def isNumeric(string):
 
 def getGameDir(dir):
     gamePath = str(es.ServerVar('eventscripts_gamedir'))
-    return '%s\\%s' % (gamePath, dir)
+    return '%s/%s' % (gamePath, dir)
 
 def clientInServer(userid):
     return es.exists('userid', userid)

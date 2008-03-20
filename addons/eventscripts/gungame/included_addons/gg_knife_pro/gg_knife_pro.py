@@ -50,6 +50,7 @@ def player_death(event_var):
     # Check for knife kill, and not a team kill, and not a suicide by world
     userteam = event_var['es_userteam']
     attackerteam = event_var['es_attackerteam']
+    
     if event_var['weapon'] != 'knife' or attackerteam == userteam or event_var['attacker'] == '0':
         return
 
@@ -65,6 +66,10 @@ def player_death(event_var):
     attacker = int(event_var['attacker'])
     gungameAttacker = gungamelib.getPlayer(attacker)
     gungameAttackerLevel = gungameAttacker['level']
+    
+    # FIXED: Duplicate winning
+    if gungameAttackerLevel == gungamelib.getTotalLevels():
+        return
     
     # Get victim info
     userid = event_var['userid']

@@ -8,12 +8,14 @@
 # ==============================================================================
 #   IMPORTS
 # ==============================================================================
+# Python Imports
 import string
 import random
 import os
-
-import es
 import ConfigParser
+
+# EventScripts Imports
+import es
 import playerlib
 import gamethread
 import popuplib
@@ -351,15 +353,13 @@ class Player:
         if int(es.getplayerteam(self.userid)) > 1:
             if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
                 es.server.cmd('es_setpos %d %s %s %s' %(self.userid, x, y, z))
-                
                 if eyeangle0 or eyeangle1:
                     es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
-                
                 gamethread.delayed(0.6, self.resetPlayerLocation, ())
             else:
-                echo('gungame', 0, 0, 'Player:TeleportPlayer:NotAlive', {'userid': self.userid, 'name': es.getplayername(self.userid)})
+                raise DeadError, 'Unable to teleport player -> userid \'%s\' is not alive' % self.userid
         else:
-            echo('gungame', 0, 0, 'Player:TeleportPlayer:NoTeam', {'userid': self.userid, 'name': es.getplayername(self.userid)})
+            raise TeamError, 'Unable to teleport player -> userid \'%s\' is not a team' % self.userid
         
     def setPlayerEyeAngles(self, eyeAngle0, eyeAngle1):
         # Make sure the player is on a team
@@ -999,6 +999,7 @@ class addonDependency:
                 # Delete depdency
                 del dict_registeredDependencies[self.dependency]
 
+                
 # ==============================================================================
 #   MESSAGE CLASS
 # ==============================================================================
@@ -1179,6 +1180,7 @@ class Message:
                 # Send message
                 usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
+                
 # ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================
@@ -1226,7 +1228,7 @@ def centermsg(addon, filter, string, tokens={}):
     Message(addon, filter).centermsg(string, tokens)
 
 # ==============================================================================
-#   LEVEL UP AND DOWN TRIGGERING
+#   LEVEL UP AND LEVEL DOWN TRIGGERING
 # ==============================================================================
 def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
     es.event('initialize', 'gg_levelup')

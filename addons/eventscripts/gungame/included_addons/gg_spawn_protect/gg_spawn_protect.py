@@ -58,6 +58,10 @@ def player_spawn(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
     
+    # Is player alive?
+    if not gungamelib.isAlive(userid) or not gungamelib.isSpectator(userid):
+        return
+    
     # Start countdown
     startCountdown(userid)
     
@@ -97,8 +101,11 @@ def combatCountdown(userid, repeatInfo):
     elif playerCounters[userid] == 1:
         gungamelib.centermsg('gg_spawn_protect', userid, 'CombatCountdown_Singular')
     
+    print 'Timer, userid: %s' % userid
+    
     # Set the players health back and return
     if playerCounters[userid] == 0:
+        print 'Fired 1.'
         # Finish the countdown
         finishCountdown(userid)
         return

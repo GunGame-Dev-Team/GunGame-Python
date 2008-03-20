@@ -47,14 +47,18 @@ def server_cvar(event_var):
         gg_knife_pro_limit = int(event_var['cvarvalue'])
     
 def player_death(event_var):
-    # Check for knife kill, and not a team kill
+    # Check for knife kill, and not a team kill, and not a suicide by world
     userteam = event_var['es_userteam']
     attackerteam = event_var['es_attackerteam']
-    if event_var['weapon'] != 'knife' or attackerteam == userteam:
+    if event_var['weapon'] != 'knife' or attackerteam == userteam or event_var['attacker'] == '0':
         return
 
     # Is warmup round?
     if gungamelib.getGlobal('isWarmup') == 1:
+        return
+        
+    # Check to make sure it wasn't a suicide
+    if event_var['attacker'] == '0':
         return
     
     # Get attacker info

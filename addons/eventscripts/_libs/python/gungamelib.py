@@ -247,7 +247,7 @@ class Player:
                     raise GunGameValueError, 'MultiKill value must be 0 or greater -> given \'%i\'' %value
             # TRIPLE
             elif item == 'triple':
-                if value1 > -1 and value < 4:
+                if value > -1 and value < 4:
                     self.attributes[item] = value
                 else:
                     raise GunGameValueError, 'Triple Level value must be between 0 and 3 -> given \'%i\'' %value

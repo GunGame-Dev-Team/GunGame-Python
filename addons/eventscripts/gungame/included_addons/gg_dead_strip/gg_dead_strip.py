@@ -49,7 +49,7 @@ def item_pickup(event_var):
         playerWeapon = gungamePlayer.getWeapon()
         #playerWeapon = gungamePlayer.get('weapon')
         playerlibPlayer = playerlib.getPlayer(userid)
-        if gungamelib.getGlobal('isWarmup') == '1':
+        if gungamelib.getGlobal('isWarmup') == 1:
             if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
                 es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
         else:

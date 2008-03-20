@@ -58,7 +58,7 @@ def server_cvar(event_var):
 
 def player_spawn(event_var):
     # Is a warmup round?
-    if gungamelib.getGlobal('isWarmup') == '1':
+    if gungamelib.getGlobal('isWarmup') == 1:
         return
     
     # Get userid and player object
@@ -71,31 +71,22 @@ def player_spawn(event_var):
     # See if prevent level is already turned on
     if not gungamePlayer['preventlevel']:
         gungamePlayer['preventlevel'] = 1
-        gamethread.delayed(dict_SpawnProtectVars['delay'], setPreventLevelZero, (userid))
 
 def player_disconnect(event_var):
     # Get userid
     userid = int(event_var['userid'])
     
     # Is the player invincible?
-    if playerCounters.has_key(userid):
-        finishCountdown(userid, False)
+    if repeat.status('CombatCounter%s' % userid):
+        repeat.delete('CombatCounter%s' % userid)
 
 def player_death(event_var):
     # Get userid
     userid = int(event_var['userid'])
     
     # Is the player invincible?
-    if playerCounters.has_key(userid):
-        finishCountdown(userid, False)
-
-def weapon_fire(event_var):
-    # Get userid
-    userid = int(event_var['userid'])
-    
-    # Is the player invincible?
-    if playerCounters.has_key(userid):
-        finishCountdown(userid)
+    if repeat.status('CombatCounter%s' % userid):
+        repeat.delete('CombatCounter%s' % userid)
 
 def combatCountdown(userid, repeatInfo):
     # Set health
@@ -123,10 +114,12 @@ def finishCountdown(userid, announce=True):
     # Init vars
     userid = int(userid)
     player = playerlib.getPlayer(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
 
-    # Set color and health
+    # Set color and health and preventLevel
     player.set('health', 100)
     player.set('color', (255, 255, 255, 255))
+    gungamePlayer['preventlevel'] = 0
     
     # Tell them they are uninvicible
     if announce:
@@ -144,17 +137,14 @@ def startCountdown(userid):
     # Init vars
     userid = int(userid)
     player = playerlib.getPlayer(userid)
+    delay = dict_SpawnProtectVars['delay']
     
-    playerCounters[userid] = dict_SpawnProtectVars['delay']
+    playerCounters[userid] = delay
 
     # Set color and health
     player.set('health', 999)
-    player.set('color', (dict_SpawnProtectVars['red'], dict_SpawnProtectVars['green'], dict_SpawnProtectVars['blue'], dict_SpawnProtectVars['alpha']))
+    player.set('color', (dict_SpawnProtectVars['red'], dict_SpawnProtectVars['green'], dict_SpawnProtectVars['blue'],               dict_SpawnProtectVars['alpha']))
     
     # Start counter
     repeat.create('CombatCounter%s' % userid, combatCountdown, (userid))
-    repeat.start('CombatCounter%s' % userid, 1, 0)
-
-def setPreventLevelZero(userid):
-    gungamePlayer = gungamelib.getPlayer(userid)
-    gungamePlayer['preventlevel'] = 0
+    repeat.start('CombatCounter%s' % userid, 1, delay + 1)

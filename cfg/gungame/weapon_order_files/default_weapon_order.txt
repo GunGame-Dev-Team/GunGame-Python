@@ -32,10 +32,10 @@
 // Pick which ones you want and put them in order with level 1 being first in the list then level 2, level 3, etc.
 // ************************************************************ 
 
-glock 1
-usp 2
-p228 3
-deagle 4
+glock
+usp
+p228
+deagle
 fiveseven
 elite
 m3

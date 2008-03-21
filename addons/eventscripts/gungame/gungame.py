@@ -997,7 +997,7 @@ def player_disconnect(event_var):
                 dict_reconnectingPlayers[steamid] = 1
     
     # Remove the player from the leader list
-    if userid in gungamelib.getLeaderList():
+    if userid in gungamelib.getCurrentLeaderList():
         gungamelib.removeLeader(userid)
         
     gungamePlayer.removePlayer()

@@ -571,34 +571,34 @@ def levelInfoHudHint(userid):
         if gungamelib.getCurrentLeaderCount() == 1:    
             HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\n\nYou are the leader.' % (gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
         else:
-            if leaderLevel != 1:
-                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\n\nYou are amongst the leaders (' % (gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
-            else:
+            if leaderLevel == 1:
                 HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\n\nThere are no leaders.' % (gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
-            leadersCount = 0
+            else:
+                HudHintText = 'Current level: %d of %d\nCurrent weapon: %s%s\n\nYou are amongst the leaders (' % (gungamePlayer['level'], gungamelib.getTotalLevels(), gungamePlayer.getWeapon(), multiKillText)
+                
+                # Get the first 2 leaders
+                leadersCount = 0
+                for leader in list_leadersUserid:
+                    # Increment leader count
+                    leadersCount += 1
+                            
+                    # More than 2 leaders added?
+                    if leadersCount == 3:
+                        HudHintText += '...'
+                        break
+                            
+                    # Don't add the comma if there is 2 or less leaders
+                    if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
+                        HudHintText += es.getplayername(leader)
+                        break
                     
-            # Get the first 2 leaders
-            for leader in list_leadersUserid:
-                # Increment leader count
-                leadersCount += 1
-                        
-                # More than 2 leaders added?
-                if leadersCount == 3:
-                    HudHintText += '...'
-                    break
-                        
-                # Don't add the comma if there is 2 or less leaders
-                if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
-                    HudHintText += es.getplayername(leader)
-                    break
-                        
-                # Don't add our userid
-                if leader == userid:
-                    continue
-                        
-                # Add the name to the hudhint and increment the leaders count
-                HudHintText += es.getplayername(leader) + ', '
+                    # Don't add our userid
+                    if leader == userid:
+                        continue
                     
+                    # Add the name to the hudhint and increment the leaders count
+                    HudHintText += es.getplayername(leader) + ', '
+                        
                 # Finish off the HudHint
                 HudHintText += ')'
     else:
@@ -646,8 +646,8 @@ def load():
         # Create a list of stripping exceptions using the 'gg_map_strip_exceptions' variable
         list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')
     
-    weaponOrderINI  = ConfigParser.ConfigParser()
-    gameDir         = es.ServerVar('eventscripts_gamedir')
+    weaponOrderINI = ConfigParser.ConfigParser()
+    gameDir = es.ServerVar('eventscripts_gamedir')
     
     # Loop through the Weapon Order INI and register their information with GunGame
     weaponOrderINI.read('%s/cfg/gungame/gg_weapon_orders.ini' % gameDir)
@@ -661,8 +661,8 @@ def load():
                 myWeaponOrder.changeWeaponOrderType(gungamelib.getVariableValue('gg_weapon_order'))
             
             if gungamelib.getVariableValue('gg_multikill') > 1:
-                # gungamelib.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill'))
                 continue
+            
             myWeaponOrder.echo()
     
     '''

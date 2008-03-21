@@ -30,7 +30,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.157"
+gungameVersion = "1.0.158"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 
@@ -1392,8 +1392,9 @@ def gg_win(event_var):
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
     
     # Play the winner sound
-    if gungamelib.getSound('winner'):
-        es.playsound(userid, gungamelib.getSound('winner'), 1.0)
+    for userid in es.getUseridList():
+        if gungamelib.getSound('winner'):
+            es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
     if gungamelib.getVariableValue('gg_save_winners') > 0:
         # See if the player has won before

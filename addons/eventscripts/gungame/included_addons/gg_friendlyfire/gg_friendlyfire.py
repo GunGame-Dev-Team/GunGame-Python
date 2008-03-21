@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_friendlyfire
-Version #:      1.0.157
+Version #:      1.0.158
 Description:    Friendly fire will activate when the last level is reached
 '''
 
@@ -16,7 +16,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_friendlyfire Addon for GunGame: Python"
-info.version  = "1.0.157"
+info.version  = "1.0.158"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_friendlyfire"
 info.author   = "GunGame Development Team"

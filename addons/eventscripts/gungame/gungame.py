@@ -40,7 +40,8 @@ info.name     = "GunGame: Python"
 info.version  = gungameVersion
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame"
-info.author   = "GunGame Development Team"
+#info.author   = "GunGame Development Team"
+info.author   = "XE_ManUp, RideGuy, Saul"       # DON'T REMOVE, USED BY GG_WELCOME_MSG, SORRY IF I MISSED SOME PEOPLE OUT!
 
 # ==============================================================================
 #   GLOBALS

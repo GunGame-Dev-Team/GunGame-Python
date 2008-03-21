@@ -77,7 +77,8 @@ def player_disconnect(event_var):
     # Is the player invincible?
     if repeat.status('CombatCounter%s' % userid):
         repeat.delete('CombatCounter%s' % userid)
-        
+    
+    # Remove from counters
     if playerCounters.has_key(userid):
         del playerCounters[userid]
 
@@ -95,6 +96,9 @@ def combatCountdown(userid, repeatInfo):
         player = playerlib.getPlayer(userid)
     except UseridError:
         repeat.delete('CombatCounter%s' % userid)
+    
+    # Keep them invincible
+    player.set('health', 999)
     
     # Is plural
     if playerCounters[userid] > 1:

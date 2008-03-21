@@ -14,6 +14,7 @@ import popuplib
 
 # GunGame imports
 import gungamelib
+from gungame import gungame
 
 # Register this addon with EventScripts
 info = es.AddonInfo()
@@ -24,18 +25,27 @@ info.basename = "gungame/included_addons/gg_welcome_msg"
 info.author   = "GunGame Development Team"
 
 def load():
-    # Register addon with gungamelib
+    # Register addon
     gg_welcome_msg = gungamelib.registerAddon('gg_welcome_msg')
     gg_welcome_msg.setMenuText('GG Welcome Message')
     
     # Create the popup
     menu = popuplib.create('gg_welcome_msg')
-    menu.addline('')
+    menu.addline('This server is running GunGame:Python (%s)' % gungame.info.version)
+    menu.addline('Created by: %s' % gungame.info.author)
+    menu.addline('----------------------------')
+    menu.addline('->1. Loaded addons:')
     
+    for addon in gungamelib.dict_RegisteredAddons:
+        addonObj = gungamelib.dict_RegisteredAddons[addon]
+        menu.addline(' * %s' % addonObj.menuText[3:])
+        
+    menu.addline('----------------------------')
+
+    menu.addline('->9. Exit')
+def player_activate(event_var):
+    # Send the popup
+    gamethread.delayed(2, popuplib.send, ('gg_welcome_msg', int(event_var['userid'])))
+
 def unload():
-    # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_welcome_msg')
-    
-def player_connect(event_var):
-    # Send the popup in 10 seconds
-    gamethread.delayed(9, popuplib.send, ('gg_welcome_msg', event_var['userid']))

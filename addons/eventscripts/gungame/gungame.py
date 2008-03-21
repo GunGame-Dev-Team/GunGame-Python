@@ -800,7 +800,7 @@ def load():
             # Fire gg_start event
             es.event('initialize','gg_start')
             es.event('fire','gg_start')
-                
+    
     # Restart map
     gungamelib.msg('gungame', '#all', 'Loaded')
     es.server.cmd('mp_restartgame 2')

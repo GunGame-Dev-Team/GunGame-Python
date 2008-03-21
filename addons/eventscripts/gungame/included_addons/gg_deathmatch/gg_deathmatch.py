@@ -96,7 +96,7 @@ def server_cvar(event_var):
 
 def es_map_start(event_var):
     getSpawnPoints(event_var['mapname'])
-    
+
 def player_team(event_var):
     # Respawn the player
     if event_var['disconnect'] != '0':

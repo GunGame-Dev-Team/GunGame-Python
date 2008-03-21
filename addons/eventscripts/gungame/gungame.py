@@ -1077,6 +1077,10 @@ def player_death(event_var):
                                 
                                 gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
                                 gungameAttacker['multikill'] = 0
+                                
+                                # Play the levelup sound
+                                if gungamelib.getSound('levelup'):
+                                    es.playsound(userid, gungamelib.getSound('levelup'), 1.0)
                             else:
                                 # Message the attacker
                                 multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
@@ -1092,6 +1096,10 @@ def player_death(event_var):
                             levelUpNewLevel = levelUpOldLevel + 1
                             
                             gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
+                            
+                            # Play the levelup sound
+                            if gungamelib.getSound('levelup'):
+                                es.playsound(userid, gungamelib.getSound('levelup'), 1.0)
                             
                 # The victim was AFK
                 else:
@@ -1117,6 +1125,10 @@ def player_death(event_var):
                         gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
                     else:
                         gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
+                        
+                    # Play the leveldown sound
+                    if gungamelib.getSound('leveldown'):
+                        es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
             else:
                 # Let's see if we get to punish the vile TK'er...
                 if gungamelib.getVariableValue('gg_tk_punish') > 0:
@@ -1130,6 +1142,10 @@ def player_death(event_var):
                         
                     else:
                         gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
+                        
+                    # Play the leveldown sound
+                    if gungamelib.getSound('leveldown'):
+                        es.playsound(attacker, gungamelib.getSound('leveldown'), 1.0)
     else:
         # Killed by "world"
         gungameAttacker = gungamelib.getPlayer(userid)
@@ -1144,6 +1160,10 @@ def player_death(event_var):
                 # Let's not put them on a non-existant level 0...
                 if levelDownNewLevel > 0:
                     gungamelib.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
+                    
+                # Play the leveldown sound
+                if gungamelib.getSound('leveldown'):
+                    es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
     
 def bomb_defused(event_var):
     # Set vars
@@ -1176,6 +1196,12 @@ def bomb_exploded(event_var):
     levelUpOldLevel = gungamePlayer['level']
     levelUpNewLevel = levelUpOldLevel + 1
     gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
+    
+def player_team(event_var):
+    if int(event_var['oldteam']) < 2 and int(event_var['team']) > 1:
+        # Play the welcome sound
+        if gungamelib.getSound('welcome'):
+            es.playsound(userid, gungamelib.getSound('welcome'), 1.0)
 
 def gg_levelup(event_var):
     # Check for a winner first
@@ -1191,6 +1217,16 @@ def gg_levelup(event_var):
         # Regular levelup code...
         userid = int(event_var['userid'])
         gungamePlayer = gungamelib.getPlayer(userid)
+        
+        if gungamelib.getLevelWeapon(event_var['new_level']) == 'knife':
+            # Play the leveldown sound
+            if gungamelib.getSound('knifelevel'):
+                es.emitsound('player', userid, gungamelib.getSound('knifelevel'), 1.0, 1.0)
+                
+        if gungamelib.getLevelWeapon(event_var['new_level']) == 'hegrenade':
+            # Play the leveldown sound
+            if gungamelib.getSound('nadelevel'):
+                es.emitsound('player', userid, gungamelib.getSound('nadelevel'), 1.0, 1.0)
         
         # Set the player's level in the GunGame Core Dictionary
         gungamePlayer['level'] = int(event_var['new_level'])
@@ -1354,6 +1390,10 @@ def gg_win(event_var):
     # Tell the world
     gungamelib.saytext2('gungame', '#all', index, 'PlayerWon', {'player': playerName})
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
+    
+    # Play the winner sound
+    if gungamelib.getSound('winner'):
+        es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
     if gungamelib.getVariableValue('gg_save_winners') > 0:
         # See if the player has won before

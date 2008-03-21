@@ -1471,7 +1471,10 @@ def addDownloadableSounds():
             
 def getSound(soundName):
     if dict_gungameSounds.has_key(soundName):
-        return dict_gungameSounds[soundName]
+        if dict_gungameSounds[soundName] == '0':
+            return 0
+        else:
+            return dict_gungameSounds[soundName]
     else:
         raise SoundError, 'The sound does not exist.'
     

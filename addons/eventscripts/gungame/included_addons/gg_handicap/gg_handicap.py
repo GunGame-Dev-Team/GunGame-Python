@@ -70,7 +70,7 @@ def handicapUpdate(repeatInfo):
         gungamePlayer = gungamelib.getPlayer(userid)
         if gungamePlayer['level'] < averageLevel:
             gungamePlayer['level'] = averageLevel
-            if gungamelib.getSound('handicap') != '0':
+            if gungamelib.getSound('handicap'):
                 es.playsound(userid, gungamelib.getSound('handicap'), 1.0)
     
     gungamelib.msg('gg_handicap', userid, 'HandicapUpdate', {'level': averageLevel})

@@ -46,7 +46,7 @@ def gg_levelup(event_var):
         # Add the player to the triple level list
         list_currentTripleLevel.append(userid)
         # Sound and Messages
-        if gungamelib.getSound('triplelevel') != '0':
+        if gungamelib.getSound('triplelevel'):
             es.emitsound('player', userid, gungamelib.getSound('triplelevel'), 1.0, 1.0)
         gungamelib.msg('gg_triple_level', '#all', 'MsgTripleLevelled', {'name': name})
         gungamelib.centermsg('gg_triple_level', '#all', 'CenterTripleLevelled', {'name': name})

@@ -111,8 +111,16 @@ def player_death(event_var):
     # Trigger level down for the victim
     gungamelib.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
     
+    # Play the leveldown sound
+    if gungamelib.getSound('leveldown'):
+        es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
+    
     # Trigger level up for the attacker
     gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
+    
+    # Play the leveldown sound
+    if gungamelib.getSound('levelsteal'):
+        es.playsound(attacker, gungamelib.getSound('levelsteal'), 1.0)
     
     # BEGIN THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
     # -----------------------------------------------------------------------------------------------------------

@@ -96,6 +96,9 @@ def unload():
     
     # Return "mp_freezetime" to what it was originally
     es.forcevalue('mp_freezetime', mp_freezetimeBackUp)
+    
+    # Set "isWarmup" global
+    gungamelib.setGlobal('isWarmup', 0)
 
 def startTimer():
     # Create a repeat

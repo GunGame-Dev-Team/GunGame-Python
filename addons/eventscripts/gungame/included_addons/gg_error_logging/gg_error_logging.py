@@ -51,7 +51,7 @@ def gungameExceptHook(type, value, tb):
         if not os.path.isfile(gungameErrorLogPath):
             # Create the Error Log
             gungameErrorLog = open(gungameErrorLogPath, 'w')
-            gungameErrorLog.write('GunGame Version: %s\n' %str(es.ServerVar('eventscripts_ggp')))
+            gungameErrorLog.write('GunGame Version: %s\n' % str(es.ServerVar('eventscripts_ggp')))
             gungameErrorLog.write('\n')
         else:
             gungameErrorLog = open(gungameErrorLogPath, 'a')

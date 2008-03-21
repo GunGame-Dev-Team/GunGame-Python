@@ -306,7 +306,7 @@ def cmd_convert():
             newFile = open(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\') + f.strip('es_').strip('_db'), 'w')
             
             # Are there any points?
-            if points.count() == 0:
+            if len(points) == 0:
                 gungamelib.echo('gg_deathmatch', 0, 0, 'CannotConvert_Skipping')
                 continue
             

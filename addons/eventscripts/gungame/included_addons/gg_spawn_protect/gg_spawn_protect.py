@@ -10,9 +10,10 @@ Description:    This will make players invincible and marked with color when
 
 # EventScripts imports
 import es
-import playerlib
 import gamethread
 import repeat
+import playerlib
+from playerlib import UseridError
 
 # GunGame imports
 import gungamelib
@@ -95,9 +96,6 @@ def combatCountdown(userid, repeatInfo):
     except UseridError:
         repeat.delete('CombatCounter%s' % userid)
     
-    # Set health
-    player.set('health', 999)
-    
     # Is plural
     if playerCounters[userid] > 1:
         gungamelib.centermsg('gg_spawn_protect', userid, 'CombatCountdown_Plural', {'time': playerCounters[userid]})
@@ -107,7 +105,7 @@ def combatCountdown(userid, repeatInfo):
         gungamelib.centermsg('gg_spawn_protect', userid, 'CombatCountdown_Singular')
     
     # Set the players health back and return
-    if playerCounters[userid] == 0:
+    if playerCounters[userid] <= 0:
         # Finish the countdown
         finishCountdown(userid)
         return

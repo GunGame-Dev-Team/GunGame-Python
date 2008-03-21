@@ -1387,7 +1387,6 @@ def createScoreList(keyGroupName=None):
             es.msg('keygroup %s created' %keyGroupName)
     else:
         return sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
-        # Returns [ (userid, level), (userid, level), (userid, level) ] ... highest level to lowest
     
 # ==============================================================================
 #   LEADER RELATED COMMANDS
@@ -1409,7 +1408,7 @@ def getCurrentLeaderString():
         if not currentLeaderString:
             currentLeaderString = userid
         else:
-            currentLeaderString = '%s,%s' %(currentLeaderString, userid)
+            currentLeaderString = '%s,%s' % (currentLeaderString, userid)
     return currentLeaderString
     
 def getOldLeaderString():

@@ -23,7 +23,6 @@ info.author   = "GunGame Development Team"
 
 # Set Level where gg_friendlyfire has to be activate
 friendlyFireLevel = gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_friendlyfire')
-friendlyFireEnabled = 0
 mp_friendlyfireBackUp = 0
 
 def load():
@@ -33,6 +32,7 @@ def load():
     
     # Get backup of mp_friendlyfire
     mp_friendlyfireBackUp = int(es.ServerVar('mp_friendlyfire'))
+    
     # Set mp_friendlyfire to 0
     es.forcevalue('mp_friendlyfire', 0)
 
@@ -41,7 +41,7 @@ def unload():
     gungamelib.unregisterAddon('gg_friendlyfire')
     
     # Return 'mp_friendlyfire' to what it was originally
-    es.server.cmd('mp_friendlyfire %d' %mp_friendlyfireBackUp)
+    es.server.cmd('mp_friendlyfire %d' % mp_friendlyfireBackUp)
     
 def server_cvar(event_var):
     # Watch for change in friendlyfire level
@@ -49,26 +49,24 @@ def server_cvar(event_var):
         friendlyFireLevel = gungamelib.getTotalLevels() - int(event_var['cvarvalue'])
 
 def es_map_start(event_var):
-    friendlyFireEnabled = 0
     # Set mp_friendlyfire to 0
     es.forcevalue('mp_friendlyfire', 0)
     
 def gg_start():
-    friendlyFireEnabled = 0
     # Set mp_friendlyfire to 0
     es.forcevalue('mp_friendlyfire', 0)
     
     # Get friendlyfireLevel again just incase the Total Levels have changed
     friendlyFireLevel = gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_friendlyfire')
-    
 
 def gg_levelup(event_var):
     # If the Leader is on the friendlyfire level?
     if gungamelib.getLeaderLevel() >= friendlyFireLevel:
         # Check whether friendlyfire is enabled
-        if not friendlyFireEnabled:
-            # Set friendlyfire to 1; Message and Sound
+        if int(es.ServerVar('mp_friendlyfire')) == 0:
+            # Set friendlyfire to 1
             es.forcevalue('mp_friendlyfire', 1)
+            
+            # Show message and sound
             gungamelib.msg('gg_friendlyfire', '#all', 'WatchYourFire')
             es.cexec_all('play npc/roller/mine/rmine_tossed1.wav')
-            friendlyFireEnabled = 1

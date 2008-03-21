@@ -223,6 +223,7 @@ def rebuildLeaderMenu():
     
     for userid in gungamelib.getCurrentLeaderList():
         list_leaderNames.append(removeReturnChars(es.getplayername(userid)))
+    
     # Check to see if the popup "gungameLevelMenu" exists
     if popuplib.exists('gungameLeadersMenu'):
         # The popup exists...let's unsend it

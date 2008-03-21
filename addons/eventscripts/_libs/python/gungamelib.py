@@ -118,7 +118,7 @@ class Player:
                         self.attributes = dict_gungameCore[self.userid]
                 else:
                     # If we reach this code, someone has given us an invalid userid
-                    raise UseridError,  '\'%s\' is an invalid userid -> no matching userid found active on the server' %self.userid
+                    raise UseridError,  '\'%s\' is an invalid userid: no matching userid found active on the server' %self.userid
             else:
                 # We will now make sure that the player exists in the GunGame database
                 # When we "validate" the player, we are actually checking to see if they exist in the GunGame Core Dictionary
@@ -130,7 +130,7 @@ class Player:
                     self.attributes = dict_gungameCore[self.userid]
         except TypeError, e:
             # If we reach this code, this means that they did not provide us a userid
-            raise TypeError, 'gungamelib.getPlayer() expected a userid -> no userid provided'
+            raise TypeError, 'gungamelib.getPlayer() expected a userid: no userid provided'
             
     def __getitem__(self, item):
         # We will be nice and convert the "item" to a lower-cased string
@@ -141,7 +141,7 @@ class Player:
             # Allowing the retrieving of attributes in the dictionary
             return self.attributes[item]
         else:
-            raise PlayerError, 'Unable to retrieve the \'%s\' value -> player attribute does not exist' %item
+            raise PlayerError, 'Unable to retrieve the \'%s\' value: player attribute does not exist' %item
         
     def __setitem__(self, item, value):
         # We will be nice and convert the "item" to a lower-cased string
@@ -232,36 +232,36 @@ class Player:
                                 
                     self.attributes[item] = int(value)
                 else:
-                    raise GunGameValueError, 'Level value must be greater than 0 or less than %d -> given \'%i\'' %((getTotalLevels() + 1), value)
+                    raise GunGameValueError, 'Level value must be greater than 0 or less than %d: given \'%i\'' %((getTotalLevels() + 1), value)
             # AFK ROUNDS
             elif item == 'afkrounds':
                 if value > -1:
                     self.attributes[item] = int(value)
                 else:
-                    raise GunGameValueError, 'AFK Rounds value must be 0 or greater -> given \'%i\'' %value
+                    raise GunGameValueError, 'AFK Rounds value must be 0 or greater: given \'%i\'' %value
             # MULTIKILL
             elif item == 'multikill':
                 if value > -1:
                     self.attributes[item] = int(value)
                 else:
-                    raise GunGameValueError, 'MultiKill value must be 0 or greater -> given \'%i\'' %value
+                    raise GunGameValueError, 'MultiKill value must be 0 or greater: given \'%i\'' %value
             # TRIPLE
             elif item == 'triple':
                 if value > -1 and value < 4:
                     self.attributes[item] = value
                 else:
-                    raise GunGameValueError, 'Triple Level value must be between 0 and 3 -> given \'%i\'' %value
+                    raise GunGameValueError, 'Triple Level value must be between 0 and 3: given \'%i\'' %value
             # PREVENT LEVEL
             elif item == 'preventlevel':
                 if value == 0 or value == 1:
                     self.attributes[item] = int(value)
                 else:
-                    raise GunGameValueError, 'PreventLevel must be either 0 or 1 -> given \'%i\'' %value
+                    raise GunGameValueError, 'PreventLevel must be either 0 or 1: given \'%i\'' %value
             else:
                 # Allow the setting of attributes in the dictionary
                 self.attributes[item] = int(value)
         else:
-            raise PlayerError, 'Unable to set the \'%s\' value -> player attribute does not exist' %item
+            raise PlayerError, 'Unable to set the \'%s\' value: player attribute does not exist' %item
         
     def __int__(self):
         # If the instance is used as an integer, return the player's userid
@@ -325,7 +325,7 @@ class Player:
             # Update the player's "afkmathtotal" attribute
             self.attributes['afkmathtotal'] = int(afkMathTotal)
         else:
-            raise TeamError, 'AFK Message: Unable to reset the player\'s location -> userid \'%s\' is not a team' %self.userid
+            raise TeamError, 'AFK Message: Unable to reset the player\'s location: userid \'%s\' is not a team' %self.userid
             
     def playerNotAFK(self):
         # Make sure the player is on a team
@@ -334,7 +334,7 @@ class Player:
             # This is called when we definately know the player is not AFK
             self.attributes['afkmathtotal'] = 0
         else:
-            raise TeamError, 'AFK Message: Unable to set the player to active status -> userid \'%s\' is not a team' %self.userid
+            raise TeamError, 'AFK Message: Unable to set the player to active status: userid \'%s\' is not a team' %self.userid
             
     def isPlayerAFK(self):
         # Make sure the player is on a team
@@ -346,7 +346,7 @@ class Player:
             else:
                 return False
         else:
-            raise TeamError, 'AFK Message: Unable to check player\'s AFK status -> userid \'%s\' is not a team' %self.userid
+            raise TeamError, 'AFK Message: Unable to check player\'s AFK status: userid \'%s\' is not a team' %self.userid
             
     def teleportPlayer(self, x, y, z, eyeangle0=None, eyeangle1=None):
         # Make sure the player is on a team
@@ -357,9 +357,9 @@ class Player:
                     es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
                 gamethread.delayed(0.6, self.resetPlayerLocation, ())
             else:
-                raise DeadError, 'Unable to teleport player -> userid \'%s\' is not alive' % self.userid
+                raise DeadError, 'Unable to teleport player: userid \'%s\' is not alive' % self.userid
         else:
-            raise TeamError, 'Unable to teleport player -> userid \'%s\' is not a team' % self.userid
+            raise TeamError, 'Unable to teleport player: userid \'%s\' is not a team' % self.userid
         
     def setPlayerEyeAngles(self, eyeAngle0, eyeAngle1):
         # Make sure the player is on a team
@@ -368,9 +368,9 @@ class Player:
                 es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
                 gamethread.delayed(0.6, self.resetPlayerLocation, ())
             else:
-                raise DeadError, 'Unable to set player\'s eyeangles -> userid \'%s\' is not alive' %self.userid
+                raise DeadError, 'Unable to set player\'s eyeangles: userid \'%s\' is not alive' %self.userid
         else:
-            raise TeamError, 'Unable to set player\'s eyeangles -> userid \'%s\' is not a team' %self.userid
+            raise TeamError, 'Unable to set player\'s eyeangles: userid \'%s\' is not a team' %self.userid
             
     def stripPlayer(self):
         # Make sure the player is on a team
@@ -384,9 +384,9 @@ class Player:
                 if playerlibSecondary:
                     es.server.cmd('es_xremove %d' %int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
             else:
-                raise DeadError, 'Unable to strip player -> userid \'%s\' is not alive' %self.userid
+                raise DeadError, 'Unable to strip player: userid \'%s\' is not alive' %self.userid
         else:
-            raise TeamError, 'Unable to strip player -> userid \'%s\' is not a team' %self.userid
+            raise TeamError, 'Unable to strip player: userid \'%s\' is not a team' %self.userid
             
     def giveWeapon(self):
         if int(es.getplayerteam(self.userid)) > 1:
@@ -397,7 +397,7 @@ class Player:
                 if playerWeapon == 'hegrenade' and 'BOT' in self.attributes['steamid']:
                     es.server.cmd('es_xdelayed 0.001 es_xsexec %s \"use weapon_%s\"' %(self.userid, playerWeapon))
         else:
-            raise TeamError, 'Unable to give the player a weapon -> userid \'%s\' is not a team' %self.userid
+            raise TeamError, 'Unable to give the player a weapon: userid \'%s\' is not a team' %self.userid
     
     def getWeapon(self):
         if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
@@ -465,7 +465,7 @@ class WeaponOrder:
                                 dict_tempWeaponOrder[levelCounter] = list_splitLine
                             else:
                                 echo('gungame', 0, 0, 'WeaponOrder:MultikillNotNumeric', {'weapon': weaponName, 'to': list_splitLine[1]})
-                                #es.dbgmsg(0, 'Unable to set multkill value for \'%s\' -> \'%s\' is not a numeric value...skipping' %(weaponName, list_splitLine[1]))
+                                #es.dbgmsg(0, 'Unable to set multkill value for \'%s\': \'%s\' is not a numeric value...skipping' %(weaponName, list_splitLine[1]))
                         else:
                             levelCounter += 1
                             list_splitLine.append(1)
@@ -494,7 +494,7 @@ class WeaponOrder:
             dict_weaponOrderSettings[fileName] = dict_tempWeaponOrderSettings
             dict_gungameWeaponOrders[fileName] = dict_tempWeaponOrder
         except IOError:
-            raise FileError, ('Unable to load weapon order file -> \'%s\' does not exist' %fileName)
+            raise FileError, ('Unable to load weapon order file: \'%s\' does not exist' %fileName)
         
     def __isRegistered(self, fileName):
         if dict_gungameWeaponOrders.has_key(fileName):
@@ -599,9 +599,9 @@ class WeaponOrder:
                 
                 msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#reversed'})
             else:
-                raise GunGameValueError, 'Invalid argument for changeWeaponOrder() -> \'%s\'' %weaponOrder
+                raise GunGameValueError, 'Invalid argument for changeWeaponOrder(): \'%s\'' %weaponOrder
         else:
-            raise GunGameValueError, 'Unable to change the weapon order -> \'%s\' is the current weapon order' %weaponOrder
+            raise GunGameValueError, 'Unable to change the weapon order: \'%s\' is the current weapon order' %weaponOrder
     
     def buildWeaponOrderMenu(self):
         dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
@@ -797,10 +797,10 @@ class Config:
             echo('gungame', 0, 0, 'Config:Loaded', {'name': self.configPath})
         except IOError:
             if not configName.lower() in list_criticalConfigs:
-                raise FileError, 'Unable to load the Config: \'%s\' -> File does not exist.' %configPath
+                raise FileError, 'Unable to load the Config: \'%s\': File does not exist.' %configPath
             else:
                 es.server.queuecmd('es_xunload gungame')
-                raise FileError, 'Unable to load the Config: \'%s\' -> File does not exist... unloading GunGame.' %configPath
+                raise FileError, 'Unable to load the Config: \'%s\': File does not exist... unloading GunGame.' %configPath
                 
     def isNumeric(self, string):
         try:
@@ -1322,7 +1322,7 @@ def getLevelWeapon(levelNumber):
     if dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
         return str(dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
     else:
-        raise GunGameValueError, 'Unable to retrieve weapon information -> level \'%d\' does not exist' %levelNumber
+        raise GunGameValueError, 'Unable to retrieve weapon information: level \'%d\' does not exist' %levelNumber
         
 def sendWeaponOrderMenu(userid):
     popuplib.send('gungameWeaponOrderMenu_page1', userid)
@@ -1438,9 +1438,9 @@ def getVariableValue(variableName):
         if dict_cfgSettings.has_key(variableName):
             return dict_cfgSettings[variableName]
         else:
-            raise GunGameValueError, 'Unable to retrieve the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
+            raise GunGameValueError, 'Unable to retrieve the variable value: The variable \'%s\' has not been registered with GunGame' %variableName
     else:
-        raise GunGameValueError, 'Unable to retrieve the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
+        raise GunGameValueError, 'Unable to retrieve the variable value: The variable \'%s\' has not been set as a console variable' %variableName
 
 def setVariableValue(variableName, value):
     variableName = variableName.lower()
@@ -1453,9 +1453,9 @@ def setVariableValue(variableName, value):
             if getVariableValue(variableName) != value:
                 dict_cfgSettings[variableName] = value    
         else:
-            raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been registered with GunGame' %variableName
+            raise GunGameValueError, 'Unable to set the variable value: The variable \'%s\' has not been registered with GunGame' %variableName
     else:
-        raise GunGameValueError, 'Unable to set the variable value. -> The variable \'%s\' has not been set as a console variable' %variableName
+        raise GunGameValueError, 'Unable to set the variable value: The variable \'%s\' has not been set as a console variable' %variableName
 
 def getVariableList():
     return dict_cfgSettings.keys()
@@ -1491,7 +1491,7 @@ def getAddon(addonName):
     if dict_RegisteredAddons.has_key(addonName):
         return dict_RegisteredAddons[addonName]
     else:
-        raise AddonError('Cannot getAddon -> %s doesn\'t exist!' % addonName)
+        raise AddonError('Cannot getAddon: %s doesn\'t exist!' % addonName)
 
 def unregisterAddon(addonName):
     if dict_RegisteredAddons.has_key(addonName):
@@ -1539,7 +1539,13 @@ def isNumeric(string):
     return True
 
 def getGameDir(dir):
+    # Get game dir
     gamePath = str(es.ServerVar('eventscripts_gamedir'))
+    
+    # Fix for linux
+    dir = dir.replace('\\', '/')
+    
+    # Return
     return '%s/%s' % (gamePath, dir)
 
 def clientInServer(userid):

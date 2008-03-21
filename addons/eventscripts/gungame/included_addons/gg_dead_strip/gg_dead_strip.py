@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_dead_strip
-Version #:      1.0.155
+Version #:      1.0.157
 Description:    When a player dies all his weapons are imidiately removed from the game.
 '''
 
@@ -16,7 +16,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_dead_strip Addon for GunGame: Python"
-info.version  = "1.0.155"
+info.version  = "1.0.157"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_dead_strip"
 info.author   = "GunGame Development Team"

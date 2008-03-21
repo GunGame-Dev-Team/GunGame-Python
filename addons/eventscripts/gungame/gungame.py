@@ -30,7 +30,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.155"
+gungameVersion = "1.0.157"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 
@@ -1080,7 +1080,7 @@ def player_death(event_var):
                                 
                                 # Play the levelup sound
                                 if gungamelib.getSound('levelup'):
-                                    es.playsound(userid, gungamelib.getSound('levelup'), 1.0)
+                                    es.playsound(attacker, gungamelib.getSound('levelup'), 1.0)
                             else:
                                 # Message the attacker
                                 multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
@@ -1099,7 +1099,7 @@ def player_death(event_var):
                             
                             # Play the levelup sound
                             if gungamelib.getSound('levelup'):
-                                es.playsound(userid, gungamelib.getSound('levelup'), 1.0)
+                                es.playsound(attacker, gungamelib.getSound('levelup'), 1.0)
                             
                 # The victim was AFK
                 else:

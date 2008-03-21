@@ -178,6 +178,7 @@ def getSpawnPoints(_mapName):
     
     # Does the spawn file exist
     if not spawnPointsExist:
+        gungamelib.echo('gg_deathmatch', 0, 0, 'NoSpawnpoints', {'map': _mapName})
         spawnPoints = 0
         return
     
@@ -413,6 +414,10 @@ def cmd_printSpawnPoints():
         gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_print', 'syntax': ''})
         return
     
+    # Do we have spawnpoints?
+    if spawnPoints == 0:
+        gungamelib.echo('gg_deathmatch', 0, 0, 'NoSpawnpointsToShow')
+    
     # Send message
     gungamelib.echo('gg_deathmatch', 0, 0, 'SpawnpointsFor', {'map': mapName})
     
@@ -447,6 +452,10 @@ def cmd_showSpawnPoints():
     
     # Set vars
     userid = es.getargv(1)
+    
+    # Do we have spawnpoints?
+    if spawnPoints == 0:
+        gungamelib.echo('gg_deathmatch', 0, 0, 'NoSpawnpointsToShow')
     
     # Loop through spawn points
     for index in spawnPoints:

@@ -51,16 +51,18 @@ def load():
             continue
         
         # Do we have enough?
-        if count == 9:
-            menu.addline(' * ...')
+        if count == 10:
+            menu.addline('   * ...')
             break
         
         # Add to menu
-        menu.addline(' * %s' % name)
+        menu.addline('   * %s' % name)
     
     # Do finishing
     menu.addline('----------------------------')
-    menu.addline('->0. Exit')
+    menu.addline('0. Exit')
+    menu.timeout('send', 5)
+    menu.timeout('view', 5)
 
 def player_activate(event_var):
     # Send the popup

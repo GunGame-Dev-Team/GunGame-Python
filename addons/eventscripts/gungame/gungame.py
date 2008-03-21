@@ -1223,12 +1223,14 @@ def gg_levelup(event_var):
         if gungamelib.getLevelWeapon(event_var['new_level']) == 'knife':
             # Play the leveldown sound
             if gungamelib.getSound('knifelevel'):
-                es.emitsound('player', userid, gungamelib.getSound('knifelevel'), 1.0, 1.0)
+                for userid in es.getUseridList():
+                    es.playsound(userid, gungamelib.getSound('knifelevel'), 1.0)
                 
         if gungamelib.getLevelWeapon(event_var['new_level']) == 'hegrenade':
             # Play the leveldown sound
             if gungamelib.getSound('nadelevel'):
-                es.emitsound('player', userid, gungamelib.getSound('nadelevel'), 1.0, 1.0)
+                for userid in es.getUseridList():
+                    es.playsound(userid, gungamelib.getSound('nadelevel'), 1.0)
         
         # Set the player's level in the GunGame Core Dictionary
         gungamePlayer['level'] = int(event_var['new_level'])

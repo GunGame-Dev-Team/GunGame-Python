@@ -296,7 +296,7 @@ def cmd_convert():
     for f in os.listdir(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\legacy')):
         name, ext = os.path.splitext(f)
         
-        if name.startswith('es_') and name.endswith('_db') and ext == '.txt':
+        if name.startswith('es_') and name.endswith('_db') and ext == '.txt':            
             # Announce we are parsing it
             gungamelib.echo('gg_deathmatch', 0, 0, 'ConvertingFile', {'file': f})
             
@@ -304,7 +304,8 @@ def cmd_convert():
             points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\legacy\\') + f)
             
             # Now write it to a file
-            newFile = open(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\') + f.strip('es_').strip('_db'), 'w')
+            newFileName = name[3:][:-3]
+            newFile = open(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt') % newFileName, 'w')
             
             # Are there any points?
             if len(points) == 0:

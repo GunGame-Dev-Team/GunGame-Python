@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_knife_elite
-Version #:      1.0.144
+Version #:      1.0.155
 Description:    After a player levels up, they only get a knife until the next round.
                 THIS WILL OVERRIDE TURBO MODE!!
 '''
@@ -18,7 +18,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_elite Addon for GunGame: Python"
-info.version  = "1.0.144"
+info.version  = "1.0.155"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_elite"
 info.author   = "GunGame Development Team"

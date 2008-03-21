@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_triple_level
-Version #:      1.0.144
+Version #:      1.0.155
 Description:    When a player makes 3 levels in one round he get faster and have an effect for 10 secs
 '''
 
@@ -17,7 +17,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_triple_level Addon for GunGame: Python"
-info.version  = "1.0.144"
+info.version  = "1.0.155"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_triple_level"
 info.author   = "GunGame Development Team"

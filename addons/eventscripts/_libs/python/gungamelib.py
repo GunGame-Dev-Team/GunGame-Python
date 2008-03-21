@@ -400,11 +400,8 @@ class Player:
             raise TeamError, 'Unable to give the player a weapon -> userid \'%s\' is not a team' %self.userid
     
     def getWeapon(self):
-        if int(es.getplayerteam(self.userid)) > 1:
-            if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
-                return dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.attributes['level']][0]
-        else:
-            raise TeamError, 'Unable to give the player a weapon -> userid \'%s\' is not a team' %self.userid
+        if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
+            return dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.attributes['level']][0]
     
     def getWins(self):
         # GET WINS

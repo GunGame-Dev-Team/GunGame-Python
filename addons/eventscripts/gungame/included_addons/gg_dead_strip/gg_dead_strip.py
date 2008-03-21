@@ -47,7 +47,6 @@ def item_pickup(event_var):
         userid = event_var['userid']
         gungamePlayer = gungamelib.getPlayer(userid)
         playerWeapon = gungamePlayer.getWeapon()
-        #playerWeapon = gungamePlayer.get('weapon')
         playerlibPlayer = playerlib.getPlayer(userid)
         if gungamelib.getGlobal('isWarmup') == 1:
             if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:

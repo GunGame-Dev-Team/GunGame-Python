@@ -996,13 +996,17 @@ def player_disconnect(event_var):
             else:
                 dict_reconnectingPlayers[steamid] = 1
     
+    # Remove the player from the leader list
+    if userid in gungamelib.getLeaderList():
+        gungamelib.removeLeader(userid)
+        
     gungamePlayer.removePlayer()
 
 def player_spawn(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
     
-    if int(event_var['es_userteam']) > 1:
+    if int(event_var['es_userteam']) > 1 and not es.isbot(userid):
         # Reset the player's location with GunGame's AFK Checker
         gamethread.delayed(0.6, gungamePlayer.resetPlayerLocation, ())
 

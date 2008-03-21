@@ -1401,6 +1401,11 @@ def getCurrentLeaderList():
 def getOldLeaderList():
     return dict_leaderInfo['oldLeaders']
     
+def removeLeader(userid):
+    userid = int(userid)
+    if userid in dict_leaderInfo['currentLeaders']:
+        dict_leaderInfo['currentLeaders'].remove(userid)
+    
 def getCurrentLeaderString():
     currentLeaderString = None
     for userid in dict_leaderInfo['currentLeaders']:

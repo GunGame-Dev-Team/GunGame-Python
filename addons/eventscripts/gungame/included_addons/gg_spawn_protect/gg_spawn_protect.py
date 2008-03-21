@@ -64,7 +64,7 @@ def weapon_fire(event_var):
         return
     
     # Finish countdown for player if they are protected
-    if repeat.status('CombatCounter%s' % userid):
+    if repeat.status('CombatCounter%s' % event_var['userid']):
         finishCountdown(int(event_var['userid']))
 
 def player_spawn(event_var):
@@ -113,6 +113,7 @@ def combatCountdown(userid, repeatInfo):
         player = playerlib.getPlayer(userid)
     except UseridError:
         repeat.delete('CombatCounter%s' % userid)
+        return
     
     # Keep them invincible
     player.set('health', 999)

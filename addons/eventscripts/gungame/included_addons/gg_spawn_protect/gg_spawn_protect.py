@@ -33,15 +33,24 @@ dict_SpawnProtectVars['green'] = gungamelib.getVariableValue('gg_spawn_protect_g
 dict_SpawnProtectVars['blue'] = gungamelib.getVariableValue('gg_spawn_protect_blue')
 dict_SpawnProtectVars['alpha'] = gungamelib.getVariableValue('gg_spawn_protect_alpha')
 dict_SpawnProtectVars['delay'] = gungamelib.getVariableValue('gg_spawn_protect')
+dict_SpawnProtectVars['cancelOnFire'] = gungamelib.getVariableValue('gg_spawn_protect_cancelonfire')
 
 playerCounters = {}
+noisyBefore = 0
 
 def load():
     # Register
     gg_spawn_protect = gungamelib.registerAddon('gg_spawn_protect')
     gg_spawn_protect.setMenuText('GG Spawn Protection')
     
+    if dict_SpawnProtectVars['cancelOnFire']:
+        noisyBefore = int(es.ServerVar('eventscripts_noisy'))
+        es.ServerVar('eventscripts_noisy').set(1)
+    
 def unload():
+    # Set noisy back
+    es.ServerVar('eventscripts_noisy').set(noisyBefore)
+    
     # Unregister
     gungamelib.unregisterAddon('gg_spawn_protect')
     
@@ -49,6 +58,14 @@ def server_cvar(event_var):
     # Register change in gg_map_list_file
     if event_var['cvarname'] == 'gg_spawn_protect':
         dict_SpawnProtectVars['delay'] = gungamelib.getVariableValue('gg_spawn_protect')
+
+def weapon_fire(event_var):
+    if not dict_SpawnProtectVars['cancelOnFire']:
+        return
+    
+    # Finish countdown for player if they are protected
+    if repeat.status('CombatCounter%s' % userid):
+        finishCountdown(int(event_var['userid']))
 
 def player_spawn(event_var):
     # Is a warmup round?

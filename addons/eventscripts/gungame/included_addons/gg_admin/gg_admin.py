@@ -27,13 +27,13 @@ info.author   = "GunGame Development Team"
 
 # This will hold all settings not including "addon toggles"
 dict_cfgSettings = {}
+
 # This holds registered menu info
 dict_menus = {}
 
 auth = services.use('auth')
 
 #dict_gungameVariables, dict_gungameRegisteredAddons, list_includedAddonsDir, list_customAddonsDir
-
 
 def load():
     es.dbgmsg(0,'*****load')

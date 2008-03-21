@@ -31,18 +31,37 @@ def load():
     
     # Create the popup
     menu = popuplib.create('gg_welcome_msg')
+    
+    # Do header
     menu.addline('This server is running GunGame:Python (%s)' % gungame.info.version)
     menu.addline('Created by: %s' % gungame.info.author)
     menu.addline('----------------------------')
     menu.addline('->1. Loaded addons:')
     
+    # Do addons
+    count = 0
     for addon in gungamelib.dict_RegisteredAddons:
+        # Get vars
+        count += 1
         addonObj = gungamelib.dict_RegisteredAddons[addon]
-        menu.addline(' * %s' % addonObj.menuText[3:])
+        name = addonObj.menuText[3:]
         
+        # Skip if its warmup round or welcome message
+        if name == 'Warmup Round' or name == 'Welcome Message':
+            continue
+        
+        # Do we have enough?
+        if count == 9:
+            menu.addline(' * ...')
+            break
+        
+        # Add to menu
+        menu.addline(' * %s' % name)
+    
+    # Do finishing
     menu.addline('----------------------------')
+    menu.addline('->0. Exit')
 
-    menu.addline('->9. Exit')
 def player_activate(event_var):
     # Send the popup
     gamethread.delayed(2, popuplib.send, ('gg_welcome_msg', int(event_var['userid'])))

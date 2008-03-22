@@ -117,8 +117,12 @@ class Player:
                     if dict_gungameCore.has_key(self.userid):
                         self.attributes = dict_gungameCore[self.userid]
                 else:
-                    # If we reach this code, someone has given us an invalid userid
-                    raise UseridError,  '\'%s\' is an invalid userid: no matching userid found active on the server' %self.userid
+                    
+                    if dict_gungameCore.has_key(self.userid):
+                        self.removePlayer()
+                    else:
+                        # If we reach this code, someone has given us an invalid userid
+                        raise UseridError,  '\'%s\' is an invalid userid: no matching userid found active on the server' %self.userid
             else:
                 # We will now make sure that the player exists in the GunGame database
                 # When we "validate" the player, we are actually checking to see if they exist in the GunGame Core Dictionary

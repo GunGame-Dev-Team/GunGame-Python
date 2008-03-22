@@ -1401,6 +1401,16 @@ def removeLeader(userid):
     userid = int(userid)
     if userid in dict_leaderInfo['currentLeaders']:
         dict_leaderInfo['currentLeaders'].remove(userid)
+        if len(dict_leaderInfo['currentLeaders']) == 0:
+            leaderLevel = 1
+            for userid in dict_gungameCore:
+                if int(dict_gungameCore[userid]['level']) > leaderLevel:
+                    dict_leaderInfo['currentLeaders'] = [userid]
+                    leaderLevel = int(dict_gungameCore[userid]['level'])
+                                        
+                elif dict_gungameCore[userid]['level'] == leaderLevel:
+                    dict_leaderInfo['currentLeaders'].append(userid)
+            
     
 def getCurrentLeaderString():
     currentLeaderString = None

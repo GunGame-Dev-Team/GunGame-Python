@@ -1436,7 +1436,7 @@ def server_cvar(event_var):
                 gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
             return
             
-    if str(gungamelib.getVariableValue(cvarName)) != newValue:
+    if gungamelib.getVariableValue(cvarName) != newValue:
         gungamelib.setVariableValue(cvarName, newValue)
     
     # GG_MAPVOTE
@@ -1453,13 +1453,13 @@ def server_cvar(event_var):
             es.unload('gungame/included_addons/gg_nade_bonus')
     # GG_SPAWN_PROTECTION
     elif cvarName == 'gg_spawn_protect':
-        if int(newValue) > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonlist():
+        if newValue > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonlist():
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
         elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_spawn_protect')
     # GG_FRIENDLYFIRE
     elif cvarName == 'gg_friendlyfire':
-        if int(newValue) > 0 and 'gg_friendlyfire' not in gungamelib.getRegisteredAddonlist():
+        if newValue > 0 and 'gg_friendlyfire' not in gungamelib.getRegisteredAddonlist():
             es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
         elif newValue == 0 and 'gg_friendlyfire' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_friendlyfire')

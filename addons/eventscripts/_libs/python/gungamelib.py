@@ -116,8 +116,8 @@ class Player:
                 # When we "validate" the player, we are actually checking to see if they exist in the GunGame Core Dictionary
                 if self.__validatePlayer():
                     # When players are kicked, or disconnect, the check for their userid will fail...however, they are still in the GunGame Core Dictionary
-                    self.removePlayer()
-                    del dict_gungameSteamids[self.userid]
+                    # We will return their attributes for the sake of throwing errors and more than likely remove their entry from the dictionary on event gg_win
+                    self.attributes = dict_gungameCore[self.userid]
                 else:
                     # If we reach this code, someone has given us an invalid userid
                     raise UseridError,  '\'%s\' is an invalid userid: no matching userid found active on the server' %self.userid

@@ -994,23 +994,21 @@ def player_disconnect(event_var):
     
     userid = int(event_var['userid'])
     
-    # We have to grab this information before they are deleted by the next command below
-    steamid = gungamelib.getPlayerUniqueID(userid)
-    
     # Using the gungamelib.getPlayer(userid) once they have disconnected will cause them to be deleted
     gungamePlayer = gungamelib.getPlayer(userid)
     
+    steamid = gungamePlayer['steamid']
     # TODO: Fix this!
     # Make sure the player is not a BOT
-    #if 'BOT' not in steamid:
-    #    # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
-    #    if not dict_reconnectingPlayers.has_key(steamid):
-    #        # Set this player up in the Reconnecting Players Dictionary
-    #        reconnectLevel = gungamePlayer['level'] - gungamelib.getVariableValue('gg_retry_punish')
-    #        if reconnectLevel > 0:
-    #            dict_reconnectingPlayers[steamid] = reconnectLevel
-    #        else:
-    #            dict_reconnectingPlayers[steamid] = 1
+    if 'BOT' not in steamid:
+        # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
+        if not dict_reconnectingPlayers.has_key(steamid):
+            # Set this player up in the Reconnecting Players Dictionary
+            reconnectLevel = gungamePlayer['level'] - gungamelib.getVariableValue('gg_retry_punish')
+            if reconnectLevel > 0:
+                dict_reconnectingPlayers[steamid] = reconnectLevel
+            else:
+                dict_reconnectingPlayers[steamid] = 1
     
     # Remove the player from the leader list
     if userid in gungamelib.getCurrentLeaderList():

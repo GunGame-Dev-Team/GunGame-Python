@@ -30,7 +30,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.158"
+gungameVersion = "1.0.175"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 
@@ -128,7 +128,7 @@ def buildLevelMenu():
         popuplib.delete('gungameLevelMenu')
     # Let's create the "gungameLevelMenu" popup
     gungameLevelMenu = popuplib.create('gungameLevelMenu')
-    if gungamelib.getVariableValue('gg_multikill') == 0:
+    if gungamelib.getVariableValue('gg_multikill_override') == 0:
         gungameLevelMenu.addline('->1. LEVEL') # Line #1
         gungameLevelMenu.addline('   * You are on level <level number>') # Line #2
         gungameLevelMenu.addline('   * You need a <weapon name> kill to advance') # Line #3
@@ -156,12 +156,12 @@ def buildLevelMenu():
 def prepGunGameLevelMenu(userid, popupid):
     gungameLevelMenu = popuplib.find('gungameLevelMenu')
     gungamePlayer = gungamelib.getPlayer(userid)
-    if gungamelib.getVariableValue('gg_multikill') == 0:
+    if gungamelib.getVariableValue('gg_multikill_override') == 0:
         gungameLevelMenu.modline(2, '   * You are on level %d' %gungamePlayer['level']) # Line #2
         gungameLevelMenu.modline(3, '   * You need a %s kill to advance' %gungamePlayer.getWeapon()) # Line #3
     else:
         gungameLevelMenu.modline(2, '   * You are on level %d (%s)' %(gungamePlayer['level'], gungamePlayer.getWeapon())) # Line #2
-        gungameLevelMenu.modline(3, '   * You have made %d/%d of your required kills' %(gungamePlayer.get('multikill'), gungamelib.getVariableValue('gg_multikill'))) # Line #3
+        gungameLevelMenu.modline(3, '   * You have made %d/%d of your required kills' %(gungamePlayer['multikill'], gungamelib.getVariableValue('gg_multikill_override'))) # Line #3
     leaderLevel = gungamelib.getLeaderLevel()
     playerLevel = gungamePlayer['level']
     if leaderLevel > 1:
@@ -661,8 +661,9 @@ def load():
             if gungamelib.getVariableValue('gg_weapon_order') != '#default':
                 myWeaponOrder.changeWeaponOrderType(gungamelib.getVariableValue('gg_weapon_order'))
             
-            if gungamelib.getVariableValue('gg_multikill') > 1:
+            if gungamelib.getVariableValue('gg_multikill_override') > 1:
                 continue
+                myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
             
             myWeaponOrder.echo()
     
@@ -827,7 +828,7 @@ def es_map_start(event_var):
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Execute GunGame's autoexec.cfg
-    es.delayed('1', 'exec gungame/autoexec.cfg')
+    es.delayed('1', 'exec gungame/gg_server.cfg')
     
     # Split the map name into a list separated by "_"
     list_mapPrefix = event_var['mapname'].split('_')
@@ -984,8 +985,12 @@ def player_disconnect(event_var):
     global dict_reconnectingPlayers
     
     userid = int(event_var['userid'])
+    
+    # We have to grab this information before they are deleted by the next command below
+    steamid = gungamelib.getPlayerUniqueID(userid)
+    
+    # Using the gungamelib.getPlayer(userid) once they have disconnected will cause them to be deleted
     gungamePlayer = gungamelib.getPlayer(userid)
-    steamid = gungamePlayer['steamid']
     
     # Make sure the player is not a BOT
     if 'BOT' not in steamid:
@@ -1066,8 +1071,8 @@ def player_death(event_var):
                         if multiKill > 1:
                         
                             if weapon == 'knife' or weapon == 'hegrenade':
-                                if gungamelib.getVariableValue('gg_multikill'):
-                                    gungameAttacker['multikill'] = gungamelib.getVariableValue('gg_multikill')
+                                if gungamelib.getVariableValue('gg_multikill_override'):
+                                    gungameAttacker['multikill'] = gungamelib.getVariableValue('gg_multikill_override')
                             else:
                                 gungameAttacker['multikill'] += 1
                                 
@@ -1467,3 +1472,16 @@ def server_cvar(event_var):
             es.server.queuecmd('es_load gungame/included_addons/%s' %cvarName)
         elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/%s' %cvarName)
+    elif cvarName == 'gg_multikill_override':
+        if newValue != gungamelib.getVariableValue('gg_multikill_override'):
+            myWeaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_file'))
+            if newValue == 0:
+                myWeaponOrder.setMultiKillOverride(0)
+            else:
+                myWeaponOrder.setMultiKillOverride(newValue)
+    elif cvarName == 'gg_weapon_order_file':
+        if newValue != gungamelib.getVariableValue('gg_weapon_order_file')
+            myWeaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_file'))
+            myWeaponOrder.setWeaponOrderFile()
+            if gungamelib.getVariableValue('gg_multikill_override') > 1:
+                myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))

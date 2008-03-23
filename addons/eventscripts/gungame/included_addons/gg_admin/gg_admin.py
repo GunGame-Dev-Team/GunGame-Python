@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_admin
-Version #:      1.0.158
+Version #:      1.0.175
 Description:    Gives menu based admin control of gungame and it's addons.
 '''
 
@@ -20,7 +20,7 @@ import gungamelib as gga
 
 info = es.AddonInfo()
 info.name     = "gg_admin (for GunGame: Python)"
-info.version  = "1.0.158"
+info.version  = "1.0.175"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_admin"
 info.author   = "GunGame Development Team"

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.135
+    Version: 1.0.175
     Description:
 '''
 
@@ -42,6 +42,8 @@ dict_gungameSounds = {}
 
 dict_RegisteredAddons = {}
 dict_registeredDependencies = {}
+
+dict_gungameSteamids = {}
 
 # ==============================================================================
 #   GLOBAL LISTS
@@ -115,6 +117,7 @@ class Player:
                 if self.__validatePlayer():
                     # When players are kicked, or disconnect, the check for their userid will fail...however, they are still in the GunGame Core Dictionary
                     self.removePlayer()
+                    del dict_gungameSteamids[self.userid]
                 else:
                     # If we reach this code, someone has given us an invalid userid
                     raise UseridError,  '\'%s\' is an invalid userid: no matching userid found active on the server' %self.userid
@@ -281,6 +284,8 @@ class Player:
                 'steamid']
         values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(self.userid, 1)]
         self.attributes = dict(zip(names, values))
+        
+        dict_gungameSteamids[self.userid] = playerlib.uniqueid(self.userid, 1)
 
         # We now create the player in the GunGame Core Dictionary
         # NOTE: Any time the player's attributes change, so will the GunGame Core Dictionary
@@ -528,12 +533,15 @@ class WeaponOrder:
         es.dbgmsg(0, ' ')
         
     def setMultiKillOverride(self, value):
+        value = int(value)
         dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
         for level in dict_tempWeaponOrder:
-            if dict_tempWeaponOrder[level][0] != 'knife' and (not 'hegrenade'):
-                dict_tempWeaponOrder[level][1] = int(value)
+            if dict_tempWeaponOrder[level][0] != 'knife' and dict_tempWeaponOrder[level][0] != 'hegrenade':
+                dict_tempWeaponOrder[level][1] = value
                 
         dict_gungameWeaponOrders[self.fileName] = dict_tempWeaponOrder
+        
+        self.buildWeaponOrderMenu()
         
         msg('gungame', '#all', 'WeaponOrder:MultikillValuesChanged', {'to': value})
         es.server.cmd('mp_restartgame 2')
@@ -1585,3 +1593,7 @@ def getESTVersion():
 
 def isDead(userid):
     return bool(int(es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag')))
+    
+def getPlayerUniqueID(userid):
+    userid = int(userid)
+    return dict_gungameSteamids[userid]

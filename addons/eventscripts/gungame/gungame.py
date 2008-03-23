@@ -670,7 +670,6 @@ def load():
                 myWeaponOrder.changeWeaponOrderType(gungamelib.getVariableValue('gg_weapon_order'))
             
             if gungamelib.getVariableValue('gg_multikill_override') > 1:
-                continue
                 myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
             
             myWeaponOrder.echo()

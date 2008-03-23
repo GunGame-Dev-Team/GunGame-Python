@@ -398,7 +398,7 @@ class Player:
                 playerWeapon = self.getWeapon()
                 if playerWeapon != 'knife':
                     es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' %(self.userid, playerWeapon))
-                if playerWeapon == 'hegrenade' and 'BOT' in self.attributes['steamid']:
+                if playerWeapon == 'hegrenade' and es.isbot(self.userid):
                     es.server.cmd('es_xdelayed 0.001 es_xsexec %s \"use weapon_%s\"' %(self.userid, playerWeapon))
         else:
             raise TeamError, 'Unable to give the player a weapon: userid \'%s\' is not a team' %self.userid

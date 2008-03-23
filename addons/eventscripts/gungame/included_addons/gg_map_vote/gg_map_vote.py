@@ -14,6 +14,7 @@ import random
 import es
 import popuplib
 import playerlib
+import gamethread
 import usermsg
 import repeat
 
@@ -216,6 +217,13 @@ def startVote():
     repeat.create('voteCounter', VoteCountdown)
     repeat.start('voteCounter', 1, 0)
     
+    # Bot vote code
+    if int(es.ServerVar('gg_vote_bots_vote')):
+        for userid in playerlib.getUseridList('#bot'):
+            choice = random.choice(dict_addonVars['voteList'])
+            time = random.randint(1, 5)
+            gamethread.delayed(time, voteMenuSelect, (userid, choice, 0))
+    
     # Set the active vars
     dict_addonVars['voteActive'] = 1
     gungamelib.setGlobal('voteActive', 1)
@@ -226,7 +234,7 @@ def VoteCountdown(repeatInfo):
         if dict_addonVars['voteTimer'] <= 5:
             # Beep :)
             es.cexec_all('playgamesound hl1/fvox/beep.wav')
-            
+        
         # Get vote info
         voteInfo = str()
         for map in dict_playerChoice['votedMaps']:

@@ -80,7 +80,7 @@ def load():
     # Get a player list of dead players then spawn them
     for userid in playerlib.getUseridList('#dead'):
         respawn(userid)
-        
+
     # Set freezetime
     es.server.cmd('mp_freezetime 0')
     es.server.cmd('mp_roundtime 999')
@@ -162,7 +162,7 @@ def player_disconnect(event_var):
     # Remove the counter
     if repeat.status('RespawnCounter%s' % userid):
         repeat.delete('RespawnCounter%s' % userid)
-    
+
 # ==============================================================================
 #   Spawnpoint functions
 # ==============================================================================

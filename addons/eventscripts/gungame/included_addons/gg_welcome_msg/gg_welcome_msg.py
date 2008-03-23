@@ -1,9 +1,8 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_welcome_msg
-Version #:      1.0.175
-Description:    This will show a simple popup message to every player that connects.
+    Title: gg_welcome_msg
+    Version: 1.0.175
+    Description: Shows a simple popup message to every player that connects.
 '''
 
 # EventScripts imports

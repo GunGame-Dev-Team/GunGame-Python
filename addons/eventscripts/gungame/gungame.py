@@ -1480,7 +1480,7 @@ def server_cvar(event_var):
             else:
                 myWeaponOrder.setMultiKillOverride(newValue)
     elif cvarName == 'gg_weapon_order_file':
-        if newValue != gungamelib.getVariableValue('gg_weapon_order_file')
+        if newValue != gungamelib.getVariableValue('gg_weapon_order_file'):
             myWeaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_file'))
             myWeaponOrder.setWeaponOrderFile()
             if gungamelib.getVariableValue('gg_multikill_override') > 1:

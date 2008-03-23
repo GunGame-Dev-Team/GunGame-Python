@@ -61,6 +61,6 @@ def player_death(event_var):
         weapon = event_var['weapon']
         if weapon != 'hegrenade' and weapon != 'knife':
             playerlibPlayer = playerlib.getPlayer(event_var['attacker'])
-    
+            
             # Set the clip size based on the player's weapon
             playerlibPlayer.set('clip', [weapon, clipSize[weapon]])

@@ -50,12 +50,12 @@ def escs(string):
 
 def gg_levelup(event_var):
     # Publish to server
-    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\levelup" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))
+    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_levelup" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))
 
 def gg_leveldown(event_var):
     # Publish to server
-    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\leveldown" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))
+    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\eveldown" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))
 
 def gg_win(event_var):
     # Publish to server
-    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_\win" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))
+    es.server.cmd("es_logq %s<%i><%s><%s> triggered gg_win" % (escs(event_var["name"]), event_var["userid"], escs(event_var["steamid"]), cteam(event_var["team"])))

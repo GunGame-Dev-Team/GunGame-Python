@@ -321,11 +321,13 @@ class Player:
         
     def resetPlayerLocation(self):
         # Make sure the player is on a team
-        if int(es.getplayerteam(self.userid)) > 1:
-            # Get the player's location, although this is not really a list...it returns a tuple
+        if not isSpectator(self.userid):
+            # Get the player's location, although this is not really a list... it returns a tuple
             list_playerlocation = es.getplayerlocation(self.userid)
+            
             # Add necessary information about the player's location, excluding the "z" axis, as this is far too touchy
             afkMathTotal = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]'))
+            
             # Update the player's "afkmathtotal" attribute
             self.attributes['afkmathtotal'] = int(afkMathTotal)
         else:
@@ -352,14 +354,14 @@ class Player:
         else:
             raise TeamError, 'AFK Message: Unable to check player\'s AFK status: userid \'%s\' is not a team' %self.userid
             
-    def teleportPlayer(self, x, y, z, eyeangle0=None, eyeangle1=None):
+    def teleportPlayer(self, x, y, z, eyeangle0=0, eyeangle1=0):
         # Make sure the player is on a team
-        if int(es.getplayerteam(self.userid)) > 1:
-            if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
+        if not isSpectator(self.userid):
+            if not isDead(self.userid):
                 es.server.cmd('es_setpos %d %s %s %s' %(self.userid, x, y, z))
-                if eyeangle0 or eyeangle1:
+                if eyeangle0 != 0 or eyeangle1 != 0:
                     es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
-                gamethread.delayed(0.6, self.resetPlayerLocation, ())
+                gamethread.delayed(0.1, self.resetPlayerLocation, ())
             else:
                 raise DeadError, 'Unable to teleport player: userid \'%s\' is not alive' % self.userid
         else:
@@ -1046,7 +1048,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '\4[%s]\1 ' %getAddonMenuText(self.addonName)
+            message = '\4[%s]\1 ' % getAddonMenuText(self.addonName)
         else:
             message = ''
         
@@ -1097,7 +1099,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '\4[%s]\1 ' %getAddonMenuText(self.addonName)
+            message = '\4[%s]\1 ' % getAddonMenuText(self.addonName)
         else:
             message = ''
         
@@ -1151,7 +1153,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '[%s] ' %getAddonMenuText(self.addonName)
+            message = '[%s] ' % getAddonMenuText(self.addonName)
         else:
             message = ''
         
@@ -1184,7 +1186,7 @@ class Message:
                 # Send message
                 usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
-                
+
 # ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================
@@ -1399,7 +1401,15 @@ def createScoreList(keyGroupName=None):
 #   LEADER RELATED COMMANDS
 # ==============================================================================
 def getCurrentLeaderList():
-    return dict_leaderInfo['currentLeaders']
+    returnDict = []
+    
+    # Loop through the current leaders
+    for userid in dict_leaderInfo['currentLeaders']:
+        # Is the client in the server?
+        if clientInServer(userid):
+            returnDict.append(userid)
+    
+    return returnDict
     
 def getOldLeaderList():
     return dict_leaderInfo['oldLeaders']

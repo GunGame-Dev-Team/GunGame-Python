@@ -44,9 +44,20 @@ def unload():
     es.server.cmd('mp_friendlyfire %d' % mp_friendlyfireBackUp)
     
 def server_cvar(event_var):
+    # New value must be numeric
+    if not gungamelib.isNumeric(event_var['cvarValue']):
+        return
+    
+    # Get vars
+    newValue = int(event_var['cvarvalue'])
+    var = event_var['cvarname']
+    
     # Watch for change in friendlyfire level
-    if event_var['cvarname'] == 'gg_friendlyfire':
-        friendlyFireLevel = gungamelib.getTotalLevels() - int(event_var['cvarvalue'])
+    if var == 'gg_friendlyfire':
+        if newValue == 0:
+            es.unload('gungame/included_addons/gg_friendlyfire')
+        else:
+            friendlyFireLevel = gungamelib.getTotalLevels() - newValue
 
 def es_map_start(event_var):
     # Set mp_friendlyfire to 0

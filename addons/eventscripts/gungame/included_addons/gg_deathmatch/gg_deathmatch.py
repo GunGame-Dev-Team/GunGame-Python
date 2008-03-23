@@ -90,9 +90,16 @@ def unload():
     gungamelib.unregisterAddon('gg_deathmatch')
 
 def server_cvar(event_var):
-    # Watch for changes in deathmatch variables
-    if dict_deathmatchVars.has_key(event_var['cvarname']):
-        dict_deathmatchVars[event_var['cvarname']] = int(event_var['cvarvalue'])
+    # New value must be numeric
+    if not gungamelib.isNumeric(event_var['cvarValue']):
+        return
+    
+    # Get vars
+    newValue = int(event_var['cvarvalue'])
+    var = event_var['cvarname']
+    
+    if var == 'gg_deathmatch' and newValue == 0:
+        es.unload('gungame/included_addons/gg_deathmatch')
 
 def es_map_start(event_var):
     getSpawnPoints(event_var['mapname'])

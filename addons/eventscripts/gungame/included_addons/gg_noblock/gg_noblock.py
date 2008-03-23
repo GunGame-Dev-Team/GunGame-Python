@@ -31,4 +31,4 @@ def unload():
 
 def player_spawn(event_var):
     # Set player's collisiongroup to 2, noblock
-    es.setplayerprop(event_var["userid"], "CCSPlayer.baseclass.baseclass.baseclass.baseclass.baseclass.baseclass.m_CollisionGroup", 2)
+    es.setplayerprop(event_var["userid"], "CBaseEntity.m_CollisionGroup", 2)

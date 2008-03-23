@@ -55,11 +55,6 @@ def unload():
     # Prevent players from spawning after gg_elimination is disabled
     dict_addonVars['roundActive'] = 0
 
-def server_cvar(event_var):
-    # Register change for gg_dissolver_effect
-    if event_var['cvarname'] == 'gg_dissolver_effect':
-        dict_addonVars['gg_dissolver_effect'] = gungamelib.getVariableValue('gg_dissolver_effect')
-
 def es_map_start(event_var):
     # reset round tracking
     dict_addonVars['roundActive'] = 0

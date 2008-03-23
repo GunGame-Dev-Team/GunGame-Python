@@ -42,8 +42,7 @@ def load():
     for addon in gungamelib.dict_RegisteredAddons:
         # Get vars
         count += 1
-        addonObj = gungamelib.dict_RegisteredAddons[addon]
-        name = addonObj.menuText[3:]
+        name = gungamelib.getAddonMenuText(addon)[3:]
         
         # Skip if its warmup round or welcome message
         if name == 'Warmup Round' or name == 'Welcome Message':

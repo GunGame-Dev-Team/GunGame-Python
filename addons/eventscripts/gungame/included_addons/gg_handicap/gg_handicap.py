@@ -41,10 +41,16 @@ def unload():
         repeat.delete('handicapUpdateLoop')
 
 def server_cvar(event_var):
-    # register change in gg_handicap_update
-    if event_var['cvarname'] == 'gg_handicap_update':
-        gg_handicap_update = gungamelib.getVariableValue('gg_handicap_update')
-        if gg_handicap_update:
+    # New value must be numeric
+    if not gungamelib.isNumeric(event_var['cvarValue']):
+        return
+    
+    # Get vars
+    newValue = int(event_var['cvarvalue'])
+    var = event_var['cvarname']
+    
+    if var == 'gg_handicap_update':
+        if newValue == 1:
             repeat.create('handicapUpdateLoop', handicapUpdate)
             repeat.start('handicapUpdateLoop', gg_handicap_update, 0)
         else:

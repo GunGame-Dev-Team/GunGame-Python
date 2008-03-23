@@ -69,7 +69,7 @@ def gg_levelup(event_var):
 
         # Reset the level counter to 0 since they just tripled
         gungamePlayer['triple'] = 0
-		
+        
         # Stop Triple Level Bonus after 10 secs
         gamethread.delayed(10, removeTriple, (userid))
 

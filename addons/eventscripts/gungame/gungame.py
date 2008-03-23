@@ -223,7 +223,15 @@ def rebuildLeaderMenu():
     list_leaderNames = []
     
     for userid in gungamelib.getCurrentLeaderList():
-        list_leaderNames.append(removeReturnChars(es.getplayername(userid)))
+        # Get their name
+        name = es.getplayername(userid)
+        
+        # Is their name 0?
+        if isinstance(name, int) and name == 0:
+            continue
+        
+        # Add their name to the leader names
+        list_leaderNames.append(removeReturnChars(name))
     
     # Check to see if the popup "gungameLevelMenu" exists
     if popuplib.exists('gungameLeadersMenu'):
@@ -610,7 +618,7 @@ def levelInfoHudHint(userid):
                             gungamelib.getLevelWeapon(gungamelib.getLeaderLevel()))
             
     if not int(gungamelib.getGlobal('voteActive')) and not int(gungamelib.getGlobal('isWarmup')):
-        gamethread.delayed(0.5, usermsg.hudhint, (userid, HudHintText))
+        gamethread.delayed(0.5, usermsg.hudhint, (str(userid), HudHintText))
 
 # ==============================================================================
 #   GAME EVENTS
@@ -992,16 +1000,17 @@ def player_disconnect(event_var):
     # Using the gungamelib.getPlayer(userid) once they have disconnected will cause them to be deleted
     gungamePlayer = gungamelib.getPlayer(userid)
     
+    # TODO: Fix this!
     # Make sure the player is not a BOT
-    if 'BOT' not in steamid:
-        # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
-        if not dict_reconnectingPlayers.has_key(steamid):
-            # Set this player up in the Reconnecting Players Dictionary
-            reconnectLevel = gungamePlayer['level'] - gungamelib.getVariableValue('gg_retry_punish')
-            if reconnectLevel > 0:
-                dict_reconnectingPlayers[steamid] = reconnectLevel
-            else:
-                dict_reconnectingPlayers[steamid] = 1
+    #if 'BOT' not in steamid:
+    #    # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
+    #    if not dict_reconnectingPlayers.has_key(steamid):
+    #        # Set this player up in the Reconnecting Players Dictionary
+    #        reconnectLevel = gungamePlayer['level'] - gungamelib.getVariableValue('gg_retry_punish')
+    #        if reconnectLevel > 0:
+    #            dict_reconnectingPlayers[steamid] = reconnectLevel
+    #        else:
+    #            dict_reconnectingPlayers[steamid] = 1
     
     # Remove the player from the leader list
     if userid in gungamelib.getCurrentLeaderList():

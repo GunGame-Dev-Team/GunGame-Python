@@ -39,12 +39,11 @@ def unload():
     gungamelib.unregisterAddon('gg_knife_pro')
 
 def server_cvar(event_var):
-    # Get the cvar name
-    cvar = event_var['cvarname']
+    newValue = int(event_var['cvarvalue'])
+    var = event_var['cvarname']
     
-    # Register change in gg_knife_pro_limit
-    if cvar == 'gg_knife_pro_limit':
-        gg_knife_pro_limit = int(event_var['cvarvalue'])
+    if var == 'gg_knife_pro_limit':
+        gg_knife_pro_limit = newValue
     
 def player_death(event_var):
     # Check for knife kill, and not a team kill, and not a suicide by world
@@ -67,7 +66,7 @@ def player_death(event_var):
     gungameAttacker = gungamelib.getPlayer(attacker)
     gungameAttackerLevel = gungameAttacker['level']
     
-    # FIXED: Duplicate winning
+    # Fix duplicate winning
     if gungameAttackerLevel == gungamelib.getTotalLevels():
         return
     

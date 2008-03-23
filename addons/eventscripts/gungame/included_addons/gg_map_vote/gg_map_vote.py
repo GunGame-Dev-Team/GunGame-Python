@@ -96,25 +96,20 @@ def load():
     initiateVote()
 
 def unload():
-    # unregister this addon with gungamelib
+    # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_map_vote')
         
     # Restore original value for eventscripts_maphandler
     es.ServerVar('eventscripts_maphandler').set(oldEventscriptsMaphandler)
     
-    # delete popup
+    # Delete popup
     if popuplib.exists('voteMenu'):
         popuplib.unsendname('voteMenu', es.getUseridList())
         popuplib.delete('voteMenu')
         
-    #delete repeat
+    # Delete repeat
     if repeat.status('voteCounter'):
         repeat.delete('voteCounter')
-
-def server_cvar(event_var):
-    # watch for changes in map vote variables
-    if dict_mapVoteVars.has_key(event_var['cvarname']):
-        dict_mapVoteVars[event_var['cvarname']] = event_var['cvarvalue']
 
 def es_map_start(event_var):
     # add current map to list of recent maps

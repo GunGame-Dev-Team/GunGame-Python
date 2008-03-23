@@ -55,9 +55,32 @@ def unload():
     gungamelib.unregisterAddon('gg_spawn_protect')
     
 def server_cvar(event_var):
-    # Register change in gg_map_list_file
-    if event_var['cvarname'] == 'gg_spawn_protect':
-        dict_SpawnProtectVars['delay'] = gungamelib.getVariableValue('gg_spawn_protect')
+    # New value must be numeric
+    if not gungamelib.isNumeric(event_var['cvarValue']):
+        return
+    
+    # Get vars
+    newValue = int(event_var['cvarvalue'])
+    var = event_var['cvarname']
+    
+    if var == 'gg_spawn_protect':
+        if newValue == 0:
+            # Unload addon
+            es.unload('gungame/included_addons/gg_spawn_protect')
+        else:
+            # Set new delay
+            dict_SpawnProtectVars['delay'] = newValue
+    
+    if var == 'gg_spawn_protect_cancelonfire':
+        dict_SpawnProtectVars['cancelOnFire'] = newValue
+        
+        if newValue == 1:
+            # Set noisy vars
+            noisyBefore = int(es.ServerVar('eventscripts_noisy'))
+            es.ServerVar('eventscripts_noisy').set(1)
+        else:
+            # Set noisy back
+            es.ServerVar('eventscripts_noisy').set(noisyBefore)
 
 def weapon_fire(event_var):
     if not dict_SpawnProtectVars['cancelOnFire']:

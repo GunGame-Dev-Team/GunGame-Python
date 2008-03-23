@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.175
+    Version: 1.0.177
     Description:
 '''
 
@@ -1046,7 +1046,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '\4[%s]\1 ' % (self.addonName)
+            message = '\4[%s]\1 ' %getAddonMenuText(self.addonName)
         else:
             message = ''
         
@@ -1097,7 +1097,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '\4[%s]\1 ' % (self.addonName)
+            message = '\4[%s]\1 ' %getAddonMenuText(self.addonName)
         else:
             message = ''
         
@@ -1151,7 +1151,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '[%s] ' % (self.addonName)
+            message = '[%s] ' %getAddonMenuText(self.addonName)
         else:
             message = ''
         
@@ -1509,6 +1509,14 @@ def getAddon(addonName):
         return dict_RegisteredAddons[addonName]
     else:
         raise AddonError('Cannot getAddon: %s doesn\'t exist!' % addonName)
+
+def getAddonMenuText(addonName):
+    if addonName == 'gungame':
+        return 'GunGame'
+    elif dict_RegisteredAddons.has_key(addonName):
+        return dict_RegisteredAddons[addonName].menuText
+    else:
+        raise AddonError('Cannot get Menu Text: %s doesn\'t exist!' % addonName)
 
 def unregisterAddon(addonName):
     if dict_RegisteredAddons.has_key(addonName):

@@ -135,6 +135,9 @@ def player_spawn(event_var):
     if gungamelib.isSpectator(userid) or gungamelib.isDead(userid):
         return
     
+    # No-block
+    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 2)
+    
     # Do we have a spawn point file?
     if spawnPoints != 0:
         # Get a random spawn index

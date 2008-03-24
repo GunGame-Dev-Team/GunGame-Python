@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version:
+    Version: 1.0.186
     Description: The main addon, handles leaders and events.
 '''
 
@@ -23,14 +23,13 @@ import keyvalues
 
 # GunGame Imports
 import gungamelib
-
 reload(gungamelib)
 
 # ==============================================================================
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.175"
+gungameVersion = "1.0.186"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 
@@ -40,8 +39,7 @@ info.name     = "GunGame: Python"
 info.version  = gungameVersion
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame"
-#info.author   = "GunGame Development Team"
-info.author   = "XE_ManUp, RideGuy, Saul"       # DON'T REMOVE, USED BY GG_WELCOME_MSG, SORRY IF I MISSED SOME PEOPLE OUT!
+info.author   = "XE_ManUp, RideGuy, Saul Rennison"
 
 # ==============================================================================
 #   GLOBALS

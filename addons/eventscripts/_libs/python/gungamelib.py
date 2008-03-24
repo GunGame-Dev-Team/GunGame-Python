@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.177
+    Version: 1.0.186
     Description:
 '''
 
@@ -405,7 +405,7 @@ class Player:
                 if playerWeapon != 'knife':
                     es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' % (self.userid, playerWeapon))
                 
-                if playerWeapon == 'hegrenade' and es.isbot(self.userid):
+                if playerWeapon == 'hegrenade':
                     es.server.cmd('es_xdelayed 0.001 es_xsexec %s \"use weapon_hegrenade\"' % self.userid)
         else:
             raise TeamError, 'Unable to give the player a weapon: userid \'%s\' is not a team' %self.userid

@@ -3,7 +3,7 @@
 
     Title:      gg_dead_strip
 Version #:      1.0.175
-Description:    When a player dies all his weapons are imidiately removed from the game.
+Description:    When a player dies all of their weapons are immediately removed from the game.
 '''
 
 # Eventscripts imports
@@ -52,9 +52,17 @@ def item_pickup(event_var):
             if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
                 es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
         else:
-            if playerWeapon != item and playerWeapon != 'hegrenade' or playerWeapon == 'hegrenade' and gungamelib.getVariableValue('gg_nade_bonus') != item and item != 'hegrenade':
-                es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
-
+            # Check to see if this is the right weapon fo their level
+            if playerWeapon != item:
+                if playerWeapon == 'hegrenade':
+                    nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
+                    # Check to see if the grenade level bonus weapon is active
+                    if nadeBonus:
+                        # Check to make sure that the grenade level bonus weapon is not the weapon the player picked up
+                        if nadeBonus != playerWeapon:
+                            es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
+                    else:
+                        es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
 
 def filterDrop(userid, args):
     if args[0] == 'drop':

@@ -2,7 +2,7 @@
 (c)2007 by the GunGame Coding Team
 
     Title:      gg_handicap
-Version #:      1.0.175
+Version #:      1.0.189
 Description:    When a player joins they are given the average level.
 '''
 
@@ -10,6 +10,7 @@ Description:    When a player joins they are given the average level.
 import es
 import repeat
 import playerlib
+import gamethread
 
 # GunGame imports
 import gungamelib
@@ -17,7 +18,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_handicap Addon for GunGame: Python"
-info.version  = "1.0.175"
+info.version  = "1.0.189"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_handicap"
 info.author   = "GunGame Development Team"
@@ -93,8 +94,9 @@ def handicapUpdate(repeatInfo):
             if gungamelib.getVariableValue('gg_turbo'):
                 if gungamePlayer.getWeapon() == 'knife':
                     es.sexec(userid, 'use weapon_knife')
-                gungamePlayer.stripPlayer()
-                gamethread.delayed(0.01, gungamePlayer.giveWeapon, ())
+                if not gungamelib.isDead(userid):
+                    gungamePlayer.stripPlayer()
+                    gamethread.delayed(0.1, gungamePlayer.giveWeapon, ())
             
             # Play sound
             if gungamelib.getSound('handicap'):

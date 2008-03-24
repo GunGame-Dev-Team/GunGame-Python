@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.175
+    Version: 1.0.189
     Description: Deathmatch addon for GunGame:Python
 '''
 
@@ -25,7 +25,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.175"
+info.version  = "1.0.189"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "GunGame Development Team"
@@ -39,6 +39,7 @@ dict_deathmatchVars['respawn_cmd'] = gungamelib.getVariableValue('gg_dm_respawn_
 respawnCounters = {}
 lastSpawnPoint = {}
 spawnPoints = {}
+list_randomSpawnIndex = []
 
 # ==============================================================================
 #   Event functions
@@ -142,13 +143,18 @@ def player_spawn(event_var):
     # Do we have a spawn point file?
     if spawnPoints != 0:
         # Get a random spawn index
-        spawnindex = random.randint(0, len(spawnPoints) - 1)
+        if not list_randomSpawnIndex:
+            for i in range(0, len(spawnPoints) - 1):
+                list_randomSpawnIndex.append(i)
+            random.shuffle(list_randomSpawnIndex)
+        
+        spawnindex = list_randomSpawnIndex.pop(0)
         
         # Has the player spawned before? (catches error)
         try:
             if lastSpawnPoint[userid] == spawnindex:
                 # Get another random spawn index
-                spawnindex = random.randint(0, len(spawnPoints) - 1)
+                spawnindex = list_randomSpawnIndex.pop(0)
         except KeyError:
             pass
         
@@ -156,7 +162,9 @@ def player_spawn(event_var):
         lastSpawnPoint[userid] = spawnindex
         
         # Teleport the player
-        gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0], spawnPoints[spawnindex][1], spawnPoints[spawnindex][2], 0, spawnPoints[spawnindex][4])
+        gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0],
+                                     spawnPoints[spawnindex][1], spawnPoints[spawnindex][2],
+                                     0, spawnPoints[spawnindex][4])
 
 def round_start(event_var):
     # Loop through the players

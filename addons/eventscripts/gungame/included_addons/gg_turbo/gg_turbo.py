@@ -10,6 +10,7 @@ Description:    GunGame Turbo is allows players to recieve the weapon for their 
 
 # EventScripts imports
 import es
+import gamethread
 
 # GunGame imports
 import gungamelib
@@ -37,4 +38,4 @@ def gg_levelup(event_var):
     if gungamePlayer.getWeapon() == 'knife':
         es.sexec(userid, 'use weapon_knife')
     gungamePlayer.stripPlayer()
-    gungamePlayer.giveWeapon()
+    gamethread.delayed(0.01, gungamePlayer.giveWeapon, ())

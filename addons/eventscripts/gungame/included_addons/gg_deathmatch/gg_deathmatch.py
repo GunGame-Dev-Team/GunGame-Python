@@ -135,8 +135,9 @@ def player_spawn(event_var):
     if gungamelib.isSpectator(userid) or gungamelib.isDead(userid):
         return
     
-    # No-block
-    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 2)
+    # No-block for a second, to stop sticking inside other players
+    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
+    gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', 5))
     
     # Do we have a spawn point file?
     if spawnPoints != 0:

@@ -89,6 +89,13 @@ def handicapUpdate(repeatInfo):
             # Set their level
             gungamePlayer['level'] = averageLevel
             
+            # Give new weapon if turbo mode is on
+            if gungamelib.getVariableValue('gg_turbo'):
+                if gungamePlayer.getWeapon() == 'knife':
+                    es.sexec(userid, 'use weapon_knife')
+                gungamePlayer.stripPlayer()
+                gamethread.delayed(0.01, gungamePlayer.giveWeapon, ())
+            
             # Play sound
             if gungamelib.getSound('handicap'):
                 es.playsound(userid, gungamelib.getSound('handicap'), 1.0)

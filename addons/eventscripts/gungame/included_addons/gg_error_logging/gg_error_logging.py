@@ -39,6 +39,16 @@ def load():
     # Clear existing logs
     clearExistingLogs()
     
+    # Print opening header
+    openFile()
+    errorFile.write('\n')
+    errorFile.write('%s\n' % ('*' * 50))
+    errorFile.write('\tGunGame Errorlog\n')
+    errorFile.write('\tOpened: %s\n' % time.strftime(dateFormat))
+    errorFile.write('%s\n' % ('*' * 50))
+    errorFile.write('\n')
+    errorFile.close()
+    
     # Set error hook
     sys.excepthook = exceptHook
 
@@ -79,12 +89,6 @@ def openFile():
 
     # Open the file
     errorFile = open(logPath, 'a')
-    errorFile.write('\n')
-    errorFile.write('%s\n' % ('*' * 50))
-    errorFile.write('\tGunGame Errorlog\n')
-    errorFile.write('\tOpened: %s\n' % time.strftime(dateFormat))
-    errorFile.write('%s\n' % ('*' * 50))
-    errorFile.write('\n')
 
 def exceptHook(type, value, tb):
     global errorFile

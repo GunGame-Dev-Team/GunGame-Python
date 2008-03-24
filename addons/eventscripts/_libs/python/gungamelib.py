@@ -1406,19 +1406,53 @@ def createScoreList(keyGroupName=None):
 #   LEADER RELATED COMMANDS
 # ==============================================================================
 def getCurrentLeaderList():
-    returnDict = []
+    leaders = []
     
     # Loop through the current leaders
     for userid in dict_leaderInfo['currentLeaders']:
         # Is the client in the server?
-        if clientInServer(userid):
-            returnDict.append(userid)
+        if es.getplayername(userid) != 0:
+            leaders.append(userid)
     
-    return returnDict
-    
+    # No leaders in the server?
+    if len(leaders) == 0:
+        # Get a list of players with the next highest level
+        return getNewLeaderList()
+    else:
+        # Return list of leaders as usual
+        return leaders
+
 def getOldLeaderList():
     return dict_leaderInfo['oldLeaders']
+
+def getNewLeaderList():
+    highestLevel = 0
+    players = []
     
+    # Loop through the players
+    for index in dict_gungameCore:
+        player = dict_gungameCore[index]
+        level = dict_gungameCore[index]['level']
+        
+        # Is the player on the server?
+        if es.getplayername(index) == 0:
+            continue
+        
+        # Is the players level higher than the highest level?
+        if level > highestLevel:
+            # Set list to them
+            players = [index]
+            highestLevel = level
+        elif level == highestLevel:
+            # Append them to the current list
+            players.append(index)
+    
+    # Set current leaders
+    dict_leaderInfo['currentLeaders'] = players
+    
+    # Return players
+    return players
+
 def removeLeader(userid):
     userid = int(userid)
     if userid in dict_leaderInfo['currentLeaders']:
@@ -1429,11 +1463,9 @@ def removeLeader(userid):
                 if int(dict_gungameCore[userid]['level']) > leaderLevel:
                     dict_leaderInfo['currentLeaders'] = [userid]
                     leaderLevel = int(dict_gungameCore[userid]['level'])
-                                        
                 elif dict_gungameCore[userid]['level'] == leaderLevel:
                     dict_leaderInfo['currentLeaders'].append(userid)
-            
-    
+
 def getCurrentLeaderString():
     currentLeaderString = None
     for userid in dict_leaderInfo['currentLeaders']:
@@ -1539,15 +1571,18 @@ def unregisterAddon(addonName):
     else:
         raise AddonError('%s has not been previously registered.' % addonName)
 
+def addonExists(addonName):
+    pass
+
 def getRegisteredAddonlist():
     return dict_RegisteredAddons.keys()
-    
+
 def getDependencyList():
     return dict_registeredDependencies.keys()
-    
+
 def getDependencyValue(dependencyName):
     return dict_registeredDependencies[dependencyName].dependencyValue
-    
+
 # ==============================================================================
 #   GLOBALS RELATED COMMANDS
 # ==============================================================================

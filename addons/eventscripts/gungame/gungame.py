@@ -553,10 +553,10 @@ def levelInfoHudHint(userid):
     leaderLevel = gungamelib.getLeaderLevel()
     # Get levels behind leader
     levelsBehindLeader = leaderLevel - gungamePlayer['level']
-            
+    
     # Get list of leaders userids
     list_leadersUserid = gungamelib.getCurrentLeaderList()
-            
+    
     multiKill = gungamelib.getLevelMultiKill(gungamePlayer['level'])
     
     if multiKill > 1:
@@ -569,9 +569,10 @@ def levelInfoHudHint(userid):
     else:
         # Get levels behind leader
         levelsBehindLeader = leaderLevel - gungamePlayer['level']
-        # Get list of leaders userids
-        list_leadersUserid = gungamelib.getLevelUseridList(leaderLevel)
         
+        # Get list of leaders userids
+        list_leadersUserid = gungamelib.getCurrentLeaderList()
+    
     # How many levels behind the leader?
     if levelsBehindLeader == 0:
         # Is there more than 1 leader?
@@ -588,12 +589,12 @@ def levelInfoHudHint(userid):
                 for leader in list_leadersUserid:
                     # Increment leader count
                     leadersCount += 1
-                            
+                    
                     # More than 2 leaders added?
                     if leadersCount == 3:
                         HudHintText += '...'
                         break
-                            
+                    
                     # Don't add the comma if there is 2 or less leaders
                     if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
                         HudHintText += es.getplayername(leader)
@@ -605,7 +606,7 @@ def levelInfoHudHint(userid):
                     
                     # Add the name to the hudhint and increment the leaders count
                     HudHintText += es.getplayername(leader) + ', '
-                        
+                    
                 # Finish off the HudHint
                 HudHintText += ')'
     else:
@@ -993,10 +994,9 @@ def player_disconnect(event_var):
     
     # Using the gungamelib.getPlayer(userid) once they have disconnected will cause them to be deleted
     gungamePlayer = gungamelib.getPlayer(userid)
-    
     steamid = gungamePlayer['steamid']
-    # TODO: Fix this!
-    # Make sure the player is not a BOT
+
+    # Make sure the player is not a bot
     if 'BOT' not in steamid:
         # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
         if not dict_reconnectingPlayers.has_key(steamid):
@@ -1008,8 +1008,47 @@ def player_disconnect(event_var):
                 dict_reconnectingPlayers[steamid] = 1
     
     # Remove the player from the leader list
-    if userid in gungamelib.getCurrentLeaderList():
-        gungamelib.removeLeader(userid)
+    # NOTE: Possibly decremented
+    #if userid in gungamelib.getCurrentLeaderList():
+    #    gungamelib.removeLeader(userid)
+    
+    # Var prep
+    oldLeaders = gungamelib.dict_leaderInfo['currentLeaders']
+    leaders = gungamelib.getCurrentLeaderList()
+    
+    # Has there been leader changes?
+    if userid in oldLeaders:
+        # Get first player stuff
+        firstPlayer = int(leaders[0])
+        player = gungamelib.getPlayer(firstPlayer)
+        level = player['level']
+        
+        if len(leaders) == 1:
+            # Get index
+            index = player.attributes['index']
+            name = es.getplayername(firstPlayer)
+            
+            # Just a new leader
+            gungamelib.saytext2('gungame', '#all', index, 'NewLeader', {'player': name, 'level': level}, False)
+        else:
+            # Var prep
+            leaderNames = []
+            count = 0
+            
+            # Loop through leaders
+            for userid in leaders:
+                # Only have 3 leader names on there
+                if count == 3:
+                    leaderNames.append('...')
+                
+                # Add leader name
+                leaderNames.append(es.getplayername(userid))
+                
+                # Increment count
+                count += 1
+            
+            # More than 1 leader
+            gungamelib.msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(leaderNames), 'level': level}, False)
 
 def player_spawn(event_var):
     userid = int(event_var['userid'])

@@ -1,11 +1,13 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_admin
-Version #:      1.0.175
-Description:    Gives menu based admin control of gungame and it's addons.
+    Title: gg_admin
+    Version: 1.0.186
+    Description: Gives admins control over
 '''
 
+# ==============================================================================
+#   IMPORTS
+# ==============================================================================
 # Python imports
 import os
 
@@ -16,64 +18,78 @@ import playerlib
 import popuplib
 
 # GunGame imports
-import gungamelib as gga
+import gungamelib
 
+# ==============================================================================
+#   EVENTSCRIPTS STUFF
+# ==============================================================================
+# Register with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_admin (for GunGame: Python)"
-info.version  = "1.0.175"
+info.version  = "1.0.186"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_admin"
 info.author   = "GunGame Development Team"
 
-# This will hold all settings not including "addon toggles"
-dict_cfgSettings = {}
-
-# This holds registered menu info
+# ==============================================================================
+#   GLOBALS
+# ==============================================================================
+dict_settings = {}
 dict_menus = {}
 
 auth = services.use('auth')
 
-#dict_gungameVariables, dict_gungameRegisteredAddons, list_includedAddonsDir, list_customAddonsDir
-
+# ==============================================================================
+#   GAME EVENTS
+# ==============================================================================
 def load():
-    es.dbgmsg(0,'*****load')
-    global adminmenu
-    auth.registerCapability('!ggadmin', auth.ADMIN)
-    if not es.exists('saycommand', '!ggadmin'):
-        es.regsaycmd('!ggadmin', 'gungame/included_addons/gg_admin/sendAdminMenu')
-    if not es.exists('saycommand', '!gguser'):
-        es.regsaycmd('!gguser', 'gungame/included_addons/gg_admin/sendUserMenu')
-    if not es.exists('clientcommand', '!set_setting'):
-        es.regclientcmd('!set_setting', 'gungame/included_addons/gg_admin/set_setting')
+    # Register
+    gg_admin = gungamelib.registerAddon('gg_admin')
+    gg_admin.setMenuText('GG Admin')
     
-    gga.registerAddon('gungame/included_addons/gg_admin', 'GG Admin')
-    regMenu('settingsmenu','GG Settings','admin','gg_admin')
-    regMenu('defaultaddons','GG Included Addons','admin','gg_admin')
-    regMenu('customaddons','GG Custom Addons','admin','gg_admin')
+    # Create commands
+    regCmd(0, '!ggadmin', sendAdminMenu)
+    regCmd(1, 'gg_admin', sendAdminMenu)
+    regCmd(0, '!gguser', sendUserMenu)
+    regCmd(1, 'gg_user', sendUserMenu)
+    
+    # Register menus
+    regMenu('settingsmenu','Settings','admin','gg_admin')
+    regMenu('defaultaddons','Default Addon Settings','admin','gg_admin')
+    regMenu('customaddons','Custom Addon Settings','admin','gg_admin')
 
 def unload():
-    gga.unregisterAddon('gungame/included_addons/gg_admin', 'GG Admin')
-    es.unregsaycmd('!ggadmin')
-    es.unregsaycmd('!gguser')
-    es.unregclientcmd('!set_setting') 
+    # Unregister
+    gungamelib.unregisterAddon('gg_admin')
 
-def regMenu(menuname,displayname,type,addon):
-    es.dbgmsg(0,'*****regMenu')
-    es.dbgmsg(0,'*****menuname=%s displayname=%s type=%s addon=%s' %(menuname,displayname,type,addon))
-    
-    # types- admin, user
-    # gg_regMenu('mymenu','My Menu','admin','myaddon')
-    if not dict_menus.has_key(menuname): 
+# ==============================================================================
+#   HELPER FUNCTIONS
+# ==============================================================================
+def regCmd(type, name, function):
+    if type == 0:
+        if es.exists('saycommand', name):
+            return
+        
+        es.regsaycmd(name, 'gungame/included_addons/gg_admin/%s' % function.__name__)
+    elif type == 1:
+        if es.exists('clientcommand', name):
+            return
+        
+        es.regclientcmd(name, 'gungame/included_addons/gg_admin/%s' % function.__name__)
+
+def regMenu(menuName, displayname, type, addon):
+    if not dict_menus.has_key(menuName): 
         if type in ('admin','user'):
             dict_menus[menuname] = displayname,type,addon
         else:
             es.dbgmsg(0,'*****Accepted menu types- admin, user')
     else:
-        es.dbgmsg(0,'*****That menu is already registered.')
+        gungamelib.echo('gg_admin', 0, 0, 'MenuAlreadyRegistered', {'menu': menuName})
 
 def buildAdminMenu(userid):
-    es.dbgmsg(0,'*****buildAdminMenu')
     global adminmenu
+    
+    es.dbgmsg(0,'*****buildAdminMenu')
     adminmenu = popuplib.easymenu('adminmenu'+ str(userid),None,selectAdminMenu)
     adminmenu.settitle('GunGame Admin Menu')
     for menu in dict_menus:
@@ -155,7 +171,7 @@ def buildAddonsMenu(type,userid):
     addonsmenu = popuplib.easymenu('addonsmenu',None,_addons_select)
     if type == 'defaultaddons':
         addonsmenu.settitle('GunGame Addons:\n-Select to toggle')
-        for addon in gga.list_includedAddonsDir:
+        for addon in gungamelib.list_includedAddonsDir:
             es.dbgmsg(0,'*****addon=%s' %addon)
             if int(gga.checkRegisteredAddon('gungame/included_addons/'+ addon)):
                 addonsmenu.addoption((addon,'included_addons','unload'),addon + ' is on')

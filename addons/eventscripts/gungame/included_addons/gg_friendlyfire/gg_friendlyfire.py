@@ -63,7 +63,7 @@ def es_map_start(event_var):
     # Set mp_friendlyfire to 0
     es.forcevalue('mp_friendlyfire', 0)
     
-def gg_start():
+def gg_start(event_var):
     # Set mp_friendlyfire to 0
     es.forcevalue('mp_friendlyfire', 0)
     

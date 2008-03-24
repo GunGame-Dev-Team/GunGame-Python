@@ -96,7 +96,12 @@ def handicapUpdate(repeatInfo):
                     es.sexec(userid, 'use weapon_knife')
                 if not gungamelib.isDead(userid):
                     gungamePlayer.stripPlayer()
-                    gamethread.delayed(0.1, gungamePlayer.giveWeapon, ())
+                    
+                    # Only delay if we are on linux
+                    if os.name == 'posix':
+                        gamethread.delayed(0.01, gungamePlayer.giveWeapon, ())
+                    else:
+                        gungamePlayer.giveWeapon()
             
             # Play sound
             if gungamelib.getSound('handicap'):

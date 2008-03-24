@@ -232,7 +232,7 @@ def VoteCountdown(repeatInfo):
         
         # Get vote info
         voteInfo = str()
-        for map in dict_playerChoice['votedMaps']:
+        for map in sorted(dict_playerChoice['votedMaps']):
             voteInfo += '\n%s (%d votes)' % (map, dict_playerChoice['votedMaps'][map])
 
         # Send the HudHint

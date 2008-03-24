@@ -137,8 +137,9 @@ def player_spawn(event_var):
         return
     
     # No-block for a second, to stop sticking inside other players
-    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
-    gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', 5))
+    if gungamelib.getVariableValue('gg_noblock') == 0:
+        es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
+        gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', 5))
     
     # Do we have a spawn point file?
     if spawnPoints != 0:
@@ -163,8 +164,10 @@ def player_spawn(event_var):
         
         # Teleport the player
         gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0],
-                                     spawnPoints[spawnindex][1], spawnPoints[spawnindex][2],
-                                     0, spawnPoints[spawnindex][4])
+                                                    spawnPoints[spawnindex][1],
+                                                    spawnPoints[spawnindex][2],
+                                                    0,
+                                                    spawnPoints[spawnindex][4])
 
 def round_start(event_var):
     # Loop through the players

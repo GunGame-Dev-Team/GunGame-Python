@@ -6,6 +6,9 @@ Version #:      1.0.189
 Description:    When a player joins they are given the average level.
 '''
 
+# System imports
+import os
+
 # EventScripts imports
 import es
 import repeat

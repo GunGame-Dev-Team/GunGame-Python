@@ -8,6 +8,9 @@ Description:    GunGame Turbo is allows players to recieve the weapon for their 
                 This addon makes the GunGame round a little more fast-paced.
 '''
 
+# System imports
+import os
+
 # EventScripts imports
 import es
 import gamethread

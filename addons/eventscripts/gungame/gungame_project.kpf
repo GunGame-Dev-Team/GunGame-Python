@@ -13,15 +13,17 @@
 </folder>
 <file id="3c5ea7ee-f3df-4e46-903b-bc96cc2a4244" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="es.py" url="file:///D:/srcds/cstrike/addons/eventscripts/es.py">
 </file>
+<livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="file:///D:/srcds/cstrike/cfg/gungame/translations">
+</livefolder>
 <preference-set idref="0651bb49-f501-4ccc-aaea-20751ee88255/included_addons/gg_deathmatch/gg_deathmatch.py">
   <string id="lastInvocation">default</string>
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
-  <string id="userEnvironment"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
   <boolean id="use-console">0</boolean>
+  <string relative="path" id="filename">included_addons/gg_deathmatch/gg_deathmatch.py</string>
   <string id="mpostparams"></string>
   <boolean id="show-dialog">1</boolean>
   <string id="request-method">GET</string>
@@ -30,7 +32,7 @@
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
   <string id="cookieparams"></string>
-  <string relative="path" id="filename">included_addons/gg_deathmatch/gg_deathmatch.py</string>
+  <string id="userEnvironment"></string>
   <boolean id="sim-cgi">0</boolean>
   <string id="cwd"></string>
   <string id="userCGIEnvironment"></string>
@@ -42,9 +44,9 @@
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
-  <string id="userEnvironment"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
+  <boolean id="show-dialog">1</boolean>
   <boolean id="use-console">0</boolean>
   <string id="mpostparams"></string>
   <string id="filename">D:\srcds\cstrike\addons\eventscripts\_libs\python\gungamelib.py</string>
@@ -54,7 +56,7 @@
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
   <string id="cookieparams"></string>
-  <boolean id="show-dialog">1</boolean>
+  <string id="userEnvironment"></string>
   <boolean id="sim-cgi">0</boolean>
   <string id="cwd"></string>
   <string id="userCGIEnvironment"></string>
@@ -66,9 +68,9 @@
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
-  <string id="userEnvironment"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
+  <boolean id="show-dialog">1</boolean>
   <boolean id="use-console">0</boolean>
   <string id="mpostparams"></string>
   <string relative="path" id="filename">included_addons/gg_warmup_round/gg_warmup_round.py</string>
@@ -78,7 +80,7 @@
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
   <string id="cookieparams"></string>
-  <boolean id="show-dialog">1</boolean>
+  <string id="userEnvironment"></string>
   <boolean id="sim-cgi">0</boolean>
   <string id="cwd"></string>
   <string id="userCGIEnvironment"></string>

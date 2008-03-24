@@ -383,12 +383,15 @@ class Player:
         if int(es.getplayerteam(self.userid)) > 1:
             if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
                 playerlibPlayer = playerlib.getPlayer(self.userid)
+                knifeIndex = playerlibPlayer.get('weaponindex', 'knife')
+                
                 playerlibPrimary = playerlibPlayer.get('primary')
                 playerlibSecondary = playerlibPlayer.get('secondary')
+                
                 if playerlibPrimary:
-                    es.server.cmd('es_xremove %d' %int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
+                    es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
                 if playerlibSecondary:
-                    es.server.cmd('es_xremove %d' %int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
+                    es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
             else:
                 raise DeadError, 'Unable to strip player: userid \'%s\' is not alive' %self.userid
         else:
@@ -398,10 +401,12 @@ class Player:
         if int(es.getplayerteam(self.userid)) > 1:
             if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
                 playerWeapon = self.getWeapon()
+                
                 if playerWeapon != 'knife':
-                    es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' %(self.userid, playerWeapon))
+                    es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' % (self.userid, playerWeapon))
+                
                 if playerWeapon == 'hegrenade' and es.isbot(self.userid):
-                    es.server.cmd('es_xdelayed 0.001 es_xsexec %s \"use weapon_%s\"' %(self.userid, playerWeapon))
+                    es.server.cmd('es_xdelayed 0.001 es_xsexec %s \"use weapon_hegrenade\"' % self.userid)
         else:
             raise TeamError, 'Unable to give the player a weapon: userid \'%s\' is not a team' %self.userid
     
@@ -1017,8 +1022,8 @@ class Message:
 
     def __loadStrings(self):
         # Does the language file exist?
-        if os.path.isfile(getGameDir('cfg/gungame/language_files/%s.ini' % self.addonName)):
-            self.strings = langlib.Strings(getGameDir('cfg/gungame/language_files/%s.ini' % self.addonName))
+        if os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName)):
+            self.strings = langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName))
         else:
             raise FileError('No string file exists for: %s' % self.addonName)
     

@@ -1230,13 +1230,13 @@ def gg_levelup(event_var):
         gungamePlayer = gungamelib.getPlayer(userid)
         
         if gungamelib.getLevelWeapon(event_var['new_level']) == 'knife':
-            # Play the leveldown sound
+            # Play sound
             if gungamelib.getSound('knifelevel'):
                 for userid in es.getUseridList():
                     es.playsound(userid, gungamelib.getSound('knifelevel'), 1.0)
                 
         if gungamelib.getLevelWeapon(event_var['new_level']) == 'hegrenade':
-            # Play the leveldown sound
+            # Play sound
             if gungamelib.getSound('nadelevel'):
                 for userid in es.getUseridList():
                     es.playsound(userid, gungamelib.getSound('nadelevel'), 1.0)
@@ -1248,6 +1248,7 @@ def gg_levelup(event_var):
         gungamePlayer['multikill'] = 0
         
         leaderLevel = gungamelib.getLeaderLevel()
+        
         if leaderLevel == int(event_var['new_level']):
             rebuildLeaderMenu()
 

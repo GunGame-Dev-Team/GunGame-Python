@@ -41,11 +41,19 @@ def player_spawn(event_var):
 
 def gg_levelup(event_var):
     checkBonus(event_var['userid'])
-        
+
 def checkBonus(userid):
+    # Int'ify userid
     userid = int(userid)
-    if int(es.getplayerteam(userid)) > 1:
-        gungamePlayer = gungamelib.getPlayer(userid)
-        if gungamePlayer.getWeapon() == 'hegrenade':
-            es.server.cmd('es_xdelayed 0.1 es_xgive %d %s' %(userid, bonusWeapon))
-            es.server.cmd('es_xdelayed 0.2 es_xsexec %d use weapon_hegrenade' %userid)
+    
+    # Is a spectator or a bot?
+    if gungamelib.isSpectator(userid) or es.isbot(userid):
+        return
+    
+    # Get player object
+    gungamePlayer = gungamelib.getPlayer(userid)
+    
+    # If the weapon is a hegrenade, give them the bonus weapon
+    if gungamePlayer.getWeapon() == 'hegrenade':
+        es.server.cmd('es_xdelayed 0.01 es_xgive %s %s' % (userid, bonusWeapon))
+        es.server.cmd('es_xdelayed 0.02 es_xsexec %s "use weapon_hegrenade"' % userid)

@@ -1406,6 +1406,7 @@ def createScoreList(keyGroupName=None):
 #   LEADER RELATED COMMANDS
 # ==============================================================================
 def getCurrentLeaderList():
+    # Var prep
     leaders = []
     
     # Loop through the current leaders
@@ -1426,29 +1427,32 @@ def getOldLeaderList():
     return dict_leaderInfo['oldLeaders']
 
 def getNewLeaderList():
+    # Var prep
     highestLevel = 0
     players = []
     
     # Loop through the players
-    for index in dict_gungameCore:
-        player = dict_gungameCore[index]
-        level = dict_gungameCore[index]['level']
+    for userid in dict_gungameCore:
+        player = dict_gungameCore[userid]
+        level = dict_gungameCore[userid]['level']
         
         # Is the player on the server?
-        if es.getplayername(index) == 0:
+        if es.getplayername(userid) == 0:
             continue
         
         # Is the players level higher than the highest level?
         if level > highestLevel:
             # Set list to them
-            players = [index]
+            players = [userid]
             highestLevel = level
         elif level == highestLevel:
             # Append them to the current list
-            players.append(index)
+            players.append(userid)
     
     # Set current leaders
+    dict_leaderInfo['oldLeaders'] = dict_leaderInfo['currentLeaders']
     dict_leaderInfo['currentLeaders'] = players
+    dict_leaderInfo['leaderLevel'] = highestLevel
     
     # Return players
     return players

@@ -27,7 +27,8 @@ def load():
     # Register addon
     gg_welcome_msg = gungamelib.registerAddon('gg_welcome_msg')
     gg_welcome_msg.setMenuText('GG Welcome Message')
-    
+
+def buildPopup():
     # Create the popup
     menu = popuplib.create('gg_welcome_msg')
     
@@ -63,7 +64,8 @@ def load():
     menu.timeout('view', 5)
 
 def player_activate(event_var):
-    # Send the popup
+    # Build and send popup
+    buildPopup()
     gamethread.delayed(2, popuplib.send, ('gg_welcome_msg', int(event_var['userid'])))
 
 def unload():

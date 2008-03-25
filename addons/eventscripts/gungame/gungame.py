@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.186
+    Version: 1.0.192
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.186"
+gungameVersion = "1.0.192"
 gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
 gungameVersionVar.makepublic()
 
@@ -1013,8 +1013,8 @@ def player_disconnect(event_var):
     #    gungamelib.removeLeader(userid)
     
     # Var prep
-    oldLeaders = gungamelib.dict_leaderInfo['currentLeaders']
     leaders = gungamelib.getCurrentLeaderList()
+    oldLeaders = gungamelib.getOldLeaderList()
     
     # Has there been leader changes?
     if userid in oldLeaders:
@@ -1023,14 +1023,19 @@ def player_disconnect(event_var):
         player = gungamelib.getPlayer(firstPlayer)
         level = player['level']
         
+        # Only 1 leader
         if len(leaders) == 1:
             # Get index
             index = player.attributes['index']
             name = es.getplayername(firstPlayer)
             
-            # Just a new leader
+            # Announce to world
             gungamelib.saytext2('gungame', '#all', index, 'NewLeader', {'player': name, 'level': level}, False)
         else:
+            # Happens if everyone is level 1, then a player disconnects.
+            if leaders == es.getUseridList():
+                return
+            
             # Var prep
             leaderNames = []
             count = 0
@@ -1040,6 +1045,7 @@ def player_disconnect(event_var):
                 # Only have 3 leader names on there
                 if count == 3:
                     leaderNames.append('...')
+                    break
                 
                 # Add leader name
                 leaderNames.append(es.getplayername(userid))
@@ -1047,7 +1053,7 @@ def player_disconnect(event_var):
                 # Increment count
                 count += 1
             
-            # More than 1 leader
+            # Announce to world
             gungamelib.msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(leaderNames), 'level': level}, False)
 
 def player_spawn(event_var):
@@ -1074,7 +1080,7 @@ def player_spawn(event_var):
                     # See if the admin wants us to give them a defuser
                     if gungamelib.getVariableValue('gg_player_defuser') > 0:
                         playerlibPlayer = playerlib.getPlayer(userid)
-                            
+                        
                         # Make sure the player doesn't already have a defuser
                         if not playerlibPlayer.get('defuser'):
                             es.server.cmd('es_xgive %d item_defuser' %userid)

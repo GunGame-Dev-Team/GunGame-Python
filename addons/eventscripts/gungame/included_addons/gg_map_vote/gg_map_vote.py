@@ -9,6 +9,7 @@ Description:    Adds map voting capabilities to gungame.
 # Python imports
 import os
 import random
+from operator import itemgetter
 
 # EventScripts imports
 import es
@@ -232,9 +233,9 @@ def VoteCountdown(repeatInfo):
         
         # Get vote info
         voteInfo = str()
-        for map in sorted(dict_playerChoice['votedMaps']):
-            voteInfo += '\n%s (%d votes)' % (map, dict_playerChoice['votedMaps'][map])
-
+        for map in sorted(dict_playerChoice['votedMaps'].items(), key=itemgetter(1), reverse=True):
+            voteInfo += '\n%s (%d votes)' % (map[0], map[1])
+        
         # Send the HudHint
         if dict_addonVars['voteTimer'] == 1:
             gungamelib.hudhint('gg_map_vote', '#all', 'Countdown_Singular', {'voteInfo': voteInfo})
@@ -249,7 +250,7 @@ def VoteCountdown(repeatInfo):
         
         # Get results
         voteResults()
-        
+    
     # Decrement timer
     dict_addonVars['voteTimer'] -= 1
     

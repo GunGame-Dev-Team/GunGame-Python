@@ -39,10 +39,10 @@ def unload():
     gungamelib.unregisterAddon('gg_knife_pro')
 
 def server_cvar(event_var):
-    newValue = int(event_var['cvarvalue'])
     var = event_var['cvarname']
     
     if var == 'gg_knife_pro_limit':
+        newValue = int(event_var['cvarvalue'])
         gg_knife_pro_limit = newValue
     
 def player_death(event_var):

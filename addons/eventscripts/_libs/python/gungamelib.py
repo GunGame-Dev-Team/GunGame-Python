@@ -172,7 +172,8 @@ class Player:
                                 
                             # Check to see if this is a new leader
                             elif len(dict_leaderInfo['currentLeaders']) > 1:
-                                dict_leaderInfo['currentLeaders'].remove(self.userid)
+                                if self.userid in dict_leaderInfo['currentLeaders']:
+                                    dict_leaderInfo['currentLeaders'].remove(self.userid)
                                 dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
                                 dict_leaderInfo['currentLeaders'] = [self.userid]
                                 # FIRE NEW LEADER EVENT HERE event gg_new_leader

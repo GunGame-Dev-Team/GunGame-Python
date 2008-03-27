@@ -29,7 +29,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.196"
+gungameVersion = "1.0.197"
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -1065,7 +1065,7 @@ def player_spawn(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
     
-    if int(event_var['es_userteam']) > 1:
+    if gungamelib.isSpectator(userid) > 1:
         if not es.isbot(userid):
             # Reset the player's location with GunGame's AFK Checker
             gamethread.delayed(0.6, gungamePlayer.resetPlayerLocation, ())

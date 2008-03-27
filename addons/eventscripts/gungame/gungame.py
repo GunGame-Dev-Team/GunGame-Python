@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.192
+    Version: 1.0.196
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,9 +29,8 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.192"
-gungameVersionVar = es.ServerVar('eventscripts_ggp', gungameVersion)
-gungameVersionVar.makepublic()
+gungameVersion = "1.0.196"
+es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
 info = es.AddonInfo()
@@ -967,6 +966,12 @@ def round_end(event_var):
                     # See if the player needs to be punished for being AFK
                     afkPunishCheck(int(userid))
 
+def player_connect(event_var):
+    # If a player gets an invalid Steam Ticket, they will be disconnected, firing player_disconnect. We add this here for redundancy checking only. Otherwise, it is useless.
+    userid = int(event_var['userid'])
+    if userid:
+        gungamelib.getPlayer(userid)
+                    
 def player_activate(event_var):
     global dict_gungameWinners
     userid = int(event_var['userid'])

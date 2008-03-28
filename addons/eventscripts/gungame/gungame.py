@@ -965,12 +965,6 @@ def round_end(event_var):
                 if gungamePlayer.isPlayerAFK():
                     # See if the player needs to be punished for being AFK
                     afkPunishCheck(int(userid))
-
-def player_connect(event_var):
-    # If a player gets an invalid Steam Ticket, they will be disconnected, firing player_disconnect. We add this here for redundancy checking only. Otherwise, it is useless.
-    userid = int(event_var['userid'])
-    if userid:
-        gungamelib.getPlayer(userid)
                     
 def player_activate(event_var):
     global dict_gungameWinners
@@ -997,7 +991,9 @@ def player_disconnect(event_var):
     
     userid = int(event_var['userid'])
     
-    # Using the gungamelib.getPlayer(userid) once they have disconnected will cause them to be deleted
+    if not gungamelib.playerExists(userid):
+        return
+
     gungamePlayer = gungamelib.getPlayer(userid)
     steamid = gungamePlayer['steamid']
 

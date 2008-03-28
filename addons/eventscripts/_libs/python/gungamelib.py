@@ -1660,3 +1660,10 @@ def isDead(userid):
 def getPlayerUniqueID(userid):
     userid = int(userid)
     return dict_gungameSteamids[userid]
+    
+def playerExists(userid)
+    userid = int(userid)
+    if dict_gungameCore.has_key(userid):
+        return True
+    else:
+        return False

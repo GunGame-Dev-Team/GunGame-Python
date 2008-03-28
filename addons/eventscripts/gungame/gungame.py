@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.198
+    Version: 1.0.203
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.198"
+gungameVersion = "1.0.203"
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -934,6 +934,18 @@ def round_start(event_var):
                 
                 # Remove the hostages from the map
                 es.server.cmd('es_xfire %d hostage_entity Kill' %userid)
+                
+    if gungamelib.getVariableValue('gg_leaderweapon_warning'):
+        leaderWeapon = gungamelib.getLevelWeapon(gungamelib.getLeaderLevel())
+        if leaderWeapon == 'knife':
+            if gungamelib.getSound('knifelevel'):
+                for userid in es.getUseridList():
+                    es.playsound(userid, gungamelib.getSound('knifelevel'), 1.0)
+
+        if leaderWeapon == 'hegrenade':
+            if gungamelib.getSound('nadelevel'):
+                for userid in es.getUseridList():
+                    es.playsound(userid, gungamelib.getSound('nadelevel'), 1.0)
 
 def round_freeze_end(event_var):
     global countBombDeathAsSuicide
@@ -1144,6 +1156,10 @@ def player_death(event_var):
                                 # Message the victim
                                 multiKill = gungamelib.getLevelMultiKill(gungameVictim['level'])
                                 gungamelib.hudhint('gungame', userid, 'KillsThisLevel', {'kills': gungameVictim['multikill'], 'togo': multiKill})
+                                
+                                # Play the multikill sound
+                                if gungamelib.getSound('multikill'):
+                                    es.playsound(attacker, gungamelib.getSound('multikill'), 1.0)
                                 
                         # Multikill was not active
                         else:

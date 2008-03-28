@@ -148,7 +148,7 @@ class Player:
     def __setitem__(self, item, value):
         # We will be nice and convert the "item" to a lower-cased string
         item = str(item).lower()
-        value == int(value)
+        value = int(value)
         # Let's make sure that the item that they are trying to change exists
         if item in self.attributes:
             # LEVEL
@@ -279,7 +279,7 @@ class Player:
             # We will return "False" if the player does not exist in the GunGame Core Dictionary
             return False
             
-    def __createPlayer(self):
+    def __createPlayer(self, connectFlag=None):
         names = ['level', 'afkrounds', 'multikill',
                 'triple', 'preventlevel', 'afkmathtotal',
                 'steamid']

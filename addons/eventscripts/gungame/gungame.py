@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.203
+    Version: 1.0.204
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.203"
+gungameVersion = "1.0.204"
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -1269,6 +1269,7 @@ def bomb_exploded(event_var):
     gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
     
 def player_team(event_var):
+    userid = int(event_var['userid'])
     if int(event_var['oldteam']) < 2 and int(event_var['team']) > 1:
         # Play the welcome sound
         if gungamelib.getSound('welcome'):

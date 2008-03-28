@@ -102,7 +102,7 @@ def exceptHook(type, value, tb):
     
     # Print header
     es.dbgmsg(0, '\n%s' % ('*' * 79))
-    es.dbgmsg(0, 'GunGame exception hooked!')
+    es.dbgmsg(0, 'GunGame exception caught!')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
     
     # Open the file for writing
@@ -111,7 +111,7 @@ def exceptHook(type, value, tb):
     # Write header to file
     errorFile.write('\n')
     errorFile.write('%s\n' % ('-=' * 25))
-    errorFile.write('\tHooked exception: %s\n' % time.strftime(dateFormat))
+    errorFile.write('\tException caught: %s\n' % time.strftime(dateFormat))
     errorFile.write('%s\n' % ('-=' * 25))
     errorFile.write('\n')
     
@@ -128,5 +128,5 @@ def exceptHook(type, value, tb):
     # Print finishing
     es.dbgmsg(0, '\n%s' % ('*' * 79))
     es.dbgmsg(0, 'Please open "addons/eventscripts/gungame/errorlog/%s.txt" and report the' % str(es.ServerVar('eventscripts_ggp')))
-    es.dbgmsg(0, 'contents in the "Bug Reports" topic.')
+    es.dbgmsg(0, 'error in the GunGame "Bug Reports" topic.')
     es.dbgmsg(0, '%s\n' % ('*' * 79))

@@ -977,7 +977,7 @@ def round_end(event_var):
                 if gungamePlayer.isPlayerAFK():
                     # See if the player needs to be punished for being AFK
                     afkPunishCheck(int(userid))
-                    
+
 def player_activate(event_var):
     global dict_gungameWinners
     userid = int(event_var['userid'])

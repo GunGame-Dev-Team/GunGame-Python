@@ -1,0 +1,10 @@
+// Variables:
+//	$version -- Version of GG:Python running
+//	$author -- Names of the people who wrote GG:Python
+//
+//	$server -- Name of the server
+//	$date -- Date, in DD/MM/YY format
+//	$time -- Time, in HH:MM:SS format
+//
+This server is running GG:Python ($version)
+You are playing on $server on $date at $time

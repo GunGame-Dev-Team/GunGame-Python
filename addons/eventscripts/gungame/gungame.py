@@ -1061,7 +1061,7 @@ def player_spawn(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
     
-    if gungamelib.isSpectator(userid) > 1:
+    if not gungamelib.isSpectator(userid):
         if not es.isbot(userid):
             # Reset the player's location with GunGame's AFK Checker
             gamethread.delayed(0.6, gungamePlayer.resetPlayerLocation, ())

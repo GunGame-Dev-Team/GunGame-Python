@@ -1,14 +1,16 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_warmup_round
-Version #:      1.0.210
-Description:    GunGame WarmUp Round allows players to begin warming up for
-                the upcoming GunGame round without allowing them to level up,
-                also allowing connecting players to get a full connection to
-                the server prior to the GunGame Round starting.
+    Title: gg_warmup_round
+    Version: 1.0.212
+    Description: GunGame WarmUp Round allows players to begin warming up for
+                 the upcoming GunGame round without allowing them to level up,
+                 also allowing connecting players to get a full connection to
+                 the server prior to the GunGame Round starting.
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # EventScripts imports
 import es
 import gamethread
@@ -19,14 +21,20 @@ import repeat
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_warmup_round Addon for GunGame: Python"
-info.version  = "1.0.210"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_warmup_round"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_warmup_round Addon for GunGame: Python'
+info.version  = '1.0.212'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_warmup_round'
+info.author   = 'GunGame Development Team'
 
+# ==============================================================================
+#  ERROR CLASSES
+# ==============================================================================
 # Begin Multiple Error Classes
 class _GunGameQueryError:
     def __init__(self, message):
@@ -38,16 +46,23 @@ class _GunGameQueryError:
 class WarmUpWeaponError(_GunGameQueryError):
     pass
 
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
 list_allWeapons = ['knife', 'glock', 'usp', 'p228', 'deagle',
                    'elite', 'fiveseven', 'awp', 'scout', 'aug',
                    'mac10', 'tmp', 'mp5navy', 'ump45', 'p90',
                    'galil', 'famas', 'ak47', 'sg552', 'sg550',
                    'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1',
                    'hegrenade', 'flashbang', 'smokegrenade']
-                   
-mp_freezetimeBackUp = 0
-warmupTime = gungamelib.getVariableValue('gg_warmup_timer') + 1
 
+mp_freezetimeBackUp = 0
+warmupTimeVariable = gungamelib.getVariable('gg_warmup_timer')
+warmupTime = 0
+
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     # Register addon with gungamelib
     gg_warmup_round = gungamelib.registerAddon('gg_warmup_round')
@@ -100,17 +115,12 @@ def unload():
     # Set "isWarmup" global
     gungamelib.setGlobal('isWarmup', 0)
 
-def startTimer():
-    # Create a repeat
-    repeat.create('WarmupTimer', countDown)
-    repeat.start('WarmupTimer', 1, 0)
-    
-    # Create timeleft global
-    gungamelib.setGlobal('warmupTimeLeft', warmupTime)
 
-def server_cvar(event_var):    
-    if event_var['cvarname'] == 'gg_warmup_timer' and event_var['cvarvalue'] == '0':
-        es.unload('gungame/included_addons/gg_warmup_round')
+def server_cvar(event_var):
+    global warmupTime
+    
+    if event_var['cvarname'] == 'gg_warmup_timer':
+        warmupTime = int(gungamelib.getVariable('gg_warmup_timer')) + 1
 
 def player_activate(event_var):
     userid = int(event_var['userid'])
@@ -149,8 +159,20 @@ def hegrenade_detonate(event_var):
     if int(event_var['es_userteam']) > 1 and not playerlibPlayer.get('isdead') and gungamelib.getVariableValue('gg_warmup_weapon') == 'hegrenade':
         es.server.cmd('es_xgive %s weapon_hegrenade' % userid)
 
+def startTimer():
+    # Create a repeat
+    repeat.create('WarmupTimer', countDown)
+    repeat.start('WarmupTimer', 1, 0)
+    
+    # Create timeleft global
+    gungamelib.setGlobal('warmupTimeLeft', warmupTime)
+
+# ==============================================================================
+#  COUNTDOWN CODE
+# ==============================================================================
 def countDown(repeatInfo):
     global warmupTime
+    
     # If the remaining time is greater than 1
     if warmupTime >= 1:
         # Loop through the players

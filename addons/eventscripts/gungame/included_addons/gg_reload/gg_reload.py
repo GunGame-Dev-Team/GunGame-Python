@@ -1,11 +1,13 @@
-'''
-(c) 2008 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_reload
-Version #:      1.0.209
-Description:    When a player makes a kill the ammo in their clip is replenished.
+    Title: gg_reload
+    Version: 1.0.212
+    Description: When a player makes a kill the ammo in their clip is replenished.
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # EventScripts imports
 import es
 import playerlib
@@ -13,14 +15,20 @@ import playerlib
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_reload Addon for GunGame: Python"
-info.version  = "1.0.209"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/reload"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_reload Addon for GunGame: Python'
+info.version  = '1.0.212'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/reload'
+info.author   = 'GunGame Development Team'
 
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
 clipSize        = {'usp': 12, 
                    'glock': 20,
                    'deagle': 7,
@@ -46,6 +54,9 @@ clipSize        = {'usp': 12,
                    'sg550': 30,
                    'm249': 100}
 
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     # Register addon with gungamelib
     gg_reload = gungamelib.registerAddon('gg_reload')
@@ -54,6 +65,7 @@ def load():
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_reload')
+
 
 def player_death(event_var):
     if event_var['attacker'] != '0' and event_var['attacker'] != event_var['userid']:

@@ -1,12 +1,14 @@
-'''
-(c)2008 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_knife_pro
-Version #:      1.0.209
-Description:    When one player knife kills another player, the attacker steals
-                a level from the victim.
+    Title: gg_knife_pro
+    Version: 1.0.212
+    Description: When one player knife kills another player, the attacker steals
+                 a level from the victim.
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # EventScripts imports
 import es
 import playerlib
@@ -15,41 +17,41 @@ import usermsg
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = "1.0.209"
+info.version  = '1.0.212'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
 
-# Globals
-gg_knife_pro_limit = 0
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
+proLimit = gungamelib.getVariable('gg_knife_pro_limit')
 
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():    
     # Register addon with gungamelib
     gg_knife_pro = gungamelib.registerAddon('gg_knife_pro')
     gg_knife_pro.setMenuText('GG Knife Pro')
-    
-    # Get gg_knife_pro_limit
-    gg_knife_pro_limit = gungamelib.getVariableValue('gg_knife_pro_limit')
-    
+
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_knife_pro')
 
-def server_cvar(event_var):
-    var = event_var['cvarname']
-    
-    if var == 'gg_knife_pro_limit':
-        newValue = int(event_var['cvarvalue'])
-        gg_knife_pro_limit = newValue
-    
+
 def player_death(event_var):
     # Check for knife kill, and not a team kill, and not a suicide by world
     userteam = event_var['es_userteam']
     attackerteam = event_var['es_attackerteam']
     
+    # Skip if was a team kill, suicide or a not a knife kill
     if event_var['weapon'] != 'knife' or attackerteam == userteam or event_var['attacker'] == '0':
         return
 
@@ -96,7 +98,7 @@ def player_death(event_var):
         return
     
     # Is the level difference higher than the limit?
-    if ((gungameAttackerLevel - gungameVictimLevel) >= gg_knife_pro_limit) and gg_knife_pro_limit != 0:
+    if ((gungameAttackerLevel - gungameVictimLevel) >= int(proLimit)) and int(proLimit) != 0:
         gungamelib.msg('gg_knife_pro', attacker, 'LevelDifferenceLimit')
         return
         
@@ -121,29 +123,17 @@ def player_death(event_var):
     if gungamelib.getSound('levelsteal'):
         es.playsound(attacker, gungamelib.getSound('levelsteal'), 1.0)
     
-    # BEGIN THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
-    # -----------------------------------------------------------------------------------------------------------
+    # Event code
     es.event('initialize', 'gg_knife_steal')
-    # The userid of the player that stole the level
     es.event('setint', 'gg_knife_steal', 'userid', attacker)
-    # The steamid of player that stole the level (provided by uniqueid)
     es.event('setstring', 'gg_knife_steal', 'steamid', attackersteamid)
-    # The name of the player that stole the level
     es.event('setstring', 'gg_knife_steal', 'name', attackername)
-    # The team # of the player that stole the level up: team 2= Terrorists, 3= CT
-    es.event('setstring', 'gg_knife_steal', 'team', attackerteam)                                
-    # The new level of the player that stole the level
+    es.event('setstring', 'gg_knife_steal', 'team', attackerteam)
     es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttackerNewLevel)
-    # The new level of the victim
     es.event('setint', 'gg_knife_steal', 'victim_level', gungameVictimNewLevel)
-    # The userid of victim
     es.event('setint', 'gg_knife_steal', 'victim', userid)
-    # The victim's name
     es.event('setstring', 'gg_knife_steal', 'victimname', username)
-    # Fire the "gg_knife_steal" event
     es.event('fire', 'gg_knife_steal')
-    # -----------------------------------------------------------------------------------------------------------
-    # END THE EVENT CODE FOR INITIALIZING & FIRING EVENT "GG_KNIFE_STEAL"
     
     # Announce the level stealing
     index = playerlib.getPlayer(attacker).attributes['index']

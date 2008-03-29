@@ -1,12 +1,14 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_handicap
-Version #:      1.0.209
-Description:    When a player joins they are given the average level.
+    Title: gg_handicap
+    Version: 1.0.212
+    Description:
 '''
 
-# System imports
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
+# Python imports
 import os
 
 # EventScripts imports
@@ -18,16 +20,25 @@ import gamethread
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_handicap Addon for GunGame: Python"
-info.version  = "1.0.209"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_handicap"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_handicap (for GunGame: Python)'
+info.version  = '1.0.212'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_handicap'
+info.author   = 'GunGame Development Team'
 
-gg_handicap_update = gungamelib.getVariableValue('gg_handicap_update')
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
+updateType = gungamelib.getVariable('gg_handicap_update')
 
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     # Register addon with gungamelib
     gg_handicap = gungamelib.registerAddon('gg_handicap')
@@ -44,11 +55,6 @@ def unload():
     # Stop loop
     if repeat.status('HandicapLoop'):
         repeat.delete('HandicapLoop')
-
-def server_cvar(event_var):
-    # Watch for a change in gg_handicap_update
-    if event_var['cvarname'] == 'gg_handicap_update':
-        gg_handicap_update = int(event_var['cvarvalue'])
 
 def es_map_start(event_var):
     # Start loop
@@ -67,7 +73,7 @@ def player_activate(event_var):
         gungamelib.msg('gg_handicap', userid, 'LevelAveraged', {'level': averageLevel})
 
 def handicapUpdate(repeatInfo):
-    if not gg_handicap_update:
+    if not int(updateType):
         return
     
     # Get average level

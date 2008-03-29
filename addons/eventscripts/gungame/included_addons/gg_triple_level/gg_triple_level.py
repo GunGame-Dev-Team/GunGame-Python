@@ -1,11 +1,14 @@
-'''
-(c)2008 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_triple_level
-Version #:      1.0.209
-Description:    When a player makes 3 levels in one round he get faster and have an effect for 10 secs
+    Title: gg_triple_level
+    Version: 1.0.212
+    Description: When a player makes 3 levels in one round the player will be
+                 faster and have an effect for 10 secs.
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # EventScripts imports
 import es
 import playerlib
@@ -14,17 +17,26 @@ import gamethread
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_triple_level Addon for GunGame: Python"
-info.version  = "1.0.209"
+info.version  = '1.0.212'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_triple_level"
 info.author   = "GunGame Development Team"
 
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
 # Create a list to store those that are currently triple levelled
 list_currentTripleLevel = []
 
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     # Register addon with gungamelib
     gg_triple_level = gungamelib.registerAddon('gg_triple_level')
@@ -33,6 +45,7 @@ def load():
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_triple_level')
+
 
 def gg_levelup(event_var):
     userid = event_var['userid']
@@ -93,6 +106,9 @@ def round_start(event_var):
         gungamePlayer = gungamelib.getPlayer(userid)
         gungamePlayer['triple'] = 0
 
+# ==============================================================================
+#  HELPER FUNCTIONS
+# ==============================================================================
 def removeTriple(userid):
     # Remove the player from the current triple level list
     list_currentTripleLevel.remove(userid)

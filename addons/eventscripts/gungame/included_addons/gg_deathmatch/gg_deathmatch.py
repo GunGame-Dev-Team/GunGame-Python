@@ -1,10 +1,13 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.209
+    Version: 1.0.212
     Description: Deathmatch addon for GunGame:Python
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # System imports
 import os.path
 import string
@@ -22,18 +25,24 @@ import keyvalues
 import gungamelib
 from gungamelib import ArgumentError
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = "1.0.209"
+info.version  = '1.0.212'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "GunGame Development Team"
 
-# Get some deathmatch vars
-dict_deathmatchVars = {}
-dict_deathmatchVars['gg_dm_respawn_delay'] = int(gungamelib.getVariableValue('gg_dm_respawn_delay'))
-dict_deathmatchVars['gg_dm_respawn_cmd'] = gungamelib.getVariableValue('gg_dm_respawn_cmd')
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
+# Variables
+dict_variables = {}
+dict_variables['delay'] = gungamelib.getVariable('gg_dm_respawn_delay')
+dict_variables['cmd'] = gungamelib.getVariable('gg_dm_respawn_cmd')
 
 # Globals
 respawnCounters = {}
@@ -41,7 +50,7 @@ spawnPoints = {}
 list_randomSpawnIndex = []
 
 # ==============================================================================
-#   Event functions
+#  GAME EVENTS
 # ==============================================================================
 def load():
     # Register addon with gungamelib
@@ -89,14 +98,6 @@ def unload():
     # Unregister this addon with GunGame
     gungamelib.unregisterAddon('gg_deathmatch')
 
-def server_cvar(event_var):
-    cvarname = event_var['cvarname']
-    
-    if dict_deathmatchVars.has_key(cvarname):
-        cvarvalue = event_var['cvarvalue']
-        if gungamelib.isNumeric(cvarvalue):
-            cvarvalue = int(cvarvalue)
-        dict_deathmatchVars[cvarname] = cvarvalue
 
 def es_map_start(event_var):
     getSpawnPoints(event_var['mapname'])
@@ -110,7 +111,7 @@ def player_team(event_var):
     userid = event_var['userid']
     
     # Respawn the player
-    gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['gg_dm_respawn_cmd'], userid)))
+    gamethread.delayed(5, es.server.cmd, ('%s %s' % (str(dict_variables['cmd']), userid)))
     
     # Tell them they will respawn soon
     gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
@@ -133,9 +134,9 @@ def player_spawn(event_var):
         return
     
     # No-block for a second, to stop sticking inside other players
-    if gungamelib.getVariableValue('gg_noblock') == 0:
-        es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
-        gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', 5))
+    collisionBefore = es.getplayerprop(userid, 'CBaseEntity.m_CollisionGroup')
+    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
+    gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
     
     # Do we have a spawn point file?
     if spawnPoints != 0:
@@ -171,7 +172,7 @@ def player_disconnect(event_var):
         repeat.delete('RespawnCounter%s' % userid)
 
 # ==============================================================================
-#   Spawnpoint functions
+#  SPAWNPOINT HELPERS
 # ==============================================================================
 def getSpawnPoints(_mapName):
     global spawnPoints
@@ -266,7 +267,7 @@ def removeSpawnPoint(index):
     getSpawnPoints(gungamelib.getLevelName())
 
 # ==============================================================================
-#   Respawn code
+#  RESPAWN CODE
 # ==============================================================================
 def RespawnCountdown(userid, repeatInfo):
     # Is it in warmup?
@@ -279,19 +280,19 @@ def RespawnCountdown(userid, repeatInfo):
             
     # Respawn the player
     if respawnCounters[userid] == 0:
-        es.server.cmd('%s %s' % (dict_deathmatchVars['gg_dm_respawn_cmd'], userid))
+        es.server.cmd('%s %s' % (str(dict_variables['cmd']), userid))
         
     # Decrement the timer
     respawnCounters[userid] -= 1
 
 def respawn(userid):
     # Tell the userid they are respawning
-    respawnCounters[userid] = dict_deathmatchVars['gg_dm_respawn_delay']
+    respawnCounters[userid] = int(dict_variables['delay'])
     repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
-    repeat.start('RespawnCounter%s' % userid, 1, dict_deathmatchVars['gg_dm_respawn_delay'] + 1)
+    repeat.start('RespawnCounter%s' % userid, 1, int(dict_variables['delay']) + 1)
 
 # ==============================================================================
-#   Convertion commands
+#  CONVERTION HELPERS
 # ==============================================================================
 def cmd_convert():
     # Do we have enough arguments?
@@ -364,7 +365,7 @@ def parseLegacySpawnpoint(file):
     return points
 
 # ==============================================================================
-#   Console commands
+#  CONSOLE FUNCTIONS
 # ==============================================================================
 def cmd_addSpawnPoint():
     global spawnPoints

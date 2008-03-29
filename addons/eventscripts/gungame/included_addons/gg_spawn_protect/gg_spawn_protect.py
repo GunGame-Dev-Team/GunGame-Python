@@ -1,13 +1,15 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_spawn_protection
-Version #:      1.0.210
-Description:    This will make players invincible and marked with color when
-                ever a player spawns.  Protected players cannot level up during
-                spawn protection.
+    Title: gg_spawn_protection
+    Version: 1.0.212
+    Description: This will make players invincible and marked with color when
+                 ever a player spawns. Protected players cannot level up during
+                 spawn protection.
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # EventScripts imports
 import es
 import gamethread
@@ -19,32 +21,41 @@ from playerlib import UseridError
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_spawn_protection"
-info.version  = "1.0.210"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_spawn_protect"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_spawn_protection (for GunGame:Python)'
+info.version  = '1.0.212'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_spawn_protect'
+info.author   = 'GunGame Development Team'
 
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
 # Addon settings
-dict_SpawnProtectVars = {}
-dict_SpawnProtectVars['gg_spawn_protect_red'] = gungamelib.getVariableValue('gg_spawn_protect_red')
-dict_SpawnProtectVars['gg_spawn_protect_green'] = gungamelib.getVariableValue('gg_spawn_protect_green')
-dict_SpawnProtectVars['gg_spawn_protect_blue'] = gungamelib.getVariableValue('gg_spawn_protect_blue')
-dict_SpawnProtectVars['gg_spawn_protect_alpha'] = gungamelib.getVariableValue('gg_spawn_protect_alpha')
-dict_SpawnProtectVars['gg_spawn_protect'] = gungamelib.getVariableValue('gg_spawn_protect')
-dict_SpawnProtectVars['cancelOnFire'] = gungamelib.getVariableValue('gg_spawn_protect_cancelonfire')
+dict_variables = {}
+dict_variables['red'] = gungamelib.getVariable('gg_spawn_protect_red')
+dict_variables['green'] = gungamelib.getVariable('gg_spawn_protect_green')
+dict_variables['blue'] = gungamelib.getVariable('gg_spawn_protect_blue')
+dict_variables['alpha'] = gungamelib.getVariable('gg_spawn_protect_alpha')
+dict_variables['delay'] = gungamelib.getVariable('gg_spawn_protect')
+dict_variables['cancelOnFire'] = gungamelib.getVariable('gg_spawn_protect_cancelonfire')
 
 playerCounters = {}
 noisyBefore = 0
 
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     # Register
     gg_spawn_protect = gungamelib.registerAddon('gg_spawn_protect')
     gg_spawn_protect.setMenuText('GG Spawn Protection')
     
-    if dict_SpawnProtectVars['cancelOnFire']:
+    if int(dict_variables['cancelOnFire']):
         noisyBefore = int(es.ServerVar('eventscripts_noisy'))
         es.ServerVar('eventscripts_noisy').set(1)
     
@@ -54,7 +65,8 @@ def unload():
     
     # Unregister
     gungamelib.unregisterAddon('gg_spawn_protect')
-    
+
+
 def server_cvar(event_var):
     global noisyBefore
     
@@ -62,7 +74,7 @@ def server_cvar(event_var):
     
     if cvarname == 'gg_spawn_protect_cancelonfire':
         newValue = int(event_var['cvarvalue'])
-        dict_SpawnProtectVars['cancelOnFire'] = newValue
+        dict_variables['cancelOnFire'] = newValue
         
         if newValue == 1:
             # Set noisy vars
@@ -71,16 +83,9 @@ def server_cvar(event_var):
         else:
             # Set noisy back
             es.ServerVar('eventscripts_noisy').set(noisyBefore)
-            
-    elif dict_SpawnProtectVars.has_key(cvarname):
-        newValue = int(event_var['cvarvalue'])
-        cvarvalue = event_var['cvarvalue']
-        if gungamelib.isNumeric(cvarvalue):
-            cvarvalue = int(cvarvalue)
-        dict_SpawnProtectVars[cvarname] = cvarvalue
 
 def weapon_fire(event_var):
-    if not dict_SpawnProtectVars['cancelOnFire']:
+    if not int(dict_variables['cancelOnFire']):
         return
     
     # Finish countdown for player if they are protected
@@ -122,6 +127,9 @@ def player_death(event_var):
     if repeat.status('CombatCounter%s' % userid):
         repeat.delete('CombatCounter%s' % userid)
 
+# ==============================================================================
+#  COUNTDOWN CODE
+# ==============================================================================
 def combatCountdown(userid, repeatInfo):
     # Get player
     try:
@@ -185,14 +193,14 @@ def startCountdown(userid):
     # Init vars
     userid = int(userid)
     player = playerlib.getPlayer(userid)
-    delay = dict_SpawnProtectVars['gg_spawn_protect']
+    delay = int(dict_variables['delay'])
     
     # Set player counter
     playerCounters[userid] = delay
 
     # Set color and health
     player.set('health', 999)
-    player.set('color', (dict_SpawnProtectVars['gg_spawn_protect_red'], dict_SpawnProtectVars['gg_spawn_protect_green'], dict_SpawnProtectVars['gg_spawn_protect_blue'], dict_SpawnProtectVars['gg_spawn_protect_alpha']))
+    player.set('color', (int(dict_variables['red']), int(dict_variables['green']), int(dict_variables['blue']), int(dict_variables['alpha'])))
     
     # See if prevent level is already turned on
     gungamePlayer = gungamelib.getPlayer(userid)

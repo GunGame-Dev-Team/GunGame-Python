@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.209
+    Version: 1.0.212
     Description:
 '''
 
@@ -35,7 +35,7 @@ dict_leaderInfo['currentLeaders'] = []
 dict_leaderInfo['oldLeaders'] = []
 dict_leaderInfo['leaderLevel'] = 1
 
-dict_cfgSettings = {}
+dict_variables = {}
 dict_globals = {}
 
 dict_gungameSounds = {}
@@ -56,6 +56,8 @@ list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
 
 # If any configs in this list are missing when they call the config, GunGame will unload                    
 list_criticalConfigs = ['gg_en_config.cfg', 'gg_default_addons.cfg']
+
+list_configs = []
 
 # ==============================================================================
 #   GLOBAL VARIABLES
@@ -743,89 +745,77 @@ class WeaponOrder:
 #   CONFIG CLASS
 # ==============================================================================
 class Config:
-    '''Class for Registration of Configs used by GunGame.'''
-    def __init__(self, configName):
-        self.configName = configName
-        self.configPath = '%s/cfg/gungame/%s' %(str(es.ServerVar('eventscripts_gamedir')), configName)
+    '''Class for registration of config files used by GunGame.'''
+    
+    def __init__(self, name):
+        '''Sets the class's variables.'''
+        self.name = name
+        self.path = getGameDir('cfg/gungame/%s' % name)
         
-        # Check to see if it has been registered before
+        # Check to see if it has been loaded before
         if not self.__isLoaded():
-            self.__load()
+            # Add to configs list
+            list_configs.append(self.name)
             
+            # Parse file
+            self.__parse()
+    
     def __isLoaded(self):
-        if dict_cfgSettings.has_key(self.configName):
+        '''Checks to see if the config is already loaded.'''
+        if self.name in list_configs:
             return True
         else:
             return False
-            
-    def __load(self):
+    
+    def __parse(self):
+        '''Parses the config file.'''
         try:
             # Open the Config
-            gungameConfig = open(self.configPath, 'r')
-            
-            # Loop through each line in the Config
-            for line in gungameConfig.readlines():
-                # Strip the spaces from the begninning and end of each line
-                line = line.strip().lower()
-                
-                # Make sure that the line doesn't begin with '//'
-                if not line.startswith('//'):
-                    # Change the text to lowercase and convert to a string
-                    if line:
-                        # Remove excess whitespace
-                        while '  ' in line:
-                            line = line.replace('  ', ' ')
-                            
-                        # Add the variables and values to dict_cfgSettings
-                        list_variables = line.split()
-                        
-                        variableName = list_variables[0]
-                        
-                        # If the variable has not been added to the GunGame Variables Database
-                        if not dict_cfgSettings.has_key(variableName):
-                            variableValue = list_variables[1]
-                            
-                            # Add the variable and value to the GunGame Variables Database
-                            dict_cfgSettings[variableName] = variableValue
-                            
-                            # Check to see if we can convert the value to an int
-                            if self.isNumeric(variableValue):
-                                # Add the variable and value to the GunGame Config Settings Database as an integer
-                                dict_cfgSettings[variableName] = int(variableValue)
-                                
-                            else:
-                                # Add the variable and value to the GunGame Config Settings Database as a string
-                                dict_cfgSettings[variableName] = variableValue
-                                
-                            # Create console variables
-                            es.ServerVar(variableName).set(variableValue)
-                            
-                            # Set the notify flag so that changing the variable's value will trigger the server_cvar event
-                            es.ServerVar(variableName).addFlag('notify')
-                            
-                            # Use a server command to fire the server_cvar event
-                            es.server.cmd('%s %s' %(variableName, variableValue))
-                            
-                        else:
-                            echo('gungame', 0, 2, 'Config:AlreadyAdded', {'name': variableName})
-            
-            echo('gungame', 0, 0, 'Config:Loaded', {'name': self.configPath})
+            configObj = open(self.path, 'r')
         except IOError:
             if not configName.lower() in list_criticalConfigs:
-                raise FileError, 'Unable to load the Config: \'%s\': File does not exist.' %configPath
+                raise FileError, 'Unable to load the Config: \'%s\': File does not exist.' % self.name
             else:
                 es.server.queuecmd('es_xunload gungame')
-                raise FileError, 'Unable to load the Config: \'%s\': File does not exist... unloading GunGame.' %configPath
+                raise FileError, 'Unable to load the Config: \'%s\': File does not exist... Unloading GunGame.' % self.name
+        
+        # Loop through each line in the Config
+        for line in configObj.readlines():
+            # Strip line and put it in lower-case
+            line = line.strip().lower()
+            
+            # Skip if line is a comment or empty
+            if line.startswith('//') or not line:
+                continue
+            
+            # Remove excess whitespace
+            while '  ' in line:
+                line = line.replace('  ', ' ')
+            
+            # Get variable name and value
+            variableName, variableValue = line.split(' ', 1)
+            
+            # Don't re-add variables, but change the value instead
+            if dict_variables.has_key(variableName):
+                dict_variables[variableName].set(variableValue)
+                echo('gungame', 0, 2, 'Config:AlreadyAdded', {'name': variableName})
                 
-    def isNumeric(self, string):
-        try:
-            test = int(string)
-        except ValueError:
-            return False
-        else:
-            return True
+                # Skip to next line
+                continue
             
+            # Add the variable and value
+            dict_variables[variableName] = es.ServerVar(variableName, variableValue)
+            dict_variables[variableName].set(variableValue)
             
+            # Make variable public
+            dict_variables[variableName].addFlag('notify')
+            
+            # Use a server command to fire the server_cvar event
+            es.server.cmd('%s %s' % (variableName, variableValue))
+            
+        # Print config loaded
+        echo('gungame', 0, 0, 'Config:Loaded', {'name': self.name})
+
 # ==============================================================================
 #   SOUND CLASS
 # ==============================================================================
@@ -834,14 +824,15 @@ class InvalidSoundPack(_GunGameLibError):
 
 class Sounds:
     '''Class that stores GunGame Sounds.'''
+    
     def __init__(self, soundPackName):
         self.soundPackName = soundPackName
         
         # Set up the sound pack path
         if '.ini' in soundPackName:
-            self.soundPackPath = '%s/cfg/gungame/sound_packs/%s' %(gameDir, soundPackName)
+            self.soundPackPath = getGameDir('cfg/gungame/sound_packs/%s' % soundPackName)
         else:
-            self.soundPackPath = '%s/cfg/gungame/sound_packs/%s.ini' %(gameDir, soundPackName)
+            self.soundPackPath = getGameDir('cfg/gungame/sound_packs/%s.ini' % soundPackName)
         
         # Make sure that the sound pack INI exists
         if self.__checkSoundPack():
@@ -853,7 +844,7 @@ class Sounds:
         # Open the INI file
         soundPackINI = ConfigParser.ConfigParser()
         soundPackINI.read(self.soundPackPath)
-
+        
         # Loop through each section (should only be 1) in the soundpack INI
         for section in soundPackINI.sections():
             # Loop through each option in the soundpack INI
@@ -879,15 +870,17 @@ class Sounds:
         addDownloadableSounds()
     
     def __checkSoundPack(self):
-        es.msg(self.soundPackPath)
-        
+        # File exists?
         if os.path.isfile(self.soundPackPath):
             return True
         else:
             return False
         
     def __checkSound(self, soundFile):
-        soundPath = '%s/sound/%s' %(gameDir, soundFile)
+        # Set path
+        soundPath = getGameDir('sound/%s' % soundFile)
+        
+        # File exists?
         if os.path.isfile(soundPath):
             return True
         else:
@@ -937,13 +930,16 @@ class Addon:
         # Check if dependency already exists
         if not dict_registeredDependencies.has_key(dependencyName):
             # Check if dependency is a valid gungame variable
-            if dict_cfgSettings.has_key(dependencyName):
-                if self.isNumeric(value):
+            if dict_variables.has_key(dependencyName):
+                if isNumeric(value):
                     value = int(value)
+                
                 # Add dependency and original value to addon attributes
                 self.dependencies.append(dependencyName)
+                
                 # Create dependency class
                 dict_registeredDependencies[dependencyName] = addonDependency(dependencyName, value, self.addon)
+                
                 # Set GunGame variable to dependents value
                 setVariableValue(dependencyName, value)
             else:
@@ -952,6 +948,7 @@ class Addon:
         else:
             # Add dependency and original value to addon attributes
             self.dependencies.append(dependencyName)
+            
             # Add dependent to existing dependency
             dict_registeredDependencies[dependencyName].addDependent(value, self.addon)
     
@@ -962,14 +959,6 @@ class Addon:
             dict_registeredDependencies[dependencyName].delDependent(self.addon)
         else:
             raise AddonError('%s is not a registered dependency!' % dependencyName)
-    
-    def isNumeric(self, string):
-        try:
-            test = int(string)
-        except ValueError:
-            return False
-        else:
-            return True
     
 class addonDependency:
     def __init__(self, dependencyName, value, dependentName):
@@ -994,6 +983,7 @@ class addonDependency:
                 setVariableValue(dependentName, 0)
             else:
                 es.unload('gungame/custom_addons/%s' %dependentName)
+            
             echo('gungame', 0, 0, 'Dependency:Failed', {'name': self.dependency})
             
     def delDependent(self, dependentName):
@@ -1004,14 +994,13 @@ class addonDependency:
             
             # Check if there are any more dependencies
             if not self.dependentList:
-                if dict_cfgSettings:
+                if dict_variables:
                     # Set Variable back to it's original value
                     setVariableValue(self.dependency, self.dependencyOriginalValue)
                     
                 # Delete depdency
                 del dict_registeredDependencies[self.dependency]
 
-                
 # ==============================================================================
 #   MESSAGE CLASS
 # ==============================================================================
@@ -1277,11 +1266,13 @@ def resetGunGame():
     dict_leaderInfo['oldLeaders'] = []
     dict_leaderInfo['leaderLevel'] = 1
     
-    # Reset the Player Information Database in the dict_gungameCore
+    # Reset the player information dictionary
     dict_gungameCore.clear()
+    
+    # Add all players to the players dictionary
     for userid in es.getUseridList():
         gungamePlayer = getPlayer(userid)
-        
+
 def clearGunGame():
     # Clear the dict_leaderInfo
     dict_leaderInfo.clear()
@@ -1302,11 +1293,11 @@ def clearGunGame():
     dict_leaderInfo['oldLeaders'] = []
     dict_leaderInfo['leaderLevel'] = 1
     
-    # Reset the Player Information Database in the dict_gungameCore
+    # Reset the Player Information dictionary
     dict_gungameCore.clear()
     
-    # Reset the Player Information Database in the dict_cfgSettings
-    dict_cfgSettings.clear()
+    # Reset the stored variables
+    dict_variables.clear()
     
     # Clear the gungame globals
     dict_globals.clear()
@@ -1506,33 +1497,44 @@ def getOldLeaderCount():
 # ==============================================================================
 #   CONFIG RELATED COMMANDS
 # ==============================================================================
+def getVariable(variableName):
+    variableName = variableName.lower()
+    
+    if not dict_variables.has_key(variableName):
+        raise GunGameValueError, 'Unable to retrieve variable instance: The variable \'%s\' has not been registered.' % variableName
+    
+    return dict_variables[variableName]
+
 def getVariableValue(variableName):
     variableName = variableName.lower()
-    if es.exists('variable', variableName):
-        if dict_cfgSettings.has_key(variableName):
-            return dict_cfgSettings[variableName]
-        else:
-            raise GunGameValueError, 'Unable to retrieve the variable value: The variable \'%s\' has not been registered with GunGame' %variableName
+    
+    if not dict_variables.has_key(variableName):
+        raise GunGameValueError, 'Unable to retrieve variable value: The variable \'%s\' has not been registered.' % variableName
+    
+    variable = dict_variables[variableName]
+    
+    # Is numeric?
+    if isNumeric(str(variable)):
+        # Return number
+        return int(variable)
     else:
-        raise GunGameValueError, 'Unable to retrieve the variable value: The variable \'%s\' has not been set as a console variable' %variableName
+        # Return string
+        return str(variable)
 
 def setVariableValue(variableName, value):
     variableName = variableName.lower()
-    if es.exists('variable', variableName):
-        if dict_cfgSettings.has_key(variableName):
-            if isNumeric(value):
-                value = int(value)
-            if es.ServerVar(variableName) != str(value):
-                es.server.cmd('%s %s' %(variableName, value))
-            if getVariableValue(variableName) != value:
-                dict_cfgSettings[variableName] = value    
-        else:
-            raise GunGameValueError, 'Unable to set the variable value: The variable \'%s\' has not been registered with GunGame' %variableName
-    else:
-        raise GunGameValueError, 'Unable to set the variable value: The variable \'%s\' has not been set as a console variable' %variableName
+    
+    if not dict_variables.has_key(variableName):
+        raise GunGameValueError, 'Unable to set variable value: The variable \'%s\' has not been registered.' % variableName
+    
+    # Set variable value
+    dict_variables[variableName].set(value)
+    
+    # Fire server_cvar
+    es.server.cmd('%s %s' % (variableName, value))
 
 def getVariableList():
-    return dict_cfgSettings.keys()
+    return dict_variables.keys()
     
 # ==============================================================================
 #   SOUND RELATED COMMANDS

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_welcome_msg
-    Version: 1.0.209
+    Version: 1.0.212
     Description: Shows a simple popup message to every player that connects.
 '''
 
@@ -26,11 +26,11 @@ from gungame import gungame
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_welcome_msg (for GunGame: Python)"
-info.version  = "1.0.209"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_welcome_msg"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_welcome_msg (for GunGame: Python)'
+info.version  = '1.0.212'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_welcome_msg'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #   GLOBALS

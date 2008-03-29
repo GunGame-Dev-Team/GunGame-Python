@@ -1,12 +1,15 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_unl_grenade
-Version #:      1.0.209
-Description:    When a player reaches grenade level, they are given another grenade when their 
-                thrown grenade detonates.  This will automatically disable the Earn Hegrenades addon.
+    Title: gg_unl_grenade
+    Version: 1.0.212
+    Description: When a player reaches grenade level, they are given another 
+                 grenade when their  thrown grenade detonates.  This will
+                 automatically disable the gg_earn_nade addon.
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # EventScripts imports
 import es
 import playerlib
@@ -14,15 +17,20 @@ import playerlib
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_unl_grenade Addon for GunGame: Python"
-info.version  = "1.0.209"
+info.version  = '1.0.212'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_unl_grenade"
 info.author   = "GunGame Development Team"
 
-
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     # Register addon with gungamelib
     gg_unl_grenade = gungamelib.registerAddon('gg_unl_grenade')

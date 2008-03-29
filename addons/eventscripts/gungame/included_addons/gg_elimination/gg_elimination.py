@@ -1,13 +1,16 @@
-'''
-(c)2007 by the GunGame Coding Team
+''' (c) 2008 by the GunGame Coding Team
 
-    Title:      gg_elimination
-Version #:      1.0.209
-Description:    Players respawn after their killer is killed.
-                Originally for ES1.3 created by ichthys.
-                http://addons.eventscripts.com/addons/view/3972
+    Title: gg_elimination
+    Version: 1.0.212
+    Description: Players respawn after their killer is killed.
+    
+    Originally for ES1.3 created by ichthys.
+    (http://addons.eventscripts.com/addons/view/3972)
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # EventScripts imports
 import es
 import gamethread
@@ -17,14 +20,20 @@ import usermsg
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_elimination Addon for GunGame: Python"
-info.version  = "1.0.209"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_elimination"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_elimination Addon for GunGame: Python'
+info.version  = '1.0.212'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_elimination'
+info.author   = 'GunGame Development Team'
 
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
 # Set up variables for use throughout gg_elimination
 dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
@@ -33,6 +42,9 @@ dict_addonVars['currentRound'] = 0
 # Player Database
 dict_playersEliminated = {}
 
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     # Register addon with gungamelib
     gg_elimination = gungamelib.registerAddon('gg_elimination')
@@ -53,6 +65,7 @@ def unload():
     
     # Prevent players from spawning after gg_elimination is disabled
     dict_addonVars['roundActive'] = 0
+
 
 def es_map_start(event_var):
     # reset round tracking
@@ -115,6 +128,9 @@ def player_death(event_var):
         # Check if victim had any Eliminated players
         gamethread.delayed(1, respawnEliminated, (userid, dict_addonVars['currentRound']))
 
+# ==============================================================================
+#  RESPAWN CODE
+# ==============================================================================
 def respawnPlayer(userid, respawnRound):
     # Check if the round is over and respawn player
     if dict_addonVars['roundActive'] and dict_addonVars['currentRound'] == respawnRound:
@@ -126,6 +142,7 @@ def respawnPlayer(userid, respawnRound):
 def respawnEliminated(userid, respawnRound):
     # Format respawning message
     msgFormat = None
+    
     # Check if round is over
     if dict_addonVars['roundActive'] and dict_addonVars['currentRound'] == respawnRound:
         index = 0

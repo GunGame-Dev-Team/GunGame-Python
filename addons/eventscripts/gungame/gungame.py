@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.204
+    Version: 1.0.209
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.204"
+gungameVersion = "1.0.209"
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -1489,7 +1489,10 @@ def gg_win(event_var):
         
         # Close the file
         winnersDataBaseFile.close()
-
+    
+    # Remove all old players from the dict_gungameCore    
+    gungamelib.clearOldPlayers()
+    
 def server_cvar(event_var):
     cvarName = event_var['cvarname']
     newValue = event_var['cvarvalue']

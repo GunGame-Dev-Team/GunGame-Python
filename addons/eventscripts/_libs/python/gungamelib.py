@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.186
+    Version: 1.0.209
     Description:
 '''
 
@@ -321,18 +321,14 @@ class Player:
         self.__createPlayer()
         
     def resetPlayerLocation(self):
-        # Make sure the player is on a team
-        if not isSpectator(self.userid):
-            # Get the player's location, although this is not really a list... it returns a tuple
-            list_playerlocation = es.getplayerlocation(self.userid)
-            
-            # Add necessary information about the player's location, excluding the "z" axis, as this is far too touchy
-            afkMathTotal = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]'))
-            
-            # Update the player's "afkmathtotal" attribute
-            self.attributes['afkmathtotal'] = int(afkMathTotal)
-        else:
-            raise TeamError, 'AFK Message: Unable to reset the player\'s location: userid \'%s\' is not a team' %self.userid
+        # Get the player's location, although this is not really a list... it returns a tuple
+        x,y,z = es.getplayerlocation(self.userid)
+        
+        # Add necessary information about the player's location, excluding the "z" axis, as this is far too touchy
+        afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
+        
+        # Update the player's "afkmathtotal" attribute
+        self.attributes['afkmathtotal'] = int(afkMathTotal)
             
     def playerNotAFK(self):
         # Make sure the player is on a team
@@ -346,9 +342,13 @@ class Player:
     def isPlayerAFK(self):
         # Make sure the player is on a team
         if int(es.getplayerteam(self.userid)) > 1:
-            list_playerlocation = es.getplayerlocation(self.userid)
-            afk_math_total = int(sum(list_playerlocation)) - list_playerlocation[2] + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid,'CCSPlayer.m_angEyeAngles[1]'))
-            if int(afk_math_total) == self.attributes['afkmathtotal']:
+            # Get the player's location, although this is not really a list... it returns a tuple
+            x,y,z = es.getplayerlocation(self.userid)
+            
+            # Add necessary information about the player's location, excluding the "z" axis, as this is far too touchy
+            afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
+            
+            if int(afkMathTotal) == self.attributes['afkmathtotal']:
                 return True
             else:
                 return False
@@ -384,7 +384,7 @@ class Player:
         if int(es.getplayerteam(self.userid)) > 1:
             if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
                 playerlibPlayer = playerlib.getPlayer(self.userid)
-                knifeIndex = playerlibPlayer.get('weaponindex', 'knife')
+                #knifeIndex = playerlibPlayer.get('weaponindex', 'knife')
                 
                 playerlibPrimary = playerlibPlayer.get('primary')
                 playerlibSecondary = playerlibPlayer.get('secondary')
@@ -1310,6 +1310,11 @@ def clearGunGame():
     
     # Clear the gungame globals
     dict_globals.clear()
+    
+def clearOldPlayers():
+    for userid in dict_gungameCore:
+        if not es.exists('userid', userid):
+            del dict_gungameCore[userid]
 
 # ==============================================================================
 #   WEAPON RELATED COMMANDS

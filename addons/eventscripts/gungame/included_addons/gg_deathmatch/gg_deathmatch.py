@@ -32,12 +32,11 @@ info.author   = "GunGame Development Team"
 
 # Get some deathmatch vars
 dict_deathmatchVars = {}
-dict_deathmatchVars['respawn_delay'] = int(gungamelib.getVariableValue('gg_dm_respawn_delay'))
-dict_deathmatchVars['respawn_cmd'] = gungamelib.getVariableValue('gg_dm_respawn_cmd')
+dict_deathmatchVars['gg_dm_respawn_delay'] = int(gungamelib.getVariableValue('gg_dm_respawn_delay'))
+dict_deathmatchVars['gg_dm_respawn_cmd'] = gungamelib.getVariableValue('gg_dm_respawn_cmd')
 
 # Globals
 respawnCounters = {}
-lastSpawnPoint = {}
 spawnPoints = {}
 list_randomSpawnIndex = []
 
@@ -91,16 +90,13 @@ def unload():
     gungamelib.unregisterAddon('gg_deathmatch')
 
 def server_cvar(event_var):
-    # New value must be numeric
-    if not gungamelib.isNumeric(event_var['cvarValue']):
-        return
+    cvarname = event_var['cvarname']
     
-    # Get vars
-    newValue = int(event_var['cvarvalue'])
-    var = event_var['cvarname']
-    
-    if var == 'gg_deathmatch' and newValue == 0:
-        es.unload('gungame/included_addons/gg_deathmatch')
+    if dict_deathmatchVars.has_key(cvarname):
+        cvarvalue = event_var['cvarvalue']
+        if gungamelib.isNumeric(cvarvalue):
+            cvarvalue = int(cvarvalue)
+        dict_deathmatchVars[cvarname] = cvarvalue
 
 def es_map_start(event_var):
     getSpawnPoints(event_var['mapname'])
@@ -114,7 +110,7 @@ def player_team(event_var):
     userid = event_var['userid']
     
     # Respawn the player
-    gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid)))
+    gamethread.delayed(5, es.server.cmd, ('%s %s' % (dict_deathmatchVars['gg_dm_respawn_cmd'], userid)))
     
     # Tell them they will respawn soon
     gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
@@ -150,17 +146,6 @@ def player_spawn(event_var):
             random.shuffle(list_randomSpawnIndex)
         
         spawnindex = list_randomSpawnIndex.pop(0)
-        
-        # Has the player spawned before? (catches error)
-        try:
-            if lastSpawnPoint[userid] == spawnindex:
-                # Get another random spawn index
-                spawnindex = list_randomSpawnIndex.pop(0)
-        except KeyError:
-            pass
-        
-        # Set the spawnindex as the last spawn point
-        lastSpawnPoint[userid] = spawnindex
         
         # Teleport the player
         gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0],
@@ -294,16 +279,16 @@ def RespawnCountdown(userid, repeatInfo):
             
     # Respawn the player
     if respawnCounters[userid] == 0:
-        es.server.cmd('%s %s' % (dict_deathmatchVars['respawn_cmd'], userid))
+        es.server.cmd('%s %s' % (dict_deathmatchVars['gg_dm_respawn_cmd'], userid))
         
     # Decrement the timer
     respawnCounters[userid] -= 1
 
 def respawn(userid):
     # Tell the userid they are respawning
-    respawnCounters[userid] = dict_deathmatchVars['respawn_delay']
+    respawnCounters[userid] = dict_deathmatchVars['gg_dm_respawn_delay']
     repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
-    repeat.start('RespawnCounter%s' % userid, 1, dict_deathmatchVars['respawn_delay'] + 1)
+    repeat.start('RespawnCounter%s' % userid, 1, dict_deathmatchVars['gg_dm_respawn_delay'] + 1)
 
 # ==============================================================================
 #   Convertion commands

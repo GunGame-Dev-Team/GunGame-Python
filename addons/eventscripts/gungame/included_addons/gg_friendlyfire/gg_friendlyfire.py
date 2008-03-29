@@ -2,7 +2,7 @@
 (c)2008 by the GunGame Coding Team
 
     Title:      gg_friendlyfire
-Version #:      1.0.209
+Version #:      1.0.210
 Description:    Friendly fire will activate when the last level is reached
 '''
 
@@ -16,7 +16,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_friendlyfire Addon for GunGame: Python"
-info.version  = "1.0.209"
+info.version  = "1.0.210"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_friendlyfire"
 info.author   = "GunGame Development Team"
@@ -44,20 +44,9 @@ def unload():
     es.server.cmd('mp_friendlyfire %d' % mp_friendlyfireBackUp)
     
 def server_cvar(event_var):
-    # New value must be numeric
-    if not gungamelib.isNumeric(event_var['cvarValue']):
-        return
-    
-    # Get vars
-    newValue = int(event_var['cvarvalue'])
-    var = event_var['cvarname']
-    
     # Watch for change in friendlyfire level
-    if var == 'gg_friendlyfire':
-        if newValue == 0:
-            es.unload('gungame/included_addons/gg_friendlyfire')
-        else:
-            friendlyFireLevel = gungamelib.getTotalLevels() - newValue
+    if event_var['cvarname'] == 'gg_friendlyfire':
+        friendlyFireLevel = gungamelib.getTotalLevels() - int(event_var['cvarvalue'])
 
 def es_map_start(event_var):
     # Set mp_friendlyfire to 0

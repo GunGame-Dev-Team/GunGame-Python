@@ -35,6 +35,13 @@ def load():
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_nade_bonus')
+    
+def server_cvar(event_var):
+    # Watch for a change in gg_nade_bonus
+    if event_var['cvarname'] == 'gg_nade_bonus':
+        bonusWeapon = event_var['cvarvalue']
+        if 'weapon_' not in gungamelib.getVariableValue('gg_nade_bonus'):
+            bonusWeapon = 'weapon_' + str(bonusWeapon)
 
 def player_spawn(event_var):
     checkBonus(event_var['userid'])

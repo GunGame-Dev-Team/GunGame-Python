@@ -29,7 +29,6 @@ info.author   = "GunGame Development Team"
 dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
 dict_addonVars['currentRound'] = 0
-dict_addonVars['gg_dissolver_effect'] = gungamelib.getVariableValue('gg_dissolver_effect')
 
 # Player Database
 dict_playersEliminated = {}

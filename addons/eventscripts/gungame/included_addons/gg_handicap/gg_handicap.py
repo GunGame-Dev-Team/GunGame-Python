@@ -46,19 +46,9 @@ def unload():
         repeat.delete('HandicapLoop')
 
 def server_cvar(event_var):
-    # New value must be numeric
-    if not gungamelib.isNumeric(event_var['cvarValue']):
-        return
-    
-    # Get vars
-    newValue = int(event_var['cvarvalue'])
-    var = event_var['cvarname']
-    
-    if var == 'gg_handicap_update':
-        if newValue == 1:
-            gg_handicap_update = 1
-        else:
-            gg_handicap_update = 0
+    # Watch for a change in gg_handicap_update
+    if event_var['cvarname'] == 'gg_handicap_update':
+        gg_handicap_update = int(event_var['cvarvalue'])
 
 def es_map_start(event_var):
     # Start loop

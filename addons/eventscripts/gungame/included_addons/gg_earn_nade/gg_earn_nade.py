@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_earn_nade
-    Version: 1.0.212
+    Version: 1.0.214
     Description: When a player is on "hegrenade" level and they get a kill with
                  a weapon other than an "hegrenade", they are given an
                  additional hegrenade if they do not have one.

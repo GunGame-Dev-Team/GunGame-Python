@@ -59,7 +59,7 @@ def item_pickup(event_var):
                     # Check to see if the grenade level bonus weapon is active
                     if nadeBonus:
                         # Check to make sure that the grenade level bonus weapon is not the weapon the player picked up
-                        if nadeBonus != playerWeapon:
+                        if nadeBonus != item:
                             es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
                     else:
                         es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))

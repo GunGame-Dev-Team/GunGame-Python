@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.216
+    Version: 1.0.217
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,23 +26,23 @@ import gungamelib
 reload(gungamelib)
 
 # ==============================================================================
-#   EVENTSCRIPTS STUFF
+#   ADDON REGISTRATION
 # ==============================================================================
-# Initialize some CVars
-gungameVersion = "1.0.216"
-es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
-
 # Register with EventScripts
 info = es.AddonInfo()
-info.name     = "GunGame: Python"
+info.name     = 'GunGame: Python'
 info.version  = gungameVersion
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame"
-info.author   = "XE_ManUp, RideGuy, Saul Rennison"
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame'
+info.author   = 'XE_ManUp, RideGuy, Saul Rennison'
 
 # ==============================================================================
 #   GLOBALS
 # ==============================================================================
+# Initialize some CVars
+gungameVersion = '1.0.217'
+es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
+
 dict_gungameVariables = {}
 list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
                        'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
@@ -1504,12 +1504,18 @@ def server_cvar(event_var):
         return
     
     if cvarName in gungamelib.getDependencyList():
-        if newValue != gungamelib.getDependencyValue(cvarName):
-            es.dbgmsg(0, '[GunGame] %s is a protected dependency' %cvarName)
-            if str(gungamelib.getVariableValue(cvarName)) != newValue:
-                gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
+        if newValue == gungamelib.getDependencyValue(cvarName):
             return
-            
+        
+        # Tell them its protected
+        gungamelib.echo('gungame', 0, 0, 'ProtectedDependency', {'name': cvarName})
+        
+        # If the value has changed, set it back
+        if str(gungamelib.getVariableValue(cvarName)) != newValue:
+            gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
+        
+        return
+    
     if gungamelib.getVariableValue(cvarName) != newValue:
         gungamelib.setVariableValue(cvarName, newValue)
     

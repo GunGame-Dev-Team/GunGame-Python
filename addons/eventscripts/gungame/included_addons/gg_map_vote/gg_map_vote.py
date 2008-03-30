@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 1.0.215
+    Version: 1.0.217
     Description: Adds map voting capabilities to GunGame.
 '''
 

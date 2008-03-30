@@ -1,0 +1,9 @@
+//----------------------------------------------------------------------------
+// This file contains a list of addons to show in the welcome popup.
+//
+// If an addon is NOT loaded, it will have (DISABLED) suffixed.
+// If an addon IS loaded, it will have (ENABLED) suffixed.
+//----------------------------------------------------------------------------
+gg_knife_pro
+gg_turbo
+gg_deathmatch

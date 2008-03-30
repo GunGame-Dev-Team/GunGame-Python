@@ -8,8 +8,9 @@
 # ==============================================================================
 #   IMPORTS
 # ==============================================================================
-# System imports
+# Python imports
 import time
+import re
 
 # EventScripts imports
 import es
@@ -37,27 +38,35 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 dict_playerQueue = {}
 list_rawWelcomeMsg = []
+list_addonsToShow = []
 
 # ==============================================================================
 #   GAME EVENTS
 # ==============================================================================
 def load():
     global list_rawWelcomeMsg
+    global list_addonsToShow
     
     # Register addon
     gg_welcome_msg = gungamelib.registerAddon('gg_welcome_msg')
     gg_welcome_msg.setMenuText('GG Welcome Message')
     
     # Open file and read lines
-    file = open(gungamelib.getGameDir('cfg/gungame/gg_welcome_msg.txt'), 'r')
-    list_rawWelcomeMsg = file.readlines()
-    file.close()
+    msgFileObj = open(gungamelib.getGameDir('cfg/gungame/welcome_msg/welcome message.txt'), 'r')
+    list_rawWelcomeMsg = msgFileObj.readlines()
+    msgFileObj.close()
+    
+    # Open addons file and read lines
+    addonsFileObj = open(gungamelib.getGameDir('cfg/gungame/welcome_msg/addons.txt'), 'r')
+    list_addonsToShow = addonsFileObj.readlines()
+    addonsFileObj.close()
     
     # Register command
     regCmd('welcomemsg', showPopup)
 
 def unload():
     gungamelib.unregisterAddon('gg_welcome_msg')
+
 
 def player_activate(event_var):
     userid = int(event_var['userid'])
@@ -95,20 +104,33 @@ def showPopup():
 
 def buildMenu():
     global list_rawWelcomeMsg
+    global list_addonsToShow
     
     # Get addon list
     registeredAddons = gungamelib.getRegisteredAddonlist()
     
-    # Remove un-necassary items
-    registeredAddons.remove('gg_welcome_msg')
-    if 'gg_warmup_round' in registeredAddons:
-        registeredAddons.remove('gg_warmup_round')
+    # Loop through the wanted addons to show
+    list_addonNames = []
+    for line in list_addonsToShow:
+        # Strip line
+        line = line.strip()
+        
+        # Ignore comments and skip to the next line
+        if line[:2] == '//' or not line:
+            continue
+        
+        # If the addon is loaded, add the addon to the menu
+        if line in registeredAddons:
+            list_addonNames.append(gungamelib.getAddonMenuText(line))
     
     # Loop through each line
     list_welcomeMsg = []
     for line in list_rawWelcomeMsg:
+        # Strip line
+        line = line.strip()
+        
         # Ignore comments and skip to the next line
-        if line[:2] == '//':
+        if line[:2] == '//' or not line:
             continue
         
         # Replace variables
@@ -118,18 +140,20 @@ def buildMenu():
         newLine = newLine.replace('$time', time.strftime('%H:%M:%S'))
         newLine = newLine.replace('$server', str(es.ServerVar('hostname')))
         
+        # Replace ServerVars
+        newLine = re.sub('{+(.*?)}', lambda x: str(es.ServerVar(str(x.group())[1:-1])), newLine)
+        
         # Set to new line
         list_welcomeMsg.append(newLine)
     
     # Create instance and set title
     menu = popuplib.easymenu('gg_welcome_msg', None, lambda x, y, z: True)
     menu.settitle('GunGame:Python -- Welcome Message')
-    menu.setdescription('%s\n%s\n%s\nLoaded addons:' % (menu.c_beginsep, '\n'.join(list_welcomeMsg), menu.c_beginsep))
+    menu.setdescription('%s\n%s\n%s\nThis server uses:' % (menu.c_beginsep, '\n'.join(list_welcomeMsg), menu.c_beginsep))
     
     # Add all options
-    for addonName in registeredAddons:
-        addonMenuText = gungamelib.getAddonMenuText(addonName)
-        menu.addoption(addonName, addonMenuText)
+    for addon in list_addonNames:
+        menu.addoption(addon, addon)
     
     # Set timeout
     menu.timeout('send', 8)

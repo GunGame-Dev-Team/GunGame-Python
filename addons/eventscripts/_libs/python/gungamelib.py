@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.220
+    Version: 1.0.221
     Description:
 '''
 
@@ -386,7 +386,6 @@ class Player:
         if int(es.getplayerteam(self.userid)) > 1:
             if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
                 playerlibPlayer = playerlib.getPlayer(self.userid)
-                #knifeIndex = playerlibPlayer.get('weaponindex', 'knife')
                 
                 playerlibPrimary = playerlibPlayer.get('primary')
                 playerlibSecondary = playerlibPlayer.get('secondary')
@@ -1340,7 +1339,8 @@ def clearGunGame():
     dict_globals.clear()
     
 def clearOldPlayers():
-    for userid in dict_gungameCore:
+    dict_temp = dict_gungameCore
+    for userid in dict_temp:
         if not es.exists('userid', userid):
             del dict_gungameCore[userid]
 

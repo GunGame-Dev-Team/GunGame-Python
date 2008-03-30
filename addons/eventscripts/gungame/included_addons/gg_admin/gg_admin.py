@@ -39,6 +39,7 @@ dict_menus = {}
 
 adminMenu = None
 loadMenu = None
+addonMenu = None
 
 # ==============================================================================
 #   GAME EVENTS
@@ -64,9 +65,10 @@ def buildAdminMenu():
     
     adminMenu = popuplib.easymenu('admin', None, selectAdminMenu)
     adminMenu.settitle('GG:Admin: Main Menu')
+    loadMenu.setdescription('%s\n%s' % (addonMenu.c_beginsep, 'Main Admin menu.'))
     
     adminMenu.addoption('load', 'Load / Unload addons')
-    adminMenu.addoption('settings', 'Addon Settings')
+    adminMenu.addoption('addons', 'Addon Menus')
 
 def sendAdminMenu(userid=None):
     global adminMenu
@@ -78,8 +80,8 @@ def sendAdminMenu(userid=None):
     adminMenu.send(userid)
 
 def selectAdminMenu(userid, choice, popupid):
-    if choice == 'settings':
-        #sendSettingsMenu(userid)
+    if choice == 'addons':
+        sendAddonsMenu(userid)
         return
     
     if choice == 'load':
@@ -94,6 +96,7 @@ def buildLoadMenu():
     
     loadMenu = popuplib.easymenu('load', None, selectLoadMenu)
     loadMenu.settitle('GG:Admin: Load / Unload addons')
+    loadMenu.setdescription('%s\n%s' % (addonMenu.c_beginsep, 'Load and unload addons.'))
     
     baseDir = gungamelib.getGameDir('addons/eventscripts/gungame/included_addons/')
     
@@ -103,11 +106,10 @@ def buildLoadMenu():
             continue
         
         # Try to get the addon
-        try:
-            gungamelib.getAddon(file)
-            state = 'Unload me'
-        except gungamelib.AddonError:
-            state = 'Load me'
+        if gungamelib.addonRegistered(file):
+            state = 'LOADED'
+        else:
+            state = 'UNLOADED'
         
         # Add option
         loadMenu.addoption('%s|included' % file, '%s [%s]' % (file, state))
@@ -120,11 +122,10 @@ def buildLoadMenu():
             continue
         
         # Try to get the addon
-        try:
-            gungamelib.getAddon(file)
-            state = 'Unload me'
-        except gungamelib.AddonError:
-            state = 'Load me'
+        if gungamelib.addonRegistered(file):
+            state = 'LOADED'
+        else:
+            state = 'NOT LOADED'
         
         # Add option
         loadMenu.addoption('%s|custom' % file, '%s [%s]' % (file, state))
@@ -155,6 +156,44 @@ def sendLoadMenu(userid=None):
     
     buildLoadMenu()
     loadMenu.send(userid)
+
+# ==============================================================================
+#   ADDONS MENU
+# ==============================================================================
+def buildAddonsMenu():
+    global addonMenu
+    
+    addonMenu = popuplib.easymenu('addon', None, selectAddonsMenu)
+    addonMenu.settitle('GG:Admin: Addon Menus')
+    addonMenu.setdescription('%s\n%s' % (addonMenu.c_beginsep, 'Open addon-specific menus.'))
+    
+    for addon in gungamelib.getRegisteredAddonlist():
+        # Get the addon object and display name
+        addonObj = gungamelib.getAddon(addon)
+        addonName = gungamelib.getAddonDisplayName(addon)
+        
+        # Skip if the addon has no menu
+        if not addonObj.hasMenu():
+            continue
+        
+        # Add the option
+        addonMenu.addoption(addon, addonName)
+
+def selectAddonsMenu(userid, choice, popupid):
+    # Get addon object
+    addonObj = gungamelib.getAddon(choice)
+    
+    # Show menu to the selector
+    addonObj.menu.send(userid)
+
+def sendAddonsMenu(userid=None):
+    global addonMenu
+    
+    if not userid:
+        userid = es.getcmduserid()
+    
+    buildAddonsMenu()
+    addonMenu.send(userid)
 
 # ==============================================================================
 #   HELPER FUNCTIONS

@@ -942,7 +942,7 @@ class Addon:
         self.menuCallback = function
     
     def setDescription(self, description):
-        self.menu.setdescription('%s\n%s\n%s' % (self.menu.c_beginsep, description, self.menu.c_beginsep))
+        self.menu.setdescription('%s\n%s' % (self.menu.c_beginsep, description))
     
     def hasMenu(self):
         return (self.menuCallback != None)

@@ -62,10 +62,11 @@ def load():
     gg_deathmatch.addDependency('gg_knife_elite', '0')
     gg_deathmatch.addDependency('gg_elimination', '0')
     
-    # Set display name and description
+    # Menu settings
     gg_deathmatch.setDisplayName('GG Deathmatch')
     gg_deathmatch.setDescription('Deathmatch addon for GunGame:Python')
-    gg_deathmatch.menu.addoption('spawn', 'Spawnpoints')
+    gg_deathmatch.setMenuCallback(menuCallback)
+    gg_deathmatch.menu.addoption('spawn', 'Spawnpoint Management')
     
     # Do we have EST?
     if not gungamelib.hasEST():
@@ -174,6 +175,13 @@ def player_disconnect(event_var):
     # Remove the counter
     if repeat.status('RespawnCounter%s' % userid):
         repeat.delete('RespawnCounter%s' % userid)
+
+# ==============================================================================
+#  MENU COMMANDS
+# ==============================================================================
+def menuCallback(userid, choice, popupName):
+    # TO-DO
+    pass
 
 # ==============================================================================
 #  SPAWNPOINT HELPERS

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_turbo
-    Version: 1.0.217
+    Version: 1.0.218
     Description: GunGame Turbo is allows players to recieve the weapon for their
                  new level immediately, instead of having to wait for the 
                  following round.

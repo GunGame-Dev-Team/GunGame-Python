@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.217
+    Version: 1.0.218
     Description: The main addon, handles leaders and events.
 '''
 
@@ -28,6 +28,10 @@ reload(gungamelib)
 # ==============================================================================
 #   ADDON REGISTRATION
 # ==============================================================================
+# Initialize some CVars
+gungameVersion = '1.0.218'
+es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
+
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'GunGame: Python'
@@ -39,10 +43,6 @@ info.author   = 'XE_ManUp, RideGuy, Saul Rennison'
 # ==============================================================================
 #   GLOBALS
 # ==============================================================================
-# Initialize some CVars
-gungameVersion = '1.0.217'
-es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
-
 dict_gungameVariables = {}
 list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
                        'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',

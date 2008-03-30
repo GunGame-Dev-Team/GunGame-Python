@@ -1,10 +1,13 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_error_logging
-    Version: 1.0.217
+    Version: 1.0.218
     Description: Logs all errors raised by GunGame and its addons.
 '''
 
+# ==============================================================================
+#  IMPORTS
+# ==============================================================================
 # Python imports
 import sys
 import traceback
@@ -17,26 +20,33 @@ import es
 # GunGame imports
 import gungamelib
 
+# ==============================================================================
+#  ADDON REGISTRATION
+# ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_error_logging Addon for GunGame: Python"
-info.version  = "1.0.217"
+info.version  = "1.0.218"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_error_logging"
 info.author   = "GunGame Development Team"
 
-# Globals
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
 dateFormat = '%d/%m/%Y @ [%H:%M:%S]'
 errorFile = None
 
-# Global dictionary
 dict_errorTracking = {}
-
 class ErrorTracking:
-    '''Tracks the count and line number of the errors that are logged'''
+    '''Tracks the count and line number of the errors that are logged.'''
+    
     errorIndex = None
     errorCount = 1
 
+# ==============================================================================
+#  GAME EVENTS
+# ==============================================================================
 def load():
     global errorFile
     
@@ -50,35 +60,43 @@ def load():
     # Set error hook
     sys.excepthook = exceptHook
     
-    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % str(es.ServerVar('eventscripts_ggp')))
+    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % es.ServerVar('eventscripts_ggp'))
     
+    # Don't print header if the file already exists
     if os.path.isfile(logPath):
         return
-        
+    
     # Print opening header
     openFile('w')
     errorFile.write('\n')
     errorFile.write('%s\n' % ('*' * 50))
-    errorFile.write('\tGunGame Errorlog\n')
-    errorFile.write('\tOpened: %s\n' % time.strftime(dateFormat))
+    errorFile.write('  GunGame Errorlog\n')
+    errorFile.write('  Opened: %s\n' % time.strftime(dateFormat))
     errorFile.write('\n')
-    errorFile.write('\tVersion Information:\n')
-    errorFile.write('\t\t* EventScripts:\t%s\n' %es.ServerVar('eventscripts_ver'))
+    errorFile.write('  Version Information:\n')
+    
+    # Print version information
+    errorFile.write('    * EventScripts: %s\n' % es.ServerVar('eventscripts_ver'))
+    
+    # Only print EST information if its installed
     if gungamelib.hasEST():
-        errorFile.write('\t\t* ES_Tools:\t%s\n' %es.ServerVar('est_version'))
+        errorFile.write('    * ES_Tools: %s\n' % es.ServerVar('est_version'))
     else:
-        errorFile.write('\t\t* ES_Tools:\tNone\n')
-    errorFile.write('\t\t* GunGame:\t%s\n' %es.ServerVar('eventscripts_ggp'))
+        errorFile.write('    * ES_Tools: (Not Installed)\n')
+    
+    # Print gungame version
+    errorFile.write('    * GunGame: %s\n' % es.ServerVar('eventscripts_ggp'))
     errorFile.write('%s\n' % ('*' * 50))
     errorFile.write('\n')
     errorFile.close()
-    
-    
 
 def unload():
     # Unregister addon with gungamelib
     gungamelib.unregisterAddon('gg_error_logging')
 
+# ==============================================================================
+#  HELPER FUNCTIONS
+# ==============================================================================
 def clearExistingLogs():
     # Get base directory
     baseDir = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/')
@@ -104,7 +122,7 @@ def openFile(type):
     global errorFile
     
     # Get path
-    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % str(es.ServerVar('eventscripts_ggp')))
+    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % es.ServerVar('eventscripts_ggp'))
 
     # Open the file
     errorFile = open(logPath, type)
@@ -115,14 +133,14 @@ def exceptHook(type, value, tb):
     # Format exception
     gungameError = traceback.format_exception(type, value, tb)
     
-    # If not a gungame error, send to ES
+    # If not a gungame error, send to ES and return
     if 'gungame' not in str(gungameError):
         es.excepter(type, value, tb)
         return
     
     # Print header
     es.dbgmsg(0, '\n%s' % ('*' * 79))
-    es.dbgmsg(0, 'GunGame exception caught!')
+    es.dbgmsg(0, '  GunGame exception caught!')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
     
     # Check for previous occurences of the same bug
@@ -130,12 +148,13 @@ def exceptHook(type, value, tb):
     gungameErrorCheck.pop()
     gungameErrorCheck = str(gungameErrorCheck)
     
+    # Does the error already exist?
     if dict_errorTracking.has_key(gungameErrorCheck):
         # Increment the error count
         dict_errorTracking[gungameErrorCheck].errorCount += 1
-
+        
         # Format the new line's text
-        newText = '(%s)\tException caught: %s\n' %(dict_errorTracking[gungameErrorCheck].errorCount, time.strftime(dateFormat))
+        newText = '  Exception caught: %s [Occurences: %s]\n' % (time.strftime(dateFormat), dict_errorTracking[gungameErrorCheck].errorCount)
         
         # Execute the change of the new line so it will write to the error log
         replaceErrorLine(dict_errorTracking[gungameErrorCheck].errorIndex, newText)
@@ -153,16 +172,16 @@ def exceptHook(type, value, tb):
         
         # Write header to file
         errorFile.write('\n')
-        errorFile.write('%s\n' % ('-=' * 25))
-        errorFile.write('(%s)\tException caught: %s\n' %(dict_errorTracking[gungameErrorCheck].errorCount, time.strftime(dateFormat)))
-        errorFile.write('%s\n' % ('-=' * 25))
+        errorFile.write('%s\n' % ('-=' * 33))
+        errorFile.write('  Exception caught: %s [Occurences: %s]\n' % (time.strftime(dateFormat), dict_errorTracking[gungameErrorCheck].errorCount))
+        errorFile.write('%s\n' % ('-=' * 33))
         errorFile.write('\n')
         
         # Write the error
         for x in gungameError:
             es.dbgmsg(0, x[:-1])
             errorFile.write('%s\n' % x)
-            
+        
         # Flush the changes, and close
         errorFile.write('\n')
         errorFile.flush()
@@ -170,8 +189,8 @@ def exceptHook(type, value, tb):
     
     # Print finishing
     es.dbgmsg(0, '\n%s' % ('*' * 79))
-    es.dbgmsg(0, 'Please open "addons/eventscripts/gungame/errorlog/%s.txt" and report the' % str(es.ServerVar('eventscripts_ggp')))
-    es.dbgmsg(0, 'error in the GunGame "Bug Reports" topic.')
+    es.dbgmsg(0, '  Please open "addons/eventscripts/gungame/errorlog/%s.txt" and report the' % es.ServerVar('eventscripts_ggp'))
+    es.dbgmsg(0, '  error in the GunGame "Bug Reports" topic.')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
     
 def getErrorLine():

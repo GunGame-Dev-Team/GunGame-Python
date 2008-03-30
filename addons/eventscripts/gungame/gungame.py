@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.215
+    Version: 1.0.216
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = "1.0.209"
+gungameVersion = "1.0.216"
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -1507,7 +1507,7 @@ def server_cvar(event_var):
         if newValue != gungamelib.getDependencyValue(cvarName):
             es.dbgmsg(0, '[GunGame] %s is a protected dependency' %cvarName)
             if str(gungamelib.getVariableValue(cvarName)) != newValue:
-                gungamelib.setVariableValue(cvarName, gungamelib.getVariableValue(cvarName))
+                gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
             return
             
     if gungamelib.getVariableValue(cvarName) != newValue:

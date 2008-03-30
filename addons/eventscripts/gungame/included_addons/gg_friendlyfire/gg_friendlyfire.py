@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_friendlyfire
-    Version: 1.0.214
+    Version: 1.0.215
     Description: Friendly fire will activate when a certain level is reached.
 '''
 

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_error_logging
-    Version: 1.0.210
+    Version: 1.0.215
     Description: Logs all errors raised by GunGame and its addons.
 '''
 
@@ -20,7 +20,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_error_logging Addon for GunGame: Python"
-info.version  = "1.0.210"
+info.version  = "1.0.215"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_error_logging"
 info.author   = "GunGame Development Team"
@@ -28,6 +28,14 @@ info.author   = "GunGame Development Team"
 # Globals
 dateFormat = '%d/%m/%Y @ [%H:%M:%S]'
 errorFile = None
+
+# Global dictionary
+dict_errorTracking = {}
+
+class ErrorTracking:
+    '''Tracks the count and line number of the errors that are logged'''
+    errorIndex = None
+    errorCount = 1
 
 def load():
     global errorFile
@@ -39,18 +47,33 @@ def load():
     # Clear existing logs
     clearExistingLogs()
     
+    # Set error hook
+    sys.excepthook = exceptHook
+    
+    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % str(es.ServerVar('eventscripts_ggp')))
+    
+    if os.path.isfile(logPath):
+        return
+        
     # Print opening header
-    openFile()
+    openFile('w')
     errorFile.write('\n')
     errorFile.write('%s\n' % ('*' * 50))
     errorFile.write('\tGunGame Errorlog\n')
     errorFile.write('\tOpened: %s\n' % time.strftime(dateFormat))
+    errorFile.write('\n')
+    errorFile.write('\tVersion Information:\n')
+    errorFile.write('\t\t* EventScripts:\t%s\n' %es.ServerVar('eventscripts_ver'))
+    if gungamelib.hasEST():
+        errorFile.write('\t\t* ES_Tools:\t%s\n' %es.ServerVar('est_version'))
+    else:
+        errorFile.write('\t\t* ES_Tools:\tNone\n')
+    errorFile.write('\t\t* GunGame:\t%s\n' %es.ServerVar('eventscripts_ggp'))
     errorFile.write('%s\n' % ('*' * 50))
     errorFile.write('\n')
     errorFile.close()
     
-    # Set error hook
-    sys.excepthook = exceptHook
+    
 
 def unload():
     # Unregister addon with gungamelib
@@ -77,14 +100,14 @@ def clearExistingLogs():
         if name != str(es.ServerVar('eventscripts_ggp')):
             os.remove(baseDir + f)
 
-def openFile():
+def openFile(type):
     global errorFile
     
     # Get path
     logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % str(es.ServerVar('eventscripts_ggp')))
 
     # Open the file
-    errorFile = open(logPath, 'a')
+    errorFile = open(logPath, type)
 
 def exceptHook(type, value, tb):
     global errorFile
@@ -95,34 +118,97 @@ def exceptHook(type, value, tb):
     # If not a gungame error, send to ES
     if 'gungame' not in str(gungameError):
         es.excepter(type, value, tb)
+        return
     
     # Print header
     es.dbgmsg(0, '\n%s' % ('*' * 79))
     es.dbgmsg(0, 'GunGame exception caught!')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
     
-    # Open the file for writing
-    openFile()
+    # Check for previous occurences of the same bug
+    gungameErrorCheck = gungameError[:]
+    gungameErrorCheck.pop()
+    gungameErrorCheck = str(gungameErrorCheck)
     
-    # Write header to file
-    errorFile.write('\n')
-    errorFile.write('%s\n' % ('-=' * 25))
-    errorFile.write('\tException caught: %s\n' % time.strftime(dateFormat))
-    errorFile.write('%s\n' % ('-=' * 25))
-    errorFile.write('\n')
-    
-    # Write the error
-    for x in gungameError:
-        es.dbgmsg(0, x[:-1])
-        errorFile.write('%s\n' % x)
-    
-    # Flush the changes, and close
-    errorFile.write('\n')
-    errorFile.flush()
-    errorFile.close()
+    if dict_errorTracking.has_key(gungameErrorCheck):
+        # Increment the error count
+        dict_errorTracking[gungameErrorCheck].errorCount += 1
+
+        # Format the new line's text
+        newText = '(%s)\tException caught: %s\n' %(dict_errorTracking[gungameErrorCheck].errorCount, time.strftime(dateFormat))
+        
+        # Execute the change of the new line so it will write to the error log
+        replaceErrorLine(dict_errorTracking[gungameErrorCheck].errorIndex, newText)
+        
+        # Echo the error to the console
+        for x in gungameError:
+            es.dbgmsg(0, x[:-1])
+    else:
+        # Add the new error to the dict_errorTracking
+        dict_errorTracking[gungameErrorCheck] = ErrorTracking()
+        dict_errorTracking[gungameErrorCheck].errorIndex = getErrorLine()
+        
+        # Open the file for writing
+        openFile('a')
+        
+        # Write header to file
+        errorFile.write('\n')
+        errorFile.write('%s\n' % ('-=' * 25))
+        errorFile.write('(%s)\tException caught: %s\n' %(dict_errorTracking[gungameErrorCheck].errorCount, time.strftime(dateFormat)))
+        errorFile.write('%s\n' % ('-=' * 25))
+        errorFile.write('\n')
+        
+        # Write the error
+        for x in gungameError:
+            es.dbgmsg(0, x[:-1])
+            errorFile.write('%s\n' % x)
+            
+        # Flush the changes, and close
+        errorFile.write('\n')
+        errorFile.flush()
+        errorFile.close()
     
     # Print finishing
     es.dbgmsg(0, '\n%s' % ('*' * 79))
     es.dbgmsg(0, 'Please open "addons/eventscripts/gungame/errorlog/%s.txt" and report the' % str(es.ServerVar('eventscripts_ggp')))
     es.dbgmsg(0, 'error in the GunGame "Bug Reports" topic.')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
+    
+def getErrorLine():
+    global errorFile
+    
+    # Open the file for reading
+    openFile('r')
+    
+    # Check the total lines in the errorlog
+    lineCount = len(errorFile.readlines()) + 2
+    
+    # Close the file
+    errorFile.close()
+    
+    return lineCount
+    
+def replaceErrorLine(lineIndex, text):
+    global errorFile
+    
+    # Open the file for reading
+    openFile('r')
+    
+    # Create a list for modification of the line containing the error count and update the list
+    list_errorLogLines = errorFile.readlines()
+    list_errorLogLines.pop(lineIndex)
+    list_errorLogLines.insert(lineIndex, text)
+    
+    # Close the file
+    errorFile.close()
+    
+    # Open the file for writing
+    openFile('w')
+    
+    # Re-write the errors to the file with the modified information
+    for line in list_errorLogLines:
+        errorFile.write(line)
+        
+    # Flush the changes, and close
+    errorFile.flush()
+    errorFile.close()

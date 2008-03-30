@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.218
+    Version: 1.0.220
     Description: Deathmatch addon for GunGame:Python
 '''
 
@@ -31,7 +31,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = '1.0.218'
+info.version  = '1.0.220'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "GunGame Development Team"
@@ -55,13 +55,17 @@ list_randomSpawnIndex = []
 def load():
     # Register addon with gungamelib
     gg_deathmatch = gungamelib.registerAddon('gg_deathmatch')
-    gg_deathmatch.setMenuText('GG Deathmatch')
     gg_deathmatch.addDependency('gg_turbo', '1')
     gg_deathmatch.addDependency('gg_dead_strip', '1')
     gg_deathmatch.addDependency('gg_dissolver', '1')
     gg_deathmatch.addDependency('gg_map_obj', '0')
     gg_deathmatch.addDependency('gg_knife_elite', '0')
     gg_deathmatch.addDependency('gg_elimination', '0')
+    
+    # Set display name and description
+    gg_deathmatch.setDisplayName('GG Deathmatch')
+    gg_deathmatch.setDescription('Deathmatch addon for GunGame:Python')
+    gg_deathmatch.menu.addoption('spawn', 'Spawnpoints')
     
     # Do we have EST?
     if not gungamelib.hasEST():
@@ -92,7 +96,7 @@ def load():
 
     # Set freezetime
     es.server.cmd('mp_freezetime 0')
-    es.server.cmd('mp_roundtime 999')
+    es.server.cmd('mp_roundtime 900')
 
 def unload():
     # Unregister this addon with GunGame

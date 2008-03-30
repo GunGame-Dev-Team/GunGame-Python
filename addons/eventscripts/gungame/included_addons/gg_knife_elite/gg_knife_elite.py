@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_elite
-    Version: 1.0.218
+    Version: 1.0.220
     Description: After a player levels up, they only get a knife until the next
                  round.
 '''
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_knife_elite (for GunGame: Python)'
-info.version  = '1.0.218'
+info.version  = '1.0.220'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_knife_elite'
 info.author   = 'GunGame Development Team'
@@ -46,7 +46,7 @@ dict_playerIsElite = {}
 def load():
     # Register addon with gungamelib
     gg_knife_elite = gungamelib.registerAddon('gg_knife_elite')
-    gg_knife_elite.setMenuText('GG Knife Elite')
+    gg_knife_elite.setDisplayName('GG Knife Elite')
     gg_knife_elite.addDependency('gg_dead_strip', 1)
     gg_knife_elite.addDependency('gg_turbo', 0)
     

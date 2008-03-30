@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_welcome_msg
-    Version: 1.0.218
+    Version: 1.0.220
     Description: Shows a simple popup message to every player that connects.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_welcome_msg (for GunGame: Python)'
-info.version  = '1.0.218'
+info.version  = '1.0.220'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_welcome_msg'
 info.author   = 'GunGame Development Team'
@@ -49,7 +49,7 @@ def load():
     
     # Register addon
     gg_welcome_msg = gungamelib.registerAddon('gg_welcome_msg')
-    gg_welcome_msg.setMenuText('GG Welcome Message')
+    gg_welcome_msg.setDisplayName('GG Welcome Message')
     
     # Open file and read lines
     msgFileObj = open(gungamelib.getGameDir('cfg/gungame/welcome_msg/welcome message.txt'), 'r')
@@ -121,7 +121,7 @@ def buildMenu():
         
         # If the addon is loaded, add the addon to the menu
         if line in registeredAddons:
-            list_addonNames.append(gungamelib.getAddonMenuText(line))
+            list_addonNames.append(gungamelib.getAddonDisplayName(line))
     
     # Loop through each line
     list_welcomeMsg = []

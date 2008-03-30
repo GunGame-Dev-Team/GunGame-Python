@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 1.0.218
+    Version: 1.0.220
     Description: Adds map voting capabilities to GunGame.
 '''
 
@@ -78,7 +78,7 @@ es.ServerVar('eventscripts_maphandler').set(1)
 def load():
     # Register addon with gungamelib
     gg_map_vote = gungamelib.registerAddon('gg_map_vote')
-    gg_map_vote.setMenuText('GG Map Vote')
+    gg_map_vote.setDisplayName('GG Map Vote')
 
     # create commands
     if not es.exists('command','gg_vote_cancel'):

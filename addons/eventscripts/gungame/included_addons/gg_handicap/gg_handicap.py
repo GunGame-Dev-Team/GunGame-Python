@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_handicap
-    Version: 1.0.218
+    Version: 1.0.220
     Description:
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_handicap (for GunGame: Python)'
-info.version  = '1.0.218'
+info.version  = '1.0.220'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_handicap'
 info.author   = 'GunGame Development Team'
@@ -42,7 +42,7 @@ updateType = gungamelib.getVariable('gg_handicap_update')
 def load():
     # Register addon with gungamelib
     gg_handicap = gungamelib.registerAddon('gg_handicap')
-    gg_handicap.setMenuText('GG Handicap')
+    gg_handicap.setDisplayName('GG Handicap')
     
     # Start loop
     repeat.create('HandicapLoop', handicapUpdate)

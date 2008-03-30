@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.218
+    Version: 1.0.220
     Description: Gives admins control over
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_admin (for GunGame: Python)"
-info.version  = '1.0.218'
+info.version  = '1.0.220'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_admin"
 info.author   = "GunGame Development Team"
@@ -46,7 +46,7 @@ loadMenu = None
 def load():
     # Register
     gg_admin = gungamelib.registerAddon('gg_admin')
-    gg_admin.setMenuText('GG Admin')
+    gg_admin.setDisplayName('GG Admin')
     
     # Create commands
     regCmd(0, '!ggadmin', sendAdminMenu)

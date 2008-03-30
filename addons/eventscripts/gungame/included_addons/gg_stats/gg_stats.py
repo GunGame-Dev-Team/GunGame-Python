@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_stats
-    Version: 1.0.218
+    Version: 1.0.220
     Description: This is an addon only for HLStatsX Users.
                  It allows HLStatsX to read out the stats.
 '''
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_stats (for GunGame: Python)'
-info.version  = '1.0.218'
+info.version  = '1.0.220'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_stats'
 info.author   = 'GunGame Development Team'
@@ -32,7 +32,7 @@ info.author   = 'GunGame Development Team'
 def load():
     # Register addon with gungamelib
     gg_stats = gungamelib.registerAddon('gg_stats')
-    gg_stats.setMenuText('GG Stats')
+    gg_stats.setDisplayName('GG Stats')
 
 def unload():
     # Unregister this addon with gungamelib

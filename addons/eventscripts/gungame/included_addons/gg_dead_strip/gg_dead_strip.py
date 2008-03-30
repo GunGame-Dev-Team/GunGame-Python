@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.218
+    Version: 1.0.220
     Description: Removes dead player's weapons.
 '''
 
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.218'
+info.version  = '1.0.220'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -42,7 +42,7 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle',
 def load():
     # Register this addon with GunGame
     gg_dead_strip = gungamelib.registerAddon('gg_dead_strip')
-    gg_dead_strip.setMenuText('GG Dead Strip')
+    gg_dead_strip.setDisplayName('GG Dead Strip')
     
     es.addons.registerClientCommandFilter(filterDrop)
 

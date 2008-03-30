@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.218
+    Version: 1.0.220
     Description:
 '''
 
@@ -895,19 +895,29 @@ class AddonError(_GunGameLibError):
 class Addon:
     def __init__(self, addonName):
         self.addon = str(addonName)
-        if self.validateAddon():
-            # Set up default attributes for this addon
-            self.menuText = ''
-            self.dependencies = []
-            echo('gungame', 0, 0, 'Addon:Registered', {'name': addonName})
-        else:
+        
+        # Make sure the addon exists
+        if not self.validateAddon():
             raise AddonError('%s is not an included or custom addon' % addonName)
+        
+        # Set up default attributes for this addon
+        self.displayName = ''
+        self.dependencies = []
+        
+        # Menu stuff
+        self.menuCallback = None
+        self.menu = popuplib.easymenu(addonName, None, self.__menuCallback)
+        
+        # Tell them the addon was registered
+        echo('gungame', 0, 0, 'Addon:Registered', {'name': addonName})
 
     def __del__(self):
+        # Remove all registered dependencies
         for dependency in self.dependencies:
             # Remove dependency
             dict_registeredDependencies[dependency].delDependent(self.addon)
             echo('gungame', 0, 2, 'Addon:DependencyRemoved', {'name': self.addon, 'dependency': dependency})
+        
         echo('gungame', 0, 0, 'Addon:Unregistered', {'name': self.addon})
     
     def validateAddon(self):
@@ -921,11 +931,35 @@ class Addon:
             return True
         else:
             return False
-        
-    def setMenuText(self, menuText):
-        # Set menu text (test!)
-        self.menuText = str(menuText)
-        
+    
+    '''Menu options:'''
+    def __menuCallback(self, userid, choice, popupName):
+        if self.hasMenu():
+            self.menuCallback(userid, choice, popupName)
+        else:
+            raise AddonError('Cannot call menu callback, this addon doesn\'t have a menu.')
+    
+    def setMenuCallback(self, function):
+        self.menuCallback = function
+    
+    def setDescription(self, description):
+        self.menu.setdescription('%s\n%s\n%s' % (self.menu.c_beginsep, description, self.menu.c_beginsep))
+    
+    def hasMenu(self):
+        return (self.menuCallback != None)
+    
+    def showMenu(self, userid):
+        self.menu.show(userid)
+    
+    '''Display name options:'''
+    def setDisplayName(self, name):
+        self.displayName = name
+        self.menu.settitle(name)
+    
+    def getDisplayName(self):
+        return self.displayName
+    
+    '''Dependency options:'''
     def addDependency(self, dependencyName, value):
         # Check if dependency already exists
         if not dict_registeredDependencies.has_key(dependencyName):
@@ -959,17 +993,20 @@ class Addon:
             dict_registeredDependencies[dependencyName].delDependent(self.addon)
         else:
             raise AddonError('%s is not a registered dependency!' % dependencyName)
-    
+
+# ==============================================================================
+#   ADDON DEPENDENCY CLASS
+# ==============================================================================
 class addonDependency:
     def __init__(self, dependencyName, value, dependentName):
-        # setup dependency class vars
+        # Setup dependency class vars
         self.dependency = dependencyName
         self.dependencyValue = value
         self.dependencyOriginalValue = getVariableValue(dependencyName)
         self.dependentList = [dependentName]
         
         echo('gungame', 0, 2, 'Dependency:Registered', {'name': self.dependency})
-        
+    
     def addDependent(self, value, dependentName):
         # Check if dependents value is the same as the previous dependents value
         if self.dependencyValue == value:
@@ -982,10 +1019,10 @@ class addonDependency:
             if dict_RegisteredAddons[dependentName].addonType == 'included':
                 setVariableValue(dependentName, 0)
             else:
-                es.unload('gungame/custom_addons/%s' %dependentName)
+                es.unload('gungame/custom_addons/%s' % dependentName)
             
             echo('gungame', 0, 0, 'Dependency:Failed', {'name': self.dependency})
-            
+    
     def delDependent(self, dependentName):
         # Remove dependent from dependents list
         if dependentName in self.dependentList:
@@ -997,7 +1034,7 @@ class addonDependency:
                 if dict_variables:
                     # Set Variable back to it's original value
                     setVariableValue(self.dependency, self.dependencyOriginalValue)
-                    
+                
                 # Delete depdency
                 del dict_registeredDependencies[self.dependency]
 
@@ -1043,7 +1080,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '\4[%s]\1 ' % getAddonMenuText(self.addonName)
+            message = '\4[%s]\1 ' % getAddonDisplayName(self.addonName)
         else:
             message = ''
         
@@ -1094,7 +1131,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '\4[%s]\1 ' % getAddonMenuText(self.addonName)
+            message = '\4[%s]\1 ' % getAddonDisplayName(self.addonName)
         else:
             message = ''
         
@@ -1148,7 +1185,7 @@ class Message:
         
         # Format the message
         if showPrefix:
-            message = '[%s] ' % getAddonMenuText(self.addonName)
+            message = '[%s] ' % getAddonDisplayName(self.addonName)
         else:
             message = ''
         
@@ -1569,22 +1606,25 @@ def getAddon(addonName):
     else:
         raise AddonError('Cannot getAddon: %s doesn\'t exist!' % addonName)
 
-def getAddonMenuText(addonName):
-    if addonName == 'gungame':
-        return 'GunGame'
-    elif dict_RegisteredAddons.has_key(addonName):
-        return dict_RegisteredAddons[addonName].menuText
-    else:
-        raise AddonError('Cannot get Menu Text: %s doesn\'t exist!' % addonName)
-
 def unregisterAddon(addonName):
     if dict_RegisteredAddons.has_key(addonName):
         del dict_RegisteredAddons[addonName]
     else:
         raise AddonError('%s has not been previously registered.' % addonName)
 
-def addonExists(addonName):
-    pass
+def getAddonDisplayName(addonName):
+    if addonName == 'gungame':
+        return 'GunGame'
+    elif dict_RegisteredAddons.has_key(addonName):
+        return dict_RegisteredAddons[addonName].getDisplayName()
+    else:
+        raise AddonError('Cannot get Menu Text: %s doesn\'t exist!' % addonName)
+
+def addonRegistered(addonName):
+    if dict_RegisteredAddons.has_key(addonName):
+        return True
+    else:
+        return False
 
 def getRegisteredAddonlist():
     return dict_RegisteredAddons.keys()

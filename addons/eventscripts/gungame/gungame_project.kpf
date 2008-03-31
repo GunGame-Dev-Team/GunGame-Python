@@ -7,8 +7,6 @@
 </file>
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
 </folder>
-<file id="780e0d15-c426-48f6-b171-859166279c71" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="cfglib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/cfglib.py">
-</file>
 <file id="79d588fc-6aa4-4725-91fc-e2c377c893b4" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="playerlib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/playerlib.py">
 </file>
 <file id="7c2e111e-2b05-4e00-950e-489a4a76cc03" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="gungamelib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/gungamelib.py">

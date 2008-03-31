@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_welcome_msg
-    Version: 1.0.223
+    Version: 1.0.226
     Description: Shows a simple popup message to every player that connects.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_welcome_msg (for GunGame: Python)'
-info.version  = '1.0.223'
+info.version  = '1.0.226'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_welcome_msg'
 info.author   = 'GunGame Development Team'
@@ -36,6 +36,8 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 #   GLOBALS
 # ==============================================================================
+g_timeout = gungamelib.getVariable('gg_welcome_msg_timeout')
+
 dict_playerQueue = {}
 list_rawWelcomeMsg = []
 list_addonsToShow = []
@@ -109,19 +111,12 @@ def buildMenu():
     # Get addon list
     registeredAddons = gungamelib.getRegisteredAddonlist()
     
-    # Loop through the wanted addons to show
-    list_addonNames = []
-    for line in list_addonsToShow:
-        # Strip line
-        line = line.strip()
-        
-        # Ignore comments and skip to the next line
-        if line[:2] == '//' or not line:
-            continue
-        
-        # If the addon is loaded, add the addon to the menu
-        if line in registeredAddons:
-            list_addonNames.append(gungamelib.getAddonDisplayName(line))
+    # Strip lines
+    list_addonNames = map(lambda x: x.strip(), list_addonsToShow)
+    # Filter commented blank and unregistered addons
+    list_addonNames = filter(lambda x: x[:2] != '//' and x and x in registeredAddons, list_addonNames)
+    # Now change each item in the list to its display name
+    list_addonNames = map(lambda x: gungamelib.getAddonDisplayName(x), list_addonNames)
     
     # Loop through each line
     list_welcomeMsg = []
@@ -156,8 +151,9 @@ def buildMenu():
         menu.addoption(addon, addon)
     
     # Set timeout
-    menu.timeout('send', 8)
-    menu.timeout('view', 8)
+    menuTimeout = int(g_timeout)
+    menu.timeout('send', menuTimeout)
+    menu.timeout('view', menuTimeout)
 
 # ==============================================================================
 #   HELPER FUNCTIONS

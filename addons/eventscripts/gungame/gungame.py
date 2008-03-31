@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.223'
+gungameVersion = '1.0.226'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts

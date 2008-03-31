@@ -1339,7 +1339,7 @@ def clearGunGame():
     dict_globals.clear()
     
 def clearOldPlayers():
-    dict_temp = dict_gungameCore
+    dict_temp = dict_gungameCore[:]
     for userid in dict_temp:
         if not es.exists('userid', userid):
             del dict_gungameCore[userid]

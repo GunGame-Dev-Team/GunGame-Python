@@ -88,4 +88,3 @@ def hegrenade_detonate(event_var):
     # Give it and make them use it
     es.delayed('0.01', 'es_xgive %s %s' % (userid, bonusWeapon))
     es.delayed('0.02', 'es_xsexec %s "use %s"' % (userid, bonusWeapon))
-    print 'give bot', bonusWeapon

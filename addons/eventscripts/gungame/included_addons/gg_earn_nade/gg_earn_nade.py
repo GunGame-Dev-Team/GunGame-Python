@@ -61,8 +61,8 @@ def player_death(event_var):
     if gungameAttacker.getWeapon() != 'hegrenade':
         return
     
-    # Attacker can't level up?
-    if gungameAttacker['preventlevel'] == 0:
+    # Is this the warmup round?
+    if gungamelib.getGlobal('isWarmup'):
         return
     
     # Make sure the attacking weapon was not hegrenade

@@ -1339,10 +1339,10 @@ def clearGunGame():
     dict_globals.clear()
     
 def clearOldPlayers():
-    dict_temp = dict_gungameCore[:]
-    for userid in dict_temp:
-        if not es.exists('userid', userid):
-            del dict_gungameCore[userid]
+    # Loop through the players
+    for userid in dict_gungameCore.copy():
+        # Remove from dict_gungameCore if they aren't in the server
+        if not clientInServer(userid): del dict_gungameCore[userid]
 
 # ==============================================================================
 #   WEAPON RELATED COMMANDS

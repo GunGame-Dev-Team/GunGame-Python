@@ -68,3 +68,24 @@ def checkBonus(userid):
     # Give it and make them use it
     es.delayed('0.01', 'es_xgive %s %s' % (userid, bonusWeapon))
     es.delayed('0.02', 'es_xsexec %s "use weapon_hegrenade"' % userid)
+    
+def hegrenade_detonate(event_var):
+    userid = event_var['userid']
+    if not es.isbot(userid):
+        return
+        
+    if gungamelib.getGlobal('isWarmup'):
+        return
+    
+    if gungamelib.addonRegistered('gg_unl_grenade'):
+        return
+        
+    # Get bonus weapon
+    bonusWeapon = gungamelib.getVariableValue('gg_nade_bonus')
+    if 'weapon_' not in bonusWeapon:
+        bonusWeapon = 'weapon_' + bonusWeapon
+    
+    # Give it and make them use it
+    es.delayed('0.01', 'es_xgive %s %s' % (userid, bonusWeapon))
+    es.delayed('0.02', 'es_xsexec %s "use %s"' % (userid, bonusWeapon))
+    print 'give bot', bonusWeapon

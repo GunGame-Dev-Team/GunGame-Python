@@ -80,6 +80,21 @@ def player_death(event_var):
     playerlibPlayer = playerlib.getPlayer(attacker)
     
     # Only give them a hegrenade if they don't already have one
-    if int(playerlibPlayer.get('he')) == 0:
+    if int(playerlibPlayer.get('he')) != 0:
+        return
+        
+    # Check if player is a bot
+    if es.isbot(attacker):
+        # If the bot has a gg_nade_bonus weapon lets remove it
+        nadeBonusWeapon = gungamelib.getVariableValue('gg_nade_bonus')
+        if nadeBonusWeapon:
+            if nadeBonusWeapon == playerlibPlayer.get('primary'):
+                es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
+            elif nadeBonusWeapon == playerlibPlayer.get('secondary'):
+                es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
+                
+        es.server.cmd('es_xgive %s weapon_hegrenade' % attacker)
+        es.delayed('0.01', 'es_xsexec %s "use %s"' % (attacker, 'weapon_hegrenade'))
+    else:
         # Give them an additional hegrenade
         es.server.cmd('es_xgive %s weapon_hegrenade' % attacker)

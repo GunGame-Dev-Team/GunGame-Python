@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.232
+    Version: 1.0.216
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,19 +26,19 @@ import gungamelib
 reload(gungamelib)
 
 # ==============================================================================
-#   ADDON REGISTRATION
+#   EVENTSCRIPTS STUFF
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.232'
+gungameVersion = "1.0.216"
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
 info = es.AddonInfo()
-info.name     = 'GunGame: Python'
+info.name     = "GunGame: Python"
 info.version  = gungameVersion
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
-info.basename = 'gungame'
-info.author   = 'XE_ManUp, RideGuy, Saul Rennison'
+info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
+info.basename = "gungame"
+info.author   = "XE_ManUp, RideGuy, Saul Rennison"
 
 # ==============================================================================
 #   GLOBALS
@@ -61,6 +61,7 @@ list_includedAddonsDir = []
 list_customAddonsDir = []
 list_leaderNames = []
 list_stripExceptions = []
+
 
 class gungameWinners:
     '''Class used to store GunGame winner information'''
@@ -550,7 +551,6 @@ def levelInfoHudHint(userid):
     gungamePlayer = gungamelib.getPlayer(userid)
 
     leaderLevel = gungamelib.getLeaderLevel()
-    
     # Get levels behind leader
     levelsBehindLeader = leaderLevel - gungamePlayer['level']
     
@@ -560,7 +560,7 @@ def levelInfoHudHint(userid):
     multiKill = gungamelib.getLevelMultiKill(gungamePlayer['level'])
     
     if multiKill > 1:
-        multiKillText = '\nRequired Kills: %d/%d' % (gungamePlayer['multikill'], multiKill)
+        multiKillText = '\nRequired Kills: %d/%d' %(gungamePlayer['multikill'], multiKill)
     else:
         multiKillText = '\n'
     
@@ -595,14 +595,14 @@ def levelInfoHudHint(userid):
                         HudHintText += '...'
                         break
                     
-                    # Don't add our userid
-                    if leader == userid:
-                        continue
-                    
                     # Don't add the comma if there is 2 or less leaders
                     if (len(list_leadersUserid) == 2 and leadersCount == 1) or (len(list_leadersUserid) == 1 and leadersCount == 0):
                         HudHintText += es.getplayername(leader)
                         break
+                    
+                    # Don't add our userid
+                    if leader == userid:
+                        continue
                     
                     # Add the name to the hudhint and increment the leaders count
                     HudHintText += es.getplayername(leader) + ', '
@@ -625,6 +625,9 @@ def levelInfoHudHint(userid):
 def load():
     global dict_gungameWinners
     global countBombDeathAsSuicide
+    
+    # LOAD GG_ADMIN
+    es.load('gungame/included_addons/gg_admin')
     
     # Load custom events
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
@@ -823,8 +826,7 @@ def load():
     countBombDeathAsSuicide = False
     
     # Load gg_sounds
-    if es.ServerVar('eventscripts_currentmap') != '0':
-        gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
+    gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
     
     # Fire gg_load event
     es.event('initialize','gg_load')
@@ -1022,60 +1024,54 @@ def player_disconnect(event_var):
             else:
                 dict_reconnectingPlayers[steamid] = 1
     
+    # Remove the player from the leader list
+    # NOTE: Possibly decremented
+    #if userid in gungamelib.getCurrentLeaderList():
+    #    gungamelib.removeLeader(userid)
+    
     # Var prep
     leaders = gungamelib.getCurrentLeaderList()
     oldLeaders = gungamelib.getOldLeaderList()
     
     # Has there been leader changes?
-    if userid not in oldLeaders:
-        return
-    
-    try:
-        # Try and get the first player
+    if userid in oldLeaders:
+        # Get first player stuff
         firstPlayer = int(leaders[0])
-    except IndexError:
-        # No players, leave
-        return
-    
-    # Get first player object and the leader level
-    player = gungamelib.getPlayer(firstPlayer)
-    level = player['level']
-    
-    # Only 1 leader
-    if len(leaders) == 1:
-        # Get index
-        index = player['index']
-        name = es.getplayername(firstPlayer)
+        player = gungamelib.getPlayer(firstPlayer)
+        level = player['level']
         
-        # Announce to world
-        gungamelib.saytext2('gungame', '#all', index, 'NewLeader', {'player': name, 'level': level}, False)
-        
-        # That will be all...
-        return
-    
-    # Happens if everyone is level 1, then a player disconnects.
-    if leaders == es.getUseridList():
-        return
-    
-    # Var prep
-    leaderNames = []
-    count = 0
-    
-    # Loop through leaders
-    for userid in leaders:
-        # Only have 3 leader names on there
-        if count == 3:
-            leaderNames.append('...')
-            break
-        
-        # Add leader name
-        leaderNames.append(es.getplayername(userid))
-        
-        # Increment count
-        count += 1
-    
-    # Announce to world
-    gungamelib.msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(leaderNames), 'level': level}, False)
+        # Only 1 leader
+        if len(leaders) == 1:
+            # Get index
+            index = player.attributes['index']
+            name = es.getplayername(firstPlayer)
+            
+            # Announce to world
+            gungamelib.saytext2('gungame', '#all', index, 'NewLeader', {'player': name, 'level': level}, False)
+        else:
+            # Happens if everyone is level 1, then a player disconnects.
+            if leaders == es.getUseridList():
+                return
+            
+            # Var prep
+            leaderNames = []
+            count = 0
+            
+            # Loop through leaders
+            for userid in leaders:
+                # Only have 3 leader names on there
+                if count == 3:
+                    leaderNames.append('...')
+                    break
+                
+                # Add leader name
+                leaderNames.append(es.getplayername(userid))
+                
+                # Increment count
+                count += 1
+            
+            # Announce to world
+            gungamelib.msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(leaderNames), 'level': level}, False)
 
 def player_spawn(event_var):
     userid = int(event_var['userid'])
@@ -1512,17 +1508,14 @@ def server_cvar(event_var):
         return
     
     if cvarName in gungamelib.getDependencyList():
-        if newValue == gungamelib.getDependencyValue(cvarName):
+        if newValue != gungamelib.getDependencyValue(cvarName):
+            es.dbgmsg(0, '[GunGame] %s is a protected dependency' %cvarName)
+            if str(gungamelib.getVariableValue(cvarName)) != newValue:
+                gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
             return
-        
-        # Tell them its protected
-        gungamelib.echo('gungame', 0, 0, 'ProtectedDependency', {'name': cvarName})
-        
-        # If the value has changed, set it back
-        if str(gungamelib.getVariableValue(cvarName)) != newValue:
-            gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
-        
-        return
+            
+    if gungamelib.getVariableValue(cvarName) != newValue:
+        gungamelib.setVariableValue(cvarName, newValue)
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':

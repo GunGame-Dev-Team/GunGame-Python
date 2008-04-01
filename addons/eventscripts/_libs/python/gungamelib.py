@@ -284,8 +284,8 @@ class Player:
     def __createPlayer(self, connectFlag=None):
         names = ['level', 'afkrounds', 'multikill',
                 'triple', 'preventlevel', 'afkmathtotal',
-                'steamid']
-        values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(self.userid, 1)]
+                'steamid', 'index']
+        values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(self.userid, 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
         self.attributes = dict(zip(names, values))
         
         dict_gungameSteamids[self.userid] = playerlib.uniqueid(self.userid, 1)

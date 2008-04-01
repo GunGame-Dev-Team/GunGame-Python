@@ -1043,7 +1043,7 @@ def player_disconnect(event_var):
     # Only 1 leader
     if len(leaders) == 1:
         # Get index
-        index = player.attributes['index']
+        index = player['index']
         name = es.getplayername(firstPlayer)
         
         # Announce to world

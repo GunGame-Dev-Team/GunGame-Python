@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.230
+    Version: 1.0.232
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.230'
+gungameVersion = '1.0.232'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -823,7 +823,8 @@ def load():
     countBombDeathAsSuicide = False
     
     # Load gg_sounds
-    gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
+    if es.ServerVar('eventscripts_currentmap') != '0':
+        gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
     
     # Fire gg_load event
     es.event('initialize','gg_load')

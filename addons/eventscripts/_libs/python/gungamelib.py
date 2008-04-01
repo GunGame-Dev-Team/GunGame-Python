@@ -1462,7 +1462,7 @@ def getOldLeaderList():
 
 def getNewLeaderList():
     # Var prep
-    highestLevel = 0
+    highestLevel = 1
     players = []
     
     # Loop through the players

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.230
+    Version: 1.0.235
     Description:
 '''
 
@@ -323,6 +323,10 @@ class Player:
         self.__createPlayer()
         
     def resetPlayerLocation(self):
+        # Make sure the userid still exists, as this command gets called by a delay
+        if not es.exists('userid', self.userid)
+            return
+            
         # Get the player's location, although this is not really a list... it returns a tuple
         x,y,z = es.getplayerlocation(self.userid)
         

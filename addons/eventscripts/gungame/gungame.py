@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.239
+    Version: 1.0.241
     Description: The main addon, handles leaders and events.
 '''
 
@@ -30,7 +30,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.239'
+gungameVersion = '1.0.241'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -1206,10 +1206,10 @@ def player_death(event_var):
             # Must be a team kill or a suicide
             if userid == attacker:
                 # Yep! They killed themselves. Now let's see if we are going to punish the dead...
-                if gungamelib.getVariableValue('gg_suicide_punish') > 0:
+                if gungamelib.getVariableValue('gg_tk_punish') > 0:
                     # Set vars
                     levelDownOldLevel = int(gungameAttacker['level'])
-                    levelDownNewLevel = levelDownOldLevel - gungamelib.getVariableValue('gg_suicide_punish')
+                    levelDownNewLevel = levelDownOldLevel - gungamelib.getVariableValue('gg_tk_punish')
                     
                     # Let's not put them on a non-existant level 0...
                     if levelDownNewLevel > 0:

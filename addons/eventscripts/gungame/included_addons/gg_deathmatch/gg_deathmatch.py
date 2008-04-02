@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.242
+    Version: 1.0.244
     Description: Deathmatch addon for GunGame:Python
 '''
 
@@ -31,7 +31,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_deathmatch (for GunGame: Python)"
-info.version  = '1.0.242'
+info.version  = '1.0.244'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_deathmatch"
 info.author   = "GunGame Development Team"
@@ -144,7 +144,7 @@ def player_spawn(event_var):
     gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
     
     # Do we have a spawn point file?
-    if spawnPoints != 0:
+    if spawnPoints:
         # Get a random spawn index
         if not list_randomSpawnIndex:
             for i in range(0, len(spawnPoints) - 1):

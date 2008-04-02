@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.238
+    Version: 1.0.239
     Description:
 '''
 
@@ -815,6 +815,20 @@ class Config:
             
             # Use a server command to fire the server_cvar event
             es.server.cmd('%s %s' % (variableName, variableValue))
+
+            # The following dict_cfgSettings is used to organize settings by cfg
+            # seperate addon setting from addon "toggle" variable, The loading/unloading is handled elsewhere, we do not need them here
+            # Ex. gg_knife_pro is the "toggle" whereas gg_knife_pro_limit is a setting within knife_pro
+            es.dbgmsg(1,'*****cfgname=%s varname=%s' %(self.name,variableName))
+            if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' %variableName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' %variableName)):
+			    continue
+            if dict_cfgSettings.has_key(self.name):
+                dict_cfgSettings[self.name].append(variableName)
+                es.dbgmsg(1,'*****dict_cfgSettings[%s]=%s' %(self.name,dict_cfgSettings[self.name]))
+                continue
+            #cfg = {self.name:variableName}
+            dict_cfgSettings[self.name] = [variableName]				
+            es.dbgmsg(1,'*****dict_cfgSettings[%s]=%s' %(self.name,dict_cfgSettings[self.name]))
             
         # Print config loaded
         echo('gungame', 0, 0, 'Config:Loaded', {'name': self.name})

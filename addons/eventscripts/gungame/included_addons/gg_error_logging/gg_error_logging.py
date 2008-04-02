@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_error_logging
-    Version: 1.0.237
+    Version: 1.0.238
     Description: Logs all errors raised by GunGame and its addons.
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_error_logging Addon for GunGame: Python"
-info.version  = "1.0.237"
+info.version  = "1.0.238"
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_error_logging"
 info.author   = "GunGame Development Team"

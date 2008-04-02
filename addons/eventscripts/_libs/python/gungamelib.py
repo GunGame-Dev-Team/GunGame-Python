@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.237
+    Version: 1.0.238
     Description:
 '''
 
@@ -1581,7 +1581,7 @@ def getVariableList():
 #   SOUND RELATED COMMANDS
 # ==============================================================================
 def addDownloadableSounds():
-    if es.ServerVar('eventscripts_currentmap') = '':
+    if es.ServerVar('eventscripts_currentmap') == '':
         return
     for soundName in dict_gungameSounds:
         if dict_gungameSounds[soundName] != 0:

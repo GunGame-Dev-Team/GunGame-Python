@@ -20,6 +20,7 @@ import playerlib
 import usermsg
 import popuplib
 import keyvalues
+import services
 
 # GunGame Imports
 import gungamelib
@@ -61,6 +62,12 @@ list_includedAddonsDir = []
 list_customAddonsDir = []
 list_leaderNames = []
 list_stripExceptions = []
+
+try:
+   auth = services.use('auth')
+   authaddon = auth.name
+except:
+    es.load('examples/auth/group_auth')
 
 class gungameWinners:
     '''Class used to store GunGame winner information'''
@@ -626,6 +633,7 @@ def load():
     global dict_gungameWinners
     global countBombDeathAsSuicide
 
+    
     es.load('gungame/included_addons/gg_admin')
     
     # Load custom events

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.239
+    Version: 1.0.238
     Description:
 '''
 
@@ -37,6 +37,7 @@ dict_leaderInfo['leaderLevel'] = 1
 
 dict_variables = {}
 dict_globals = {}
+dict_cfgSettings = {}
 
 dict_gungameSounds = {}
 

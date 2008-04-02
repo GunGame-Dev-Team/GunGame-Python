@@ -43,13 +43,6 @@ menuGGAdminMain = ' '
 menuAddons = ' '
 menuCFGSettingsMain = ' '
 
-#register auth service
-auth = services.use('auth')
-authaddon = auth.name
-if authaddon != 'group_auth':
-    es.dbgmsg(0,'***** Group Auth must be loaded. Unloading GunGame.')
-    es.unload('gungame')
-
 #setup group_auth
 es.server.queuecmd('gauth group create ggadmin1 1')
 es.server.queuecmd('gauth group create ggadmin2 1')

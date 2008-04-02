@@ -3,6 +3,8 @@
 <project id="0651bb49-f501-4ccc-aaea-20751ee88255" kpf_version="4" name="gungame_project.kpf">
 <livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="file:///D:/srcds/cstrike/cfg/gungame/translations">
 </livefolder>
+<file id="34970e3d-6b75-4349-9638-f4816712c48d" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="errortest.py" url="file:///f:/scripts/Python/Scripts/errortest.py">
+</file>
 <file id="3c5ea7ee-f3df-4e46-903b-bc96cc2a4244" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="es.py" url="file:///D:/srcds/cstrike/addons/eventscripts/es.py">
 </file>
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
@@ -60,6 +62,30 @@
   <boolean id="show-dialog">1</boolean>
   <boolean id="sim-cgi">0</boolean>
   <boolean id="use-console">0</boolean>
+  <string id="userCGIEnvironment"></string>
+  <string id="userEnvironment"></string>
+</preference-set>
+</preference-set>
+  <string id="lastInvocation">default</string>
+</preference-set>
+<preference-set idref="34970e3d-6b75-4349-9638-f4816712c48d">
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="cookieparams"></string>
+  <string id="cwd"></string>
+  <string id="documentRoot"></string>
+  <string id="executable-params"></string>
+  <string id="filename">f:\scripts\Python\Scripts\errortest.py</string>
+  <string id="getparams"></string>
+  <string id="language">Python</string>
+  <string id="mpostparams"></string>
+  <string id="params"></string>
+  <string id="postparams"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="request-method">GET</string>
+  <boolean id="show-dialog">1</boolean>
+  <boolean id="sim-cgi">0</boolean>
+  <boolean id="use-console">1</boolean>
   <string id="userCGIEnvironment"></string>
   <string id="userEnvironment"></string>
 </preference-set>

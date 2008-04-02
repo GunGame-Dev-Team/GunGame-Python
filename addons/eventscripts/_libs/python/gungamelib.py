@@ -919,12 +919,9 @@ class Addon:
             raise AddonError('%s is not an included or custom addon' % addonName)
         
         # Set up default attributes for this addon
-        self.displayName = ''
+        self.displayName = 'Untitled Addon'
         self.dependencies = []
-        
-        # Menu stuff
-        self.menuCallback = None
-        self.menu = popuplib.easymenu(addonName, None, self.__menuCallback)
+        self.menu = None
         
         # Tell them the addon was registered
         echo('gungame', 0, 0, 'Addon:Registered', {'name': addonName})
@@ -950,29 +947,29 @@ class Addon:
         else:
             return False
     
-    '''Menu options:'''
-    def __menuCallback(self, userid, choice, popupName):
-        if self.hasMenu():
-            self.menuCallback(userid, choice, popupName)
-        else:
-            raise AddonError('Cannot call menu callback, this addon doesn\'t have a menu.')
-    
-    def setMenuCallback(self, function):
-        self.menuCallback = function
+    '''Menu options:'''    
+    def createMenu(self, selectfunc):
+        self.menu = popuplib.easymenu(self.addon, None, selectfunc)
+        self.menu.settitle(self.displayName)
     
     def setDescription(self, description):
+        if not self.hasMenu():
+            raise AddonError('Cannot set menu description (%s): Menu hasn\'t been created.' % self.addon)
+        
         self.menu.setdescription('%s\n%s' % (self.menu.c_beginsep, description))
     
     def hasMenu(self):
-        return (self.menuCallback != None)
+        return (self.menu != None)
     
     def showMenu(self, userid):
+        if not self.hasMenu():
+            raise AddonError('Cannot show menu (%s): Menu hasn\'t been created.' % self.addon)
+        
         self.menu.show(userid)
     
     '''Display name options:'''
     def setDisplayName(self, name):
         self.displayName = name
-        self.menu.settitle(name)
     
     def getDisplayName(self):
         return self.displayName

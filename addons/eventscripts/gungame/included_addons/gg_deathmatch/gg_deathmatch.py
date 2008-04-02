@@ -63,9 +63,9 @@ def load():
     gg_deathmatch.addDependency('gg_elimination', '0')
     
     # Menu settings
+    gg_deathmatch.createMenu(menuCallback)
     gg_deathmatch.setDisplayName('GG Deathmatch')
     gg_deathmatch.setDescription('Deathmatch addon for GunGame:Python')
-    gg_deathmatch.setMenuCallback(menuCallback)
     gg_deathmatch.menu.addoption('spawn', 'Spawnpoint Management')
     
     # Do we have EST?

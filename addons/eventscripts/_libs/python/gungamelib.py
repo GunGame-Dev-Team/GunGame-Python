@@ -1233,6 +1233,82 @@ class Message:
                 # Send message
                 usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
+# ==============================================================================
+#  EASYINPUT CLASS
+# ==============================================================================
+class EasyInput:
+    '''Makes "Esc"-style input boxes quickly and simply.
+    
+    <insert cool slogan here>
+    
+    Inspiration:
+     * SuperDave (http://forums.mattie.info/cs/forums/viewtopic.php?t=21958)
+    '''
+    
+    def __init__(self, name, callback, extras=''):
+        '''Called on initialization, sets default values and registers the
+        command.'''
+        # Check the callback is callable
+        if not callable(callback): raise ArgumentError('Cannot create EasyInput object: Callback must be a function.')
+        
+        # Set variables
+        self.name = name
+        self.callback = callback
+        self.settimeout(199)
+        
+        # Set default options
+        self.title = 'Untitled'
+        self.text = 'Enter an option:'
+        
+        # Create command variables
+        self.cmd = '_easyinput_%s %s' % (name, extras)
+        smallcmd = '_easyinput_%s' % name
+        
+        # Register command
+        if not es.exists('clientcommand', smallcmd):
+            es.addons.registerBlock('gungamelib', 'input_cmd', self.__inputCallback)
+            es.regclientcmd(smallcmd, 'gungamelib/input_cmd', 'Command for retrieving input box data.') 
+    
+    def setTitle(self, title):
+        '''Self-explantory.'''
+        # Set title
+        self.title = title
+    
+    def setText(self, text):
+        '''Self-explantory.'''
+        # Set text
+        self.text = text
+    
+    def setTimeout(self, timeout):
+        '''Sets timeout for the player to press "Esc" before the menu is
+        discarded. Value must be between 10 and 199, inclusive.'''
+        # Make timeout an integer
+        timeout = int(timeout)
+        
+        # Check timeout
+        if timeout not in range(10, 200): raise ArgumentError('Cannot set timeout: Value must be between 10 and 200.')
+        
+        # Set timeout
+        self.timeout = timeout
+    
+    def send(self, userid):
+        '''Sends the input box to <userid>.'''
+        # Send input
+        es.escinputbox(self.timeout, userid, self.title, self.text, self.cmd)
+    
+    def __inputCallback(self):
+        '''Called when the input is sent back to the server. Will call the
+        callback with the userid of the user, the arguments and the value they
+        inputted.'''
+        # Get userid
+        userid = int(es.getcmduserid())
+        
+        # Get arguments and value
+        args = map(es.getargv, range(1, es.getargc()))
+        value = args.pop()
+        
+        # Call the function, if it exists
+        self.callback(userid, value, args)
 
 # ==============================================================================
 #  CLASS WRAPPERS

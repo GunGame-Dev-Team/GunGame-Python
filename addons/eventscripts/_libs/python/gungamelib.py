@@ -951,23 +951,25 @@ class Addon:
         self.menu.settitle(self.displayName)
     
     def setDescription(self, description):
-        if not self.hasMenu():
-            raise AddonError('Cannot set menu description (%s): menu hasn\'t been created.' % self.addon)
+        if not self.hasMenu(): raise AddonError('Cannot set menu description (%s): menu hasn\'t been created.' % self.addon)
         
-        self.menu.setdescription('%s\n%s' % (self.menu.c_beginsep, description))
+        self.menu.setdescription('%s\n * %s' % (self.menu.c_beginsep, description))
     
     def hasMenu(self):
         return (self.menu != None)
     
-    def showMenu(self, userid):
-        if not self.hasMenu():
-            raise AddonError('Cannot show menu (%s): menu hasn\'t been created.' % self.addon)
+    def sendMenu(self, userid):
+        if not self.hasMenu(): raise AddonError('Cannot show menu (%s): menu hasn\'t been created.' % self.addon)
         
-        self.menu.show(userid)
+        self.menu.send(userid)
     
     '''Display name options:'''
     def setDisplayName(self, name):
         self.displayName = name
+        
+        # Set menu title (if created)
+        if self.hasMenu():
+            self.menu.settitle(name)
     
     def getDisplayName(self):
         return self.displayName
@@ -1048,7 +1050,7 @@ class addonDependency:
                     # Set Variable back to it's original value
                     setVariableValue(self.dependency, self.dependencyOriginalValue)
                 
-                # Delete depdency
+                # Delete depdencyfc
                 del dict_registeredDependencies[self.dependency]
 
 # ==============================================================================
@@ -1252,7 +1254,8 @@ class EasyInput:
         # Set variables
         self.name = name
         self.callback = callback
-        self.settimeout(199)
+        self.acceptUserid = 0
+        self.setTimeout(199)
         
         # Set default options
         self.title = 'Untitled'
@@ -1293,6 +1296,7 @@ class EasyInput:
         '''Sends the input box to <userid>.'''
         # Send input
         es.escinputbox(self.timeout, userid, self.title, self.text, self.cmd)
+        self.acceptUserid = int(userid)
     
     def __inputCallback(self):
         '''Called when the input is sent back to the server. Will call the
@@ -1300,6 +1304,10 @@ class EasyInput:
         inputted.'''
         # Get userid
         userid = int(es.getcmduserid())
+        
+        # Don't call the callback if the userid isn't the one we sent to
+        if userid != self.acceptUserid:
+            return
         
         # Get arguments and value
         args = map(es.getargv, range(1, es.getargc()))

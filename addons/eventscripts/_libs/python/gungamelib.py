@@ -1254,7 +1254,7 @@ class EasyInput:
         # Set variables
         self.name = name
         self.callback = callback
-        self.acceptUserid = 0
+        self.userids = []
         self.setTimeout(199)
         
         # Set default options
@@ -1294,9 +1294,14 @@ class EasyInput:
     
     def send(self, userid):
         '''Sends the input box to <userid>.'''
+        userid = int(userid)
+        
         # Send input
         es.escinputbox(self.timeout, userid, self.title, self.text, self.cmd)
-        self.acceptUserid = int(userid)
+        
+        # Add the userid to accepted userids 
+        if userid not in self.userids:
+            self.userids.append(userid)
     
     def __inputCallback(self):
         '''Called when the input is sent back to the server. Will call the
@@ -1306,8 +1311,13 @@ class EasyInput:
         userid = int(es.getcmduserid())
         
         # Don't call the callback if the userid isn't the one we sent to
-        if userid != self.acceptUserid:
+        if userid not in self.userids:
+            # Tell them they can't run this
+            msg('gungame', userid, 'EasyInput:Unauthorized')
             return
+        else:
+            # Remove from accepted userids
+            self.userids.remove(userid)
         
         # Get arguments and value
         args = map(es.getargv, range(1, es.getargc()))
@@ -1677,12 +1687,15 @@ def getVariableList():
 #   SOUND RELATED COMMANDS
 # ==============================================================================
 def addDownloadableSounds():
-    if es.ServerVar('eventscripts_currentmap') == '':
+    # Make sure we are in a map
+    if not inLevel():
         return
+    
+    # Loop through all the sounds
     for soundName in dict_gungameSounds:
         if dict_gungameSounds[soundName] != 0:
-            es.stringtable('downloadables', 'sound/%s' %dict_gungameSounds[soundName])
-            
+            es.stringtable('downloadables', 'sound/%s' % dict_gungameSounds[soundName])
+
 def getSound(soundName):
     if dict_gungameSounds.has_key(soundName):
         if dict_gungameSounds[soundName] == '0':
@@ -1775,6 +1788,19 @@ def getGameDir(dir):
     # Return
     return '%s/%s' % (gamePath, dir)
 
+def getAddonDir(addonName, dir):
+    # Check addon exists
+    if not addonExists(addonName): raise ValueError('Cannot get addon directory (%s): doesn\'t exist.' % addonName)
+    
+    # Get game dir
+    addonPath = es.getAddonDir('gungame')
+    
+    # For linux...
+    dir = dir.replace('\\', '/')
+    
+    # Return
+    return '%s/%s/%s' % (addonPath, 'included_addons' if getAddonType(addonName) else 'custom_addons', dir)
+
 def clientInServer(userid):
     return es.exists('userid', userid)
 
@@ -1815,6 +1841,16 @@ def playerExists(userid):
         return True
     else:
         return False
+
+def getAddonType(addonName):
+    # Check addon exists
+    if not addonExists(addonName): raise ValueError('Cannot get addon type (%s): doesn\'t exist.' % addonName)
+    
+    # Get addon type
+    if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)):
+        return 0
+    else:
+        return 1
 
 def addonExists(addonName):
     return (os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName)))

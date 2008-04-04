@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.242
+    Version: 1.0.247
     Description:
 '''
 
@@ -1485,9 +1485,10 @@ def setPreventLevelAll(value):
 def getAverageLevel():
     averageLevel = 0
     averageDivider = 0
-    for userid in dict_gungameCore:
-        averageDivider += 1
-        averageLevel += int(dict_gungameCore[userid]['level'])
+    for userid in es.getUseridList():
+        if dict_gungameCore.has_key(userid):
+            averageDivider += 1
+            averageLevel += int(dict_gungameCore[userid]['level'])
     if averageDivider:
         return int(round(averageLevel / averageDivider))
     else:

@@ -820,16 +820,14 @@ class Config:
             # The following dict_cfgSettings is used to organize settings by cfg
             # seperate addon setting from addon "toggle" variable, The loading/unloading is handled elsewhere, we do not need them here
             # Ex. gg_knife_pro is the "toggle" whereas gg_knife_pro_limit is a setting within knife_pro
-            es.dbgmsg(1,'*****cfgname=%s varname=%s' %(self.name,variableName))
-            if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' %variableName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' %variableName)):
-			    continue
+            if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % variableName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % variableName)):
+                continue
+            
             if dict_cfgSettings.has_key(self.name):
                 dict_cfgSettings[self.name].append(variableName)
-                es.dbgmsg(1,'*****dict_cfgSettings[%s]=%s' %(self.name,dict_cfgSettings[self.name]))
                 continue
-            #cfg = {self.name:variableName}
-            dict_cfgSettings[self.name] = [variableName]				
-            es.dbgmsg(1,'*****dict_cfgSettings[%s]=%s' %(self.name,dict_cfgSettings[self.name]))
+            
+            dict_cfgSettings[self.name] = [variableName]
             
         # Print config loaded
         echo('gungame', 0, 0, 'Config:Loaded', {'name': self.name})
@@ -856,7 +854,7 @@ class Sounds:
         if self.__checkSoundPack():
             self.__readSoundPack()
         else:
-            raise InvalidSoundPack('The soundpack %s doesn\'t exist.')
+            raise InvalidSoundPack('Cannot register soundpack (%s): file not found.' % soundPackName)
             
     def __readSoundPack(self):
         # Open the INI file
@@ -916,7 +914,7 @@ class Addon:
         
         # Make sure the addon exists
         if not self.validateAddon():
-            raise AddonError('%s is not an included or custom addon' % addonName)
+            raise AddonError('Cannot create addon (%s): addon folder doesn\'t exist.' % addonName)
         
         # Set up default attributes for this addon
         self.displayName = 'Untitled Addon'
@@ -954,7 +952,7 @@ class Addon:
     
     def setDescription(self, description):
         if not self.hasMenu():
-            raise AddonError('Cannot set menu description (%s): Menu hasn\'t been created.' % self.addon)
+            raise AddonError('Cannot set menu description (%s): menu hasn\'t been created.' % self.addon)
         
         self.menu.setdescription('%s\n%s' % (self.menu.c_beginsep, description))
     
@@ -963,7 +961,7 @@ class Addon:
     
     def showMenu(self, userid):
         if not self.hasMenu():
-            raise AddonError('Cannot show menu (%s): Menu hasn\'t been created.' % self.addon)
+            raise AddonError('Cannot show menu (%s): menu hasn\'t been created.' % self.addon)
         
         self.menu.show(userid)
     
@@ -992,7 +990,7 @@ class Addon:
                 # Set GunGame variable to dependents value
                 setVariableValue(dependencyName, value)
             else:
-                raise AddonError('%s is not a valid dependency' % dependencyName)
+                raise AddonError('Cannot add dependency (%s): variable not registered.' % dependencyName)
         # Dependent is already registered
         else:
             # Add dependency and original value to addon attributes
@@ -1007,7 +1005,7 @@ class Addon:
             # Delete dependency
             dict_registeredDependencies[dependencyName].delDependent(self.addon)
         else:
-            raise AddonError('%s is not a registered dependency!' % dependencyName)
+            raise AddonError('Cannot delete dependency (%s): not registered.' % dependencyName)
 
 # ==============================================================================
 #   ADDON DEPENDENCY CLASS
@@ -1462,8 +1460,8 @@ def getLevelWeapon(levelNumber):
     if dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
         return str(dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
     else:
-        raise GunGameValueError, 'Unable to retrieve weapon information: level \'%d\' does not exist' %levelNumber
-        
+        raise GunGameValueError('Unable to retrieve weapon information: level \'%d\' does not exist' % levelNumber)
+
 def sendWeaponOrderMenu(userid):
     popuplib.send('gungameWeaponOrderMenu_page1', userid)
 
@@ -1518,6 +1516,7 @@ def getLevelMultiKill(levelNumber):
         return dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][1]
     
 def createScoreList(keyGroupName=None):
+    # TODO: Finish this(?)
     dict_gungameScores = {}
     for userid in dict_gungameCore:
         dict_gungameScores[userid] = dict_gungameCore[userid]['level']
@@ -1631,7 +1630,7 @@ def getVariable(variableName):
     variableName = variableName.lower()
     
     if not dict_variables.has_key(variableName):
-        raise GunGameValueError, 'Unable to retrieve variable instance: The variable \'%s\' has not been registered.' % variableName
+        raise GunGameValueError('Unable to get variable object (%s): not registered.' % variableName)
     
     return dict_variables[variableName]
 
@@ -1639,7 +1638,7 @@ def getVariableValue(variableName):
     variableName = variableName.lower()
     
     if not dict_variables.has_key(variableName):
-        raise GunGameValueError, 'Unable to retrieve variable value: The variable \'%s\' has not been registered.' % variableName
+        raise GunGameValueError('Unable to get variable value (%s): not registered.' % variableName)
     
     variable = dict_variables[variableName]
     
@@ -1655,7 +1654,7 @@ def setVariableValue(variableName, value):
     variableName = variableName.lower()
     
     if not dict_variables.has_key(variableName):
-        raise GunGameValueError, 'Unable to set variable value: The variable \'%s\' has not been registered.' % variableName
+        raise GunGameValueError('Unable to set variable value (%s): not registered.' % variableName)
     
     # Set variable value
     dict_variables[variableName].set(value)
@@ -1683,7 +1682,7 @@ def getSound(soundName):
         else:
             return dict_gungameSounds[soundName]
     else:
-        raise SoundError, 'The sound does not exist.'
+        raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
     
 # ==============================================================================
 #   ADDON RELATED COMMANDS
@@ -1693,19 +1692,19 @@ def registerAddon(addonName):
         dict_RegisteredAddons[addonName] = Addon(addonName)
         return dict_RegisteredAddons[addonName]
     else:
-        raise AddonError('%s has already been registered.' % addonName)
+        raise AddonError('Cannot register addon (%s): already registered.' % addonName)
 
 def getAddon(addonName):
     if dict_RegisteredAddons.has_key(addonName):
         return dict_RegisteredAddons[addonName]
     else:
-        raise AddonError('Cannot getAddon: %s doesn\'t exist!' % addonName)
+        raise AddonError('Cannot get addon object (%s): not registered.' % addonName)
 
 def unregisterAddon(addonName):
     if dict_RegisteredAddons.has_key(addonName):
         del dict_RegisteredAddons[addonName]
     else:
-        raise AddonError('%s has not been previously registered.' % addonName)
+        raise AddonError('Cannot unregister addon (%s): not registered.' % addonName)
 
 def getAddonDisplayName(addonName):
     if addonName == 'gungame':
@@ -1713,7 +1712,7 @@ def getAddonDisplayName(addonName):
     elif dict_RegisteredAddons.has_key(addonName):
         return dict_RegisteredAddons[addonName].getDisplayName()
     else:
-        raise AddonError('Cannot get Menu Text: %s doesn\'t exist!' % addonName)
+        raise AddonError('Cannot get display name (%s): not registered.' % addonName)
 
 def addonRegistered(addonName):
     if dict_RegisteredAddons.has_key(addonName):
@@ -1747,24 +1746,22 @@ def getGlobal(variableName):
         return dict_globals[variableName]
     else:
         return 0
-        
+
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
 def isNumeric(string):
-    '''Check to see if a string is an integer.'''
     try:
         int(string)
+        return True
     except ValueError:
         return False
-    
-    return True
 
 def getGameDir(dir):
     # Get game dir
     gamePath = str(es.ServerVar('eventscripts_gamedir'))
     
-    # Fix for linux
+    # For linux...
     dir = dir.replace('\\', '/')
     
     # Return
@@ -1782,6 +1779,7 @@ def getLevelName():
 def isSpectator(userid):
     if not clientInServer(userid):
         return 0
+    
     return (es.getplayerteam(userid) <= 1)
 
 def hasEST():
@@ -1809,3 +1807,12 @@ def playerExists(userid):
         return True
     else:
         return False
+
+def addonExists(addonName):
+    return (os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName)))
+
+def formatArgs(userid=False):
+    if userid:
+        return es.getcmduserid(), map(es.getargv, range(1, es.getargc()))
+    else:
+        return map(es.getargv, range(1, es.getargc()))

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_pro
-    Version: 1.0.242
+    Version: 1.0.251
     Description: When one player knife kills another player, the attacker steals
                  a level from the victim.
 '''
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = '1.0.242'
+info.version  = '1.0.251'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -32,6 +32,7 @@ info.author   = "GunGame Development Team"
 #  GLOBALS
 # ==============================================================================
 proLimit = gungamelib.getVariable('gg_knife_pro_limit')
+nadeSteal = gungamelib.getVariable('gg_knife_nade_steal')
 
 # ==============================================================================
 #  GAME EVENTS
@@ -83,7 +84,7 @@ def player_death(event_var):
         return
     
     # Is the attacker on the grenade level?
-    if gungameAttacker.getWeapon() == 'hegrenade':
+    if gungameAttacker.getWeapon() == 'hegrenade' and nadeSteal == 0:
         gungamelib.msg('gg_knife_pro', attacker, 'AttackerNadeLevel')
         return
     
@@ -116,8 +117,9 @@ def player_death(event_var):
     if gungamelib.getSound('leveldown'):
         es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
     
-    # Trigger level up for the attacker
-    gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
+    if gungameAttacker.getWeapon() != 'hegrenade':
+        # Trigger level up for the attacker
+        gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
     
     # Play the leveldown sound
     if gungamelib.getSound('levelsteal'):

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_spawn_protection
-    Version: 1.0.242
+    Version: 1.0.251
     Description: This will make players invincible and marked with color when
                  ever a player spawns. Protected players cannot level up during
                  spawn protection.
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_spawn_protection (for GunGame:Python)'
-info.version  = '1.0.242'
+info.version  = '1.0.251'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_spawn_protect'
 info.author   = 'GunGame Development Team'
@@ -157,7 +157,7 @@ def combatCountdown(userid, repeatInfo):
         
     # Set the view tint
     # fade <userid> <0 = no fade, 1 = fade Out 2 = fade in> <time to fade (in frames)> <time faded (in frames)> <red> <green> <blue> <alpha>
-    # usermsg.fade(userid,0,1,1000,0,255,0,30)
+    usermsg.fade(userid,0,1,1000,0,255,0,30)
     
     # Decrement the timer
     playerCounters[userid] -= 1
@@ -179,8 +179,8 @@ def finishCountdown(userid):
     
     # Set back the view tint
     # fade <userid> <0 = no fade, 1 = fade Out 2 = fade in> <time to fade (in frames)> <time faded (in frames)> <red> <green> <blue> <alpha>
-    # usermsg.fade(userid,0,1,10,0,0,0,30)
-    # usermsg.fade(userid,0,1,20,0,0,0,0)
+    usermsg.fade(userid,0,1,1000,0,255,0,0)
+    usermsg.fade(userid,0,1,1000,0,0,0,0)
     
     # Tell them they are uninvicible
     gungamelib.centermsg('gg_spawn_protect', userid, 'CombatStarted')

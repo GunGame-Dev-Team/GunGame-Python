@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.242
+    Version1.0.251
     Description: The main addon, handles leaders and events.
 '''
 
@@ -30,7 +30,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.242'
+gungameVersion = '1.0.251'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -632,10 +632,7 @@ def levelInfoHudHint(userid):
 def load():
     global dict_gungameWinners
     global countBombDeathAsSuicide
-
-    
-    es.load('gungame/included_addons/gg_admin')
-    
+        
     # Load custom events
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     

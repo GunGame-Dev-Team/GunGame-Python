@@ -428,7 +428,6 @@ class Player:
             return dict_gungameWinners[steamid].int_wins
         else:
             return 0
-            
 
 # ==============================================================================
 #   WEAPON ORDER CLASS
@@ -451,7 +450,7 @@ class WeaponOrder:
             # Create a dictionary to temporarily hold the weapon order
             dict_tempWeaponOrder = {}
             # Open the weapon order file for parsing
-            weaponOrderFile = open(filePath, "r")
+            weaponOrderFile = open(filePath, 'r')
             # Set the level counter to 0
             levelCounter = 0
             # Loop through each line in the weapon order file
@@ -776,12 +775,12 @@ class Config:
         try:
             # Open the Config
             configObj = open(self.path, 'r')
-        except IOError:
+        except IOError, e:
             if not configName.lower() in list_criticalConfigs:
-                raise FileError, 'Unable to load the Config: \'%s\': File does not exist.' % self.name
+                raise FileError('Unable to load config (%s): %s' % (self.name, e))
             else:
                 es.server.queuecmd('es_xunload gungame')
-                raise FileError, 'Unable to load the Config: \'%s\': File does not exist... Unloading GunGame.' % self.name
+                raise FileError('Unable to load required config (%s): %s' % (self.name, e))
         
         # Loop through each line in the Config
         for line in configObj.readlines():
@@ -836,6 +835,9 @@ class Config:
 #   SOUND CLASS
 # ==============================================================================
 class InvalidSoundPack(_GunGameLibError):
+    pass
+
+class SoundError(_GunGameLibError):
     pass
 
 class Sounds:
@@ -1067,7 +1069,7 @@ class Message:
         if os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName)):
             self.strings = langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName))
         else:
-            raise FileError('No string file exists for: %s' % self.addonName)
+            raise FileError('Cannot load strings (%s): no string file exists.' % self.addonName)
     
     def __cleanString(self, string):
         string = string.replace('\3', '').replace('\4', '').replace('\1', '')
@@ -1704,7 +1706,7 @@ def getSound(soundName):
             return dict_gungameSounds[soundName]
     else:
         raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
-    
+
 # ==============================================================================
 #   ADDON RELATED COMMANDS
 # ==============================================================================
@@ -1799,7 +1801,7 @@ def getAddonDir(addonName, dir):
     dir = dir.replace('\\', '/')
     
     # Return
-    return '%s/%s/%s' % (addonPath, 'included_addons' if getAddonType(addonName) else 'custom_addons', dir)
+    return '%s/%s/%s' % (addonPath, 'custom_addons' if getAddonType(addonName) else 'included_addons', dir)
 
 def clientInServer(userid):
     return es.exists('userid', userid)

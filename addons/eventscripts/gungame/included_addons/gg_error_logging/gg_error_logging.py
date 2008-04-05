@@ -84,8 +84,10 @@ def load():
     else:
         errorFile.write('    * ES_Tools: (Not Installed)\n')
     
-    # Print gungame version
     errorFile.write('    * GunGame: %s\n' % es.ServerVar('eventscripts_ggp'))
+    errorFile.write('    * Popup: %s\n' % es.ServerVar('popup_version'))
+    
+    # Finish
     errorFile.write('%s\n' % ('*' * 50))
     errorFile.write('\n')
     errorFile.close()
@@ -190,7 +192,7 @@ def exceptHook(type, value, tb):
     # Print finishing
     es.dbgmsg(0, '\n%s' % ('*' * 79))
     es.dbgmsg(0, '  Please open "addons/eventscripts/gungame/errorlog/%s.txt" and report the' % es.ServerVar('eventscripts_ggp'))
-    es.dbgmsg(0, '  error in the GunGame "Bug Reports" topic.')
+    es.dbgmsg(0, '  contained exceptions in the GunGame "Bug Reports" topic.')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
     
 def getErrorLine():

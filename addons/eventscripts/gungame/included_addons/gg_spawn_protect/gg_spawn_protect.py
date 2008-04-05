@@ -14,7 +14,6 @@
 import es
 import gamethread
 import repeat
-import usermsg
 import playerlib
 from playerlib import UseridError
 
@@ -154,11 +153,7 @@ def combatCountdown(userid, repeatInfo):
         # Finish the countdown
         finishCountdown(userid)
         return
-        
-    # Set the view tint
-    # fade <userid> <0 = no fade, 1 = fade Out 2 = fade in> <time to fade (in frames)> <time faded (in frames)> <red> <green> <blue> <alpha>
-    usermsg.fade(userid,0,1,1000,0,255,0,30)
-    
+            
     # Decrement the timer
     playerCounters[userid] -= 1
 
@@ -177,10 +172,6 @@ def finishCountdown(userid):
     player.set('color', (255, 255, 255, 255))
     gungamePlayer['preventlevel'] = 0
     
-    # Set back the view tint
-    # fade <userid> <0 = no fade, 1 = fade Out 2 = fade in> <time to fade (in frames)> <time faded (in frames)> <red> <green> <blue> <alpha>
-    usermsg.fade(userid,0,1,1000,0,255,0,0)
-    usermsg.fade(userid,0,1,1000,0,0,0,0)
     
     # Tell them they are uninvicible
     gungamelib.centermsg('gg_spawn_protect', userid, 'CombatStarted')

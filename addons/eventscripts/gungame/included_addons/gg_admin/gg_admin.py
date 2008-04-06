@@ -1,8 +1,8 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.255
-    Description: Gives admins control over
+    Version: 1.0.256
+    Description: Gives admins control over GunGame and its addons.
 '''
 
 # ==============================================================================
@@ -20,18 +20,18 @@ from configobj import ConfigObj
 
 # GunGame imports
 import gungamelib
-from gungame import gungame as gg
+from gungame import gungame
 
 # ==============================================================================
-#   EVENTSCRIPTS STUFF
+#   ADDON REGISTRATION
 # ==============================================================================
 # Register with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_admin (for GunGame: Python)"
-info.version  = "1.0.254"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_admin"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_admin (for GunGame: Python)'
+info.version  = '1.0.256'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_admin'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #   GLOBALS
@@ -39,27 +39,24 @@ info.author   = "GunGame Development Team"
 dict_settings = {}
 dict_menus = {}
 dict_commands = {}
+dict_admins = {}
+dict_cfgMenus = {}
 
-#  auth stuff
+# ==============================================================================
+#   AUTH SETUP
+# ==============================================================================
 try:
-    auth = services.use('auth')
-    if auth.name == 'basic_auth':
-        es.dbgmsg(0,'*****basic_auth must not be loaded when using gg_admin.')
+    # Not compatible with basic_auth
+    if services.use('auth').name == 'basic_auth':
+        gungamelib.echo('gg_admin', 0, 0, 'NoBasicAuth')
         es.unload('gungame/included_addons/gg_admin')
 except:
     pass
+
+# Load group auth
 es.load('examples/auth/group_auth')
 
-#get admins
-gameDir = es.ServerVar('eventscripts_gamedir')
-adminfile = gameDir + '/cfg/gungame/gg_admins.ini'
-dict_ggAdmins = ConfigObj(adminfile)
-
-menuGGAdminMain = ' '
-menuAddons = ' '
-menuCFGSettingsMain = ' '
-
-#setup group_auth
+# Create groups
 es.server.queuecmd('gauth group create ggadmin1 1')
 es.server.queuecmd('gauth group create ggadmin2 1')
 es.server.queuecmd('gauth group create ggadmin3 1')
@@ -69,181 +66,192 @@ es.server.queuecmd('gauth group create gguser 128')
 #   GAME EVENTS
 # ==============================================================================
 def load():
-    global menuGGAdminMain, menuAddons
     # Register
     gg_admin = gungamelib.registerAddon('gg_admin')
-	
+    
     # Create commands
-    # regCmd(type, command, function, addon, permission) 
     regCmd('say', '!ggadmin', 'sendAdminMenu', 'gg_admin', 'admin3')
     regCmd('console', 'gg_admin', 'sendAdminMenu', 'gg_admin', 'admin3')
     regCmd('say', '!ggmenu', 'sendUserMenu', 'gg_admin' , 'user')
-
-    #internal cmd to set cfg setting, called when escinput box used
-    if not int(es.exists('clientcommand','cmdSetSetting')):
-        es.regclientcmd('cmdSetSetting','gungame/included_addons/gg_admin/setSetting', 'Set CFG setting')
-
-    #register our admins here
-    for admin in dict_ggAdmins['GGAdmins']:
-        regAdmin(admin,dict_ggAdmins['GGAdmins'][admin])
-
-    menuGGAdminMain = popuplib.easymenu('menuGGAdminMain', None, selectGGAdminMain)
-    menuGGAdminMain.settitle('GG: Admin')    
-    menuGGAdminMain.addoption('load', 'Load / Unload addons')
-    menuGGAdminMain.addoption('settings', 'Addon Settings')
-    menuGGAdminMain.addoption('menus', 'Addon Menus')
-    menuGGAdminMain.addoption('commands', 'Commands')
-
-    menuAddons = popuplib.easymenu('menuAddons', None, buildLoadMenu)
-    menuAddons.settitle('GG: Addons Main')
-    menuAddons.addoption('list_includedAddonsDir', 'GG Addons')
-    menuAddons.addoption('list_customAddonsDir', 'Custom Addons')
+    
+    # Get admins
+    adminFile = open(gungamelib.getGameDir('cfg/gungame/gg_admins.ini'), 'r')
+    
+    # Format lines
+    lines = map(lambda x: x.lower().strip(), adminFile.readlines())
+    lines = filter(lambda x: not x.startswith('//') and x, lines)
+    
+    # Register admins
+    for line in lines:
+        # Get data from the line
+        steamid, name, level = line.split(' ', 2)
+        
+        # Register them
+        regAdmin(steamid, name, level)
 
 def unload():
-    # let's be kind and unregister commands
+    # Unregister commands
     for command in dict_commands:
         if dict_commands[command][0] == 'say':
             es.unregsaycmd(command)
         else:
             es.unregclientcmd(command)
-    # Unregister
+    
+    # Unregister addon
     gungamelib.unregisterAddon('gg_admin')
 
-def regAdmin(admin,data):
-    # Register an admin and set his permission groups
-    data = data.split()
-    es.server.queuecmd('gauth user create %s %s' %(data[0],admin))
-    for group in range(1,int(data[1])+1):
-        es.server.queuecmd('gauth user join %s ggadmin%s' %(data[0],group))
-
-def regCmd(type, command, function, addon, permission):
-    """ 
-	   Use: regCmd(type, command, function, addon, permission) 
-           accepted types: say, console
-           accepted permissions: admin1, admin2, admin3, user
-    """
-	
-    #check for accepted 'type' and 'permission'	
-    if type in ('say','console') and permission in ('admin1','admin2','admin3','user'):
-        # get the command type
-        if type == 'console':
-            temptype = 'clientcommand'
-        else:
-            temptype = 'saycommand'
-
-        # if the command already exists don't register it
-        if es.exists(temptype, command):
-            return 
-
-        #  get the addon path to complete the execution function
-        #is it an included_addon?
-        if os.path.isdir(gungamelib.getGameDir('addons/eventscripts/gungame/included_addons/%s' %addon)):
-            exe = 'gungame/included_addons/%s/%s' %(addon,function)
-        #or is it a custom_addon?			
-        elif os.path.isdir(gungamelib.getGameDir('addons/eventscripts/gungame/custom_addons/%s' %addon)):
-            exe = 'gungame/custom_addons/%s/%s' %(addon,function)
-        # evidentally the scripter mistyped his addon name... oops
-        else:
-            es.dbgmsg(0,'*****[GunGame regCmd Error] Addon %s does not exist.' %addon)
-            return
-
-        # now let's add it to our dictionary for later use,
-        # but we wouldn't want to add it if it's already there, now would we?
-        if not dict_commands.has_key(command):
-            dict_commands[command] = (type,addon,permission)
-            es.dbgmsg(1,'*****dict_commands=%s' %dict_commands)
-
-            # Finally, it's time to register the command with group_auth and assign it to it's proper group
-            if permission == 'user':
-                level = '#ALL'
-                intlevel = 128
-            else:
-                level = '#ADMIN'
-                intlevel = 1
-            group = 'gg' + permission
-            es.server.queuecmd('clientcmd create %s %s %s %s %s' %(type,command,exe,command,level))
-            es.server.queuecmd('gauth power create %s %s' %(command,intlevel))
-            es.server.queuecmd('gauth power give %s %s' %(command,group))
-		
-    else:
-        es.dbgmsg(0,"[Syntax Error] Accepted 'types': say, console")
-        es.dbgmsg(0,"[Syntax Error] Accepted 'permissions': admin1, admin2, admin3, user")	
-	
 # ==============================================================================
-#   MENU SELECT for Main Admin Menu
+#   ADMIN MENU
 # ==============================================================================
-def selectGGAdminMain(userid, choice, popupid):
+def buildAdminMenu():
+    # Create main menu
+    menu_admin_main = popuplib.easymenu('gg_admin_main', None, selectAdminMenu)
+    menu_admin_main.settitle('GG:Admin: Admin Main Menu')
+    menu_admin_main.setdescription('%s\n * Select an option...' % menu_admin_main.c_beginsep)
+    
+    menu_admin_main.addoption('load', 'Load / Unload Addons')
+    menu_admin_main.addoption('menus', 'Addon Menus')
+    menu_admin_main.addoption('settings', 'Variable Settings')
+
+def sendAdminMenu(userid=None):
+    if not userid:
+        userid = es.getcmduserid()
+    
+    buildAdminMenu()
+    popuplib.send('gg_admin_main', userid)
+
+def selectAdminMenu(userid, choice, popupid):
     if choice == 'settings':
-        buildSettingsMenu(userid)
-    if choice == 'load':
-        menuAddons.send(userid)
-    if choice == 'menus':
-        buildAddonsMenusMenu(userid)
-    if choice == 'commands':
-        buildAdminCommandsMenu(userid)
+        sendSettingsMenu(userid)
+    elif choice == 'load':
+        sendAddonTypeMenu(userid)
+    elif choice == 'menus':
+        sendAddonMenu(userid)
 
 # ==============================================================================
 #   CFG SETTINGS MENUS 
 # ==============================================================================
-def buildSettingsMenu(userid):
-    #get the dictionary of the various cfg file settings
-    settings = gungamelib.dict_cfgSettings
-    menuCFGSettingsMain = popuplib.easymenu('menuCFGSettingsMain', None, buildCFGSettingsMenu)
-    menuCFGSettingsMain.settitle('GG: CFG Files-\n-Select CFG file')
-    #add the various cfg file names to the menu
-    for cfg in settings:
-        menuCFGSettingsMain.addoption(cfg, cfg)
-    menuCFGSettingsMain.send(userid)
+def buildSettingsMenu():
+    # Get the configs
+    configs = gungamelib.dict_cfgSettings
+    
+    # Create menu
+    menu_cfg_settings_main = popuplib.easymenu('gg_admin_cfg_settings_main', None, buildCFGSettingsMenu)
+    menu_cfg_settings_main.settitle('GG:Admin: Configs')
+    menu_cfg_settings_main.setdescription('%s\n * Select a config' % menu_cfg_settings_main.c_beginsep)
+    
+    # Loop through each config and add it
+    for config in configs:
+        menu_cfg_settings_main.addoption(config, config)
+
+def sendSettingsMenu(userid=None):
+    if not userid:
+        userid = es.getcmduserid()
+    
+    buildSettingsMenu()
+    popuplib.send('gg_admin_cfg_settings_main', userid)
 
 def buildCFGSettingsMenu(userid, choice, popupid=None):
+    global dict_cfgMenus
     
-    global activecfgmenu
-    activecfgmenu = choice
+    # Set current menu for userid
+    dict_cfgMenus[int(userid)] = choice
     
-    #get the dictionary of the various cfg file settings
-    cfgs = gungamelib.dict_cfgSettings
-
-    #get the specific cfg file settings
-    cfg = cfgs[choice]
-    menuCFGSettings = popuplib.easymenu('menuCFGSettings', None, selectCFGSetting)
-    menuCFGSettings.settitle('GG: %s' %choice)
-    menuCFGSettings.submenu(0,'menuCFGSettingsMain')
-    #add the cfg files' settings to the menu
-    for setting in cfg:
-        menuCFGSettings.addoption(setting, '%s = %s ' % (setting, gungamelib.getVariableValue(setting)))
-    menuCFGSettings.send(userid)
-
-def selectCFGSetting(userid, choice, popupid):
-    es.escinputbox(30,userid,'Change setting',choice,'cmdSetSetting')
-
-    #set this to the name of the variable we are going to change, it's used in setSetting
-    global tempsetting
-    tempsetting = choice
-
-def setSetting():
-	
-    global activecfgmenu, tempsetting
-    userid = es.getcmduserid()
-
-    #get the new value
-    newvalue = es.getargv(1)
-
-    #set the variable
-    gungamelib.setVariableValue(tempsetting,newvalue)
-	
-    # Now let's return them to their previos menu
-    buildCFGSettingsMenu(userid,activecfgmenu)
+    # Get config
+    config = gungamelib.dict_cfgSettings[choice]
     
+    # Create menu
+    menu_cfg_settings = popuplib.easymenu('gg_admin_cfg_settings', None, selectCFGSettingMenu)
+    menu_cfg_settings.settitle('GG:Admin: Config setup (%s)' % choice)
+    menu_cfg_settings.setdescription('%s\n * Select an option to change its value' % menu_cfg_settings.c_beginsep)
+    menu_cfg_settings.submenu(0, 'gg_admin_settings')
+    
+    # Add the variables to the menu
+    for variable in config:
+        menu_cfg_settings.addoption(variable, '%s = %s ' % (variable, gungamelib.getVariableValue(variable)))
+    
+    # Send menu
+    menu_cfg_settings.send(userid)
+
+def selectCFGSettingMenu(userid, choice, popupid):
+    # Create menu and set aesthetic things
+    _input = gungamelib.EasyInput('gg_admin', setSetting, choice)
+    _input.setTitle('Set setting (%s)' % choice)
+    _input.setText('Enter a variable value for: %s' % choice)
+    
+    # Send menu
+    _input.send(userid)
+
+def setSetting(userid, choice, args):
+    # Set the variable
+    gungamelib.setVariableValue(args[0], choice)
+    
+    # Send them back to the CFG settings menu
+    buildCFGSettingsMenu(userid, dict_cfgMenus[userid])
+
 # ==============================================================================
-#   ADDONS MENUS MENU
+#   ADDON TYPE MENU
 # ==============================================================================
-def buildAddonsMenusMenu(userid):
-
-    menuAddonsMenus = popuplib.easymenu('menuAddonsMenus', None, selectAddonsMenu)
-    menuAddonsMenus.settitle('GG:Admin: Addon Menus')
-    menuAddonsMenus.setdescription('%s\n%s' % (menuAddonsMenus.c_beginsep, 'Open addon-specific menus.'))
+def buildAddonTypeMenu():
+    # Create addons type menu
+    menu_addon_type = popuplib.easymenu('gg_admin_addon_type', None, buildAddonLoad)
+    menu_addon_type.settitle('GG:Admin: Addon Type Selection')
+    menu_addon_type.setdescription('%s\n * Select an addon type' % menu_addon_type.c_beginsep)
     
-    loopcount = False
+    menu_addon_type.addoption('included', 'Included Addons')
+    menu_addon_type.addoption('custom', 'Custom Addons')
+
+def sendAddonTypeMenu(userid=None):
+    if not userid:
+        userid = es.getcmduserid()
+    
+    buildAddonTypeMenu()
+    popuplib.send('gg_admin_addon_type', userid)
+
+# ==============================================================================
+#   LOAD MENU
+# ==============================================================================
+def buildAddonLoad(userid, choice, popupid):
+    # Create menu
+    menu_load = popuplib.easymenu('gg_admin_addon_load', None, selectAddonLoad)
+    menu_load.settitle('GG:Admin: Addon Load Menu')
+    menu_load.setdescription('%s\n * Select to toggle' % menu_load.c_beginsep)
+    
+    if choice == 'included':
+        # Get included addons list
+        addons = gungame.list_includedAddonsDir
+        type = 'included'
+    else:
+        # Get custom addon list
+        addons = gungame.list_customAddonsDir
+        type = 'custom'
+    
+    # Loop through the addons
+    for item in addons:
+        if gungamelib.addonRegistered(item):
+            menu_load.addoption((item, type, 'unload'), '%s is on' % item)
+        else:
+            menu_load.addoption((item, type, 'load'), '%s is off' % item)
+    
+    # Send menu
+    menu_load.send(userid)
+
+def selectAddonLoad(userid, choice, popupid):
+    if choice[2] == 'unload':
+        es.unload('gungame/%s_addons/%s' % (choice[1], choice[0]))
+    else:
+        es.load('gungame/%s_addons/%s' % (choice[1], choice[0]))
+
+# ==============================================================================
+#   ADDON MENUS
+# ==============================================================================
+def buildAddonMenu():
+    # Create menu
+    menu_addon_menu = popuplib.easymenu('gg_admin_addon', None, selectAddonMenu)
+    menu_addon_menu.settitle('GG:Admin: Addon Menus')
+    menu_addon_menu.setdescription('%s\n * Open addon-specific menus' % menu_addon_menu.c_beginsep)
+    
+    # Loop through the addons
     for addon in gungamelib.getRegisteredAddonlist():
         # Get the addon object and display name
         addonObj = gungamelib.getAddon(addon)
@@ -254,92 +262,78 @@ def buildAddonsMenusMenu(userid):
             continue
         
         # Add the option
-        menuAddonsMenus.addoption(addon, addonName)
-        loopcount = True
-    
-	# Make sure there's options on the menu, we don't want to send an empty menu.
-    if loopcount:
-        menuAddonsMenus.send(userid)
-    else:
-        #gungamelib.msg('gg_admin', userid, string, tokens={}, showPrefix=True):
-        es.tell(userid, 'There are no registered addon menus.')
+        menu_addon_menu.addoption(addon, addonName)
 
-def selectAddonsMenu(userid, choice, popupid):
+def sendAddonMenu(userid=None):
+    if not userid:
+        userid = es.getcmduserid()
+    
+    buildAddonMenu()
+    popuplib.send('gg_admin_addon', userid)
+
+def selectAddonMenu(userid, choice, popupid):
     # Get addon object
     addonObj = gungamelib.getAddon(choice)
     
-    # Show menu to the selector
-    addonObj.menu.send(userid)
-
-def buildAdminCommandsMenu(userid, choice, popupid):
-    es.dbgmsg(0,'*****buildAdminCommandsMenu')
+    # Send the menu
+    addonObj.sendMenu(userid)
 
 # ==============================================================================
-#   ADDONS LOAD/UNLOAD MENU
+#   HELPER FUNCTIONS
 # ==============================================================================
-def buildLoadMenu(userid, choice, popupid):
-    menuLoad = popuplib.easymenu('menuLoad',None,selectLoadMenu)
-    if 'included' in choice:
-        menuLoad.settitle('GunGame Addons:\n-Select to toggle')
-        list = gg.list_includedAddonsDir
-        dir = 'included_addons'
-    else:
-        menuLoad.settitle('Custom Addons:\n-Select to toggle')
-        list = gg.list_customAddonsDir
-        dir = 'custom_addons'
-    if list:
-        list_registered = gungamelib.getRegisteredAddonlist()
-        for addon in list:
-                if addon != 'gg_admin':
-                    if addon in list_registered:
-                        menuLoad.addoption((addon,dir,'unload'),addon + ' is on')
-                    else:
-                        menuLoad.addoption((addon,dir,'load'),addon + ' is off')
-		menuLoad.submenu(0,'menuAddons')
-        menuLoad.send(userid)					
-     
-def selectLoadMenu(userid, choice, popupid):
-    #load/unload addon
-    if choice[2] == 'load':
-        es.load('gungame/' + choice[1] + '/' + choice[0]) 
-    elif choice[2] == 'unload':
-        es.unload('gungame/' + choice[1] + '/' + choice[0])
-    menuAddons.send(userid)
+def regAdmin(steamid, name, level):
+    '''Registers an admin with group_auth and sets their permissions.'''
+    # NOTE TO HTP: If you want an admins dictionary, just uncomment the next line.
+    # dict_admins[name] = steamid, level
+    
+    # Create user
+    es.server.queuecmd('gauth user create %s %s' % (name, steamid))
+    
+    # Add them to the groups
+    for group in range(1, int(level)+1):
+        es.server.queuecmd('gauth user join %s ggadmin%s' % (name, group))
 
-# ==============================================================================
-#   MISC. 
-# ==============================================================================
-def sendAdminMenu(userid=None):
-    if not userid:
-        userid = es.getcmduserid()
-    menuGGAdminMain.send(userid)
-
-def sendUserMenu(userid=None):
-    es.dbgmsg(1,'*****sendUserMenu')
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+def regCmd(type, command, block, addon, permission):
+    ''' types: say, console
+        permissions: admin1, admin2, admin3, user
+    '''
+    
+    # Correct type
+    if type not in ('say', 'console'):
+        gungamelib.echo('gg_admin', 0, 0, 'InvalidType', {'command': command, 'type': type})
+        return
+    
+    # Correct permission
+    if permission not in ('admin1', 'admin2', 'admin3', 'user'):
+        gungamelib.echo('gg_admin', 0, 0, 'InvalidPermission', {'command': command, 'permission': permission})
+        return
+    
+    # Set type
+    temptype = 'clientcommand' if type == 'console' else 'saycommand'
+    
+    # Does the command exist?
+    if es.exists(temptype, command):
+        return
+    
+    # Does the addon exist?
+    if not gungamelib.addonExists(addon):
+        gungamelib.echo('gg_admin', 0, 0, 'AddonNotExist', {'command': command, 'addon': addon})
+        return
+    
+    # Set addon block
+    addonblock = 'gungame/%s/%s/%s' % ('custom_addons' if gungamelib.getAddonType(addon) else 'included_addons', addon, block)
+    
+    # Add to command dictionary
+    if not dict_commands.has_key(command):
+        # Add to dictionary of commands
+        dict_commands[command] = type, addon, permission
+        
+        # Set level and group variables
+        level = '#ALL' if permission == 'user' else '#ADMIN'
+        levelNum = 128 if permission == 'user' else 1
+        group = 'gg' + permission
+        
+        # Create the command
+        es.server.queuecmd('clientcmd create %s %s %s %s %s' % (type, command, addonblock, command, level))
+        es.server.queuecmd('gauth power create %s %s' % (command, levelNum))
+        es.server.queuecmd('gauth power give %s %s' % (command, group))

@@ -1,0 +1,17 @@
+//----------------------------------------------------------------------------
+// admins.txt -- Admin configuration.
+//
+// All admins for gg_admin are stored in this file.
+//
+// Format: <Steam ID> <Name> <Level>
+//
+// Example: STEAM_0:1:3360502 Cheezus 3
+// Example: STEAM_0:0:450504 HitThePipe 3
+//
+// Note: Any edit of this file will require a server restart for changes to
+//       take effect.
+//----------------------------------------------------------------------------
+
+// More examples:
+// STEAM_0:1:3360502 Cheezus 3
+// STEAM_ID_LAN Local 3

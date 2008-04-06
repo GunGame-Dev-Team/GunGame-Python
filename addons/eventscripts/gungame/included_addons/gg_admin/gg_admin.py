@@ -75,7 +75,7 @@ def load():
     regCmd('say', '!ggmenu', 'sendUserMenu', 'gg_admin' , 'user')
     
     # Get admins
-    adminFile = open(gungamelib.getGameDir('cfg/gungame/gg_admins.ini'), 'r')
+    adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
     
     # Format lines
     lines = map(lambda x: x.lower().strip(), adminFile.readlines())

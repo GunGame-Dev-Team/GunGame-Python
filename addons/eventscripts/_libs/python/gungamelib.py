@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.251
+    Version: 1.0.255
     Description:
 '''
 
@@ -1700,10 +1700,7 @@ def addDownloadableSounds():
 
 def getSound(soundName):
     if dict_gungameSounds.has_key(soundName):
-        if dict_gungameSounds[soundName] == '0':
-            return 0
-        else:
-            return dict_gungameSounds[soundName]
+        return dict_gungameSounds[soundName]
     else:
         raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
 

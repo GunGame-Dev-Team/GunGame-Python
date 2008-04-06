@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.254
+    Version: 1.0.255
     Description: Gives admins control over
 '''
 

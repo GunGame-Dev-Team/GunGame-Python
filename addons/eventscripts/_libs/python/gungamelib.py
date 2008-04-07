@@ -436,7 +436,7 @@ class WeaponOrder:
     '''Class used in altering GunGame Weapon Order.'''
     
     def __init__(self, fileName):
-        filePath = getGameDir('/cfg/gungame/weapon_order_files/%s' % fileName)
+        filePath = getGameDir('cfg/gungame/weapon_order_files/%s' % fileName)
         self.fileName = fileName
         
         # Check to see if it has been registered before
@@ -482,7 +482,6 @@ class WeaponOrder:
                                 dict_tempWeaponOrder[levelCounter] = list_splitLine
                             else:
                                 echo('gungame', 0, 0, 'WeaponOrder:MultikillNotNumeric', {'weapon': weaponName, 'to': list_splitLine[1]})
-                                #es.dbgmsg(0, 'Unable to set multkill value for \'%s\': \'%s\' is not a numeric value...skipping' %(weaponName, list_splitLine[1]))
                         else:
                             levelCounter += 1
                             list_splitLine.append(1)

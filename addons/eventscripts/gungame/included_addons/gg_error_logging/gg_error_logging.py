@@ -36,11 +36,13 @@ info.author   = "GunGame Development Team"
 # ==============================================================================
 dateFormat = '%d/%m/%Y @ [%H:%M:%S]'
 errorFile = None
-
 dict_errorTracking = {}
+
+# ==============================================================================
+#  ERROR TRACKING CLASS
+# ==============================================================================
 class ErrorTracking:
     '''Tracks the count and line number of the errors that are logged.'''
-    
     errorIndex = None
     errorCount = 1
 

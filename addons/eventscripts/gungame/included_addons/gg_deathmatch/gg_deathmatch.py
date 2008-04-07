@@ -16,6 +16,7 @@ import random
 # Eventscripts imports
 import es
 import playerlib
+import popuplib
 import gamethread
 import repeat
 import usermsg
@@ -30,11 +31,11 @@ from gungamelib import ArgumentError
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_deathmatch (for GunGame: Python)"
+info.name     = 'gg_deathmatch (for GunGame: Python)'
 info.version  = '1.0.258'
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_deathmatch"
-info.author   = "GunGame Development Team"
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_deathmatch'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #  GLOBALS
@@ -67,7 +68,10 @@ def load():
     gg_deathmatch.createMenu(menuCallback)
     gg_deathmatch.setDisplayName('GG Deathmatch')
     gg_deathmatch.setDescription('Deathmatch addon for GunGame:Python')
-    gg_deathmatch.menu.addoption('spawn', 'Spawnpoint Management')
+    gg_deathmatch.menu.addoption('add', 'Add spawnpoint')
+    gg_deathmatch.menu.addoption('remove', 'Remove spawnpoint')
+    gg_deathmatch.menu.addoption('remove_all', 'Remove all spawnpoints')
+    gg_deathmatch.menu.addoption('show', 'Show all spawnpoints')
     
     # Do we have EST?
     if not gungamelib.hasEST():
@@ -96,7 +100,7 @@ def load():
     for userid in playerlib.getUseridList('#dead'):
         respawn(userid)
 
-    # Set freezetime
+    # Set freezetime and roundtime
     es.server.cmd('mp_freezetime 0')
     es.server.cmd('mp_roundtime 900')
 
@@ -198,9 +202,165 @@ def player_disconnect(event_var):
 # ==============================================================================
 #  MENU COMMANDS
 # ==============================================================================
-def menuCallback(userid, choice, popupName):
-    # TO-DO
-    pass
+def menuCallback(userid, choice, popupid):
+    if choice == 'add':
+        sendAddMenu(userid)
+    elif choice == 'remove':
+        sendRemoveMenu(userid)
+    elif choice == 'remove_all':
+        sendRemoveAllMenu(userid)
+    elif choice == 'show':
+        sendShowMenu(userid)
+
+
+def sendAddMenu(userid):
+    # Create menu
+    menu = popuplib.easymenu('gg_deathmatch_add', None, selectAddMenu)
+    menu.settitle('GG Deathmatch: Add a spawnpoint')
+    menu.setdescription('%s\n * Add a spawnpoint at which location' % menu.c_beginsep)
+    
+    # Add them to the menu
+    menu.addoption(userid, '<Current Location>')
+    
+    # All all players to the menu
+    for _userid in filter(lambda x: x != userid, playerlib.getUseridList('#all')):
+        menu.addoption(_userid, '%s - %s' % (_userid, es.getplayername(_userid)))
+    
+    # Send menu
+    menu.send(userid)
+
+def selectAddMenu(userid, choice, popupid):
+    # Get view angles etc.
+    viewAngle = playerlib.getPlayer(choice).get('viewangle')[1]
+    x, y, z = es.getplayerlocation(choice)
+    
+    # Add spawnpoint
+    addSpawnPoint(x, y, z, viewAngle)
+    gungamelib.msg('gg_deathmatch', userid, 'AddedSpawnpoint', {'index': len(spawnPoints)-1})
+    
+    # Log
+    gungamelib.msg('gg_deathmatch', '#all', 'PlayerExecuted', {'userid': userid, 'name': es.getplayername(userid), 'steamid': es.getplayersteamid(userid), 'info': 'added spawnpoint at %s\'s location.' % es.getplayername(choice)})
+    
+    # Return to main menu
+    popuplib.send('gg_deathmatch', userid)
+
+
+def sendRemoveMenu(userid):
+    # Create menu
+    menu = popuplib.easymenu('gg_deathmatch_remove', None, selectRemoveMenu)
+    menu.settitle('GG Deathmatch: Remove a spawnpoint')
+    menu.setdescription('%s\n * Remove a spawnpoint by index' % menu.c_beginsep)
+    
+    # All all players to the menu
+    for index in spawnPoints:
+        # Get location
+        x, y, z, unknown, roll, yaw = spawnPoints[index]
+        
+        # Add option
+        menu.addoption(index, '%s - X:%s Y:%s Z:%s' % (index, x, y, z))
+    
+    # Send menu
+    menu.send(userid)
+
+def selectRemoveMenu(userid, choice, popupid):
+    # Get their position
+    position = es.getplayerlocation(userid)
+    
+    # Teleport them
+    gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[choice][0],
+                                                spawnPoints[choice][1],
+                                                spawnPoints[choice][2],
+                                                0,
+                                                spawnPoints[choice][4])
+    
+    # Create menu
+    menu = popuplib.easymenu('gg_deathmatch_remove_confirm', None, selectRemoveConfirmMenu)
+    menu.settitle('GG Deathmatch: Remove this spawnpoint?')
+    menu.setdescription('%s\n * Do you want to remove this spawnpoint?' % menu.c_beginsep)
+    
+    # Add options
+    menu.addoption((choice, position), 'Yes, delete spawnpoint "%s".' % choice)
+    menu.addoption((-1, position), 'No, return me to the previous menu.')
+    
+    # Send menu
+    menu.send(userid)
+
+def selectRemoveConfirmMenu(userid, choice, popupid):
+    if choice[0] == -1:
+        # Teleport them back
+        gungamelib.getPlayer(userid).teleportPlayer(choice[1][0],
+                                                    choice[1][1],
+                                                    choice[1][2],
+                                                    0,
+                                                    0)
+        
+        # Send them the previous menu
+        popuplib.send('gg_deathmatch_remove', userid)
+    else:
+        # Teleport them back
+        gungamelib.getPlayer(userid).teleportPlayer(choice[1][0],
+                                                    choice[1][1],
+                                                    choice[1][2],
+                                                    0,
+                                                    0)
+        
+        # Remove the spawnpoint
+        gungamelib.msg('gg_deathmatch', '#all', 'PlayerExecuted', {'userid': userid, 'name': es.getplayername(userid), 'steamid': es.getplayersteamid(userid), 'info': 'removed spawnpoint %s' % choice[0]})
+        gungamelib.msg('gg_deathmatch', userid, 'RemovedSpawnpoint', {'index': choice[0]})
+        removeSpawnPoint(choice[0])
+        
+        # Send menu
+        popuplib.send('gg_deathmatch', userid)
+
+
+def sendRemoveAllMenu(userid):
+    # Create menu
+    menu = popuplib.easymenu('gg_deathmatch_remove_all_confirm', None, selectRemoveAllMenu)
+    menu.settitle('GG Deathmatch: Remove all spawnpoints?')
+    menu.setdescription('%s\n * Confirm' % menu.c_beginsep)
+    
+    # Add options
+    menu.addoption(1, 'Yes, remove all spawnpoints.')
+    menu.addoption(0, 'No, return me to the main menu.')
+    
+    # Send
+    menu.send(userid)
+
+def selectRemoveAllMenu(userid, choice, popupid):
+    if choice == 1:
+        # Log
+        gungamelib.msg('gg_deathmatch', '#all', 'PlayerExecuted', {'userid': userid, 'name': es.getplayername(userid), 'steamid': es.getplayersteamid(userid), 'info': 'removed all spawnpoints'})
+        
+        # Delete all spawnpoints
+        es.server.cmd('dm_del_all')
+        
+        # Send them the main menu
+        popuplib.send('gg_deathmatch', userid)
+    else:
+        popuplib.send('gg_deathmatch', userid)
+
+def sendShowMenu(userid):
+    # Create menu
+    menu = popuplib.easymenu('gg_deathmatch_show', None, selectShowMenu)
+    menu.settitle('GG Deathmatch: Show spawnpoints')
+    menu.setdescription('%s\n * Select a player to show spawnpoints to' % menu.c_beginsep)
+    
+    # Add them to the menu
+    menu.addoption(userid, '<Me>')
+    
+    # All all players to the menu
+    for _userid in filter(lambda x: x != userid, playerlib.getUseridList('#all')):
+        menu.addoption(_userid, '%s - %s' % (_userid, es.getplayername(_userid)))
+    
+    # Send menu
+    menu.send(userid)
+
+def selectShowMenu(userid, choice, popupid):
+    # Log
+    es.server.cmd('dm_show %s' % choice)
+    
+    # Return them
+    popuplib.send('gg_deathmatch', userid)
 
 # ==============================================================================
 #  SPAWNPOINT HELPERS
@@ -288,8 +448,8 @@ def removeSpawnPoint(index):
         spawnLoc = spawnPoints[index]
         
         # Write to file
-        spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (spawnPoint[0], spawnPoint[1], spawnPoint[2], spawnPoint[4]))
-        
+        spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (spawnLoc[0], spawnLoc[1], spawnLoc[2], spawnLoc[4]))
+    
     # Flush and close the file
     spawnPointFile.flush()
     spawnPointFile.close()
@@ -308,11 +468,11 @@ def RespawnCountdown(userid, repeatInfo):
         # Is the counter 1?
         elif respawnCounters[userid] == 1:
             gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Singular')
-            
+    
     # Respawn the player
     if respawnCounters[userid] == 0:
         es.server.cmd('%s %s' % (str(dict_variables['cmd']), userid))
-        
+    
     # Decrement the timer
     respawnCounters[userid] -= 1
 
@@ -332,7 +492,7 @@ def cmd_convert():
         raise ArgumentError, str(int(es.getargc()) - 1) + ' arguments provided. Expected: 0'
     
     # Loop through the files in the legacy folder
-    for f in os.listdir(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\legacy')):
+    for f in os.listdir(gungamelib.getGameDir('cfg/gungame/spawnpoints/legacy')):
         name, ext = os.path.splitext(f)
         
         if name.startswith('es_') and name.endswith('_db') and ext == '.txt':            
@@ -340,21 +500,21 @@ def cmd_convert():
             gungamelib.echo('gg_deathmatch', 0, 0, 'ConvertingFile', {'file': f})
             
             # Parse it
-            points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\legacy\\') + f)
-            
-            # Now write it to a file
-            newFileName = name[3:][:-3]
-            newFile = open(gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt') % newFileName, 'w')
+            points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg/gungame/spawnpoints/legacy/%s' % f))
             
             # Are there any points?
             if len(points) == 0:
                 gungamelib.echo('gg_deathmatch', 0, 0, 'CannotConvert_Skipping')
                 continue
             
+            # Now write it to a file
+            newFileName = name[3:-3]
+            newFile = open(gungamelib.getGameDir('cfg/gungame/spawnpoints/%s.txt' % newFileName), 'w')
+            
             # Loop through the points
             for point in points:
                 newFile.write('%s %s %s 0.000000 0.000000 0.000000\n' % (points[point][0], points[point][1], points[point][2]))
-                
+            
             # Close the file and flush
             newFile.close()
             
@@ -403,7 +563,7 @@ def cmd_addSpawnPoint():
     
     # Do we have enough arguments?
     if int(es.getargc()) != 2:
-        gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_show', 'syntax': '<userid>'})
+        gungamelib.echo('gg_deathmatch', 0, 0, 'InvalidSyntax', {'cmd': 'dm_add', 'syntax': '<userid>'})
         return
     
     # Get executor userid and 1st argument

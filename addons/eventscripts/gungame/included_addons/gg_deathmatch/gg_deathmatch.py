@@ -48,6 +48,7 @@ dict_variables['cmd'] = gungamelib.getVariable('gg_dm_respawn_cmd')
 respawnCounters = {}
 spawnPoints = {}
 list_randomSpawnIndex = []
+respawnAllowed = True
 
 # ==============================================================================
 #  GAME EVENTS
@@ -105,7 +106,11 @@ def unload():
 
 
 def es_map_start(event_var):
+    global respawnAllowed
+    
+    # Get spawnpoints and allow respawns
     getSpawnPoints(event_var['mapname'])
+    respawnAllowed = True
 
 def player_team(event_var):
     # Respawn the player
@@ -122,11 +127,14 @@ def player_team(event_var):
     gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
 
 def player_death(event_var):
+    global respawnAllowed
+    
     # Remove their defuser
     gamethread.delayed(0.5, es.remove, ('item_defuser'))
     
-    # Respawn the player
-    respawn(event_var['userid'])
+    # Respawn the player if the round hasn't ended
+    if respawnAllowed:
+        respawn(event_var['userid'])
 
 def player_spawn(event_var):
     global spawnPoints
@@ -160,21 +168,32 @@ def player_spawn(event_var):
                                                     0,
                                                     spawnPoints[spawnindex][4])
 
-def round_start(event_var):
-    # Loop through the players
+def round_end(event_var):
+    global respawnAllowed
+    
+    # Don't allow respawn
+    respawnAllowed = False
+    
+    # Stop everyones respawn counters
     for userid in es.getUseridList():
-        # Does a respawn countdown exist?
-        if repeat.status('RespawnCounter%s' % userid):
-            # Delete the respawn counter
-            repeat.delete('RespawnCounter%s' % userid)
+        if repeat.status('RespawnCounter%s' % userid): repeat.delete('RespawnCounter%s' % userid)
+
+def round_start(event_var):
+    global respawnAllowed
+    
+    # Allow respawn
+    respawnAllowed = True
+    
+    # Stop everyones respawn counters
+    for userid in es.getUseridList():
+        if repeat.status('RespawnCounter%s' % userid): repeat.delete('RespawnCounter%s' % userid)
 
 def player_disconnect(event_var):
     # Get userid
     userid = event_var['userid']
     
     # Remove the counter
-    if repeat.status('RespawnCounter%s' % userid):
-        repeat.delete('RespawnCounter%s' % userid)
+    if repeat.status('RespawnCounter%s' % userid): repeat.delete('RespawnCounter%s' % userid)
 
 # ==============================================================================
 #  MENU COMMANDS

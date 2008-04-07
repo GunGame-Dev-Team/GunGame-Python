@@ -525,18 +525,27 @@ def removeReturnChars(playerName):
 def afkPunishCheck(userid):
     gungamePlayer = gungamelib.getPlayer(userid)
     afkMaxAllowed = gungamelib.getVariableValue('gg_afk_rounds')
+    
+    # Is AFK punishment enabled?
     if afkMaxAllowed > 0:
-        # Increment the "int_afk_rounds" for this player in the GunGame Core Dictionary
+        # Increment the afk round attribute
         gungamePlayer['afkrounds'] += 1
-        # If they have been AFK for too many rounds, we proceed beyond the below check
+        
+        # Have been AFK for too long
         if gungamePlayer['afkrounds'] >= afkMaxAllowed:
+            # Check which action we should take
             if gungamelib.getVariableValue('gg_afk_action') == 1:
-                # Kick the player from the server for being AFK for the maximum number of rounds
-                es.server.cmd('kickid %d \"AFK too long.\"' %userid)
+                # Kick the player
+                es.server.cmd('kickid %d "You were AFK for too long."' % userid)
             elif gungamelib.getVariableValue('gg_afk_action') == 2:
-                # Set the player's team to spectator for being AFK for the maximum number of rounds
-                es.server.cmd('es_xfire %d !self setteam 1' %userid)
-                # POPUP!!! "You were switched to Spectator\n for being AFK!\n \n----------\n->0. Exit" 
+                # Send them to spectator
+                es.server.cmd('es_xfire %d !self SetTeam 1' % userid)
+                
+                # Send an easymenu saying they were switched
+                menu = popuplib.easymenu('gungame_afk', None, lambda x, y, z: True)
+                menu.settitle('GG Message')
+                menu.setdescription('%s\nYou were switched to Spectator for being AFK.' % menu.c_beginsep)
+                menu.send(userid)
 
 def equipPlayer():
     userid = es.getuserid()
@@ -634,6 +643,11 @@ def load():
     global dict_gungameWinners
     global countBombDeathAsSuicide
     global list_stripExceptions
+    
+    # Print load started
+    es.dbgmsg(0, '[GunGame] ')
+    gungamelib.echo('gungame', 0, 0, 'LoadStarted')
+    es.dbgmsg(0, '[GunGame] ')
     
     # Load custom events
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
@@ -846,6 +860,11 @@ def load():
     # Fire gg_load event
     es.event('initialize','gg_load')
     es.event('fire','gg_load')
+    
+    # Print load completed
+    es.dbgmsg(0, '[GunGame] ')
+    gungamelib.echo('gungame', 0, 0, 'LoadCompleted')
+    es.dbgmsg(0, '[GunGame] ')
 
 def es_map_start(event_var):
     #Load custom GunGame events
@@ -1477,8 +1496,8 @@ def gg_win(event_var):
     countBombDeathAsSuicide = False
     
     # End the GunGame Round
-    es.server.cmd('es_xgive %d game_end' %userid)
-    es.server.cmd('es_xfire %d game_end EndGame' %userid)
+    es.server.cmd('es_xgive %d game_end' % userid)
+    es.server.cmd('es_xfire %d game_end EndGame' % userid)
     
     # Enable alltalk
     es.server.cmd('sv_alltalk 1')
@@ -1538,9 +1557,8 @@ def server_cvar(event_var):
         # Tell them its protected
         gungamelib.echo('gungame', 0, 0, 'ProtectedDependency', {'name': cvarName})
         
-        # If the value has changed, set it back
-        if str(gungamelib.getVariableValue(cvarName)) != newValue:
-            gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
+        # Get the variable and invisibly set it
+        gungamelib.getVariable(cvarName).set(gungamelib.getDependencyValue(cvarName))
         
         return
     
@@ -1575,24 +1593,17 @@ def server_cvar(event_var):
     # Included addons
     elif cvarName in list_includedAddonsDir:
         if newValue == 1:
-            es.load('gungame/included_addons/%s' % cvarName)
+            es.server.queuecmd('es_load gungame/included_addons/%s' % cvarName)
         elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/%s' % cvarName)
     
-    # Custom addons
-    elif cvarName in list_customAddonsDir:
-        if newValue == 1:
-            es.load('gungame/custom_addons/%s' % cvarName)
-        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonlist():
-            es.unload('gungame/custom_addons/%s' % cvarName)
-    
     # Multikill override
     elif cvarName == 'gg_multikill_override':
+        # Get weapon order
         myWeaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_file'))
-        if newValue == 0:
-            myWeaponOrder.setMultiKillOverride(0)
-        else:
-            myWeaponOrder.setMultiKillOverride(newValue)
+        
+        # Set multikill
+        myWeaponOrder.setMultiKillOverride(newValue)
     
     # Weapon order file
     elif cvarName == 'gg_weapon_order_file':

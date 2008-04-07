@@ -521,28 +521,29 @@ class WeaponOrder:
     def echo(self):
         weaponOrder = dict_gungameWeaponOrders[self.fileName]
         
-        es.dbgmsg(0, ' ')
-        es.dbgmsg(0, 'Weapon Order File Name:    %s' %self.fileName)
-        es.dbgmsg(0, 'Weapon Order Display Name: %s' %dict_weaponOrderSettings[self.fileName]['displayName'])
-        es.dbgmsg(0, 'Weapon Order Type:         %s' %self.getWeaponOrderType())
-        es.dbgmsg(0, ' ')
-        es.dbgmsg(0, '+-------+-----------+----------------')
-        es.dbgmsg(0, '| Level | MultiKill | Weapon         ')
-        es.dbgmsg(0, '+-------+-----------+----------------')
+        es.dbgmsg(0, '[GunGame] ')
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:Info')
+        es.dbgmsg(0, '[GunGame] ')
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:FileName', {'file': self.fileName})
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:DisplayName', {'name': dict_weaponOrderSettings[self.fileName]['displayName']})
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': self.getWeaponOrderType()})
+        es.dbgmsg(0, '[GunGame] ')
+        es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:TableColumns')
+        es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
         
+        # Loop through each level
         for level in dict_gungameWeaponOrders[self.fileName]:
+            # Set variables
             weaponName = dict_gungameWeaponOrders[self.fileName][level][0]
             multiKillValue = dict_gungameWeaponOrders[self.fileName][level][1]
+            cleanLevel = '0%d' % level if level < 10 else level
             
-            if level < 10:
-                levelInfoText = '|  0%d   |     %d     | %s' %(level, multiKillValue, weaponName)
-            else:
-                levelInfoText = '|  %d   |     %d     | %s' %(level, multiKillValue, weaponName)
-            
-            es.dbgmsg(0, levelInfoText)
-            
-        es.dbgmsg(0, '+-------+-----------+----------------')
-        es.dbgmsg(0, ' ')
+            # Print to console
+            es.dbgmsg(0, '[GunGame] |  %s   |     %d     | %s%s|' % (cleanLevel, multiKillValue, weaponName, ' ' * (14-len(weaponName))))
+        
+        es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
+        es.dbgmsg(0, '[GunGame] ')
         
     def setMultiKillOverride(self, value):
         value = int(value)
@@ -1803,7 +1804,7 @@ def clientInServer(userid):
     return es.exists('userid', userid)
 
 def inLevel():
-    return (str(es.ServerVar('eventscripts_currentmap')) != '0')
+    return (str(es.ServerVar('eventscripts_currentmap')) != '')
 
 def getLevelName():
     return str(es.ServerVar('eventscripts_currentmap'))

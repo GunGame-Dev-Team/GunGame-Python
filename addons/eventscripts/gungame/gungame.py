@@ -1550,16 +1550,12 @@ def server_cvar(event_var):
     if cvarName not in gungamelib.getVariableList():
         return
     
-    if cvarName in gungamelib.getDependencyList():
-        if newValue == gungamelib.getDependencyValue(cvarName):
-            return
-        
+    if cvarName in gungamelib.getDependencyList() and newValue != gungamelib.getDependencyValue(cvarName):
         # Tell them its protected
         gungamelib.echo('gungame', 0, 0, 'ProtectedDependency', {'name': cvarName})
         
-        # Get the variable and invisibly set it
-        gungamelib.getVariable(cvarName).set(gungamelib.getDependencyValue(cvarName))
-        
+        # Set back value
+        gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
         return
     
     # GG_MAPVOTE

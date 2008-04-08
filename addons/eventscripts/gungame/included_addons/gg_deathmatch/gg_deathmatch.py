@@ -155,22 +155,28 @@ def player_spawn(event_var):
     es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
     gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
     
-    # Do we have a spawn point file?
-    if spawnPoints:
-        # Get a random spawn index
-        if not list_randomSpawnIndex:
-            for i in range(0, len(spawnPoints) - 1):
-                list_randomSpawnIndex.append(i)
-            random.shuffle(list_randomSpawnIndex)
+    # Skip if we dont have spawnpoints
+    if len(spawnPoints) == 0:
+        return
+    
+    # Sort out the random spawn indexes
+    if len(list_randomSpawnIndex) == 0:
+        # Get the spawnpoints
+        for i in range(0, len(spawnPoints)):
+            list_randomSpawnIndex.append(i)
         
-        spawnindex = list_randomSpawnIndex.pop(0)
-        
-        # Teleport the player
-        gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0],
-                                                    spawnPoints[spawnindex][1],
-                                                    spawnPoints[spawnindex][2],
-                                                    0,
-                                                    spawnPoints[spawnindex][4])
+        # Shuffle shuffle
+        random.shuffle(list_randomSpawnIndex)
+    
+    # Get the last spawnpoint
+    spawnindex = list_randomSpawnIndex.pop()
+    
+    # Teleport the player
+    gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0],
+                                                spawnPoints[spawnindex][1],
+                                                spawnPoints[spawnindex][2],
+                                                0,
+                                                spawnPoints[spawnindex][4])
 
 def round_end(event_var):
     global respawnAllowed
@@ -200,7 +206,7 @@ def player_disconnect(event_var):
     if repeat.status('RespawnCounter%s' % userid): repeat.delete('RespawnCounter%s' % userid)
 
 # ==============================================================================
-#  MENU COMMANDS
+#   MENU COMMANDS
 # ==============================================================================
 def menuCallback(userid, choice, popupid):
     if choice == 'add':
@@ -317,7 +323,7 @@ def sendRemoveAllMenu(userid):
     # Create menu
     menu = popuplib.easymenu('gg_deathmatch_remove_all_confirm', None, selectRemoveAllMenu)
     menu.settitle('GG Deathmatch: Remove all spawnpoints?')
-    menu.setdescription('%s\n * Confirm' % menu.c_beginsep)
+    menu.setdescription('%s\n * Confirmation menu' % menu.c_beginsep)
     
     # Add options
     menu.addoption(1, 'Yes, remove all spawnpoints.')

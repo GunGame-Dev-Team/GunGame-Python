@@ -1256,7 +1256,7 @@ class EasyInput:
         # Set variables
         self.name = name
         self.callback = callback
-        self.userids = []
+        self.userid = 0
         self.setTimeout(199)
         
         # Set default options
@@ -1265,12 +1265,16 @@ class EasyInput:
         
         # Create command variables
         self.cmd = '_easyinput_%s %s' % (name, extras)
-        smallcmd = '_easyinput_%s' % name
+        self.smallcmd = '_easyinput_%s' % name
         
-        # Register command
-        if not es.exists('clientcommand', smallcmd):
-            es.addons.registerBlock('gungamelib', 'input_cmd', self.__inputCallback)
-            es.regclientcmd(smallcmd, 'gungamelib/input_cmd', 'Command for retrieving input box data.') 
+        # Unregister command
+        if es.exists('clientcommand', self.smallcmd):
+            es.unregclientcmd(self.smallcmd)
+            es.addons.unregisterBlock('gungamelib', 'input_cmd')
+        
+        # Register the command again
+        es.addons.registerBlock('gungamelib', 'input_cmd', self.__inputCallback)
+        es.regclientcmd(self.smallcmd, 'gungamelib/input_cmd', 'Command for retrieving input box data.') 
     
     def setTitle(self, title):
         '''Self-explantory.'''
@@ -1301,9 +1305,8 @@ class EasyInput:
         # Send input
         es.escinputbox(self.timeout, userid, self.title, self.text, self.cmd)
         
-        # Add the userid to accepted userids 
-        if userid not in self.userids:
-            self.userids.append(userid)
+        # Make it the accepted userid
+        self.userid = userid
     
     def __inputCallback(self):
         '''Called when the input is sent back to the server. Will call the
@@ -1312,14 +1315,11 @@ class EasyInput:
         # Get userid
         userid = int(es.getcmduserid())
         
-        # Don't call the callback if the userid isn't the one we sent to
-        if userid not in self.userids:
+        # Check the userid
+        if userid != self.userid:
             # Tell them they can't run this
             msg('gungame', userid, 'EasyInput:Unauthorized')
             return
-        else:
-            # Remove from accepted userids
-            self.userids.remove(userid)
         
         # Get arguments and value
         args = map(es.getargv, range(1, es.getargc()))

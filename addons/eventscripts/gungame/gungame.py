@@ -1483,6 +1483,63 @@ def gg_vote(event_var):
     if gungamelib.getVariableValue('gg_map_vote') == 2:
         es.server.cmd('ma_voterandom end %s' %gungamelib.getVariableValue('gg_map_vote_size'))
 
+def gg_round_win(event_var):
+    global dict_gungameWinners
+    global countBombDeathAsSuicide
+    
+    userid = int(event_var['userid'])
+    index = playerlib.getPlayer(userid).get('index')
+    playerName = event_var['name']
+    steamid = event_var['steamid']
+
+    # Create a variable to prevent bomb explosion deaths from counting a suicides
+    countBombDeathAsSuicide = False
+    
+    # End the GunGame Round
+    es.server.cmd('mp_restartgame 2')
+    # Check to see if the warmup round needs to be activated
+    if gungamelib.getVariableValue('gg_round_intermission') > 0:
+        gungamelib.setGlobal('isIntermission', 1)
+        es.load('gungame/included_addons/gg_warmup_round')
+    
+    # Reset all the players
+    for userid in playerlib.getUseridList('#all'):
+        gungamePlayer = gungamelib.getPlayer(userid)
+        
+        # Reset Players in the GunGame Core Database
+        gungamePlayer.resetPlayer()
+    
+    # Tell the world
+    gungamelib.saytext2('gungame', '#all', index, 'PlayerWon', {'player': playerName})
+    gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
+    
+    # Play the winner sound
+    for userid in es.getUseridList():
+        if gungamelib.getSound('winner'):
+            es.playsound(userid, gungamelib.getSound('winner'), 1.0)
+    
+    if gungamelib.getVariableValue('gg_save_winners') > 0:
+        # See if the player has won before
+        if not dict_gungameWinners.has_key(steamid):
+            # Ah, we have a new winner! Let's add them to the database
+            dict_gungameWinners[steamid] = gungameWinners()
+        else:
+            # Increment the win count
+            dict_gungameWinners[steamid].int_wins += 1
+        
+        # Open file
+        winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
+        winnersDataBaseFile = open(winnersDataBasePath, 'w')
+        
+        # Place the contents of dict_gungameWinners in it
+        cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
+        
+        # Close the file
+        winnersDataBaseFile.close()
+    
+    # Remove all old players from the dict_gungameCore    
+    gungamelib.clearOldPlayers()
+
 def gg_win(event_var):
     global dict_gungameWinners
     global countBombDeathAsSuicide

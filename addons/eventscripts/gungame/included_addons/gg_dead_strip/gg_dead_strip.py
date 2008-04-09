@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.258
+    Version: 1.0.265
     Description: Removes dead player's weapons.
 '''
 
@@ -21,13 +21,13 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.258'
+info.version  = '1.0.265'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
 
 # ==============================================================================
-#  ADDON REGISTRATION
+#  GLOBALS
 # ==============================================================================
 list_allWeapons = ['glock', 'usp', 'p228', 'deagle',
                    'elite', 'fiveseven', 'awp', 'scout',
@@ -35,6 +35,8 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle',
                    'p90', 'galil', 'famas', 'ak47', 'sg552',
                    'sg550', 'g3sg1', 'm249', 'm3', 'xm1014',
                    'm4a1', 'hegrenade', 'flashbang', 'smokegrenade']
+
+roundActive = 1
 
 # ==============================================================================
 #  GAME EVENTS
@@ -52,6 +54,17 @@ def unload():
     
     es.addons.unregisterClientCommandFilter(filterDrop)
 
+def es_map_start(event_var):
+    global roundActive
+    roundActive = 0
+
+def round_start(event_var):
+    global roundActive
+    roundActive = 1
+    
+def round_end(event_var):
+    global roundActive
+    roundActive = 0
 
 def item_pickup(event_var):
     # Get variables
@@ -88,6 +101,14 @@ def item_pickup(event_var):
                     es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
 
 def player_death(event_var):
+    global roundActive
+    if not roundActive:
+        return
+        
+    # Make sure the player is on a team
+    if int(event_var['es_userteam']) < 2:
+        return
+        
     # Get entity list
     dict_entityList = es.createentitylist()
     

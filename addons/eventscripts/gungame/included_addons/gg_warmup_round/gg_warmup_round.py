@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 1.0.276
+    Version: 1.0.277
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round Addon for GunGame: Python'
-info.version  = '1.0.276'
+info.version  = '1.0.277'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -118,19 +118,16 @@ def unload():
     # Cancel the "gungameWarmUpRound" delay
     gamethread.cancelDelayed('gungameWarmUpRound')
     
+    # Check if repeat is still going
+    if repeat.status('WarmupTimer'):
+        repeat.delete('WarmupTimer')
+    
     # Return "mp_freezetime" to what it was originally
     es.forcevalue('mp_freezetime', mp_freezetimeBackUp)
     
     # Set "isWarmup" global
     gungamelib.setGlobal('isWarmup', 0)
     gungamelib.setGlobal('isIntermission', 0)
-
-
-def server_cvar(event_var):
-    global warmupTime
-    
-    if event_var['cvarname'] == 'gg_warmup_timer':
-        warmupTime = int(gungamelib.getVariable('gg_warmup_timer')) + 1
 
 def player_activate(event_var):
     userid = int(event_var['userid'])
@@ -172,7 +169,7 @@ def hegrenade_detonate(event_var):
 def startTimer():
     # Create a repeat
     repeat.create('WarmupTimer', countDown)
-    repeat.start('WarmupTimer', 1, 0)
+    repeat.start('WarmupTimer', 1, warmupTimeVariable + 3)
     
     # Create timeleft global
     gungamelib.setGlobal('warmupTimeLeft', warmupTime)
@@ -182,6 +179,8 @@ def startTimer():
 # ==============================================================================
 def countDown(repeatInfo):
     global warmupTime
+    
+    print warmupTime
     
     # If the remaining time is greater than 1
     if warmupTime >= 1:
@@ -212,7 +211,7 @@ def countDown(repeatInfo):
         es.cexec_all('playgamesound hl1/fvox/beep.wav')
         
         # Stop the timer
-        repeat.stop('WarmupTimer')
+        repeat.delete('WarmupTimer')
         
         gungamelib.setGlobal('isWarmup', 0)
         

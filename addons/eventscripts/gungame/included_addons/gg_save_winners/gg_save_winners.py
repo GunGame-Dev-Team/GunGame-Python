@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_save_winners
-    Version: 1.0.276
+    Version: 1.0.277
     Description: Saves the GunGame winners to a database to
                  be queried.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_save_winners (for GunGame: Python)'
-info.version  = '1.0.276'
+info.version  = '1.0.277'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_save_winners'
 info.author   = 'GunGame Development Team'

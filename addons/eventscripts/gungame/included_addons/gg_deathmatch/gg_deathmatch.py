@@ -156,11 +156,11 @@ def player_spawn(event_var):
     gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
     
     # Skip if we dont have spawnpoints
-    if len(spawnPoints) == 0:
+    if not spawnPoints:
         return
     
     # Sort out the random spawn indexes
-    if len(list_randomSpawnIndex) == 0:
+    if not list_randomSpawnIndex:
         # Get the spawnpoints
         for i in range(0, len(spawnPoints)):
             list_randomSpawnIndex.append(i)

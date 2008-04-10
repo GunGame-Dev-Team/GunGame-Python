@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.267
+    Version: 1.0.268
     Description: The main addon, handles leaders and events.
 '''
 
@@ -30,7 +30,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.258'
+gungameVersion = '1.0.268'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -54,10 +54,8 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
                    'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
                    'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
                    'smokegrenade']
-dict_gungameRegisteredAddons = {}
 dict_reconnectingPlayers = {}
 dict_gungameWinners = {}
-dict_gungameRegisteredDependencies = {}
 list_includedAddonsDir = []
 list_customAddonsDir = []
 list_leaderNames = []
@@ -809,6 +807,9 @@ def load():
     
     # Set Up a custom variable for voting in dict_gungameVariables
     dict_gungameVariables['gungame_voting_started'] = False
+    
+    # Set up a custom variable for tracking multi-rounds.
+    dict_gungameVariables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
 
     # If there is a current map listed, then the admin has loaded GunGame mid-round/mid-map
     if gungamelib.inLevel():
@@ -863,6 +864,9 @@ def es_map_start(event_var):
     
     # Reset the "gungame_voting_started" variable
     dict_gungameVariables['gungame_voting_started'] = False
+    
+    # Reset the "rounds remaining" variable for multi-rounds
+    dict_gungameVariables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
     
     # See if the option to randomize weapons is turned on
     if gungamelib.getVariableValue('gg_weapon_order') == '#random':
@@ -1304,13 +1308,23 @@ def player_team(event_var):
 def gg_levelup(event_var):
     # Check for a winner first
     if int(event_var['old_level']) == gungamelib.getTotalLevels():
-        es.event('initialize', 'gg_win')
-        es.event('setint', 'gg_win', 'userid', event_var['userid'])
-        es.event('setint', 'gg_win', 'loser', event_var['victim'])
-        es.event('setstring', 'gg_win', 'steamid', event_var['steamid'])
-        es.event('setint', 'gg_win', 'team', event_var['team'])
-        es.event('setstring', 'gg_win', 'name', event_var['name'])
-        es.event('fire', 'gg_win')
+        # Check if multi-round has any rounds left
+        if dict_gungameVariables['roundsRemaining'] > 1:
+            es.event('initialize', 'gg_round_win')
+            es.event('setint', 'gg_round_win', 'userid', event_var['userid'])
+            es.event('setint', 'gg_round_win', 'loser', event_var['victim'])
+            es.event('setstring', 'gg_round_win', 'steamid', event_var['steamid'])
+            es.event('setint', 'gg_round_win', 'team', event_var['team'])
+            es.event('setstring', 'gg_round_win', 'name', event_var['name'])
+            es.event('fire', 'gg_round_win')        
+        else:
+            es.event('initialize', 'gg_win')
+            es.event('setint', 'gg_win', 'userid', event_var['userid'])
+            es.event('setint', 'gg_win', 'loser', event_var['victim'])
+            es.event('setstring', 'gg_win', 'steamid', event_var['steamid'])
+            es.event('setint', 'gg_win', 'team', event_var['team'])
+            es.event('setstring', 'gg_win', 'name', event_var['name'])
+            es.event('fire', 'gg_win')
     else:
         # Regular levelup code...
         userid = int(event_var['userid'])
@@ -1338,8 +1352,8 @@ def gg_levelup(event_var):
         
         if leaderLevel == int(event_var['new_level']):
             rebuildLeaderMenu()
-
-        if not dict_gungameRegisteredAddons.has_key('gg_warmup_round'):
+            
+        if not gungamelib.addonRegistered('gg_warmup_round'):
             levelInfoHudHint(userid)
 
         if leaderLevel == gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_vote_trigger'):
@@ -1383,7 +1397,6 @@ def gg_leader_lostlevel(event_var):
     
 def unload():
     global gungameWeaponOrderMenu
-    global dict_gungameRegisteredAddons
     
     for addonName in gungamelib.getRegisteredAddonlist():
         if addonName in list_includedAddonsDir:
@@ -1474,8 +1487,12 @@ def gg_round_win(event_var):
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
+    # Calculate rounds remaining
+    dict_gungameVariables['roundsRemaining'] -= 1
+    
     # End the GunGame Round
     es.server.cmd('mp_restartgame 2')
+    
     # Check to see if the warmup round needs to be activated
     if gungamelib.getVariableValue('gg_round_intermission') > 0:
         gungamelib.setGlobal('isIntermission', 1)
@@ -1489,7 +1506,7 @@ def gg_round_win(event_var):
         gungamePlayer.resetPlayer()
     
     # Tell the world
-    gungamelib.saytext2('gungame', '#all', index, 'PlayerWon', {'player': playerName})
+    gungamelib.msg('gungame', '#all', 'PlayerWonRound', {'player': playerName})
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
     
     # Play the winner sound
@@ -1538,7 +1555,7 @@ def gg_win(event_var):
         gungamePlayer.resetPlayer()
     
     # Tell the world
-    gungamelib.saytext2('gungame', '#all', index, 'PlayerWon', {'player': playerName})
+    gungamelib.msg('gungame', '#all', 'PlayerWon', {'player': playerName})
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
     
     # Play the winner sound

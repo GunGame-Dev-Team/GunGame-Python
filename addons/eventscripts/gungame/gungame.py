@@ -1594,3 +1594,8 @@ def server_cvar(event_var):
         # Set multikill override
         if gungamelib.getVariableValue('gg_multikill_override') > 1:
             myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
+    
+    # GG Multi Round
+    elif cvarName == 'gg_multi_round':
+        # Reset the "rounds remaining" variable for multi-rounds
+        dict_gungameVariables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')

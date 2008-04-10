@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_save_winners
-    Version: 1.0.271
+    Version: 1.0.274
     Description: Saves the GunGame winners to a database to
                  be queried.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_save_winners (for GunGame: Python)'
-info.version  = '1.0.271'
+info.version  = '1.0.274'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_save_winners'
 info.author   = 'GunGame Development Team'
@@ -52,7 +52,6 @@ def unload():
     
     # Save the database
     gungamelib.saveWinnerDatabase()
-    es.msg(gungamelib.dict_gungameWinners)
     
 def player_activate(event_var):
     gungamePlayer = gungamelib.getPlayer(event_var['userid'])
@@ -66,7 +65,6 @@ def player_activate(event_var):
     if gungamelib.getWins(steamid):
         # Yes, they have won before...let's be nice and update their timestamp
         gungamelib.updateTimeStamp(steamid)
-    es.msg(gungamelib.dict_gungameWinners)
         
 def player_disconnect(event_var):
     userid = event_var['userid']
@@ -100,7 +98,6 @@ def gg_win(event_var):
     
     # Save the database
     gungamelib.saveWinnerDatabase()
-    es.msg(gungamelib.dict_gungameWinners)
     
 def gg_round_win(event_var):
     # Retrieve the uniqueid and set it to a variable
@@ -115,4 +112,3 @@ def gg_round_win(event_var):
     
     # Save the database
     gungamelib.saveWinnerDatabase()
-    es.msg(gungamelib.dict_gungameWinners)

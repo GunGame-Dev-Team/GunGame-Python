@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.272
+    Version: 1.0.274
     Description: The main addon, handles leaders and events.
 '''
 
@@ -30,7 +30,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.272'
+gungameVersion = '1.0.274'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -994,11 +994,6 @@ def round_end(event_var):
 def player_activate(event_var):
     # We will use this to set up players as they connect
     gungamePlayer = gungamelib.getPlayer(event_var['userid'])
-    
-    if 'BOT' in gungamePlayer['steamid']:
-        return
-        
-    gungamePlayer['level'] = 23
     
 def player_disconnect(event_var):
     userid = int(event_var['userid'])

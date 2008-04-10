@@ -1473,7 +1473,7 @@ def gg_round_win(event_var):
     
     # Play the winner sound
     for userid in es.getUseridList():
-        if gungamelib.getSound('winner'):
+        if gungamelib.getSound('roundwinner'):
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
     # Remove all old players from the dict_gungameCore    

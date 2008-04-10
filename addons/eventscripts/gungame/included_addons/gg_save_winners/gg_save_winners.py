@@ -1,9 +1,9 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_save_winners
-    Version: 1.0.265
-    Description: Punishes players for disconnecting and
-                 reconnecting in the same GunGame round.
+    Version: 1.0.271
+    Description: Saves the GunGame winners to a database to
+                 be queried.
 '''
 
 # ==============================================================================
@@ -11,6 +11,7 @@
 # ==============================================================================
 # EventScripts Imports
 import es
+import playerlib
 
 # GunGame Imports
 import gungamelib
@@ -21,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_save_winners (for GunGame: Python)'
-info.version  = '1.0.265'
+info.version  = '1.0.271'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_save_winners'
 info.author   = 'GunGame Development Team'
@@ -36,6 +37,14 @@ def load():
     
     # Load the winners database into memory from file
     gungamelib.loadWinnersDataBase()
+    
+    for userid in es.getUseridList():
+        gungamePlayer = gungamelib.getPlayer(userid)
+        steamid = gungamePlayer['steamid']
+        if not 'BOT' in steamid:
+            if gungamelib.getWins(steamid):
+                # Yes, they have won before...let's be nice and update their timestamp
+                gungamelib.updateTimeStamp(steamid)
 
 def unload():
     # Unregister this addon with GunGame
@@ -43,6 +52,7 @@ def unload():
     
     # Save the database
     gungamelib.saveWinnerDatabase()
+    es.msg(gungamelib.dict_gungameWinners)
     
 def player_activate(event_var):
     gungamePlayer = gungamelib.getPlayer(event_var['userid'])
@@ -56,6 +66,7 @@ def player_activate(event_var):
     if gungamelib.getWins(steamid):
         # Yes, they have won before...let's be nice and update their timestamp
         gungamelib.updateTimeStamp(steamid)
+    es.msg(gungamelib.dict_gungameWinners)
         
 def player_disconnect(event_var):
     userid = event_var['userid']
@@ -76,6 +87,21 @@ def player_disconnect(event_var):
         # Yes, they have won before...let's be nice and update their timestamp
         gungamelib.updateTimeStamp(steamid)
         
+def gg_win(event_var):
+    # Retrieve the uniqueid and set it to a variable
+    gungamePlayer = gungamelib.getPlayer(event_var['userid'])
+    steamid = gungamePlayer['steamid']
+    
+    # Add the win to the database
+    gungamelib.addWin(steamid)
+    
+    # Clear out old entries in the winners database
+    gungamelib.cleanWinnersDataBase(gungamelib.getVariableValue('gg_prune_database'))
+    
+    # Save the database
+    gungamelib.saveWinnerDatabase()
+    es.msg(gungamelib.dict_gungameWinners)
+    
 def gg_round_win(event_var):
     # Retrieve the uniqueid and set it to a variable
     gungamePlayer = gungamelib.getPlayer(event_var['userid'])
@@ -89,21 +115,4 @@ def gg_round_win(event_var):
     
     # Save the database
     gungamelib.saveWinnerDatabase()
-    
-    
-    
-def gg_round_win(event_var):
-    # Retrieve the uniqueid and set it to a variable
-    gungamePlayer = gungamelib.getPlayer(event_var['userid'])
-    steamid = gungamePlayer['steamid']
-    
-    # Add the win to the database
-    gungamelib.addWin(steamid)
-    
-    # Clear out old entries in the winners database
-    gungamelib.cleanWinnersDataBase(gungamelib.getVariableValue('gg_prune_database'))
-    
-    # Save the database
-    gungamelib.saveWinnerDatabase()
-    
-    
+    es.msg(gungamelib.dict_gungameWinners)

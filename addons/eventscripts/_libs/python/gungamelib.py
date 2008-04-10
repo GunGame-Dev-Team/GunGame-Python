@@ -1517,6 +1517,9 @@ def clearGunGame():
     # Clear the gungame globals
     dict_globals.clear()
     
+    # Clear the winners database
+    dict_gungameWinners.clear()
+    
 def clearOldPlayers():
     # Loop through the players
     for userid in dict_gungameCore.copy():
@@ -1829,6 +1832,16 @@ def loadWinnersDataBase():
     
     # Set the global for having the database loaded
     setGlobal('winnersloaded', 1)
+    
+def cleanWinnersDataBase(days):
+    daysInSeconds = float(days) * float(86400)
+    currentTime = float(time.time())
+    
+    for steamid in dict_gungameWinners.copy():
+        # See if the steamid has been unused in the database for longer than the set amount of days
+        if (currentTime - float(dict_gungameWinners[steamid]['timestamp'])) > daysInSeconds:
+            # Remove from dict_gungameWinners if they aren't in the server
+            del dict_gungameWinners[steamid]
 
 # ==============================================================================
 #   ADDON RELATED COMMANDS

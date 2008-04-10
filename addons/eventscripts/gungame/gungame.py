@@ -54,8 +54,6 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
                    'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
                    'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
                    'smokegrenade']
-dict_reconnectingPlayers = {}
-dict_gungameWinners = {}
 list_includedAddonsDir = []
 list_customAddonsDir = []
 list_leaderNames = []
@@ -66,11 +64,6 @@ try:
    authaddon = auth.name
 except:
     es.load('examples/auth/group_auth')
-
-class gungameWinners:
-    '''Class used to store GunGame winner information'''
-    int_wins = 1
-    int_timestamp = es.gettime()
 
 # ==============================================================================
 #   ERROR CLASSES
@@ -637,7 +630,6 @@ def levelInfoHudHint(userid):
 #   GAME EVENTS
 # ==============================================================================
 def load():
-    global dict_gungameWinners
     global countBombDeathAsSuicide
     global list_stripExceptions
     
@@ -795,9 +787,6 @@ def load():
         es.regsaycmd('!leaders', 'gungame/displayLeadersMenu')
     if not es.exists('clientcommand', '!leaders'):
         es.regclientcmd('!leaders', 'gungame/displayLeadersMenu')
-
-    if gungamelib.getVariableValue('gg_save_winners') > 0:
-        gungamelib.loadWinnersDataBase()
     
     # Set Up Active Players
     gungamelib.resetGunGame()
@@ -1003,46 +992,14 @@ def round_end(event_var):
                     afkPunishCheck(int(userid))
 
 def player_activate(event_var):
-    global dict_gungameWinners
-    userid = int(event_var['userid'])
-    
-    gungamePlayer = gungamelib.getPlayer(userid)
-    steamid = gungamePlayer['steamid']
-    
-    # See if the player has won before
-    if gungamelib.getVariableValue('gg_save_winners') > 0:
-        if dict_gungameWinners.has_key(steamid):
-            # Yes, they have won before...let's be nice and update their timestamp
-            dict_gungameWinners[steamid].int_timestamp = es.gettime()
-    
-    # See if this player was set up in the Reconnecting Players Dictionary
-    if dict_reconnectingPlayers.has_key(steamid):
-        # Yes, they were. Therefore, we set their level to be whatever it needs to be
-        gungamePlayer['level'] = dict_reconnectingPlayers[steamid]
-        # Delete the player from the Reconnecting Players Dictionary
-        del dict_reconnectingPlayers[steamid]
+    # We will use this to set up players as they connect
+    gungamePlayer = gungamelib.getPlayer(event_var['userid'])
     
 def player_disconnect(event_var):
-    global dict_reconnectingPlayers
-    
     userid = int(event_var['userid'])
     
     if not gungamelib.playerExists(userid):
         return
-
-    gungamePlayer = gungamelib.getPlayer(userid)
-    steamid = gungamePlayer['steamid']
-
-    # Make sure the player is not a bot
-    if 'BOT' not in steamid:
-        # See if this player is already in the Reconnecting Players Dictionary (shouldn't ever be, but we will check anyhow, just to be safe)
-        if not dict_reconnectingPlayers.has_key(steamid):
-            # Set this player up in the Reconnecting Players Dictionary
-            reconnectLevel = gungamePlayer['level'] - gungamelib.getVariableValue('gg_retry_punish')
-            if reconnectLevel > 0:
-                dict_reconnectingPlayers[steamid] = reconnectLevel
-            else:
-                dict_reconnectingPlayers[steamid] = 1
     
     # Var prep
     leaders = gungamelib.getCurrentLeaderList()
@@ -1476,7 +1433,6 @@ def gg_vote(event_var):
         es.server.cmd('ma_voterandom end %s' %gungamelib.getVariableValue('gg_map_vote_size'))
 
 def gg_round_win(event_var):
-    global dict_gungameWinners
     global countBombDeathAsSuicide
     
     userid = int(event_var['userid'])
@@ -1514,22 +1470,10 @@ def gg_round_win(event_var):
         if gungamelib.getSound('winner'):
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
-    if gungamelib.getVariableValue('gg_save_winners') > 0:
-        # Retrieve the uniqueid and set it to a variable
-        gungamePlayer = gungamelib.getPlayer(userid)
-        steamid = gungamePlayer['steamid']
-        
-        # Add the win to the database
-        gungamelib.addWin(steamid)
-        
-        # Save the database
-        gungamelib.saveWinnerDatabase()
-    
     # Remove all old players from the dict_gungameCore    
     gungamelib.clearOldPlayers()
 
 def gg_win(event_var):
-    global dict_gungameWinners
     global countBombDeathAsSuicide
     
     userid = int(event_var['userid'])
@@ -1562,17 +1506,6 @@ def gg_win(event_var):
     for userid in es.getUseridList():
         if gungamelib.getSound('winner'):
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
-    
-    if gungamelib.getVariableValue('gg_save_winners') > 0:
-        # Retrieve the uniqueid and set it to a variable
-        gungamePlayer = gungamelib.getPlayer(event_var['userid'])
-        steamid = gungamePlayer['steamid']
-        
-        # Add the win to the database
-        gungamelib.addWin(steamid)
-        
-        # Save the database
-        gungamelib.saveWinnerDatabase()
     
     # Remove all old players from the dict_gungameCore    
     gungamelib.clearOldPlayers()
@@ -1615,6 +1548,13 @@ def server_cvar(event_var):
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
         elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_spawn_protect')
+            
+    # GG_SPAWN_PROTECTION
+    elif cvarName == 'gg_retry_punish':
+        if newValue > 0 and 'gg_retry_punish' not in gungamelib.getRegisteredAddonlist():
+            es.server.queuecmd('es_load gungame/included_addons/gg_retry_punish')
+        elif newValue == 0 and 'gg_retry_punish' in gungamelib.getRegisteredAddonlist():
+            es.unload('gungame/included_addons/gg_retry_punish')
     
     # GG_FRIENDLYFIRE
     elif cvarName == 'gg_friendlyfire':

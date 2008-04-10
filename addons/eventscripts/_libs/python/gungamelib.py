@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.274
+    Version: 1.0.276
     Description:
 '''
 
@@ -12,8 +12,8 @@
 import string
 import random
 import os
-import ConfigParser
 import time
+import ConfigParser
 import cPickle
 
 # EventScripts Imports
@@ -23,12 +23,13 @@ import gamethread
 import popuplib
 import langlib
 import usermsg
+from configobj import ConfigObj
 
 # ==============================================================================
 #   GLOBAL DICTIONARIES
 # ==============================================================================
-dict_gungameCore = {}
-dict_gungameWeaponOrders = {}
+dict_players = {}
+dict_weaponOrders = {}
 dict_weaponOrderSettings = {}
 dict_weaponOrderSettings['currentWeaponOrderFile'] = None
 
@@ -40,29 +41,18 @@ dict_leaderInfo['leaderLevel'] = 1
 dict_variables = {}
 dict_globals = {}
 dict_cfgSettings = {}
+dict_sounds = {}
+dict_addons = {}
+dict_dependencies = {}
+dict_uniqueIds = {}
+dict_winners = {}
 
-dict_gungameSounds = {}
-
-dict_RegisteredAddons = {}
-dict_registeredDependencies = {}
-
-dict_gungameSteamids = {}
-
-global dict_gungameWinners
-dict_gungameWinners = {}
-
-# ==============================================================================
-#   GLOBAL LISTS
-# ==============================================================================
 list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
                     'elite','m3','xm1014','tmp','mac10','mp5navy',
                     'ump45','p90','galil','famas','ak47','scout',
                     'm4a1','sg550','g3sg1','awp','sg552','aug',
-                    'm249','hegrenade','knife']
-
-# If any configs in this list are missing when they call the config, GunGame will unload                    
-list_criticalConfigs = ['gg_en_config.cfg', 'gg_default_addons.cfg']
-
+                    'm249','hegrenade','knife']                  
+list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
 
 # ==============================================================================
@@ -74,32 +64,25 @@ gameDir = str(es.ServerVar('eventscripts_gamedir'))
 # ==============================================================================
 #   ERROR CLASSES
 # ==============================================================================
-class _GunGameLibError:
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return self.message
-
-class UseridError(_GunGameLibError):
+class UseridError(Exception):
     pass
     
-class PlayerError(_GunGameLibError):
+class PlayerError(Exception):
     pass
     
-class GunGameValueError(_GunGameLibError):
+class GunGameValueError(Exception):
     pass
     
-class TeamError(_GunGameLibError):
+class TeamError(Exception):
     pass
     
-class DeadError(_GunGameLibError):
+class DeadError(Exception):
     pass
     
-class FileError(_GunGameLibError):
+class FileError(Exception):
     pass
     
-class ArgumentError(_GunGameLibError):
+class ArgumentError(Exception):
     pass
 
 # ==============================================================================
@@ -112,411 +95,431 @@ gungameDebugLevel.makepublic()
 #   PLAYER CLASS
 # ==============================================================================
 class Player:
-    '''Class used in altering the GunGame Core Dictionary'''
+    '''Player class, holds all a players information and attributes.'''
     
-    # Here, we define the __init__ method. This will execute every time the gungamelib.getPlayer() is called
     def __init__(self, playerID):
+        '''Called everytime getPlayer() is called, and all the attributes are
+        refreshed.'''
         try:
-            # Here, we set self.userid to the userid they gave us
+            # Make userid an int
             self.userid = int(playerID)
-            # Now, we check to see if the userid exists on the server
+            
             if not es.exists('userid', self.userid):
-                # When we "validate" the player, we are actually checking to see if they exist in the GunGame Core Dictionary
                 if self.__validatePlayer():
-                    # When players are kicked, or disconnect, the check for their userid will fail...however, they are still in the GunGame Core Dictionary
-                    # We will return their attributes for the sake of throwing errors and more than likely remove their entry from the dictionary on event gg_win
-                    self.attributes = dict_gungameCore[self.userid]
+                    # Get their attributes
+                    self.attributes = dict_players[self.userid]
                 else:
-                    # If we reach this code, someone has given us an invalid userid
-                    raise UseridError,  '\'%s\' is an invalid userid: no matching userid found active on the server' %self.userid
+                    # Invalid userid
+                    raise UseridError('Cannot initialize Player class: "%s" is not on the server.' % self.userid)
             else:
-                # We will now make sure that the player exists in the GunGame database
-                # When we "validate" the player, we are actually checking to see if they exist in the GunGame Core Dictionary
+                # Check they exist
                 if not self.__validatePlayer():
-                    # Since they do not yet exist, but they have a valid userid, we will create them in the dict_gungameCore to avoid errors
+                    # Create the player
                     self.__createPlayer()
                 else:
-                    # We don't want to keep resetting the player's attributes to the default values, so we will pull them from the GunGame Core Dictionary
-                    self.attributes = dict_gungameCore[self.userid]
-        except TypeError, e:
-            # If we reach this code, this means that they did not provide us a userid
-            raise TypeError, 'gungamelib.getPlayer() expected a userid: no userid provided'
-            
+                    # Get the attributes
+                    self.attributes = dict_players[self.userid]
+        except TypeError:
+            # No userid
+            raise TypeError('gungamelib.getPlayer() expected a userid: no userid provided')
+    
     def __getitem__(self, item):
-        # We will be nice and convert the "item" to a lower-cased string
+        # Lower-case the item
         item = str(item).lower()
         
-        # Let's make sure that the item that they are trying to change exists
+        # Return the attribute
         if item in self.attributes:
-            # Allowing the retrieving of attributes in the dictionary
             return self.attributes[item]
         else:
-            raise PlayerError, 'Unable to retrieve the \'%s\' value: player attribute does not exist' %item
+            raise ValueError('Unable to get attribute (%s): invalid attribute.' % item)
         
     def __setitem__(self, item, value):
-        # We will be nice and convert the "item" to a lower-cased string
+        # Format the item and value
         item = str(item).lower()
         value = int(value)
-        # Let's make sure that the item that they are trying to change exists
-        if item in self.attributes:
-            # LEVEL
-            if item == 'level':
-                if value > 0 and value <= (getTotalLevels() + 1):
-                    currentLevel = self.attributes['level']
-                    
-                    # Let's see if the new level that they are trying to set is greater than their current level
-                    if value > currentLevel:
-                        # Let's see if the new level that they are trying to set is greater than the leader level
-                        if value > dict_leaderInfo['leaderLevel']:
-                            dict_leaderInfo['leaderLevel'] = value
-                            
-                            # Check to see if this is a new leader for the first time in the GunGame round
-                            if len(dict_leaderInfo['currentLeaders']) == 0:
-                                dict_leaderInfo['currentLeaders'].append(self.userid)
-                                # FIRE NEW LEADER EVENT HERE event gg_new_leader
-                                es.event('initialize', 'gg_new_leader')
-                                es.event('setint', 'gg_new_leader', 'userid', self.userid)
-                                es.event('fire', 'gg_new_leader')
-                                
-                            # Check to see if this is a new leader
-                            elif len(dict_leaderInfo['currentLeaders']) > 1:
-                                if self.userid in dict_leaderInfo['currentLeaders']:
-                                    dict_leaderInfo['currentLeaders'].remove(self.userid)
-                                dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                                dict_leaderInfo['currentLeaders'] = [self.userid]
-                                # FIRE NEW LEADER EVENT HERE event gg_new_leader
-                                es.event('initialize', 'gg_new_leader')
-                                es.event('setint', 'gg_new_leader', 'userid', self.userid)
-                                es.event('fire', 'gg_new_leader')
-                                
-                            # The leader is the same leader
-                            else:
-                                dict_leaderInfo['oldLeaders'] = [self.userid]
-                                
-                        # See if they tied the leader
-                        elif value == dict_leaderInfo['leaderLevel']:
-                            dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                            dict_leaderInfo['currentLeaders'].append(self.userid)
-                            
-                            # FIRE TIED LEADER EVENT HERE event gg_tied_leader
-                            es.event('initialize', 'gg_tied_leader')
-                            es.event('setint', 'gg_tied_leader', 'userid', self.userid)
-                            es.event('fire', 'gg_tied_leader')
-                            
-                    # Let's see if the new level that they are trying to set is less than their current level
-                    elif value < currentLevel:
-                        # Check to see if the player that lost the level is a leader
-                        if currentLevel == dict_leaderInfo['leaderLevel']:
-                            if len(dict_leaderInfo['currentLeaders']) > 1:
-                                dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                                dict_leaderInfo['currentLeaders'].remove(self.userid)
-                                
-                                # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
-                                es.event('initialize', 'gg_leader_lostlevel')
-                                es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
-                                es.event('fire', 'gg_leader_lostlevel')
-                                
-                            else:
-                                dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                                
-                                # Find the new leader level by looping though the GunGame Core Dictionary
-                                leaderLevel = 0
-                                
-                                # Set the old leader's level to the new value prior to checking the highest level
-                                self.attributes[item] = int(value)
-                                
-                                for userid in dict_gungameCore:
-                                    if int(dict_gungameCore[userid]['level']) > leaderLevel:
-                                        dict_leaderInfo['currentLeaders'] = [userid]
-                                        leaderLevel = int(dict_gungameCore[userid]['level'])
-                                        
-                                    elif dict_gungameCore[userid]['level'] == leaderLevel:
-                                        dict_leaderInfo['currentLeaders'].append(userid)
-                                        
-                                # Set the leader level to the new level
-                                dict_leaderInfo['leaderLevel'] = leaderLevel
-                                
-                                # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
-                                es.event('initialize', 'gg_leader_lostlevel')
-                                es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
-                                es.event('fire', 'gg_leader_lostlevel')
-                                
-                    self.attributes[item] = int(value)
-                else:
-                    raise GunGameValueError, 'Level value must be greater than 0 or less than %d: given \'%i\'' %((getTotalLevels() + 1), value)
-            # AFK ROUNDS
-            elif item == 'afkrounds':
-                if value > -1:
-                    self.attributes[item] = int(value)
-                else:
-                    raise GunGameValueError, 'AFK Rounds value must be 0 or greater: given \'%i\'' %value
-            # MULTIKILL
-            elif item == 'multikill':
-                if value > -1:
-                    self.attributes[item] = int(value)
-                else:
-                    raise GunGameValueError, 'MultiKill value must be 0 or greater: given \'%i\'' %value
-            # TRIPLE
-            elif item == 'triple':
-                if value > -1 and value < 4:
-                    self.attributes[item] = value
-                else:
-                    raise GunGameValueError, 'Triple Level value must be between 0 and 3: given \'%i\'' %value
-            # PREVENT LEVEL
-            elif item == 'preventlevel':
-                if value == 0 or value == 1:
-                    self.attributes[item] = int(value)
-                else:
-                    raise GunGameValueError, 'PreventLevel must be either 0 or 1: given \'%i\'' %value
-            else:
-                # Allow the setting of attributes in the dictionary
-                self.attributes[item] = int(value)
-        else:
-            raise PlayerError, 'Unable to set the \'%s\' value: player attribute does not exist' %item
         
+        # Does the attribute exist?
+        if item not in self.attributes:
+            raise ValueError('Unable to set attribute (%s): invalid attribute.' % item)
+        
+        # LEVEL
+        if item == 'level':
+            if value > 0 and value <= (getTotalLevels() + 1):
+                currentLevel = self.attributes['level']
+                
+                # Let's see if the new level that they are trying to set is greater than their current level
+                if value > currentLevel:
+                    # Let's see if the new level that they are trying to set is greater than the leader level
+                    if value > dict_leaderInfo['leaderLevel']:
+                        dict_leaderInfo['leaderLevel'] = value
+                        
+                        # Check to see if this is a new leader for the first time in the GunGame round
+                        if len(dict_leaderInfo['currentLeaders']) == 0:
+                            dict_leaderInfo['currentLeaders'].append(self.userid)
+                            # FIRE NEW LEADER EVENT HERE event gg_new_leader
+                            es.event('initialize', 'gg_new_leader')
+                            es.event('setint', 'gg_new_leader', 'userid', self.userid)
+                            es.event('fire', 'gg_new_leader')
+                        
+                        # Check to see if this is a new leader
+                        elif len(dict_leaderInfo['currentLeaders']) > 1:
+                            if self.userid in dict_leaderInfo['currentLeaders']:
+                                dict_leaderInfo['currentLeaders'].remove(self.userid)
+                            dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
+                            dict_leaderInfo['currentLeaders'] = [self.userid]
+                            # FIRE NEW LEADER EVENT HERE event gg_new_leader
+                            es.event('initialize', 'gg_new_leader')
+                            es.event('setint', 'gg_new_leader', 'userid', self.userid)
+                            es.event('fire', 'gg_new_leader')
+                        
+                        # The leader is the same leader
+                        else:
+                            dict_leaderInfo['oldLeaders'] = [self.userid]
+                        
+                    # See if they tied the leader
+                    elif value == dict_leaderInfo['leaderLevel']:
+                        dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
+                        dict_leaderInfo['currentLeaders'].append(self.userid)
+                        
+                        # FIRE TIED LEADER EVENT HERE event gg_tied_leader
+                        es.event('initialize', 'gg_tied_leader')
+                        es.event('setint', 'gg_tied_leader', 'userid', self.userid)
+                        es.event('fire', 'gg_tied_leader')
+                
+                # Let's see if the new level that they are trying to set is less than their current level
+                elif value < currentLevel:
+                    # Check to see if the player that lost the level is a leader
+                    if currentLevel == dict_leaderInfo['leaderLevel']:
+                        if len(dict_leaderInfo['currentLeaders']) > 1:
+                            dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
+                            dict_leaderInfo['currentLeaders'].remove(self.userid)
+                            
+                            # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
+                            es.event('initialize', 'gg_leader_lostlevel')
+                            es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
+                            es.event('fire', 'gg_leader_lostlevel')
+                        else:
+                            dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
+                            
+                            # Find the new leader level by looping though the GunGame Core Dictionary
+                            leaderLevel = 0
+                            
+                            # Set the old leader's level to the new value prior to checking the highest level
+                            self.attributes[item] = int(value)
+                            
+                            # Check for a new leader
+                            for userid in dict_players:
+                                if int(dict_players[userid]['level']) > leaderLevel:
+                                    dict_leaderInfo['currentLeaders'] = [userid]
+                                    leaderLevel = int(dict_players[userid]['level'])
+                                elif dict_players[userid]['level'] == leaderLevel:
+                                    dict_leaderInfo['currentLeaders'].append(userid)
+                            
+                            # Set the leader level to the new level
+                            dict_leaderInfo['leaderLevel'] = leaderLevel
+                            
+                            # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
+                            es.event('initialize', 'gg_leader_lostlevel')
+                            es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
+                            es.event('fire', 'gg_leader_lostlevel')
+                        
+                self.attributes[item] = int(value)
+            else:
+                raise ValueError('Invalid value (%s): level value must be greater than 0 and less than %s.' % (value, getTotalLevels() + 1))
+        
+        # AFK ROUNDS
+        elif item == 'afkrounds':
+            if value > -1:
+                self.attributes[item] = int(value)
+            else:
+                raise ValueError('Invalid value (%s): AFK Rounds value must be a positive number.' % value)
+        
+        # MULTIKILL
+        elif item == 'multikill':
+            if value > -1:
+                self.attributes[item] = int(value)
+            else:
+                raise ValueError('Invalid value (%s): multikill value must be a positive number.' % value)
+        
+        # TRIPLE
+        elif item == 'triple':
+            if value > -1 and value < 4:
+                self.attributes[item] = value
+            else:
+                raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
+        
+        # PREVENT LEVEL
+        elif item == 'preventlevel':
+            if value == 0 or value == 1:
+                self.attributes[item] = int(value)
+            else:
+                raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
+        
+        # CUSTOM ATTRIBUTEs
+        else:
+            # Allow the setting of attributes in the dictionary
+            self.attributes[item] = int(value)
+    
     def __int__(self):
-        # If the instance is used as an integer, return the player's userid
+        '''Returns the players userid.'''
         return self.userid
         
     def __validatePlayer(self):
-        # Here, we "validate" the player by making sure that they are in the dict_gungameCore
-        if dict_gungameCore.has_key(self.userid):
-            # We will return "True" if the player exists in the GunGame Core Dictionary
-            return True
-        else:
-            # We will return "False" if the player does not exist in the GunGame Core Dictionary
-            return False
-            
+        '''Checks the player exists in the player database.'''
+        return dict_players.has_key(self.userid)
+    
     def __createPlayer(self, connectFlag=None):
+        '''Creates the player in the players database.'''
         names = ['level', 'afkrounds', 'multikill',
                 'triple', 'preventlevel', 'afkmathtotal',
                 'steamid', 'index']
         values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(self.userid, 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
+        
+        # Set attributes
         self.attributes = dict(zip(names, values))
         
-        dict_gungameSteamids[self.userid] = playerlib.uniqueid(self.userid, 1)
-
-        # We now create the player in the GunGame Core Dictionary
-        # NOTE: Any time the player's attributes change, so will the GunGame Core Dictionary
-        dict_gungameCore[self.userid] = self.attributes
+        # Get Unique ID of player
+        dict_uniqueIds[self.userid] = playerlib.uniqueid(self.userid, 1)
+        
+        # Create them in the players dictionary
+        dict_players[self.userid] = self.attributes
         
     def removePlayer(self):
-        # Let's make sure that the player exists in the GunGame database before trying to remove them
-        # When we "validate" the player, we are actually checking to see if they exist in the GunGame Core Dictionary
+        '''Removes a player from the GunGame player dictionary.'''
         if self.__validatePlayer():
-            # Now that we have verified the player exists in the GunGame Core Dictionary, we need to make sure that they are no longer on the server
-            # When we "validate" the player's connection, we are actually checking to see if their userid still exists on the server
-            if not self.__validatePlayerConnection():
-                # If the player is no longer on the server, we will allow their removal from the GunGame Core Dictionary
-                del dict_gungameCore[self.userid]
-            else:
-                # If we reach this code, someone has tried deleting the player from the GunGame Core Dictionary while the player is still active on the server
-                raise PlayerError,  'Unable to remove the userid \'%s\' from the GunGame Core Dictionary: player is still active on the server' %self.userid
+            # Check they exist on the server
+            if self.__validatePlayerConnection():
+                raise ValueError('Unable to remove the player (%s): player still in server.' % self.userid)
             
+            # Remove the player
+            del dict_players[self.userid]
+    
     def __validatePlayerConnection(self):
-        # Here, we see if the userid still exists on the server
-        if es.exists('userid', self.userid):
-            # If the userid still exists on the server, we return "True"
-            return True
-        else:
-            # If the userid does not exist on the server, we return "False"
-            return False
-            
+        '''Check the player exists in the server.'''
+        return bool(es.exists('userid', self.userid))
+    
     def resetPlayer(self):
-        # We are only creating a new method so that we can allow outside coders to reset the player in the GunGame Core Dictionary
-        # No checks are necessary to see if the player exists, due to several checks above
-        # This is the same code used in the method __createPlayer()
+        '''Reset the players attributes.'''
         self.__createPlayer()
         
     def resetPlayerLocation(self):
-        # Make sure the userid still exists, as this command gets called by a delay
-        if not es.exists('userid', self.userid):
+        '''Resets a players AFK math total.'''
+        # Check the player exists
+        if not self.__validatePlayerConnection():
             return
-            
-        # Get the player's location, although this is not really a list... it returns a tuple
-        x,y,z = es.getplayerlocation(self.userid)
         
-        # Add necessary information about the player's location, excluding the "z" axis, as this is far too touchy
+        # Get the player's location
+        x, y, z = es.getplayerlocation(self.userid)
+        
+        # Get the AFK math total
         afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
         
-        # Update the player's "afkmathtotal" attribute
+        # Update the AFK math total
         self.attributes['afkmathtotal'] = int(afkMathTotal)
-            
+    
     def playerNotAFK(self):
-        # Make sure the player is on a team
-        if int(es.getplayerteam(self.userid)) > 1:
-            # Set the player's "afkmathtotal" attribute to 0
-            # This is called when we definately know the player is not AFK
-            self.attributes['afkmathtotal'] = 0
-        else:
-            raise TeamError, 'AFK Message: Unable to set the player to active status: userid \'%s\' is not a team' %self.userid
-            
-    def isPlayerAFK(self):
-        # Make sure the player is on a team
-        if int(es.getplayerteam(self.userid)) > 1:
-            # Get the player's location, although this is not really a list... it returns a tuple
-            x,y,z = es.getplayerlocation(self.userid)
-            
-            # Add necessary information about the player's location, excluding the "z" axis, as this is far too touchy
-            afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
-            
-            if int(afkMathTotal) == self.attributes['afkmathtotal']:
-                return True
-            else:
-                return False
-        else:
-            raise TeamError, 'AFK Message: Unable to check player\'s AFK status: userid \'%s\' is not a team' %self.userid
-            
-    def teleportPlayer(self, x, y, z, eyeangle0=0, eyeangle1=0):
-        # Make sure the player is on a team
-        if not isSpectator(self.userid):
-            if not isDead(self.userid):
-                es.server.cmd('es_setpos %d %s %s %s' %(self.userid, x, y, z))
-                if eyeangle0 != 0 or eyeangle1 != 0:
-                    es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
-                gamethread.delayed(0.1, self.resetPlayerLocation, ())
-            else:
-                raise DeadError, 'Unable to teleport player: userid \'%s\' is not alive' % self.userid
-        else:
-            raise TeamError, 'Unable to teleport player: userid \'%s\' is not a team' % self.userid
+        '''Makes a player not AFK.'''
+        # Make sure player is on a team
+        if isSpectator(self.userid):
+            raise TeamError('Unable to make player active (%s): not on a team.' % self.userid)
         
+        # Reset player math total
+        self.attributes['afkmathtotal'] = 0
+    
+    def isPlayerAFK(self):
+        '''Checks a player is AFK.'''
+        # Make sure player is on a team
+        if isSpectator(self.userid):
+            raise TeamError('Unable to check player AFK status (%s): not on a team.' % self.userid)
+        
+        # Get the player's location
+        x, y, z = es.getplayerlocation(self.userid)
+        
+        # Get AFK math total
+        afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
+        
+        return (int(afkMathTotal) == self.attributes['afkmathtotal'])
+    
+    def teleportPlayer(self, x, y, z, eyeangle0=0, eyeangle1=0):
+        '''Teleport a player.'''
+        # Make sure player is on a team
+        if isSpectator(self.userid):
+            raise TeamError('Unable to teleport player (%s): not on a team.' % self.userid)
+        
+        # Make sure the player is alive
+        if isDead(self.userid):
+            raise DeadError('Unable to teleport player (%s): not alive.' % self.userid)
+        
+        # Set position
+        es.server.cmd('es_xsetpos %d %s %s %s' % (self.userid, x, y, z))
+        
+        # Set eye angles
+        if eyeangle0 != 0 or eyeangle1 != 0:
+            es.server.cmd('es_xsetang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
+        
+        # Reset player AFK status
+        gamethread.delayed(0.1, self.resetPlayerLocation, ())
+    
     def setPlayerEyeAngles(self, eyeAngle0, eyeAngle1):
-        # Make sure the player is on a team
-        if int(es.getplayerteam(self.userid)) > 1:
-            if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
-                es.server.cmd('es_setang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
-                gamethread.delayed(0.6, self.resetPlayerLocation, ())
-            else:
-                raise DeadError, 'Unable to set player\'s eyeangles: userid \'%s\' is not alive' %self.userid
-        else:
-            raise TeamError, 'Unable to set player\'s eyeangles: userid \'%s\' is not a team' %self.userid
-            
+        '''Sets a players view angle.'''
+        # Make sure player is on a team
+        if isSpectator(self.userid):
+            raise TeamError('Unable to set player angles (%s): not on a team' % self.userid)
+        
+        # Make sure player is alive
+        if isDead(self.userid):
+            raise DeadError('Unable to set player angles (%s): not alive.' % self.userid)
+        
+        # Set angles
+        es.server.cmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
+        
+        # Reset player AFK status
+        gamethread.delayed(0.1, self.resetPlayerLocation, ())
+    
     def stripPlayer(self):
-        # Make sure the player is on a team
-        if int(es.getplayerteam(self.userid)) > 1:
-            if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
-                playerlibPlayer = playerlib.getPlayer(self.userid)
-                
-                playerlibPrimary = playerlibPlayer.get('primary')
-                playerlibSecondary = playerlibPlayer.get('secondary')
-                
-                if playerlibPrimary:
-                    es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
-                if playerlibSecondary:
-                    es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
-            else:
-                raise DeadError, 'Unable to strip player: userid \'%s\' is not alive' %self.userid
-        else:
-            raise TeamError, 'Unable to strip player: userid \'%s\' is not a team' %self.userid
-            
+        '''Strips a player of all their weapons, except knife.'''
+        # Make sure player is on a team
+        if isSpectator(self.userid):
+            raise TeamError('Unable to strip player (%s): not on a team' % self.userid)
+        
+        # Make sure player is alive
+        if isDead(self.userid):
+            raise DeadError('Unable to strip player (%s): is not alive' % self.userid)
+        
+        # Get player object
+        playerObj = playerlib.getPlayer(self.userid)
+        
+        # Get player weapon names
+        primary = playerObj.get('primary')
+        secondary = playerObj.get('secondary')
+        
+        # Remove primary
+        if primary:
+            es.server.cmd('es_xremove %d' % int(playerObj.get('weaponindex', primary)))
+        
+        # Remove secondary
+        if secondary:
+            es.server.cmd('es_xremove %d' % int(playerObj.get('weaponindex', secondary)))
+    
     def giveWeapon(self):
-        if int(es.getplayerteam(self.userid)) > 1:
-            if not es.getplayerprop(self.userid, 'CCSPlayer.baseclass.pl.deadflag'):
-                playerWeapon = self.getWeapon()
-                
-                if playerWeapon != 'knife':
-                    es.server.cmd('es_xdelayed 0.001 es_xgive %s weapon_%s' % (self.userid, playerWeapon))
-                
-                if playerWeapon == 'hegrenade':
-                    es.server.cmd('es_xdelayed 0.001 es_xsexec %s \"use weapon_hegrenade\"' % self.userid)
-        else:
-            raise TeamError, 'Unable to give the player a weapon: userid \'%s\' is not a team' %self.userid
+        '''Gives a player their current weapon.'''
+        # Make sure player is on a team
+        if isSpectator(self.userid):
+            raise TeamError('Unable to give player weapon (%s): not on a team' % self.userid)
+        
+        # Make sure player is alive
+        if isDead(self.userid):
+            raise DeadError('Unable to give player weapon (%s): is not alive' % self.userid)
+        
+        # Get active weapon
+        playerWeapon = self.getWeapon()
+        
+        if playerWeapon != 'knife':
+            es.delayed('0.001', 'es_xgive %s weapon_%s' % (self.userid, playerWeapon))
+        
+        if playerWeapon == 'hegrenade':
+            es.delayed('0.001', 'es_xsexec %s "use weapon_hegrenade"' % self.userid)
     
     def getWeapon(self):
+        '''Returns the weapon for the players level.'''
         if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
-            return dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.attributes['level']][0]
+            return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.attributes['level']][0]
 
 # ==============================================================================
 #   WEAPON ORDER CLASS
 # ==============================================================================
 class WeaponOrder:
-    '''Class used in altering GunGame Weapon Order.'''
+    '''Parses weapon order files.'''
     
     def __init__(self, fileName):
-        filePath = getGameDir('cfg/gungame/weapon_order_files/%s' % fileName)
+        '''Initializes the WeaponOrder class.'''
+        # Set variables
+        self.filePath = getGameDir('cfg/gungame/weapon_order_files/%s' % fileName)
         self.fileName = fileName
         
         # Check to see if it has been registered before
         if not self.__isRegistered(fileName):
-            self.__parse(fileName, filePath)
+            self.__parse()
         else:
             echo('gungame', 0, 0, 'WeaponOrder:AlreadyRegistered', {'file': fileName})
     
-    def __parse(self, fileName, filePath):
+    def __parse(self):
+        '''Parses the weapon file.'''
+        # Try to open the file
         try:
-            # Create a dictionary to temporarily hold the weapon order
-            dict_tempWeaponOrder = {}
-            # Open the weapon order file for parsing
-            weaponOrderFile = open(filePath, 'r')
-            # Set the level counter to 0
-            levelCounter = 0
-            # Loop through each line in the weapon order file
-            for line in weaponOrderFile:
-                # Remove spaces from the ends of the lines and convert characters to lower case
-                line = line.strip().lower()
+            weaponOrderFile = open(self.filePath, 'r')
+        except IOError, e:
+            raise FileError('Cannot parse weapon order file (%s): IOError: %s' % e)
+        
+        # Variable preparation
+        dict_tempWeaponOrder = {}
+        dict_tempWeaponOrderSettings = {}
+        levelCounter = 0
+        
+        # Clean and format the lines
+        lines = map(lambda x: x.strip().lower(), weaponOrderFile.readlines())
+        lines = filter(lambda x: x and (not x.startswith('//')), lines)
+        
+        # Close the file, we have the lines
+        weaponOrderFile.close()
+        
+        # Loop through each line
+        for line in lines:
+            # Remove double spacing
+            while '  ' in line:
+                line = line.replace('  ', ' ')
+            
+            # Split line
+            list_splitLine = line.split()
+            
+            # Check the weapon name
+            weaponName = str(list_splitLine[0])
+            if weaponName not in list_validWeapons:
+                echo('gungame', 0, 0, 'WeaponOrder:InvalidWeapon', {'weapon': weaponName})
+                continue
+            
+            # Multikill?
+            if len(list_splitLine) > 1:
+                # Make sure the multikill value is numerical
+                if not isNumeric(list_splitLine[1]):
+                    echo('gungame', 0, 0, 'WeaponOrder:MultikillNotNumeric', {'weapon': weaponName, 'to': list_splitLine[1]})
+                    continue
                 
-                # Make sure that the line contains some sort of text, and that the line does not begin with "//"
-                if line and (not line.startswith('//')):
-                    # Remove double spacing
-                    while '  ' in line:
-                        line = line.replace('  ', ' ')
-                        
-                    # We use the split() method on the line to separate weapon names from multikill values
-                    list_splitLine = line.split(" ")
-                    
-                    # Just in case someone got space happy, we will loop through the list and remove any entries == ''
-                    # Set the weapon name to the first index (0) in the split list
-                    weaponName = str(list_splitLine[0])
-                    if weaponName in list_validWeapons:
-                        if len(list_splitLine) > 1:
-                            if isNumeric(list_splitLine[1]):
-                                multiKillValue = int(list_splitLine[1])
-                                
-                                # Make sure that the level counter comes AFTER the potential exception above
-                                levelCounter += 1
-                                list_splitLine[1] = int(list_splitLine[1])
-                                
-                                dict_tempWeaponOrder[levelCounter] = list_splitLine
-                            else:
-                                echo('gungame', 0, 0, 'WeaponOrder:MultikillNotNumeric', {'weapon': weaponName, 'to': list_splitLine[1]})
-                        else:
-                            levelCounter += 1
-                            list_splitLine.append(1)
-                            dict_tempWeaponOrder[levelCounter] = list_splitLine
-                    else:
-                        echo('gungame', 0, 0, 'WeaponOrder:InvalidWeapon', {'weapon': weaponName})
+                # Get multikill value
+                multiKillValue = int(list_splitLine[1])
+                
+                # Set values for this level
+                levelCounter += 1
+                list_splitLine[1] = multiKillValue
+            else:
+                # Set values for this level
+                levelCounter += 1
+                list_splitLine.append(1)
             
-            # Close the weapon order file, since we are done parsing it
-            weaponOrderFile.close()
-            dict_tempWeaponOrderSettings = {}
-            
-            # Open the INI to find out the "Display Name" for this weapon order
-            weaponOrderINI.read('%s/cfg/gungame/gg_weapon_orders.ini' %gameDir)
-            
-            # Loop through each section (the section name is the "Display Name") in the INI
-            for weaponOrderDisplayName in weaponOrderINI.sections():
-                # See if the "fileName" in the INI matches the current "file" we are working with
-                if weaponOrderINI.get(weaponOrderDisplayName, 'fileName') == fileName:
-                    # If the file name matches, we add the section name as the "displayName" in the weapon order settings dictionary
-                    dict_tempWeaponOrderSettings['displayName'] = weaponOrderDisplayName
-                    
-            # Set the "weaponOrder" value to "#default" in the weapon order settings since this is the loaded default
-            dict_tempWeaponOrderSettings['weaponOrder'] = '#default'
-            
-            # Save the temporary dictionarys to the persistent dictionarys
-            dict_weaponOrderSettings[fileName] = dict_tempWeaponOrderSettings
-            dict_gungameWeaponOrders[fileName] = dict_tempWeaponOrder
-        except IOError:
-            raise FileError, ('Unable to load weapon order file: \'%s\' does not exist' %fileName)
+            # Set level values
+            dict_tempWeaponOrder[levelCounter] = list_splitLine
         
+        # Get display names
+        weaponOrderINI = ConfigObj(getGameDir('cfg/gungame/gg_weapon_orders.ini'))
+        
+        # Loop through each section (the section name is the "Display Name") in the INI
+        for displayName in weaponOrderINI:
+            if weaponOrderINI[displayName]['fileName'] == self.fileName: dict_tempWeaponOrderSettings['displayName'] = displayName
+        
+        # Set the order type to default
+        dict_tempWeaponOrderSettings['weaponOrder'] = '#default'
+        
+        # Copy the temporary dictionaries over
+        dict_weaponOrderSettings[self.fileName] = dict_tempWeaponOrderSettings.copy()
+        dict_weaponOrders[self.fileName] = dict_tempWeaponOrder.copy()
+    
     def __isRegistered(self, fileName):
-        if dict_gungameWeaponOrders.has_key(fileName):
-            return True
-        else:
-            return False
-        
+        '''Checks if a weapon order is already registered.'''
+        return dict_weaponOrders.has_key(fileName)
+    
     def echo(self):
-        weaponOrder = dict_gungameWeaponOrders[self.fileName]
+        '''Echos the current weapon order to console.'''
+        weaponOrder = dict_weaponOrders[self.fileName]
         
         es.dbgmsg(0, '[GunGame] ')
         echo('gungame', 0, 0, 'WeaponOrder:Echo:Info')
@@ -530,10 +533,10 @@ class WeaponOrder:
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
         
         # Loop through each level
-        for level in dict_gungameWeaponOrders[self.fileName]:
+        for level in dict_weaponOrders[self.fileName]:
             # Set variables
-            weaponName = dict_gungameWeaponOrders[self.fileName][level][0]
-            multiKillValue = dict_gungameWeaponOrders[self.fileName][level][1]
+            weaponName = dict_weaponOrders[self.fileName][level][0]
+            multiKillValue = dict_weaponOrders[self.fileName][level][1]
             cleanLevel = '0%d' % level if level < 10 else level
             
             # Print to console
@@ -541,87 +544,141 @@ class WeaponOrder:
         
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
         es.dbgmsg(0, '[GunGame] ')
-        
+    
     def setMultiKillOverride(self, value):
+        '''Sets the multikill override.'''
         value = int(value)
-        dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
+        
+        # Create a temporary weapon order dictionary
+        dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
+        
+        # Loop through the weapon order dictionary
         for level in dict_tempWeaponOrder:
+            # Set multikill if its not a knife or a hegrenade
             if dict_tempWeaponOrder[level][0] != 'knife' and dict_tempWeaponOrder[level][0] != 'hegrenade':
                 dict_tempWeaponOrder[level][1] = value
-                
-        dict_gungameWeaponOrders[self.fileName] = dict_tempWeaponOrder
         
+        # Copy the temporary weapon order back
+        dict_weaponOrders[self.fileName] = dict_tempWeaponOrder.copy()
+        
+        # Rebuild weapon order menu
         self.buildWeaponOrderMenu()
         
+        # Tell players the multikill value changed
         msg('gungame', '#all', 'WeaponOrder:MultikillValuesChanged', {'to': value})
         es.server.cmd('mp_restartgame 2')
     
     def setMultiKillDefaults(self):
-        filePath = '%s/cfg/gungame/weapon_order_files/%s' %(str(gameDir), self.fileName)
-        self.__parse(self.fileName, filePath)
+        '''Sets the multikill values back to their default values.'''
+        # Re-parse the file
+        self.__parse()
         
+        # Tell players the multikill values have been reset
         msg('gungame', '#all', 'WeaponOrder:MultikillReset')
         es.server.cmd('mp_restartgame 2')
-        
+    
     def setWeaponOrderFile(self):
+        '''Sets the current weapon order file to this.'''
+        # Check its not the current one
         if dict_weaponOrderSettings['currentWeaponOrderFile'] == self.fileName:
             return
         
+        # Set the current weapon order file
         dict_weaponOrderSettings['currentWeaponOrderFile'] = self.fileName
+        
+        # Rebuild the weapon order menu
         self.buildWeaponOrderMenu()
         
+        # Tell players the weapon order file has changed
         msg('gungame', '#all', 'WeaponOrder:FileChanged', {'to': self.fileName})
         es.server.cmd('mp_restartgame 2')
     
     def getWeaponOrderType(self):
+        '''Returns the weapon order type.'''
         return dict_weaponOrderSettings[self.fileName]['weaponOrder']
-        
+    
     def __setWeaponOrder(self, value):
+        '''Sets the weapon order type.'''
+        # Set the weapon order type
         dict_weaponOrderSettings[self.fileName]['weaponOrder'] = str(value)
-        es.server.cmd('mp_restartgame 2')
         
+        # Restart game
+        es.server.cmd('mp_restartgame 2')
+    
     def changeWeaponOrderType(self, weaponOrder):
+        '''Changes the weapon order type.'''
         weaponOrder = str(weaponOrder.lower())
+        
+        # Is this the current value?
+        if weaponOrder == self.getWeaponOrderType():
+            raise ValueError('Cannot change weapon order type (%s): this is the current weapon order type.' % weaponOrder)
+        
+        # Shuffled
         if weaponOrder == '#random':
-            dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
+            # Get temporary weapon order
+            dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
+            
+            # Get levels and shuffle it
             list_gungameLevels = dict_tempWeaponOrder.keys()
             random.shuffle(list_gungameLevels)
+            
+            # Get weapons and shuffle it
             list_gungameWeapons = dict_tempWeaponOrder.values()
             random.shuffle(list_gungameWeapons)
+            
+            # Loop through the levels and set the weapons
             weaponArrayNumber = 0
             for level in list_gungameLevels:
                 dict_tempWeaponOrder[level] = list_gungameWeapons[weaponArrayNumber]
                 weaponArrayNumber += 1
-            dict_gungameWeaponOrders[self.fileName] = dict_tempWeaponOrder
-            self.__setWeaponOrder('#random')
             
+            # Set the weapon orders back
+            dict_weaponOrders[self.fileName] = dict_tempWeaponOrder
+            
+            # Tell the players the weapon order has changed
+            self.__setWeaponOrder('#random')
             msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#random'})
-        elif self.getWeaponOrderType() != str(weaponOrder):
-            if weaponOrder == '#default':
-                filePath = '%s/cfg/gungame/weapon_order_files/%s' %(str(gameDir), self.fileName)
-                self.__parse(self.fileName, filePath)
-                
-                msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#default'})
-            elif weaponOrder == '#reversed':
-                dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
-                list_gungameLevels = dict_tempWeaponOrder.keys()
-                list_gungameWeapons = dict_tempWeaponOrder.values()
-                list_gungameWeapons.reverse()
-                weaponArrayNumber = 0
-                for level in list_gungameLevels:
-                    dict_tempWeaponOrder[level] = list_gungameWeapons[weaponArrayNumber]
-                    weaponArrayNumber += 1
-                dict_gungameWeaponOrders[self.fileName] = dict_tempWeaponOrder
-                self.__setWeaponOrder('#reversed')
-                
-                msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#reversed'})
-            else:
-                raise GunGameValueError, 'Invalid argument for changeWeaponOrder(): \'%s\'' %weaponOrder
+        
+        # Default
+        elif weaponOrder == '#default':
+            # Re-parse the file
+            self.__parse(self.fileName, filePath)
+            
+            # Tell the players the weapon order has changed
+            msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#default'})
+        
+        # Reversed
+        elif weaponOrder == '#reversed':
+            # Get temporary weapon order
+            dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
+            
+            # Get levels and weapons
+            list_gungameLevels = dict_tempWeaponOrder.keys()
+            list_gungameWeapons = dict_tempWeaponOrder.values()
+            
+            # Reverse it
+            list_gungameWeapons.reverse()
+            
+            # Loop through the levels and reverse the weapons
+            weaponArrayNumber = 0
+            for level in list_gungameLevels:
+                dict_tempWeaponOrder[level] = list_gungameWeapons[weaponArrayNumber]
+                weaponArrayNumber += 1
+            
+            # Set the weapon orders back
+            dict_weaponOrders[self.fileName] = dict_tempWeaponOrder
+            
+            # Tell the players the weapon order has changed
+            self.__setWeaponOrder('#reversed')
+            msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#reversed'})
+        
+        # Invalid value
         else:
-            raise GunGameValueError, 'Unable to change the weapon order: \'%s\' is the current weapon order' %weaponOrder
+            raise ValueError('Cannot change weapon order type (%s): must be: #default, #random or #reversed.' % weaponOrder)
     
     def buildWeaponOrderMenu(self):
-        dict_tempWeaponOrder = dict_gungameWeaponOrders[self.fileName]
+        '''Builds the weapon order menu.'''
+        dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
         
         # Create a list of level numbers to use for creating the popup
         list_gungameLevels = dict_tempWeaponOrder.keys()
@@ -739,8 +796,7 @@ class WeaponOrder:
             
             # Increment the page count for the next while loop iteration to create another menu page
             buildPageCount += 1
-            
-            
+
 # ==============================================================================
 #   CONFIG CLASS
 # ==============================================================================
@@ -762,16 +818,13 @@ class Config:
     
     def __isLoaded(self):
         '''Checks to see if the config is already loaded.'''
-        if self.name in list_configs:
-            return True
-        else:
-            return False
+        return (self.name in list_configs)
     
     def __parse(self):
         '''Parses the config file.'''
+        # Try to open the config file
         try:
-            # Open the Config
-            configObj = open(self.path, 'r')
+            configFile = open(self.path, 'r')
         except IOError, e:
             if not configName.lower() in list_criticalConfigs:
                 raise FileError('Unable to load config (%s): %s' % (self.name, e))
@@ -779,15 +832,15 @@ class Config:
                 es.server.queuecmd('es_xunload gungame')
                 raise FileError('Unable to load required config (%s): %s' % (self.name, e))
         
+        # Format lines
+        lines = map(lambda x: x.strip().lower(), configFile.readlines())
+        lines = filter(lambda x: x and (not x.startswith('//')), lines)
+        
+        # Close file
+        configFile.close()
+        
         # Loop through each line in the Config
-        for line in configObj.readlines():
-            # Strip line and put it in lower-case
-            line = line.strip().lower()
-            
-            # Skip if line is a comment or empty
-            if line.startswith('//') or not line:
-                continue
-            
+        for line in lines:
             # Remove excess whitespace
             while '  ' in line:
                 line = line.replace('  ', ' ')
@@ -812,35 +865,36 @@ class Config:
             
             # Use a server command to fire the server_cvar event
             es.server.cmd('%s %s' % (variableName, variableValue))
-
-            # The following dict_cfgSettings is used to organize settings by cfg
-            # seperate addon setting from addon "toggle" variable, The loading/unloading is handled elsewhere, we do not need them here
-            # Ex. gg_knife_pro is the "toggle" whereas gg_knife_pro_limit is a setting within knife_pro
-            if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % variableName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % variableName)):
+            
+            # Is an addon?
+            if addonExists(variableName):
                 continue
             
+            # Set the CFG value
             if dict_cfgSettings.has_key(self.name):
                 dict_cfgSettings[self.name].append(variableName)
                 continue
             
+            # Make the CFG setting for this config
             dict_cfgSettings[self.name] = [variableName]
-            
+        
         # Print config loaded
         echo('gungame', 0, 0, 'Config:Loaded', {'name': self.name})
 
 # ==============================================================================
 #   SOUND CLASS
 # ==============================================================================
-class InvalidSoundPack(_GunGameLibError):
+class InvalidSoundPack(Exception):
     pass
 
-class SoundError(_GunGameLibError):
+class SoundError(Exception):
     pass
 
 class Sounds:
-    '''Class that stores GunGame Sounds.'''
+    '''Soundpack class, adds sounds from a soundpack.'''
     
     def __init__(self, soundPackName):
+        '''Initializes the Sound class.'''
         self.soundPackName = soundPackName
         
         # Set up the sound pack path
@@ -851,60 +905,54 @@ class Sounds:
         
         # Make sure that the sound pack INI exists
         if self.__checkSoundPack():
-            self.__readSoundPack()
+            self.__parse()
         else:
             raise InvalidSoundPack('Cannot register soundpack (%s): file not found.' % soundPackName)
-            
-    def __readSoundPack(self):
+    
+    def __checkSoundPack(self):
+        '''Checks to see if the file exists.'''
+        return os.path.isfile(self.soundPackPath)
+    
+    def __parse(self):
         # Open the INI file
-        soundPackINI = ConfigParser.ConfigParser()
-        soundPackINI.read(self.soundPackPath)
+        soundPackINI = ConfigObj(self.soundPackPath)
         
-        # Loop through each section (should only be 1) in the soundpack INI
-        for section in soundPackINI.sections():
+        # Loop through each section in the soundpack
+        for section in soundPackINI:
             # Loop through each option in the soundpack INI
-            for option in soundPackINI.options(section):
-                soundFile = soundPackINI.get(section, option)
-                # Check to make sure they don't have the option set to "0" ... this means they want no sound for whatever event triggers it
-                if soundPackINI.get(section, option) != '0':
-                    # Check to make sure that the sound file exists
-                    if self.__checkSound(soundFile):
-                        # Add sound here
-                        dict_gungameSounds[option] = soundFile
-                    else:
-                        # The sound may not exist, so we warn them that we were unable to locate it
-                        echo('gungame', 0, 0, 'Sounds:CannotAdd', {'file': soundFile})
-                        
-                        # Add it anyway
-                        dict_gungameSounds[option] = soundFile
+            for option in soundPackINI[section]:
+                # Get the sound file
+                soundFile = soundPackINI[section][option]
+                
+                # Make sure there is a sound
+                if soundPackINI.get(section, option) == '0':
+                    dict_sounds[option] = 0
+                
+                # Check to make sure that the sound file exists
+                if self.__checkSound(soundFile):
+                    # Add sound here
+                    dict_sounds[option] = soundFile
                 else:
-                    # They have the sound disabled for this option. We'll set it to "0" in the gg_sounds dictionary
-                    dict_gungameSounds[option] = 0
+                    # The sound may not exist, so we warn them that we were unable to locate it
+                    echo('gungame', 0, 0, 'Sounds:CannotAdd', {'file': soundFile})
+                    
+                    # Add it anyway
+                    dict_sounds[option] = soundFile
         
         # Add downloadables
         addDownloadableSounds()
     
-    def __checkSoundPack(self):
-        # File exists?
-        if os.path.isfile(self.soundPackPath):
-            return True
-        else:
-            return False
-        
     def __checkSound(self, soundFile):
         # Set path
         soundPath = getGameDir('sound/%s' % soundFile)
         
         # File exists?
-        if os.path.isfile(soundPath):
-            return True
-        else:
-            return False
+        return os.path.isfile(soundPath)
 
 # ==============================================================================
 #   ADDON CLASS
 # ==============================================================================
-class AddonError(_GunGameLibError):
+class AddonError(Exception):
     pass
     
 class Addon:
@@ -927,7 +975,7 @@ class Addon:
         # Remove all registered dependencies
         for dependency in self.dependencies:
             # Remove dependency
-            dict_registeredDependencies[dependency].delDependent(self.addon)
+            dict_dependencies[dependency].delDependent(self.addon)
             echo('gungame', 0, 2, 'Addon:DependencyRemoved', {'name': self.addon, 'dependency': dependency})
         
         echo('gungame', 0, 0, 'Addon:Unregistered', {'name': self.addon})
@@ -976,7 +1024,7 @@ class Addon:
     '''Dependency options:'''
     def addDependency(self, dependencyName, value):
         # Check if dependency already exists
-        if not dict_registeredDependencies.has_key(dependencyName):
+        if not dict_dependencies.has_key(dependencyName):
             # Check if dependency is a valid gungame variable
             if dict_variables.has_key(dependencyName):
                 if isNumeric(value):
@@ -986,7 +1034,7 @@ class Addon:
                 self.dependencies.append(dependencyName)
                 
                 # Create dependency class
-                dict_registeredDependencies[dependencyName] = addonDependency(dependencyName, value, self.addon)
+                dict_dependencies[dependencyName] = addonDependency(dependencyName, value, self.addon)
                 
                 # Set GunGame variable to dependents value
                 setVariableValue(dependencyName, value)
@@ -998,13 +1046,13 @@ class Addon:
             self.dependencies.append(dependencyName)
             
             # Add dependent to existing dependency
-            dict_registeredDependencies[dependencyName].addDependent(value, self.addon)
+            dict_dependencies[dependencyName].addDependent(value, self.addon)
     
     def delDependency(self, dependencyName):
         # Check if dependency exists first
-        if dict_registeredDependencies.has_key(dependencyName):
+        if dict_dependencies.has_key(dependencyName):
             # Delete dependency
-            dict_registeredDependencies[dependencyName].delDependent(self.addon)
+            dict_dependencies[dependencyName].delDependent(self.addon)
         else:
             raise AddonError('Cannot delete dependency (%s): not registered.' % dependencyName)
 
@@ -1030,7 +1078,7 @@ class addonDependency:
         # Dependent has a different value
         else:
             # Unload addon since it conflicts with existant dependents
-            if dict_RegisteredAddons[dependentName].addonType == 'included':
+            if dict_addons[dependentName].addonType == 'included':
                 setVariableValue(dependentName, 0)
             else:
                 es.unload('gungame/custom_addons/%s' % dependentName)
@@ -1050,7 +1098,7 @@ class addonDependency:
                     setVariableValue(self.dependency, self.dependencyOriginalValue)
                 
                 # Delete depdencyfc
-                del dict_registeredDependencies[self.dependency]
+                del dict_dependencies[self.dependency]
 
 # ==============================================================================
 #   MESSAGE CLASS
@@ -1329,7 +1377,7 @@ class EasyInput:
 #  WINNERS CLASS
 # ==============================================================================
 class Winners:
-    global dict_gungameWinners
+    global dict_winners
     ''' Class used for tracking and storing Winners'''
     def __init__(self, uniqueid):
         self.uniqueid = str(uniqueid)
@@ -1339,11 +1387,11 @@ class Winners:
             # Load the database using cpickle
             loadWinnerDatabase()
             
-        if not dict_gungameWinners.has_key(self.uniqueid):
+        if not dict_winners.has_key(self.uniqueid):
             self.attributes = {'wins':0, 'timestamp':time.time()}
-            dict_gungameWinners[self.uniqueid] = self.attributes
+            dict_winners[self.uniqueid] = self.attributes
         else:
-            self.attributes = dict_gungameWinners[self.uniqueid]
+            self.attributes = dict_winners[self.uniqueid]
         
     def __getitem__(self, item):
         # We will be nice and convert the "item" to a lower-cased string
@@ -1457,7 +1505,7 @@ def resetGunGame():
     dict_leaderInfo['leaderLevel'] = 1
     
     # Reset the player information dictionary
-    dict_gungameCore.clear()
+    dict_players.clear()
     
     # Add all players to the players dictionary
     for userid in es.getUseridList():
@@ -1467,11 +1515,11 @@ def clearGunGame():
     # Clear the dict_leaderInfo
     dict_leaderInfo.clear()
     
-    # Clear the dict_gungameCore
-    dict_gungameCore.clear()
+    # Clear the dict_players
+    dict_players.clear()
     
-    # Clear the dict_gungameWeaponOrders
-    dict_gungameWeaponOrders.clear()
+    # Clear the dict_weaponOrders
+    dict_weaponOrders.clear()
     
     # Clear the dict_weaponOrderSettings
     dict_weaponOrderSettings.clear()
@@ -1484,7 +1532,7 @@ def clearGunGame():
     dict_leaderInfo['leaderLevel'] = 1
     
     # Reset the Player Information dictionary
-    dict_gungameCore.clear()
+    dict_players.clear()
     
     # Reset the stored variables
     dict_variables.clear()
@@ -1494,9 +1542,9 @@ def clearGunGame():
     
 def clearOldPlayers():
     # Loop through the players
-    for userid in dict_gungameCore.copy():
-        # Remove from dict_gungameCore if they aren't in the server
-        if not clientInServer(userid): del dict_gungameCore[userid]
+    for userid in dict_players.copy():
+        # Remove from dict_players if they aren't in the server
+        if not clientInServer(userid): del dict_players[userid]
 
 # ==============================================================================
 #   WEAPON RELATED COMMANDS
@@ -1507,22 +1555,22 @@ def getCurrentWeaponOrderFile():
 def getWeaponOrderString():
     weaponOrderString = None
     currentWeaponOrder = dict_weaponOrderSettings['currentWeaponOrderFile']
-    for level in dict_gungameWeaponOrders[currentWeaponOrder]:
+    for level in dict_weaponOrders[currentWeaponOrder]:
         if not weaponOrderString:
-            weaponOrderString = dict_gungameWeaponOrders[currentWeaponOrder][level][0]
+            weaponOrderString = dict_weaponOrders[currentWeaponOrder][level][0]
         else:
-            weaponOrderString = '%s,%s' %(weaponOrderString, dict_gungameWeaponOrders[currentWeaponOrder][level][0])
+            weaponOrderString = '%s,%s' %(weaponOrderString, dict_weaponOrders[currentWeaponOrder][level][0])
     return weaponOrderString
     
 def getWeaponOrderList():
     currentWeaponOrder = dict_weaponOrderSettings['currentWeaponOrderFile']
-    list_weaponOrder = [dict_gungameWeaponOrders[currentWeaponOrder][level][0] for level in dict_gungameWeaponOrders[currentWeaponOrder]]
+    list_weaponOrder = [dict_weaponOrders[currentWeaponOrder][level][0] for level in dict_weaponOrders[currentWeaponOrder]]
     return list_weaponOrder
     
 def getLevelWeapon(levelNumber):
     levelNumber = int(levelNumber)
-    if dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
-        return str(dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
+    if dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
+        return str(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
     else:
         raise GunGameValueError('Unable to retrieve weapon information: level \'%d\' does not exist' % levelNumber)
 
@@ -1536,7 +1584,7 @@ def weaponOrderMenuHandler(userid, choice, popupname):
 #   LEVEL RELATED COMMANDS
 # ==============================================================================
 def getTotalLevels():
-    list_weaponOrderKeys = dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].keys()
+    list_weaponOrderKeys = dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].keys()
     return int(len(list_weaponOrderKeys))
     
 def setPreventLevelAll(value):
@@ -1548,9 +1596,9 @@ def getAverageLevel():
     averageLevel = 0
     averageDivider = 0
     for userid in es.getUseridList():
-        if dict_gungameCore.has_key(userid):
+        if dict_players.has_key(userid):
             averageDivider += 1
-            averageLevel += int(dict_gungameCore[userid]['level'])
+            averageLevel += int(dict_players[userid]['level'])
     if averageDivider:
         return int(round(averageLevel / averageDivider))
     else:
@@ -1559,16 +1607,16 @@ def getAverageLevel():
 def getLevelUseridList(levelNumber):
     levelNumber = int(levelNumber)
     list_levelUserids = []
-    for userid in dict_gungameCore:
-        if dict_gungameCore[int(userid)]['level'] == levelNumber:
+    for userid in dict_players:
+        if dict_players[int(userid)]['level'] == levelNumber:
             list_levelUserids.append(userid)
     return list_levelUserids
     
 def getLevelUseridString(levelNumber):
     levelNumber = int(levelNumber)
     levelUseridString = None
-    for userid in dict_gungameCore:
-        if dict_gungameCore[int(userid)]['level'] == levelNumber:
+    for userid in dict_players:
+        if dict_players[int(userid)]['level'] == levelNumber:
             if not levelUseridString:
                 levelUseridString = userid
             else:
@@ -1576,14 +1624,14 @@ def getLevelUseridString(levelNumber):
     return levelUseridString
     
 def getLevelMultiKill(levelNumber):
-    if dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
-        return dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][1]
+    if dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
+        return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][1]
     
 def createScoreList(keyGroupName=None):
     # TODO: Finish this(?)
     dict_gungameScores = {}
-    for userid in dict_gungameCore:
-        dict_gungameScores[userid] = dict_gungameCore[userid]['level']
+    for userid in dict_players:
+        dict_gungameScores[userid] = dict_players[userid]['level']
     if keyGroupName:
         list_sortedScores = sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
         for useridLevelTuple in list_sortedScores:
@@ -1622,9 +1670,9 @@ def getNewLeaderList():
     players = []
     
     # Loop through the players
-    for userid in dict_gungameCore:
-        player = dict_gungameCore[userid]
-        level = dict_gungameCore[userid]['level']
+    for userid in dict_players:
+        player = dict_players[userid]
+        level = dict_players[userid]['level']
         
         # Is the player on the server?
         if es.getplayername(userid) == 0:
@@ -1653,11 +1701,11 @@ def removeLeader(userid):
         dict_leaderInfo['currentLeaders'].remove(userid)
         if len(dict_leaderInfo['currentLeaders']) == 0:
             leaderLevel = 1
-            for userid in dict_gungameCore:
-                if int(dict_gungameCore[userid]['level']) > leaderLevel:
+            for userid in dict_players:
+                if int(dict_players[userid]['level']) > leaderLevel:
                     dict_leaderInfo['currentLeaders'] = [userid]
-                    leaderLevel = int(dict_gungameCore[userid]['level'])
-                elif dict_gungameCore[userid]['level'] == leaderLevel:
+                    leaderLevel = int(dict_players[userid]['level'])
+                elif dict_players[userid]['level'] == leaderLevel:
                     dict_leaderInfo['currentLeaders'].append(userid)
 
 def getCurrentLeaderString():
@@ -1738,13 +1786,13 @@ def addDownloadableSounds():
         return
     
     # Loop through all the sounds
-    for soundName in dict_gungameSounds:
-        if dict_gungameSounds[soundName] != 0:
-            es.stringtable('downloadables', 'sound/%s' % dict_gungameSounds[soundName])
+    for soundName in dict_sounds:
+        if dict_sounds[soundName] != 0:
+            es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
 
 def getSound(soundName):
-    if dict_gungameSounds.has_key(soundName):
-        return dict_gungameSounds[soundName]
+    if dict_sounds.has_key(soundName):
+        return dict_sounds[soundName]
     else:
         raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
 
@@ -1752,10 +1800,10 @@ def getSound(soundName):
 #   WINNER RELATED COMMANDS
 # ==============================================================================
 def getWins(uniqueid):
-    global dict_gungameWinners
+    global dict_winners
     uniqueid = str(uniqueid)
-    if dict_gungameWinners.has_key(uniqueid):
-        return dict_gungameWinners[uniqueid]['wins']
+    if dict_winners.has_key(uniqueid):
+        return dict_winners[uniqueid]['wins']
     else:
         return 0
 
@@ -1768,21 +1816,21 @@ def updateTimeStamp(uniqueid):
     gungameWinner['timestamp'] = time.time()
     
 def saveWinnerDatabase():
-    global dict_gungameWinners
+    global dict_winners
     # Set the winners database path to a variable
     winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
     
     # Open the file
     winnersDataBaseFile = open(winnersDataBasePath, 'w')
             
-    # Place the contents of dict_gungameWinners in
-    cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
+    # Place the contents of dict_winners in
+    cPickle.dump(dict_winners, winnersDataBaseFile)
             
     # Save changes
     winnersDataBaseFile.close()
     
 def loadWinnersDataBase():
-    global dict_gungameWinners
+    global dict_winners
     # Set a variable for the path of the winner's database
     winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
         
@@ -1791,8 +1839,8 @@ def loadWinnersDataBase():
         # Open the file
         winnersDataBaseFile = open(winnersDataBasePath, 'w')
             
-        # Place the contents of dict_gungameWinners in
-        cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
+        # Place the contents of dict_winners in
+        cPickle.dump(dict_winners, winnersDataBaseFile)
             
         # Save changes
         winnersDataBaseFile.close()
@@ -1800,8 +1848,8 @@ def loadWinnersDataBase():
     # Open the "..cstrike/addons/eventscripts/gungame/data/winnerdata.db" file
     winnersDataBaseFile = open(winnersDataBasePath, 'r')
     
-    # Load the winners database file into dict_gungameWinners via pickle
-    dict_gungameWinners = cPickle.load(winnersDataBaseFile)
+    # Load the winners database file into dict_winners via pickle
+    dict_winners = cPickle.load(winnersDataBaseFile)
         
     # Close the winners database file
     winnersDataBaseFile.close()
@@ -1810,60 +1858,60 @@ def loadWinnersDataBase():
     setGlobal('winnersloaded', 1)
     
 def cleanWinnersDataBase(days):
-    global dict_gungameWinners
+    global dict_winners
     daysInSeconds = float(days) * float(86400)
     currentTime = float(time.time())
     
-    for steamid in dict_gungameWinners.copy():
+    for steamid in dict_winners.copy():
         # See if the steamid has been unused in the database for longer than the set amount of days
-        if (currentTime - float(dict_gungameWinners[steamid]['timestamp'])) > daysInSeconds:
-            # Remove from dict_gungameWinners if they aren't in the server
-            del dict_gungameWinners[steamid]
+        if (currentTime - float(dict_winners[steamid]['timestamp'])) > daysInSeconds:
+            # Remove from dict_winners if they aren't in the server
+            del dict_winners[steamid]
 
 # ==============================================================================
 #   ADDON RELATED COMMANDS
 # ==============================================================================
 def registerAddon(addonName):
-    if not dict_RegisteredAddons.has_key(addonName):
-        dict_RegisteredAddons[addonName] = Addon(addonName)
-        return dict_RegisteredAddons[addonName]
+    if not dict_addons.has_key(addonName):
+        dict_addons[addonName] = Addon(addonName)
+        return dict_addons[addonName]
     else:
         raise AddonError('Cannot register addon (%s): already registered.' % addonName)
 
 def getAddon(addonName):
-    if dict_RegisteredAddons.has_key(addonName):
-        return dict_RegisteredAddons[addonName]
+    if dict_addons.has_key(addonName):
+        return dict_addons[addonName]
     else:
         raise AddonError('Cannot get addon object (%s): not registered.' % addonName)
 
 def unregisterAddon(addonName):
-    if dict_RegisteredAddons.has_key(addonName):
-        del dict_RegisteredAddons[addonName]
+    if dict_addons.has_key(addonName):
+        del dict_addons[addonName]
     else:
         raise AddonError('Cannot unregister addon (%s): not registered.' % addonName)
 
 def getAddonDisplayName(addonName):
     if addonName == 'gungame':
         return 'GunGame'
-    elif dict_RegisteredAddons.has_key(addonName):
-        return dict_RegisteredAddons[addonName].getDisplayName()
+    elif dict_addons.has_key(addonName):
+        return dict_addons[addonName].getDisplayName()
     else:
         raise AddonError('Cannot get display name (%s): not registered.' % addonName)
 
 def addonRegistered(addonName):
-    if dict_RegisteredAddons.has_key(addonName):
+    if dict_addons.has_key(addonName):
         return True
     else:
         return False
 
 def getRegisteredAddonlist():
-    return dict_RegisteredAddons.keys()
+    return dict_addons.keys()
 
 def getDependencyList():
-    return dict_registeredDependencies.keys()
+    return dict_dependencies.keys()
 
 def getDependencyValue(dependencyName):
-    return dict_registeredDependencies[dependencyName].dependencyValue
+    return dict_dependencies[dependencyName].dependencyValue
 
 # ==============================================================================
 #   GLOBALS RELATED COMMANDS
@@ -1948,11 +1996,11 @@ def isDead(userid):
     
 def getPlayerUniqueID(userid):
     userid = int(userid)
-    return dict_gungameSteamids[userid]
+    return dict_uniqueIds[userid]
     
 def playerExists(userid):
     userid = int(userid)
-    if dict_gungameCore.has_key(userid):
+    if dict_players.has_key(userid):
         return True
     else:
         return False

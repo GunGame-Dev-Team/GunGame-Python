@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.274
+    Version: 1.0.276
     Description: The main addon, handles leaders and events.
 '''
 
@@ -10,7 +10,6 @@
 # ==============================================================================
 # Python Imports
 import os
-import ConfigParser
 
 # EventScripts Imports
 import es
@@ -30,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.274'
+gungameVersion = '1.0.276'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts
@@ -44,7 +43,7 @@ info.author   = 'XE_ManUp, RideGuy, Saul Rennison'
 # ==============================================================================
 #   GLOBALS
 # ==============================================================================
-dict_gungameVariables = {}
+dict_variables = {}
 list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
                        'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
                        'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
@@ -68,35 +67,28 @@ except:
 # ==============================================================================
 #   ERROR CLASSES
 # ==============================================================================
-class _GunGameQueryError:
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return self.message
-
-class UseridError(_GunGameQueryError):
+class UseridError(Exception):
     pass
 
-class PlayerError(_GunGameQueryError):
+class PlayerError(Exception):
     pass
 
-class ArgumentError(_GunGameQueryError):
+class ArgumentError(Exception):
     pass
     
-class LevelValueError(_GunGameQueryError):
+class LevelValueError(Exception):
     pass
 
-class MultiKillValueError(_GunGameQueryError):
+class MultiKillValueError(Exception):
     pass
     
-class AFKValueError(_GunGameQueryError):
+class AFKValueError(Exception):
     pass
 
-class TripleValueError(_GunGameQueryError):
+class TripleValueError(Exception):
     pass
 
-class VariableError(_GunGameQueryError):
+class VariableError(Exception):
     pass
 
 # ==============================================================================
@@ -794,11 +786,11 @@ def load():
     # Reset the leader names list
     list_leaderNames = []
     
-    # Set Up a custom variable for voting in dict_gungameVariables
-    dict_gungameVariables['gungame_voting_started'] = False
+    # Set Up a custom variable for voting in dict_variables
+    dict_variables['gungame_voting_started'] = False
     
     # Set up a custom variable for tracking multi-rounds.
-    dict_gungameVariables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
+    dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
 
     # If there is a current map listed, then the admin has loaded GunGame mid-round/mid-map
     if gungamelib.inLevel():
@@ -852,10 +844,10 @@ def es_map_start(event_var):
     gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
     
     # Reset the "gungame_voting_started" variable
-    dict_gungameVariables['gungame_voting_started'] = False
+    dict_variables['gungame_voting_started'] = False
     
     # Reset the "rounds remaining" variable for multi-rounds
-    dict_gungameVariables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
+    dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
     
     # See if the option to randomize weapons is turned on
     if gungamelib.getVariableValue('gg_weapon_order') == '#random':
@@ -1266,7 +1258,7 @@ def gg_levelup(event_var):
     # Check for a winner first
     if int(event_var['old_level']) == gungamelib.getTotalLevels():
         # Check if multi-round has any rounds left
-        if dict_gungameVariables['roundsRemaining'] > 1:
+        if dict_variables['roundsRemaining'] > 1:
             es.event('initialize', 'gg_round_win')
             es.event('setint', 'gg_round_win', 'userid', event_var['userid'])
             es.event('setint', 'gg_round_win', 'loser', event_var['victim'])
@@ -1315,8 +1307,8 @@ def gg_levelup(event_var):
 
         if leaderLevel == gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_vote_trigger'):
             if es.ServerVar('eventscripts_nextmapoverride') == '':
-                if not dict_gungameVariables['gungame_voting_started']:
-                    if dict_gungameVariables['roundsRemaining'] < 2:
+                if not dict_variables['gungame_voting_started']:
+                    if dict_variables['roundsRemaining'] < 2:
                         es.event('initialize', 'gg_vote')
                         es.event('fire', 'gg_vote')
             else:
@@ -1429,7 +1421,7 @@ def unload():
     gungamelib.clearGunGame()
 
 def gg_vote(event_var):
-    dict_gungameVariables['gungame_voting_started'] = True
+    dict_variables['gungame_voting_started'] = True
     if gungamelib.getVariableValue('gg_map_vote') == 2:
         es.server.cmd('ma_voterandom end %s' %gungamelib.getVariableValue('gg_map_vote_size'))
 
@@ -1445,7 +1437,7 @@ def gg_round_win(event_var):
     countBombDeathAsSuicide = False
     
     # Calculate rounds remaining
-    dict_gungameVariables['roundsRemaining'] -= 1
+    dict_variables['roundsRemaining'] -= 1
     
     # End the GunGame Round
     es.server.cmd('mp_restartgame 2')
@@ -1508,7 +1500,7 @@ def gg_win(event_var):
         if gungamelib.getSound('winner'):
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
-    # Remove all old players from the dict_gungameCore    
+    # Remove all old players from the dict_players    
     gungamelib.clearOldPlayers()
     
 def server_cvar(event_var):
@@ -1582,7 +1574,7 @@ def server_cvar(event_var):
     # Weapon order file
     elif cvarName == 'gg_weapon_order_file':
         # Dont set the weapon order file if its not registered
-        if not gungamelib.dict_gungameWeaponOrders.has_key(newValue):
+        if not gungamelib.dict_weaponOrders.has_key(newValue):
             gungamelib.echo('gungame', 0, 0, 'WeaponOrderNotRegistered', {'file': newValue})
             gungamelib.getVariable('gg_weapon_order_file').set('default_weapon_order.txt')
             return
@@ -1598,4 +1590,4 @@ def server_cvar(event_var):
     # GG Multi Round
     elif cvarName == 'gg_multi_round':
         # Reset the "rounds remaining" variable for multi-rounds
-        dict_gungameVariables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
+        dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')

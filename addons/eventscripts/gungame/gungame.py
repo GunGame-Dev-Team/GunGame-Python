@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.258
+    Version: 1.0.267
     Description: The main addon, handles leaders and events.
 '''
 
@@ -10,7 +10,6 @@
 # ==============================================================================
 # Python Imports
 import os
-import cPickle
 import ConfigParser
 
 # EventScripts Imports
@@ -190,7 +189,7 @@ def prepGunGameLevelMenu(userid, popupid):
         # There are no leaders
         gungameLevelMenu.modline(4, '   * There currently is no leader') # Line #4
     if gungamelib.getVariableValue('gg_save_winners') > 0:
-        gungameLevelMenu.modline(6, '   * You have won %d time(s)' %12345) # Line #6
+        gungameLevelMenu.modline(6, '   * You have won %d time(s)' %gungamelib.getWins(gungamePlayer['steamid'])) # Line #6
         if leaderLevel > 1:
             gungameLevelMenu.modline(8, '   * Leader Level: %d (%s)' %(leaderLevel, gungamelib.getLevelWeapon(leaderLevel))) # Line #8
         else:
@@ -800,27 +799,7 @@ def load():
         es.regclientcmd('!leaders', 'gungame/displayLeadersMenu')
 
     if gungamelib.getVariableValue('gg_save_winners') > 0:
-        # Set a variable for the path of the winner's database
-        winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
-        
-        # See if the file exists
-        if not os.path.isfile(winnersDataBasePath):
-            # Open the file
-            winnersDataBaseFile = open(winnersDataBasePath, 'w')
-            
-            # Place the contents of dict_gungameWinners in
-            cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
-            
-            # Save changes
-            winnersDataBaseFile.close()
-        # Open the "..cstrike/addons/eventscripts/gungame/data/winnerdata.db" file
-        winnersDataBaseFile = open(winnersDataBasePath, 'r')
-        
-        # Load the winners database file into dict_gungameWinners via pickle
-        dict_gungameWinners = cPickle.load(winnersDataBaseFile)
-        
-        # Close the winners database file
-        winnersDataBaseFile.close()
+        gungamelib.loadWinnersDataBase()
     
     # Set Up Active Players
     gungamelib.resetGunGame()
@@ -1519,23 +1498,15 @@ def gg_round_win(event_var):
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
     if gungamelib.getVariableValue('gg_save_winners') > 0:
-        # See if the player has won before
-        if not dict_gungameWinners.has_key(steamid):
-            # Ah, we have a new winner! Let's add them to the database
-            dict_gungameWinners[steamid] = gungameWinners()
-        else:
-            # Increment the win count
-            dict_gungameWinners[steamid].int_wins += 1
+        # Retrieve the uniqueid and set it to a variable
+        gungamePlayer = gungamelib.getPlayer(userid)
+        steamid = gungamePlayer['steamid']
         
-        # Open file
-        winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
-        winnersDataBaseFile = open(winnersDataBasePath, 'w')
+        # Add the win to the database
+        gungamelib.addWin(steamid)
         
-        # Place the contents of dict_gungameWinners in it
-        cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
-        
-        # Close the file
-        winnersDataBaseFile.close()
+        # Save the database
+        gungamelib.saveWinnerDatabase()
     
     # Remove all old players from the dict_gungameCore    
     gungamelib.clearOldPlayers()
@@ -1576,23 +1547,15 @@ def gg_win(event_var):
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
     if gungamelib.getVariableValue('gg_save_winners') > 0:
-        # See if the player has won before
-        if not dict_gungameWinners.has_key(steamid):
-            # Ah, we have a new winner! Let's add them to the database
-            dict_gungameWinners[steamid] = gungameWinners()
-        else:
-            # Increment the win count
-            dict_gungameWinners[steamid].int_wins += 1
+        # Retrieve the uniqueid and set it to a variable
+        gungamePlayer = gungamelib.getPlayer(event_var['userid'])
+        steamid = gungamePlayer['steamid']
         
-        # Open file
-        winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
-        winnersDataBaseFile = open(winnersDataBasePath, 'w')
+        # Add the win to the database
+        gungamelib.addWin(steamid)
         
-        # Place the contents of dict_gungameWinners in it
-        cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
-        
-        # Close the file
-        winnersDataBaseFile.close()
+        # Save the database
+        gungamelib.saveWinnerDatabase()
     
     # Remove all old players from the dict_gungameCore    
     gungamelib.clearOldPlayers()

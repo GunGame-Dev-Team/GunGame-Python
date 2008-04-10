@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.258
+    Version: 1.0.267
     Description:
 '''
 
@@ -13,6 +13,8 @@ import string
 import random
 import os
 import ConfigParser
+import time
+import cPickle
 
 # EventScripts Imports
 import es
@@ -45,6 +47,8 @@ dict_RegisteredAddons = {}
 dict_registeredDependencies = {}
 
 dict_gungameSteamids = {}
+
+dict_gungameWinners = {}
 
 # ==============================================================================
 #   GLOBAL LISTS
@@ -420,14 +424,6 @@ class Player:
     def getWeapon(self):
         if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
             return dict_gungameWeaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.attributes['level']][0]
-    
-    def getWins(self):
-        # GET WINS
-        # gungamePlayer.get('Wins')
-        if dict_gungameWinners.has_key(self.attributes['steamid']):
-            return dict_gungameWinners[steamid].int_wins
-        else:
-            return 0
 
 # ==============================================================================
 #   WEAPON ORDER CLASS
@@ -1329,6 +1325,73 @@ class EasyInput:
         self.callback(userid, value, args)
 
 # ==============================================================================
+#  WINNERS CLASS
+# ==============================================================================
+class Winners:
+    ''' Class used for tracking and storing Winners'''
+    def __init__(self, uniqueid):
+        self.uniqueid = str(uniqueid)
+    
+        # Make sure that the winner's database has been loaded
+        if not getGlobal('winnersloaded'):
+            # Load the database using cpickle
+            self.__loadWinnerDatabase()
+            
+        if not dict_gungameWinners.has_key(self.uniqueid):
+            self.attributes = {'wins':0, 'timestamp':time.time()}
+            dict_gungameWinners[self.uniqueid] = self.attributes
+        else:
+            self.attributes = dict_gungameWinners[self.uniqueid]
+            
+    def __loadWinnerDatabase(self):
+        # Set a variable for the path of the winner's database
+        winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
+        
+        # See if the file exists
+        if not os.path.isfile(winnersDataBasePath):
+            # Open the file
+            winnersDataBaseFile = open(winnersDataBasePath, 'w')
+            
+            # Place the contents of dict_gungameWinners in
+            cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
+            
+            # Save changes
+            winnersDataBaseFile.close()
+            
+        # Open the "..cstrike/addons/eventscripts/gungame/data/winnerdata.db" file
+        winnersDataBaseFile = open(winnersDataBasePath, 'r')
+        
+        # Load the winners database file into dict_gungameWinners via pickle
+        dict_gungameWinners = cPickle.load(winnersDataBaseFile)
+        
+        # Close the winners database file
+        winnersDataBaseFile.close()
+        
+        # Set the global to show the winners database is loaded
+        setGlobal('winnersloaded', 1)
+        
+    def __getitem__(self, item):
+        # We will be nice and convert the "item" to a lower-cased string
+        item = str(item).lower()
+        
+        # Let's make sure that the item that they are trying to change exists
+        if item in self.attributes:
+            # Allowing the retrieving of attributes in the dictionary
+            return self.attributes[item]
+        
+    def __setitem__(self, item, value):
+        # We will be nice and convert the "item" to a lower-cased string
+        item = str(item).lower()
+        
+        # Let's make sure that the item that they are trying to change exists
+        if item in self.attributes:
+            if item == 'wins':
+                self.attributes[item] = int(value)
+            if item == 'timestamp':
+                self.attributes[item] = float(value)
+                
+                
+# ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================
 def getPlayer(userid):
@@ -1355,7 +1418,13 @@ def getSoundPack(soundPackName):
         return Sounds(soundPackName)
     except TypeError, e:
         raise e
-
+        
+def getWinner(uniqueid):
+    try:
+        return Winners(uniqueid)
+    except TypeError, e:
+        raise e
+        
 # ==============================================================================
 #  MESSAGE FUNCTIONS
 # ==============================================================================
@@ -1703,6 +1772,63 @@ def getSound(soundName):
         return dict_gungameSounds[soundName]
     else:
         raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
+
+# ==============================================================================
+#   WINNER RELATED COMMANDS
+# ==============================================================================
+def getWins(uniqueid):
+    if dict_gungameWinners.has_key(uniqueid):
+        return dict_gungameWinners[uniqueid]['wins']
+    else:
+        return 0
+
+def addWin(uniqueid):
+    gungameWinner = getWinner(uniqueid)
+    gungameWinner['wins'] += 1
+    
+def updateTimeStamp(uniqueid):
+    gungameWinner = getWinner(uniqueid)
+    gungameWinner['timestamp'] = time.time()
+    
+def saveWinnerDatabase():
+    # Set the winners database path to a variable
+    winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
+    
+    # Open the file
+    winnersDataBaseFile = open(winnersDataBasePath, 'w')
+            
+    # Place the contents of dict_gungameWinners in
+    cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
+            
+    # Save changes
+    winnersDataBaseFile.close()
+    
+def loadWinnersDataBase():
+    # Set a variable for the path of the winner's database
+    winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
+        
+    # See if the file exists
+    if not os.path.isfile(winnersDataBasePath):
+        # Open the file
+        winnersDataBaseFile = open(winnersDataBasePath, 'w')
+            
+        # Place the contents of dict_gungameWinners in
+        cPickle.dump(dict_gungameWinners, winnersDataBaseFile)
+            
+        # Save changes
+        winnersDataBaseFile.close()
+            
+    # Open the "..cstrike/addons/eventscripts/gungame/data/winnerdata.db" file
+    winnersDataBaseFile = open(winnersDataBasePath, 'r')
+        
+    # Load the winners database file into dict_gungameWinners via pickle
+    dict_gungameWinners = cPickle.load(winnersDataBaseFile)
+        
+    # Close the winners database file
+    winnersDataBaseFile.close()
+    
+    # Set the global for having the database loaded
+    setGlobal('winnersloaded', 1)
 
 # ==============================================================================
 #   ADDON RELATED COMMANDS

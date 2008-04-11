@@ -108,7 +108,7 @@ def player_death(event_var):
         if gungamelib.getSound('leveldown'):
             es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
     
-    if not gungameAttacker.getWeapon() == 'hegrenade':
+    if gungameAttacker.getWeapon() != 'hegrenade':
         # Trigger level up for the attacker
         gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
     

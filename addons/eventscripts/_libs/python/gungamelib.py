@@ -1573,7 +1573,7 @@ def getLevelWeapon(levelNumber):
     if dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
         return str(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
     else:
-        raise GunGameValueError('Unable to retrieve weapon information: level \'%d\' does not exist' % levelNumber)
+        raise GunGameValueError('Cannot get weapon information (%s): doesn\'t exist' % levelNumber)
 
 def sendWeaponOrderMenu(userid):
     popuplib.send('gungameWeaponOrderMenu_page1', userid)
@@ -1596,32 +1596,34 @@ def setPreventLevelAll(value):
 def getAverageLevel():
     averageLevel = 0
     averageDivider = 0
+    
     for userid in es.getUseridList():
         if dict_players.has_key(userid):
             averageDivider += 1
             averageLevel += int(dict_players[userid]['level'])
-    if averageDivider:
-        return int(round(averageLevel / averageDivider))
-    else:
-        return 0
-        
+    
+    return int(round(averageLevel / averageDivider)) if averageDivider else 0
+
 def getLevelUseridList(levelNumber):
     levelNumber = int(levelNumber)
     list_levelUserids = []
+    
     for userid in dict_players:
-        if dict_players[int(userid)]['level'] == levelNumber:
-            list_levelUserids.append(userid)
+        if dict_players[int(userid)]['level'] == levelNumber: list_levelUserids.append(userid)
+    
     return list_levelUserids
     
 def getLevelUseridString(levelNumber):
     levelNumber = int(levelNumber)
     levelUseridString = None
+    
     for userid in dict_players:
         if dict_players[int(userid)]['level'] == levelNumber:
             if not levelUseridString:
                 levelUseridString = userid
             else:
                 levelUseridString = '%s,%s' %(levelUseridString, userid)
+    
     return levelUseridString
     
 def getLevelMultiKill(levelNumber):
@@ -1629,15 +1631,17 @@ def getLevelMultiKill(levelNumber):
         return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][1]
     
 def createScoreList(keyGroupName=None):
-    # TODO: Finish this(?)
     dict_gungameScores = {}
+    
     for userid in dict_players:
         dict_gungameScores[userid] = dict_players[userid]['level']
+    
     if keyGroupName:
         list_sortedScores = sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
-        for useridLevelTuple in list_sortedScores:
-            # <-- TO DO -->
-            es.msg('keygroup %s created' %keyGroupName)
+        
+        for userInfo in list_sortedScores:
+            # TODO
+            pass
     else:
         return sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
     
@@ -1651,8 +1655,7 @@ def getCurrentLeaderList():
     # Loop through the current leaders
     for userid in dict_leaderInfo['currentLeaders']:
         # Is the client in the server?
-        if es.getplayername(userid) != 0:
-            leaders.append(userid)
+        if es.getplayername(userid) != 0: leaders.append(userid)
     
     # No leaders in the server?
     if len(leaders) == 0:
@@ -1724,7 +1727,7 @@ def getOldLeaderString():
         if not oldLeaderString:
             oldLeaderString = userid
         else:
-            oldLeaderString = '%s,%s' %(oldLeaderString, userid)
+            oldLeaderString = '%s,%s' % (oldLeaderString, userid)
     return oldLeaderString
     
 def getLeaderLevel():
@@ -1743,7 +1746,7 @@ def getVariable(variableName):
     variableName = variableName.lower()
     
     if not dict_variables.has_key(variableName):
-        raise GunGameValueError('Unable to get variable object (%s): not registered.' % variableName)
+        raise ValueError('Unable to get variable object (%s): not registered.' % variableName)
     
     return dict_variables[variableName]
 
@@ -1751,23 +1754,18 @@ def getVariableValue(variableName):
     variableName = variableName.lower()
     
     if not dict_variables.has_key(variableName):
-        raise GunGameValueError('Unable to get variable value (%s): not registered.' % variableName)
+        raise ValueError('Unable to get variable value (%s): not registered.' % variableName)
     
     variable = dict_variables[variableName]
     
     # Is numeric?
-    if isNumeric(str(variable)):
-        # Return number
-        return int(variable)
-    else:
-        # Return string
-        return str(variable)
+    return int(variable) if isNumeric(variable) else variable
 
 def setVariableValue(variableName, value):
     variableName = variableName.lower()
     
     if not dict_variables.has_key(variableName):
-        raise GunGameValueError('Unable to set variable value (%s): not registered.' % variableName)
+        raise ValueError('Unable to set variable value (%s): not registered.' % variableName)
     
     # Set variable value
     dict_variables[variableName].set(value)
@@ -1795,14 +1793,17 @@ def getSound(soundName):
     if dict_sounds.has_key(soundName):
         return dict_sounds[soundName]
     else:
-        raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
+        raise SoundError('Cannot get sound (%s): sound not found.' % soundName)
 
 # ==============================================================================
 #   WINNER RELATED COMMANDS
 # ==============================================================================
 def getWins(uniqueid):
     global dict_winners
+    
     uniqueid = str(uniqueid)
+    
+    # Make sure the winner exists
     if dict_winners.has_key(uniqueid):
         return dict_winners[uniqueid]['wins']
     else:
@@ -1818,41 +1819,35 @@ def updateTimeStamp(uniqueid):
     
 def saveWinnerDatabase():
     global dict_winners
+    
     # Set the winners database path to a variable
     winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
     
-    # Open the file
+    # Open the file and dump the new winner database
     winnersDataBaseFile = open(winnersDataBasePath, 'w')
-            
-    # Place the contents of dict_winners in
     cPickle.dump(dict_winners, winnersDataBaseFile)
-            
-    # Save changes
     winnersDataBaseFile.close()
     
 def loadWinnersDataBase():
     global dict_winners
+    
     # Set a variable for the path of the winner's database
     winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
-        
+    
     # See if the file exists
     if not os.path.isfile(winnersDataBasePath):
         # Open the file
         winnersDataBaseFile = open(winnersDataBasePath, 'w')
-            
+        
         # Place the contents of dict_winners in
         cPickle.dump(dict_winners, winnersDataBaseFile)
-            
+        
         # Save changes
         winnersDataBaseFile.close()
     
-    # Open the "..cstrike/addons/eventscripts/gungame/data/winnerdata.db" file
+    # Load the winners database
     winnersDataBaseFile = open(winnersDataBasePath, 'r')
-    
-    # Load the winners database file into dict_winners via pickle
     dict_winners = cPickle.load(winnersDataBaseFile)
-        
-    # Close the winners database file
     winnersDataBaseFile.close()
     
     # Set the global for having the database loaded
@@ -1860,13 +1855,15 @@ def loadWinnersDataBase():
     
 def cleanWinnersDataBase(days):
     global dict_winners
+    
+    # Get days in seconds and the current time
     daysInSeconds = float(days) * float(86400)
     currentTime = float(time.time())
     
+    # Loop through the winners
     for steamid in dict_winners.copy():
-        # See if the steamid has been unused in the database for longer than the set amount of days
+        # Prune the player?
         if (currentTime - float(dict_winners[steamid]['timestamp'])) > daysInSeconds:
-            # Remove from dict_winners if they aren't in the server
             del dict_winners[steamid]
 
 # ==============================================================================
@@ -1920,17 +1917,16 @@ def getDependencyValue(dependencyName):
 def setGlobal(variableName, variableValue):
     '''Set a global variable (name case insensitive)'''
     variableName = variableName.lower()
-    if isNumeric(variableValue):
-        variableValue = int(variableValue)
-    dict_globals[variableName] = variableValue
+    
+    # Set value
+    dict_globals[variableName] = int(variableValue) if isNumeric(variableValue) else variableValue
 
 def getGlobal(variableName):
     '''Returns a global variable (name case insensitive)'''
     variableName = variableName.lower()
-    if dict_globals.has_key(variableName):
-        return dict_globals[variableName]
-    else:
-        return 0
+    
+    # Return value if it exists, else return 0
+    return dict_globals[variableName] if dict_globals.has_key(variableName) else 0
 
 # ==============================================================================
 #  HELPER FUNCTIONS
@@ -1966,7 +1962,7 @@ def getAddonDir(addonName, dir):
     return '%s/%s/%s' % (addonPath, 'custom_addons' if getAddonType(addonName) else 'included_addons', dir)
 
 def clientInServer(userid):
-    return es.exists('userid', userid)
+    return (not es.getplayername(userid) == 0) or (not es.exists('userid', userid))
 
 def inLevel():
     return (str(es.ServerVar('eventscripts_currentmap')) != '')
@@ -1975,52 +1971,32 @@ def getLevelName():
     return str(es.ServerVar('eventscripts_currentmap'))
 
 def isSpectator(userid):
-    if not clientInServer(userid):
-        return 0
-    
-    return (es.getplayerteam(userid) <= 1)
+    return (es.getplayerteam(userid) <= 1) if clientInServer(userid) else 0
 
 def hasEST():
-    if str(es.ServerVar('est_version')) != '0':
-        return True
-    else:
-        return False
-    
+    return str(es.ServerVar('est_version')) != '0'
+
 def getESTVersion():
-    if hasEST():
-        return float(es.ServerVar('est_version'))
-    else:
-        return 0.000
+    return float(es.ServerVar('est_version')) if hasEST() else 0.000
 
 def isDead(userid):
     return bool(int(es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag')))
-    
+
 def getPlayerUniqueID(userid):
-    userid = int(userid)
-    return dict_uniqueIds[userid]
-    
+    return dict_uniqueIds[int(userid)]
+
 def playerExists(userid):
-    userid = int(userid)
-    if dict_players.has_key(userid):
-        return True
-    else:
-        return False
+    return dict_players.has_key(int(userid))
 
 def getAddonType(addonName):
     # Check addon exists
     if not addonExists(addonName): raise ValueError('Cannot get addon type (%s): doesn\'t exist.' % addonName)
     
     # Get addon type
-    if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)):
-        return 0
-    else:
-        return 1
+    return (not os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)))
 
 def addonExists(addonName):
     return (os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName)))
 
-def formatArgs(userid=False):
-    if userid:
-        return es.getcmduserid(), map(es.getargv, range(1, es.getargc()))
-    else:
-        return map(es.getargv, range(1, es.getargc()))
+def formatArgs(userid):
+    return map(es.getargv, range(1, es.getargc()))

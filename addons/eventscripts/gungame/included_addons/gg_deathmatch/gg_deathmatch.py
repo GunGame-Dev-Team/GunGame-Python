@@ -114,11 +114,15 @@ def es_map_start(event_var):
     
     # Get spawnpoints and allow respawns
     getSpawnPoints(event_var['mapname'])
-    respawnAllowed = True
+    respawnAllowed = False
 
 def player_team(event_var):
-    # Respawn the player
+    # Don't allow it if people are disconnecting
     if event_var['disconnect'] != '0':
+        return
+    
+    # Don't allow spectators
+    if event_var['team'] == '1':
         return
     
     # Get the userid

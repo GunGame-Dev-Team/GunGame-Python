@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_rookie
-    Version: 1.0.278
+    Version: 1.0.280
     Description:    This is the same as gg_knife_pro, but a few small
                     differences. When one player knife kills another player,
                     the attacker will ALWAYS level up, unless on knife level.
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = '1.0.278'
+info.version  = '1.0.280'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -39,7 +39,7 @@ def load():
     # Register addon with gungamelib
     gg_knife_rookie = gungamelib.registerAddon('gg_knife_rookie')
     gg_knife_rookie.setDisplayName('GG Knife Rookie')
-    gg_knife_rookie.addDependency('gg_knife_pro', '0')
+    gg_knife_rookie.addDependency('gg_knife_pro', 0)
 
 def unload():
     # Unregister this addon with gungamelib

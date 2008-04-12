@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.278
+    Version: 1.0.280
     Description: Deathmatch addon for GunGame:Python
 '''
 
@@ -32,7 +32,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.278'
+info.version  = '1.0.280'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -57,12 +57,12 @@ respawnAllowed = True
 def load():
     # Register addon with gungamelib
     gg_deathmatch = gungamelib.registerAddon('gg_deathmatch')
-    gg_deathmatch.addDependency('gg_turbo', '1')
-    gg_deathmatch.addDependency('gg_dead_strip', '1')
-    gg_deathmatch.addDependency('gg_dissolver', '1')
-    gg_deathmatch.addDependency('gg_map_obj', '0')
-    gg_deathmatch.addDependency('gg_knife_elite', '0')
-    gg_deathmatch.addDependency('gg_elimination', '0')
+    gg_deathmatch.addDependency('gg_turbo', 1)
+    gg_deathmatch.addDependency('gg_dead_strip', 1)
+    gg_deathmatch.addDependency('gg_dissolver', 1)
+    gg_deathmatch.addDependency('gg_map_obj', 0)
+    gg_deathmatch.addDependency('gg_knife_elite', 0)
+    gg_deathmatch.addDependency('gg_elimination', 0)
     
     # Menu settings
     gg_deathmatch.createMenu(menuCallback)

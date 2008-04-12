@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.278
+    Version: 1.0.280
     Description:
 '''
 
@@ -1023,12 +1023,13 @@ class Addon:
     
     '''Dependency options:'''
     def addDependency(self, dependencyName, value):
+        if isNumeric(value):
+            value = int(value)
+        
         # Check if dependency already exists
         if not dict_dependencies.has_key(dependencyName):
             # Check if dependency is a valid gungame variable
             if dict_variables.has_key(dependencyName):
-                if isNumeric(value):
-                    value = int(value)
                 
                 # Add dependency and original value to addon attributes
                 self.dependencies.append(dependencyName)

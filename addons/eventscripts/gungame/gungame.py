@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.278
+    Version: 1.0.280
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Initialize some CVars
-gungameVersion = '1.0.278'
+gungameVersion = '1.0.280'
 es.ServerVar('eventscripts_ggp', gungameVersion).makepublic()
 
 # Register with EventScripts

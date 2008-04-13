@@ -68,7 +68,15 @@ es.server.queuecmd('gauth group create gguser 128')
 def load():
     # Register
     gg_admin = gungamelib.registerAddon('gg_admin')
+    gg_admin.setDisplayName('GG Admin')
+    
+    # Command registration
     gg_admin.registerCommand('admin', sendAdminMenu, '')
+    gg_admin.registerCommand('admin_add', cmd_admin_add, '<steamid> <name> <level>')
+    gg_admin.registerCommand('admin_remove', cmd_admin_remove, '<steamid>')
+    gg_admin.registerCommand('admin_show', cmd_admin_show, '')
+    gg_admin.registerCommand('admin_set', cmd_admin_set, '<steamid> <new level>')
+    gg_admin.registerCommand('admins', cmd_admins, '')
     
     # Get admins
     adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
@@ -109,13 +117,97 @@ def load():
 def unload():
     # Unregister commands
     for command in dict_commands:
-        if dict_commands[command][0] == 'say':
-            es.unregsaycmd(command)
-        else:
-            es.unregclientcmd(command)
+        es.unregsaycmd('!gg%s' % command)
+        es.unregclientcmd('gg_%s' % command)
     
     # Unregister addon
     gungamelib.unregisterAddon('gg_admin')
+
+# ==============================================================================
+#   COMMANDS
+# ==============================================================================
+def cmd_admin_add(userid, steamid, name, level):
+    # Check the admin exists
+    if dict_admins.has_key(steamid):
+        gungamelib.msg('gg_admin', userid, 'AdminExists', {'steamid': steamid})
+        return
+    
+    # Open file
+    adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'a')
+    
+    # Write to file
+    adminFile.write('// LOG: Admin added by <%s,%s>\n' % (userid, es.getplayersteamid(userid)))
+    adminFile.write('%s %s %s\n' % (steamid, name, level))
+    adminFile.write('\n')
+    
+    # Add to admins dictionary
+    dict_admins[steamid] = level
+    
+    # Close file
+    adminFile.close()
+
+def cmd_admin_remove(userid, steamid):
+    # Check the admin exists
+    if not dict_admins.has_key(steamid):
+        gungamelib.msg('gg_admin', userid, 'InvalidAdmin', {'steamid': steamid})
+        return
+    
+    # Open file and remove the line that starts with <steamid>
+    adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
+    lines = filter(lambda x: not x.startswith(steamid), adminFile.readlines())
+    adminFile.close()
+    
+    # Open the file again, but write the new lines to it
+    adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
+    adminFile.write('\n'.join(lines))
+    adminFile.close()
+    
+    # Tell them the removal was successful
+    gungamelib.msg('gg_admin', userid, 'AdminRemoved', {'steamid': steamid})
+
+def cmd_admin_show(userid):
+    # Tell them to check their console
+    gungamelib.msg('gungame', userid, 'CheckYourConsole')
+    gungamelib.echo('gg_admin', userid, 0, 'AdminStart')
+    
+    # Check the admin exists
+    for steamid in dict_admins:
+        level = dict_admins[steamid]
+        
+        gungamelib.echo('gg_admin', userid, 0, 'AdminItem', {'steamid': steamid, 'level': level})
+    
+    # End
+    gungamelib.echo('gg_admin', userid, 0, 'AdminEnd')
+
+def cmd_admin_set(userid, steamid, level):
+    # Check the admin exists
+    if not dict_admins.has_key(steamid):
+        gungamelib.msg('gg_admin', userid, 'InvalidAdmin', {'steamid': steamid})
+        return
+    
+    # Note to Devs: I will finish this off when I find a way
+
+def cmd_admins(userid):
+    # Tell them to check their console
+    gungamelib.msg('gungame', userid, 'CheckYourConsole')
+    gungamelib.echo('gg_admin', userid, 0, 'AdminStart')
+    
+    # Get a list of active admins
+    for userid in es.getUseridList():
+        # Get player steamid
+        steamid = es.getplayersteamid(userid)
+        
+        # Do they exist in the admins dictionary?
+        if dict_admins.has_key(steamid):
+            # Get player info
+            level = dict_admins[steamid]
+            name = es.getplayername(userid)
+            
+            # Add to console
+            gungamelib.echo('gg_admin', userid, 0, 'AdminItem2', {'steamid': steamid, 'level': dict_admins[steamid], 'name': es.getplayername(userid)})
+    
+    # End
+    gungamelib.echo('gg_admin', userid, 0, 'AdminEnd')
 
 # ==============================================================================
 #   ADMIN MENU
@@ -316,6 +408,11 @@ def sendCommandMenu(userid):
     popuplib.send('gg_admin_command', userid)
 
 def selectCommandMenu(userid, choice, popupid):
+    # Just call the command if there is no parameters
+    if getCommandSyntax(choice) == '':
+        callCommand(userid, choice, [])
+        return
+    
     # Create menu and set aesthetic things
     _input = gungamelib.EasyInput('gg_admin_command', callCommandCallback, choice)
     _input.setTitle('Call Command (%s)' % choice)
@@ -326,7 +423,7 @@ def selectCommandMenu(userid, choice, popupid):
 
 def callCommandCallback(userid, choice, args):
     # Call command
-    callCommand(userid, args[0], choice.split())
+    callCommand(userid, args[0], choice.split(' '))
 
 # ==============================================================================
 #   HELPER FUNCTIONS
@@ -337,10 +434,10 @@ def getCommandSyntax(command):
         addonObj = gungamelib.getAddon(addonName)
         
         # See if the addon has the command
-        if not addonObj.hasCommand(command):
-            continue
-        
-        return addonObj.getCommandSyntax(command)
+        if addonObj.hasCommand(command):
+            return addonObj.getCommandSyntax(command)
+    
+    return '<unknown>'
 
 def getCommandsForLevel(level):
     return filter(lambda x: dict_commands[x] <= level, dict_commands)
@@ -351,10 +448,9 @@ def callCommand(userid, command, args):
         addonObj = gungamelib.getAddon(addonName)
         
         # See if the addon has the command
-        if not addonObj.hasCommand(command):
-            continue
-        
-        addonObj.callCommand(command, userid, args)
+        if addonObj.hasCommand(command):
+            addonObj.callCommand(command, userid, args)
+            break
 
 def cmdHandler():
     # Get command name
@@ -374,6 +470,9 @@ def regAdmin(steamid, name, level):
     # Add them to the groups
     for group in range(1, int(level)+1):
         es.server.queuecmd('gauth user join %s ggadmin%s' % (name, group))
+    
+    # Announce admin registration
+    gungamelib.echo('gg_admin', 0, 0, 'AddedAdmin', {'name': name, 'steamid': steamid, 'level': level})
 
 def regCmd(command, permission):
     '''Registers commands with client command and group_auth.'''

@@ -91,6 +91,10 @@ class Player:
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
+        # Check the userid is numeric
+        if not isNumeric(userid):
+            raise ValueError('Cannot get player: invalid userid (must be numerical)')
+        
         # Make userid an int
         self.userid = int(userid)
         
@@ -100,7 +104,7 @@ class Player:
                 self.attributes = dict_players[self.userid]
             else:
                 # Invalid userid
-                raise UseridError('Cannot initialize Player class: "%s" is not on the server.' % self.userid)
+                raise UseridError('Cannot get player: "%s" is not on the server.' % self.userid)
         else:
             # Check they exist
             if not self.__validatePlayer():
@@ -991,13 +995,27 @@ class Addon:
         if not self.commands.has_key(command):
             raise AddonError('Cannot call command (%s): not registered.' % command)
         
+        # Clean up the variables
+        userid = int(userid)
+        arguments = list(arguments)
+        
+        # Get details on the player
+        adminIndex = getPlayer(userid)['index']
+        name = es.getplayername(userid)
+        steamid = es.getplayersteamid(userid)
+        
         try:
             self.commands[command][0](userid, *arguments)
             
-            # Show a "PlayerExecuted" message
-            msg('gungame', '#all', 'PlayerExecuted', {'name': es.getplayername(userid), 'cmd': '%s %s' % (command, ' '.join(arguments))})
+            # Show a "Player ... ran" message            
+            saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
+            
+            # Print to the admin log
+            logFile = open(getGameDir('addons/eventscripts/gungame/logs/adminlog.txt'), 'a')
+            logFile.write('%s Admin (%s:%s) ran: %s %s\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), steamid, name, command, ' '.join(arguments)))
+            logFile.close()
         except TypeError:
-            # Show an "InvalidSyntax" message
+            # Show an Invalid Syntax message to the player
             msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': self.commands[command][1]})
     
     def hasCommand(self, command):
@@ -1431,7 +1449,6 @@ class Winners:
             if item == 'timestamp':
                 self.attributes[item] = float(value)
 
-                
 # ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================

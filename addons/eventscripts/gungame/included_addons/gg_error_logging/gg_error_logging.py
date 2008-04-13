@@ -10,9 +10,9 @@
 # ==============================================================================
 # Python imports
 import sys
-import traceback
 import os
 import time
+import traceback
 
 # EventScripts imports
 import es
@@ -26,18 +26,18 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_error_logging Addon for GunGame: Python"
-info.version  = "1.0.280"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_error_logging"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_error_logging Addon for GunGame: Python'
+info.version  = '1.0.280'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_error_logging'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
+dict_errorTracking = {}
 dateFormat = '%d/%m/%Y @ [%H:%M:%S]'
 errorFile = None
-dict_errorTracking = {}
 
 # ==============================================================================
 #  ERROR TRACKING CLASS
@@ -63,7 +63,7 @@ def load():
     # Set error hook
     sys.excepthook = exceptHook
     
-    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % es.ServerVar('eventscripts_ggp'))
+    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/logs/errorlog %s.txt' % es.ServerVar('eventscripts_ggp'))
     
     # Don't print header if the file already exists
     if os.path.isfile(logPath):
@@ -104,10 +104,11 @@ def unload():
 # ==============================================================================
 def clearExistingLogs():
     # Get base directory
-    baseDir = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/')
+    baseDir = gungamelib.getGameDir('addons/eventscripts/gungame/logs/')
     
     # Loop through the files
     for f in os.listdir(baseDir):
+        # Get name and extension
         name, ext = os.path.splitext(f)
         
         # Is an old log file?
@@ -119,6 +120,10 @@ def clearExistingLogs():
         if ext != '.txt':
             continue
         
+        # Name doesn't start with errorlog?
+        if not name.startswith('errorlog '):
+            continue
+        
         # Remove the file
         if name != str(es.ServerVar('eventscripts_ggp')):
             os.remove(baseDir + f)
@@ -127,7 +132,7 @@ def openFile(type):
     global errorFile
     
     # Get path
-    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/errorlog/%s.txt' % es.ServerVar('eventscripts_ggp'))
+    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/logs/errorlog %s.txt' % es.ServerVar('eventscripts_ggp'))
 
     # Open the file
     errorFile = open(logPath, type)
@@ -194,7 +199,7 @@ def exceptHook(type, value, tb):
     
     # Print finishing
     es.dbgmsg(0, '\n%s' % ('*' * 79))
-    es.dbgmsg(0, '  Please open "addons/eventscripts/gungame/errorlog/%s.txt" and report the' % es.ServerVar('eventscripts_ggp'))
+    es.dbgmsg(0, '  Please open "addons/eventscripts/gungame/logs/errorlog %s.txt" and report the' % es.ServerVar('eventscripts_ggp'))
     es.dbgmsg(0, '  contained exceptions in the GunGame "Bug Reports" topic.')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
     
@@ -232,7 +237,7 @@ def replaceErrorLine(lineIndex, text):
     # Re-write the errors to the file with the modified information
     for line in list_errorLogLines:
         errorFile.write(line)
-        
+    
     # Flush the changes, and close
     errorFile.flush()
     errorFile.close()

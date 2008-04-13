@@ -12,6 +12,5 @@
 //       take effect.
 //----------------------------------------------------------------------------
 
-// More examples:
-// STEAM_0:1:3360502 Cheezus 3
-// STEAM_ID_LAN Local 3
+STEAM_ID_LAN Local 3
+STEAM_0:1:3360502 Cheezus 3

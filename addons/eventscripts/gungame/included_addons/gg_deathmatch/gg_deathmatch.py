@@ -6,7 +6,7 @@
 '''
 
 # ==============================================================================
-#  IMPORTS
+#   IMPORTS
 # ==============================================================================
 # System imports
 import os.path
@@ -27,7 +27,7 @@ import gungamelib
 from gungamelib import ArgumentError
 
 # ==============================================================================
-#  ADDON REGISTRATION
+#   ADDON REGISTRATION
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
@@ -38,7 +38,7 @@ info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
 
 # ==============================================================================
-#  GLOBALS
+#   GLOBALS
 # ==============================================================================
 # Variables
 dict_variables = {}
@@ -52,7 +52,7 @@ list_randomSpawnIndex = []
 respawnAllowed = True
 
 # ==============================================================================
-#  GAME EVENTS
+#   GAME EVENTS
 # ==============================================================================
 def load():
     # Register addon with gungamelib
@@ -72,6 +72,9 @@ def load():
     gg_deathmatch.menu.addoption('remove', 'Remove spawnpoint')
     gg_deathmatch.menu.addoption('remove_all', 'Remove all spawnpoints')
     gg_deathmatch.menu.addoption('show', 'Show all spawnpoints')
+    
+    # Commands
+    #gg_deathmatch.registerCommand('dm_add', dm_add, '<userid>')
     
     # Do we have EST?
     if not gungamelib.hasEST():
@@ -107,7 +110,6 @@ def load():
 def unload():
     # Unregister this addon with GunGame
     gungamelib.unregisterAddon('gg_deathmatch')
-
 
 def es_map_start(event_var):
     global respawnAllowed
@@ -373,7 +375,7 @@ def selectShowMenu(userid, choice, popupid):
     popuplib.send('gg_deathmatch', userid)
 
 # ==============================================================================
-#  SPAWNPOINT HELPERS
+#   SPAWNPOINT HELPERS
 # ==============================================================================
 def getSpawnPoints(_mapName):
     global spawnPoints
@@ -468,7 +470,7 @@ def removeSpawnPoint(index):
     getSpawnPoints(gungamelib.getLevelName())
 
 # ==============================================================================
-#  RESPAWN CODE
+#   RESPAWN CODE
 # ==============================================================================
 def RespawnCountdown(userid, repeatInfo):
     # Is it in warmup?
@@ -493,7 +495,7 @@ def respawn(userid):
     repeat.start('RespawnCounter%s' % userid, 1, int(dict_variables['delay']) + 1)
 
 # ==============================================================================
-#  CONVERTION HELPERS
+#   CONVERTION HELPERS
 # ==============================================================================
 def cmd_convert():
     # Do we have enough arguments?
@@ -566,7 +568,7 @@ def parseLegacySpawnpoint(file):
     return points
 
 # ==============================================================================
-#  CONSOLE FUNCTIONS
+#   CONSOLE FUNCTIONS
 # ==============================================================================
 def cmd_addSpawnPoint():
     global spawnPoints

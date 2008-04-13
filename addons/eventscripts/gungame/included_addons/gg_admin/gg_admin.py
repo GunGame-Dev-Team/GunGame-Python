@@ -68,18 +68,17 @@ es.server.queuecmd('gauth group create gguser 128')
 def load():
     # Register
     gg_admin = gungamelib.registerAddon('gg_admin')
-    
-    # Create commands
-    regCmd('say', '!ggadmin', 'sendAdminMenu', 'gg_admin', 'admin3')
-    regCmd('console', 'gg_admin', 'sendAdminMenu', 'gg_admin', 'admin3')
-    regCmd('say', '!ggmenu', 'sendUserMenu', 'gg_admin' , 'user')
+    gg_admin.registerCommand('admin', sendAdminMenu, '')
     
     # Get admins
     adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
     
     # Format lines
-    lines = map(lambda x: x.lower().strip(), adminFile.readlines())
+    lines = map(lambda x: x.strip(), adminFile.readlines())
     lines = filter(lambda x: not x.startswith('//') and x, lines)
+    
+    # Close file
+    adminFile.close()
     
     # Register admins
     for line in lines:
@@ -88,6 +87,24 @@ def load():
         
         # Register them
         regAdmin(steamid, name, level)
+    
+    # Register commands
+    cmdFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'r')
+    
+    # Format lines
+    lines = map(lambda x: x.strip(), cmdFile.readlines())
+    lines = filter(lambda x: not x.startswith('//') and x, lines)
+    
+    # Register commands
+    for line in lines:
+        # Get data from the line
+        command, level = line.split(' ', 1)
+        
+        # Register it
+        regCmd(command, level)
+    
+    # Close file
+    cmdFile.close()
 
 def unload():
     # Unregister commands
@@ -112,11 +129,9 @@ def buildAdminMenu():
     menu_admin_main.addoption('load', 'Load / Unload Addons')
     menu_admin_main.addoption('menus', 'Addon Menus')
     menu_admin_main.addoption('settings', 'Variable Settings')
+    menu_admin_main.addoption('commands', 'Commands')
 
-def sendAdminMenu(userid=None):
-    if not userid:
-        userid = es.getcmduserid()
-    
+def sendAdminMenu(userid):
     buildAdminMenu()
     popuplib.send('gg_admin_main', userid)
 
@@ -127,6 +142,8 @@ def selectAdminMenu(userid, choice, popupid):
         sendAddonTypeMenu(userid)
     elif choice == 'menus':
         sendAddonMenu(userid)
+    elif choice == 'commands':
+        sendCommandMenu(userid)
 
 # ==============================================================================
 #   CFG SETTINGS MENUS 
@@ -279,12 +296,77 @@ def selectAddonMenu(userid, choice, popupid):
     addonObj.sendMenu(userid)
 
 # ==============================================================================
+#   COMMAND MENU
+# ==============================================================================
+def buildCommandMenu(userid):
+    # Get the admin level
+    level = dict_admins[es.getplayersteamid(userid)]
+    
+    # Create menu
+    menu_command = popuplib.easymenu('gg_admin_command', None, selectCommandMenu)
+    menu_command.settitle('GG:Admin: Command menu')
+    menu_command.setdescription('%s\n * Execute commands' % menu_command.c_beginsep)
+    
+    # Loop through the commands available for the admin
+    for command in getCommandsForLevel(level):
+        menu_command.addoption(command, '%s %s' % (command, getCommandSyntax(command)))
+
+def sendCommandMenu(userid):
+    buildCommandMenu(userid)
+    popuplib.send('gg_admin_command', userid)
+
+def selectCommandMenu(userid, choice, popupid):
+    # Create menu and set aesthetic things
+    _input = gungamelib.EasyInput('gg_admin_command', callCommandCallback, choice)
+    _input.setTitle('Call Command (%s)' % choice)
+    _input.setText('Syntax: %s' % getCommandSyntax(choice))
+    
+    # Send menu
+    _input.send(userid)
+
+def callCommandCallback(userid, choice, args):
+    # Call command
+    callCommand(userid, args[0], choice.split())
+
+# ==============================================================================
 #   HELPER FUNCTIONS
 # ==============================================================================
+def getCommandSyntax(command):
+    for addonName in gungamelib.getRegisteredAddonlist():
+        # Get the addon object
+        addonObj = gungamelib.getAddon(addonName)
+        
+        # See if the addon has the command
+        if not addonObj.hasCommand(command):
+            continue
+        
+        return addonObj.getCommandSyntax(command)
+
+def getCommandsForLevel(level):
+    return filter(lambda x: dict_commands[x] <= level, dict_commands)
+
+def callCommand(userid, command, args):
+    for addonName in gungamelib.getRegisteredAddonlist():
+        # Get the addon object
+        addonObj = gungamelib.getAddon(addonName)
+        
+        # See if the addon has the command
+        if not addonObj.hasCommand(command):
+            continue
+        
+        addonObj.callCommand(command, userid, args)
+
+def cmdHandler():
+    # Get command name
+    name = es.getargv(0)[3:]
+    
+    # Call command
+    callCommand(es.getcmduserid(), name, gungamelib.formatArgs())
+
 def regAdmin(steamid, name, level):
     '''Registers an admin with group_auth and sets their permissions.'''
-    # NOTE TO HTP: If you want an admins dictionary, just uncomment the next line.
-    # dict_admins[name] = steamid, level
+    # Register the admin in dict_admins
+    dict_admins[steamid] = level
     
     # Create user
     es.server.queuecmd('gauth user create %s %s' % (name, steamid))
@@ -293,47 +375,30 @@ def regAdmin(steamid, name, level):
     for group in range(1, int(level)+1):
         es.server.queuecmd('gauth user join %s ggadmin%s' % (name, group))
 
-def regCmd(type, command, block, addon, permission):
-    ''' types: say, console
-        permissions: admin1, admin2, admin3, user
-    '''
-    
-    # Correct type
-    if type not in ('say', 'console'):
-        gungamelib.echo('gg_admin', 0, 0, 'InvalidType', {'command': command, 'type': type})
-        return
-    
-    # Correct permission
-    if permission not in ('admin1', 'admin2', 'admin3', 'user'):
-        gungamelib.echo('gg_admin', 0, 0, 'InvalidPermission', {'command': command, 'permission': permission})
-        return
-    
-    # Set type
-    temptype = 'clientcommand' if type == 'console' else 'saycommand'
+def regCmd(command, permission):
+    '''Registers commands with client command and group_auth.'''
+    consoleCmd = 'gg_%s' % command
     
     # Does the command exist?
-    if es.exists(temptype, command):
+    if es.exists('clientcommand', consoleCmd) or es.exists('command', consoleCmd):
         return
     
-    # Does the addon exist?
-    if not gungamelib.addonExists(addon):
-        gungamelib.echo('gg_admin', 0, 0, 'AddonNotExist', {'command': command, 'addon': addon})
+    # Does the command exist in the commands dict?
+    if dict_commands.has_key(command):
         return
     
-    # Set addon block
-    addonblock = 'gungame/%s/%s/%s' % ('custom_addons' if gungamelib.getAddonType(addon) else 'included_addons', addon, block)
+    # Add to dictionary of commands
+    dict_commands[command] = int(permission)
     
-    # Add to command dictionary
-    if not dict_commands.has_key(command):
-        # Add to dictionary of commands
-        dict_commands[command] = type, addon, permission
-        
-        # Set level and group variables
-        level = '#ALL' if permission == 'user' else '#ADMIN'
-        levelNum = 128 if permission == 'user' else 1
-        group = 'gg' + permission
-        
-        # Create the command
-        es.server.queuecmd('clientcmd create %s %s %s %s %s' % (type, command, addonblock, command, level))
-        es.server.queuecmd('gauth power create %s %s' % (command, levelNum))
-        es.server.queuecmd('gauth power give %s %s' % (command, group))
+    # Set group
+    group = 'ggadmin%s' % permission
+    
+    # Create the command (say)
+    es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s #admin' % (command, command))
+    es.server.queuecmd('gauth power create !gg%s 128' % command)
+    es.server.queuecmd('gauth power give !gg%s %s' % (command, group))
+    
+    # Create the command (console)
+    es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s #admin' % (command, command))
+    es.server.queuecmd('gauth power create gg_%s 128' % command)
+    es.server.queuecmd('gauth power give gg_%s %s' % (command, group))

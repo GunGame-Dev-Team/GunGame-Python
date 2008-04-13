@@ -26,7 +26,7 @@ import usermsg
 from configobj import ConfigObj
 
 # ==============================================================================
-#   GLOBAL DICTIONARIES
+#   GLOBALS
 # ==============================================================================
 dict_players = {}
 dict_weaponOrders = {}
@@ -56,21 +56,12 @@ list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
 
 # ==============================================================================
-#   GLOBAL VARIABLES
-# ==============================================================================
-weaponOrderINI = ConfigParser.ConfigParser()
-gameDir = str(es.ServerVar('eventscripts_gamedir'))
-
-# ==============================================================================
 #   ERROR CLASSES
 # ==============================================================================
 class UseridError(Exception):
     pass
     
 class PlayerError(Exception):
-    pass
-    
-class GunGameValueError(Exception):
     pass
     
 class TeamError(Exception):
@@ -97,31 +88,27 @@ gungameDebugLevel.makepublic()
 class Player:
     '''Player class, holds all a players information and attributes.'''
     
-    def __init__(self, playerID):
+    def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
-        try:
-            # Make userid an int
-            self.userid = int(playerID)
-            
-            if not es.exists('userid', self.userid):
-                if self.__validatePlayer():
-                    # Get their attributes
-                    self.attributes = dict_players[self.userid]
-                else:
-                    # Invalid userid
-                    raise UseridError('Cannot initialize Player class: "%s" is not on the server.' % self.userid)
+        # Make userid an int
+        self.userid = int(userid)
+        
+        if not es.exists('userid', self.userid):
+            if self.__validatePlayer():
+                # Get their attributes
+                self.attributes = dict_players[self.userid]
             else:
-                # Check they exist
-                if not self.__validatePlayer():
-                    # Create the player
-                    self.__createPlayer()
-                else:
-                    # Get the attributes
-                    self.attributes = dict_players[self.userid]
-        except TypeError:
-            # No userid
-            raise TypeError('gungamelib.getPlayer() expected a userid: no userid provided')
+                # Invalid userid
+                raise UseridError('Cannot initialize Player class: "%s" is not on the server.' % self.userid)
+        else:
+            # Check they exist
+            if not self.__validatePlayer():
+                # Create the player
+                self.__createPlayer()
+            else:
+                # Get the attributes
+                self.attributes = dict_players[self.userid]
     
     def __getitem__(self, item):
         # Lower-case the item
@@ -132,7 +119,7 @@ class Player:
             return self.attributes[item]
         else:
             raise ValueError('Unable to get attribute (%s): invalid attribute.' % item)
-        
+    
     def __setitem__(self, item, value):
         # Format the item and value
         item = str(item).lower()
@@ -965,6 +952,7 @@ class Addon:
         
         # Set up default attributes for this addon
         self.displayName = 'Untitled Addon'
+        self.commands = {}
         self.dependencies = []
         self.menu = None
         
@@ -992,7 +980,36 @@ class Addon:
         else:
             return False
     
-    '''Menu options:'''    
+    '''Command options:'''
+    def registerCommand(self, command, function, syntax):
+        if not callable(function):
+            raise AddonError('Cannot register command (%s): callback is not callable.' % command)
+        
+        self.commands[command] = function, syntax
+    
+    def callCommand(self, command, userid, arguments):
+        if not self.commands.has_key(command):
+            raise AddonError('Cannot call command (%s): not registered.' % command)
+        
+        try:
+            self.commands[command][0](userid, *arguments)
+            
+            # Show a "PlayerExecuted" message
+            msg('gungame', '#all', 'PlayerExecuted', {'name': es.getplayername(userid), 'cmd': '%s %s' % (command, ' '.join(arguments))})
+        except TypeError:
+            # Show an "InvalidSyntax" message
+            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': self.commands[command][1]})
+    
+    def hasCommand(self, command):
+        return self.commands.has_key(command)
+    
+    def getCommandSyntax(self, command):
+        if not self.commands.has_key(command):
+            raise AddonError('Cannot get command syntax (%s): not registered.' % command)
+        
+        return self.commands[command][1]
+    
+    '''Menu options:'''
     def createMenu(self, selectfunc):
         self.menu = popuplib.easymenu(self.addon, None, selectfunc)
         self.menu.settitle(self.displayName)
@@ -1424,31 +1441,31 @@ def getPlayer(userid):
         return Player(userid)
     except (UseridError, TypeError), e:
         raise e
-        
+
 def getWeaponOrderFile(weaponOrderFile):
     try:
         return WeaponOrder(weaponOrderFile)
     except TypeError, e:
         raise e
-        
+
 def getConfig(configName):
     try:
         return Config(configName)
     except TypeError, e:
         raise e
-        
+
 def getSoundPack(soundPackName):
     try:
         return Sounds(soundPackName)
     except TypeError, e:
         raise e
-        
+
 def getWinner(uniqueid):
     try:
         return Winners(uniqueid)
     except TypeError, e:
         raise e
-        
+
 # ==============================================================================
 #  MESSAGE FUNCTIONS
 # ==============================================================================
@@ -1573,7 +1590,7 @@ def getLevelWeapon(levelNumber):
     if dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
         return str(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
     else:
-        raise GunGameValueError('Cannot get weapon information (%s): doesn\'t exist' % levelNumber)
+        raise ValueError('Cannot get weapon information (%s): doesn\'t exist' % levelNumber)
 
 def sendWeaponOrderMenu(userid):
     popuplib.send('gungameWeaponOrderMenu_page1', userid)
@@ -1626,6 +1643,68 @@ def getLevelUseridString(levelNumber):
     
     return levelUseridString
     
+def getLevelWeapon(levelNumber):
+    levelNumber = int(levelNumber)
+    if dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
+        return str(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
+    else:
+        raise ValueError('Unable to retrieve weapon information: level \'%d\' does not exist' % levelNumber)
+
+def sendWeaponOrderMenu(userid):
+    popuplib.send('gungameWeaponOrderMenu_page1', userid)
+
+def weaponOrderMenuHandler(userid, choice, popupname):
+    pass
+
+# ==============================================================================
+#   LEVEL RELATED COMMANDS
+# ==============================================================================
+def getTotalLevels():
+    list_weaponOrderKeys = dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].keys()
+    return int(len(list_weaponOrderKeys))
+    
+def setPreventLevelAll(value):
+    for userid in es.getUseridList():
+        gungamePlayer = getPlayer(userid)
+        gungamePlayer['preventlevel'] = int(value)
+
+def getAverageLevel():
+    averageLevel = 0
+    averageDivider = 0
+    
+    for userid in es.getUseridList():
+        if dict_players.has_key(userid):
+            averageDivider += 1
+            averageLevel += int(dict_players[userid]['level'])
+    
+    if averageDivider:
+        return int(round(averageLevel / averageDivider))
+    else:
+        return 0
+
+def getLevelUseridList(levelNumber):
+    levelNumber = int(levelNumber)
+    list_levelUserids = []
+    
+    for userid in dict_players:
+        if dict_players[int(userid)]['level'] == levelNumber:
+            list_levelUserids.append(userid)
+    
+    return list_levelUserids
+    
+def getLevelUseridString(levelNumber):
+    levelNumber = int(levelNumber)
+    levelUseridString = None
+    
+    for userid in dict_players:
+        if dict_players[int(userid)]['level'] == levelNumber:
+            if not levelUseridString:
+                levelUseridString = userid
+            else:
+                levelUseridString = '%s,%s' %(levelUseridString, userid)
+    
+    return levelUseridString
+    
 def getLevelMultiKill(levelNumber):
     if dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
         return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][1]
@@ -1635,11 +1714,10 @@ def createScoreList(keyGroupName=None):
     
     for userid in dict_players:
         dict_gungameScores[userid] = dict_players[userid]['level']
-    
     if keyGroupName:
         list_sortedScores = sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
         
-        for userInfo in list_sortedScores:
+        for useridLevelTuple in list_sortedScores:
             # TODO
             pass
     else:
@@ -1654,14 +1732,18 @@ def getCurrentLeaderList():
     
     # Loop through the current leaders
     for userid in dict_leaderInfo['currentLeaders']:
-        # Is the client in the server?
-        if es.getplayername(userid) != 0: leaders.append(userid)
+        # Append to the leaders list if the player is in the server
+        if clientInServer(userid): leaders.append(userid)
     
     # No leaders in the server?
     if len(leaders) == 0:
         # Get a list of players with the next highest level
         return getNewLeaderList()
     else:
+        # Set current leader info
+        dict_leaderInfo['oldLeaders'] = dict_leaderInfo['currentLeaders']
+        dict_leaderInfo['currentLeaders'] = leaders
+        
         # Return list of leaders as usual
         return leaders
 
@@ -1679,7 +1761,7 @@ def getNewLeaderList():
         level = dict_players[userid]['level']
         
         # Is the player on the server?
-        if es.getplayername(userid) == 0:
+        if not clientInServer(userid):
             continue
         
         # Is the players level higher than the highest level?
@@ -1701,10 +1783,13 @@ def getNewLeaderList():
 
 def removeLeader(userid):
     userid = int(userid)
+    
     if userid in dict_leaderInfo['currentLeaders']:
         dict_leaderInfo['currentLeaders'].remove(userid)
+        
         if len(dict_leaderInfo['currentLeaders']) == 0:
             leaderLevel = 1
+            
             for userid in dict_players:
                 if int(dict_players[userid]['level']) > leaderLevel:
                     dict_leaderInfo['currentLeaders'] = [userid]
@@ -1714,20 +1799,24 @@ def removeLeader(userid):
 
 def getCurrentLeaderString():
     currentLeaderString = None
+    
     for userid in dict_leaderInfo['currentLeaders']:
         if not currentLeaderString:
             currentLeaderString = userid
         else:
             currentLeaderString = '%s,%s' % (currentLeaderString, userid)
+    
     return currentLeaderString
     
 def getOldLeaderString():
     oldLeaderString = None
+    
     for userid in dict_leaderInfo['oldLeaders']:
         if not oldLeaderString:
             oldLeaderString = userid
         else:
-            oldLeaderString = '%s,%s' % (oldLeaderString, userid)
+            oldLeaderString = '%s,%s' %(oldLeaderString, userid)
+    
     return oldLeaderString
     
 def getLeaderLevel():
@@ -1759,7 +1848,12 @@ def getVariableValue(variableName):
     variable = dict_variables[variableName]
     
     # Is numeric?
-    return int(variable) if isNumeric(variable) else variable
+    if isNumeric(str(variable)):
+        # Return number
+        return int(variable)
+    else:
+        # Return string
+        return str(variable)
 
 def setVariableValue(variableName, value):
     variableName = variableName.lower()
@@ -1793,17 +1887,14 @@ def getSound(soundName):
     if dict_sounds.has_key(soundName):
         return dict_sounds[soundName]
     else:
-        raise SoundError('Cannot get sound (%s): sound not found.' % soundName)
+        raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
 
 # ==============================================================================
 #   WINNER RELATED COMMANDS
 # ==============================================================================
 def getWins(uniqueid):
     global dict_winners
-    
     uniqueid = str(uniqueid)
-    
-    # Make sure the winner exists
     if dict_winners.has_key(uniqueid):
         return dict_winners[uniqueid]['wins']
     else:
@@ -1823,7 +1914,7 @@ def saveWinnerDatabase():
     # Set the winners database path to a variable
     winnersDataBasePath = es.getAddonPath('gungame') + '/data/winnersdata.db'
     
-    # Open the file and dump the new winner database
+    # Dump to the file
     winnersDataBaseFile = open(winnersDataBasePath, 'w')
     cPickle.dump(dict_winners, winnersDataBaseFile)
     winnersDataBaseFile.close()
@@ -1845,7 +1936,7 @@ def loadWinnersDataBase():
         # Save changes
         winnersDataBaseFile.close()
     
-    # Load the winners database
+    # Read the file
     winnersDataBaseFile = open(winnersDataBasePath, 'r')
     dict_winners = cPickle.load(winnersDataBaseFile)
     winnersDataBaseFile.close()
@@ -1856,11 +1947,9 @@ def loadWinnersDataBase():
 def cleanWinnersDataBase(days):
     global dict_winners
     
-    # Get days in seconds and the current time
     daysInSeconds = float(days) * float(86400)
     currentTime = float(time.time())
     
-    # Loop through the winners
     for steamid in dict_winners.copy():
         # Prune the player?
         if (currentTime - float(dict_winners[steamid]['timestamp'])) > daysInSeconds:
@@ -1897,10 +1986,7 @@ def getAddonDisplayName(addonName):
         raise AddonError('Cannot get display name (%s): not registered.' % addonName)
 
 def addonRegistered(addonName):
-    if dict_addons.has_key(addonName):
-        return True
-    else:
-        return False
+    return dict_addons.has_key(addonName)
 
 def getRegisteredAddonlist():
     return dict_addons.keys()
@@ -1918,15 +2004,19 @@ def setGlobal(variableName, variableValue):
     '''Set a global variable (name case insensitive)'''
     variableName = variableName.lower()
     
-    # Set value
-    dict_globals[variableName] = int(variableValue) if isNumeric(variableValue) else variableValue
+    if isNumeric(variableValue):
+        variableValue = int(variableValue)
+    
+    dict_globals[variableName] = variableValue
 
 def getGlobal(variableName):
     '''Returns a global variable (name case insensitive)'''
     variableName = variableName.lower()
     
-    # Return value if it exists, else return 0
-    return dict_globals[variableName] if dict_globals.has_key(variableName) else 0
+    if dict_globals.has_key(variableName):
+        return dict_globals[variableName]
+    else:
+        return 0
 
 # ==============================================================================
 #  HELPER FUNCTIONS
@@ -1962,7 +2052,7 @@ def getAddonDir(addonName, dir):
     return '%s/%s/%s' % (addonPath, 'custom_addons' if getAddonType(addonName) else 'included_addons', dir)
 
 def clientInServer(userid):
-    return (not es.getplayername(userid) == 0) or (not es.exists('userid', userid))
+    return (not es.getplayername(userid) == 0) or es.exists('userid', userid)
 
 def inLevel():
     return (str(es.ServerVar('eventscripts_currentmap')) != '')
@@ -1971,32 +2061,43 @@ def getLevelName():
     return str(es.ServerVar('eventscripts_currentmap'))
 
 def isSpectator(userid):
-    return (es.getplayerteam(userid) <= 1) if clientInServer(userid) else 0
+    if not clientInServer(userid):
+        return 0
+    
+    return (es.getplayerteam(userid) <= 1)
 
 def hasEST():
     return str(es.ServerVar('est_version')) != '0'
-
+    
 def getESTVersion():
-    return float(es.ServerVar('est_version')) if hasEST() else 0.000
+    if hasEST():
+        return float(es.ServerVar('est_version'))
+    else:
+        return 0.000
 
 def isDead(userid):
     return bool(int(es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag')))
-
+    
 def getPlayerUniqueID(userid):
-    return dict_uniqueIds[int(userid)]
-
+    userid = int(userid)
+    return dict_uniqueIds[userid]
+    
 def playerExists(userid):
-    return dict_players.has_key(int(userid))
+    userid = int(userid)
+    return dict_players.has_key(userid)
 
 def getAddonType(addonName):
     # Check addon exists
     if not addonExists(addonName): raise ValueError('Cannot get addon type (%s): doesn\'t exist.' % addonName)
     
     # Get addon type
-    return (not os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)))
+    if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)):
+        return 0
+    else:
+        return 1
 
 def addonExists(addonName):
     return (os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName)))
 
-def formatArgs(userid):
+def formatArgs(userid=False):
     return map(es.getargv, range(1, es.getargc()))

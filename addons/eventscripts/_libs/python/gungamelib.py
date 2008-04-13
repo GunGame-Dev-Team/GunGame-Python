@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.280
+    Version: 1.0.285
     Description:
 '''
 
@@ -1892,7 +1892,7 @@ def getVariableList():
 # ==============================================================================
 def addDownloadableSounds():
     # Make sure we are in a map
-    if not inLevel():
+    if not inMap():
         return
     
     # Loop through all the sounds
@@ -2071,10 +2071,10 @@ def getAddonDir(addonName, dir):
 def clientInServer(userid):
     return (not es.getplayername(userid) == 0) or es.exists('userid', userid)
 
-def inLevel():
+def inMap():
     return (str(es.ServerVar('eventscripts_currentmap')) != '')
 
-def getLevelName():
+def getMapName():
     return str(es.ServerVar('eventscripts_currentmap'))
 
 def isSpectator(userid):

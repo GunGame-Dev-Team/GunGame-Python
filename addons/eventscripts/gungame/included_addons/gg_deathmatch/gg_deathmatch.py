@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.280
+    Version: 1.0.285
     Description: Deathmatch addon for GunGame:Python
 '''
 
@@ -32,7 +32,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.280'
+info.version  = '1.0.285'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -86,9 +86,9 @@ def load():
         gungamelib.echo('gg_deathmatch', 0, 0, 'ESTWarning')
     
     # Has map loaded?
-    if gungamelib.inLevel():
+    if gungamelib.inMap():
         # Get spawn points, map loaded
-        getSpawnPoints(gungamelib.getLevelName())
+        getSpawnPoints(gungamelib.getMapName())
     
     # Get a player list of dead players then spawn them
     for userid in playerlib.getUseridList('#dead'):
@@ -215,7 +215,7 @@ def cmd_dm_add(userid, location):
         return
     
     # Is a map loaded?
-    if gungamelib.inLevel():
+    if gungamelib.inMap():
         # Get player location and viewing angles
         playerlibPlayer = playerlib.getPlayer(location)
         playerLoc = es.getplayerlocation(location)
@@ -231,10 +231,10 @@ def cmd_dm_add(userid, location):
         gungamelib.msg('gg_deathmatch', userid, 'AddedSpawnpoint', {'index': len(spawnPoints) - 1})
 
 def cmd_dm_remove_all(userid):
-    mapName = gungamelib.getLevelName()
+    mapName = gungamelib.getMapName()
     
     # Check if a map is loaded
-    if gungamelib.inLevel():
+    if gungamelib.inMap():
         # Clear the spawnpoint file
         spawnFile = open(gungamelib.getGameDir('cfg/gungame/spawnpoints/%s.txt' % mapName), 'w').close()
         
@@ -246,7 +246,7 @@ def cmd_dm_remove_all(userid):
 
 def cmd_dm_print(userid):
     # Get map name
-    mapName = gungamelib.getLevelName()
+    mapName = gungamelib.getMapName()
     
     # Do we have spawnpoints?
     if not spawnPoints:
@@ -489,7 +489,7 @@ def getSpawnPoints(_mapName):
 def addSpawnPoint(posX, posY, posZ, eyeYaw):
     global spawnFile
     
-    mapName = gungamelib.getLevelName()
+    mapName = gungamelib.getMapName()
     
     # Do we have a spawn point file?
     if not spawnPointsExist:
@@ -541,7 +541,7 @@ def removeSpawnPoint(index):
     spawnPointFile.close()
 
     # Get spawnpoints again
-    getSpawnPoints(gungamelib.getLevelName())
+    getSpawnPoints(gungamelib.getMapName())
 
 # ==============================================================================
 #   RESPAWN CODE

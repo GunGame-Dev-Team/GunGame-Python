@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.280
+    Version: 1.0.285
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,8 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.280'
-__revision__ = '280'
+__version__ = '1.0.285'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -471,7 +470,7 @@ def load():
         dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
     
         # Start warmup timer
-        if gungamelib.inLevel():
+        if gungamelib.inMap():
             # Check to see if the warmup round needs to be activated
             if gungamelib.getVariableValue('gg_warmup_timer') > 0:
                 es.load('gungame/included_addons/gg_warmup_round')

@@ -90,6 +90,10 @@ def load():
     
     # Register admins
     for line in lines:
+        # Fix for in-line comments
+        line = line.split('//')[0]
+        line = line.strip()
+        
         # Get data from the line
         steamid, name, level = line.split(' ', 2)
         
@@ -105,6 +109,9 @@ def load():
     
     # Register commands
     for line in lines:
+        # Fix for in-line comments
+        line = line.split('//')[0]
+        
         # Get data from the line
         command, level = line.split(' ', 1)
         
@@ -136,9 +143,7 @@ def cmd_admin_add(userid, steamid, name, level):
     adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'a')
     
     # Write to file
-    adminFile.write('// LOG: Admin added by <%s,%s>\n' % (userid, es.getplayersteamid(userid)))
-    adminFile.write('%s %s %s\n' % (steamid, name, level))
-    adminFile.write('\n')
+    adminFile.write('\n%s %s %s\t// LOG: Added by %s <%s>\n' % (steamid, name, level, gungamelib.removeReturnChars(es.getplayername(userid)), es.getplayersteamid(userid)))
     
     # Add to admins dictionary
     dict_admins[steamid] = level
@@ -159,7 +164,7 @@ def cmd_admin_remove(userid, steamid):
     
     # Open the file again, but write the new lines to it
     adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
-    adminFile.write('\n'.join(lines))
+    adminFile.write(''.join(lines))
     adminFile.close()
     
     # Tell them the removal was successful
@@ -204,7 +209,7 @@ def cmd_admins(userid):
             name = es.getplayername(userid)
             
             # Add to console
-            gungamelib.echo('gg_admin', userid, 0, 'AdminItem2', {'steamid': steamid, 'level': dict_admins[steamid], 'name': es.getplayername(userid)})
+            gungamelib.echo('gg_admin', userid, 0, 'AdminItem2', {'steamid': steamid, 'level': dict_admins[steamid], 'name': gungamelib.removeReturnChars(es.getplayername(userid))})
     
     # End
     gungamelib.echo('gg_admin', userid, 0, 'AdminEnd')
@@ -235,7 +240,7 @@ def selectAdminMenu(userid, choice, popupid):
     elif choice == 'menus':
         sendAddonMenu(userid)
     elif choice == 'commands':
-        sendCommandMenu(userid)
+        sendCommandAddonMenu(userid)
 
 # ==============================================================================
 #   CFG SETTINGS MENUS 
@@ -291,9 +296,9 @@ def selectCFGSettingMenu(userid, choice, popupid):
     # Send menu
     _input.send(userid)
 
-def setSetting(userid, choice, args):
+def setSetting(userid, args, extras):
     # Set the variable
-    gungamelib.setVariableValue(args[0], choice)
+    gungamelib.setVariableValue(extras, ' '.join(args))
     
     # Send them back to the CFG settings menu
     buildCFGSettingsMenu(userid, dict_cfgMenus[userid])
@@ -390,22 +395,53 @@ def selectAddonMenu(userid, choice, popupid):
 # ==============================================================================
 #   COMMAND MENU
 # ==============================================================================
-def buildCommandMenu(userid):
+def buildCommandAddonMenu(userid):
     # Get the admin level
     level = dict_admins[es.getplayersteamid(userid)]
     
     # Create menu
+    menu_command = popuplib.easymenu('gg_admin_command_addon', None, selectCommandAddonMenu)
+    menu_command.settitle('GG:Admin: Command addon selection')
+    menu_command.setdescription('%s\n * Select an addon' % menu_command.c_beginsep)
+    
+    # Loop through the addons with commands
+    for addonName in gungamelib.getRegisteredAddonlist():
+        addonObj = gungamelib.getAddon(addonName)
+        
+        # Make sure this addon has commands
+        if not addonObj.commands:
+            continue
+        
+        menu_command.addoption(addonName, gungamelib.getAddonDisplayName(addonName))
+
+def sendCommandAddonMenu(userid):
+    buildCommandAddonMenu(userid)
+    popuplib.send('gg_admin_command_addon', userid)
+
+def selectCommandAddonMenu(userid, choice, popupid):
     menu_command = popuplib.easymenu('gg_admin_command', None, selectCommandMenu)
     menu_command.settitle('GG:Admin: Command menu')
-    menu_command.setdescription('%s\n * Execute commands' % menu_command.c_beginsep)
+    menu_command.setdescription('%s\n * Select a command' % menu_command.c_beginsep)
+    
+    # Get variables
+    addonObj = gungamelib.getAddon(choice)
+    steamid = es.getplayersteamid(userid)
     
     # Loop through the commands available for the admin
-    for command in getCommandsForLevel(level):
+    for command in addonObj.commands:
+        # Make sure the command is registered
+        if command not in dict_commands:
+            continue
+        
+        # Make sure we can run this command
+        if dict_commands[command] > dict_admins[steamid]:
+            continue
+        
+        # Add to menu
         menu_command.addoption(command, '%s %s' % (command, getCommandSyntax(command)))
-
-def sendCommandMenu(userid):
-    buildCommandMenu(userid)
-    popuplib.send('gg_admin_command', userid)
+    
+    # Send menu
+    menu_command.send(userid)
 
 def selectCommandMenu(userid, choice, popupid):
     # Just call the command if there is no parameters
@@ -414,16 +450,12 @@ def selectCommandMenu(userid, choice, popupid):
         return
     
     # Create menu and set aesthetic things
-    _input = gungamelib.EasyInput('gg_admin_command', callCommandCallback, choice)
+    _input = gungamelib.EasyInput('gg_admin_command', lambda x, y, z: callCommand(x, z, y), choice)
     _input.setTitle('Call Command (%s)' % choice)
     _input.setText('Syntax: %s' % getCommandSyntax(choice))
     
     # Send menu
     _input.send(userid)
-
-def callCommandCallback(userid, choice, args):
-    # Call command
-    callCommand(userid, args[0], choice.split(' '))
 
 # ==============================================================================
 #   HELPER FUNCTIONS

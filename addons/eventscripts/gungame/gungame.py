@@ -207,7 +207,7 @@ def rebuildLeaderMenu():
     list_leaderNames = []
     for userid in gungamelib.getCurrentLeaderList():
         if gungamelib.clientInServer(userid):
-            list_leaderNames.append(removeReturnChars(es.getplayername(userid)))
+            list_leaderNames.append(gungamelib.removeReturnChars(es.getplayername(userid)))
     
     # Check if the popup exists
     if popuplib.exists('gungameLeadersMenu'):
@@ -243,11 +243,6 @@ def loadCustom(addonName):
 def unloadCustom(addonName):
     es.unload('gungame/custom_addons/' + str(addonName))
 
-def removeReturnChars(playerName):
-    playerName = playerName.strip('\n')
-    playerName = playerName.strip('\r')
-    return playerName
-
 def afkPunishCheck(userid):
     gungamePlayer = gungamelib.getPlayer(userid)
     afkMaxAllowed = gungamelib.getVariableValue('gg_afk_rounds')
@@ -277,17 +272,17 @@ def equipPlayer():
     userid = es.getuserid()
     es.server.cmd('es_xremove game_player_equip')
     es.server.cmd('es_xgive %s game_player_equip' %userid)
-    es.server.cmd('es_xfire %s game_player_equip addoutput \"weapon_knife 1\"' %userid)
+    es.server.cmd('es_xfire %s game_player_equip AddOutput \"weapon_knife 1\"' %userid)
     
     # Retrieve the armor type
     armorType = gungamelib.getVariableValue('gg_player_armor')
     
     if armorType == 2:
         # Give the player full armor
-        es.server.cmd('es_xfire %s game_player_equip addoutput \"item_assaultsuit 1\"' %userid)
+        es.server.cmd('es_xfire %s game_player_equip AddOutput \"item_assaultsuit 1\"' %userid)
     elif armorType == 1:
         # Give the player kevlar only
-        es.server.cmd('es_xfire %s game_player_equip addoutput \"item_kevlar 1\"' %userid)
+        es.server.cmd('es_xfire %s game_player_equip AddOutput \"item_kevlar 1\"' %userid)
 
 def levelInfoHudHint(userid):
     gungamePlayer = gungamelib.getPlayer(userid)
@@ -552,8 +547,8 @@ def es_map_start(event_var):
 
 def player_changename(event_var):
     # Change the player's name in the leaderlist
-    if removeReturnChars(event_var['oldname']) in list_leaderNames:
-        list_leaderNames[list_leaderNames.index(event_var['oldname'])] = removeReturnChars(event_var['newname'])
+    if gungamelib.removeReturnChars(event_var['oldname']) in list_leaderNames:
+        list_leaderNames[list_leaderNames.index(event_var['oldname'])] = gungamelib.removeReturnChars(event_var['newname'])
 
 def round_start(event_var):
     global list_stripExceptions

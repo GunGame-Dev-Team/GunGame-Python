@@ -1332,12 +1332,14 @@ class EasyInput:
         '''Called on initialization, sets default values and registers the
         command.'''
         # Check the callback is callable
-        if not callable(callback): raise ArgumentError('Cannot create EasyInput object: Callback must be a function.')
+        if not callable(callback):
+            raise ValueError('Cannot create EasyInput object: callback must be callable.')
         
         # Set variables
         self.name = name
         self.callback = callback
         self.userid = 0
+        self.extras = extras
         self.setTimeout(199)
         
         # Set default options
@@ -1345,17 +1347,16 @@ class EasyInput:
         self.text = 'Enter an option:'
         
         # Create command variables
-        self.cmd = '_easyinput_%s %s' % (name, extras)
-        self.smallcmd = '_easyinput_%s' % name
+        self.cmd = '_easyinput_%s' % name
         
         # Unregister command
-        if es.exists('clientcommand', self.smallcmd):
-            es.unregclientcmd(self.smallcmd)
+        if es.exists('clientcommand', self.cmd):
+            es.unregclientcmd(self.cmd)
             es.addons.unregisterBlock('gungamelib', 'input_cmd')
         
         # Register the command again
         es.addons.registerBlock('gungamelib', 'input_cmd', self.__inputCallback)
-        es.regclientcmd(self.smallcmd, 'gungamelib/input_cmd', 'Command for retrieving input box data.') 
+        es.regclientcmd(self.cmd, 'gungamelib/input_cmd', 'Command for retrieving input box data.') 
     
     def setTitle(self, title):
         '''Self-explantory.'''
@@ -1374,7 +1375,8 @@ class EasyInput:
         timeout = int(timeout)
         
         # Check timeout
-        if timeout not in range(10, 200): raise ArgumentError('Cannot set timeout: Value must be between 10 and 200.')
+        if timeout not in range(10, 200):
+            raise ValueError('Cannot set timeout (%s): value must be between 10 and 200.' % timeout)
         
         # Set timeout
         self.timeout = timeout
@@ -1402,12 +1404,8 @@ class EasyInput:
             msg('gungame', userid, 'EasyInput:Unauthorized')
             return
         
-        # Get arguments and value
-        args = map(es.getargv, range(1, es.getargc()))
-        value = args.pop()
-        
         # Call the function, if it exists
-        self.callback(userid, value, args)
+        self.callback(userid, formatArgs(), self.extras)
 
 # ==============================================================================
 #  WINNERS CLASS
@@ -2116,5 +2114,11 @@ def getAddonType(addonName):
 def addonExists(addonName):
     return (os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName)))
 
-def formatArgs(userid=False):
+def formatArgs():
     return map(es.getargv, range(1, es.getargc()))
+
+def removeReturnChars(playerName):
+    playerName = playerName.strip('\n')
+    playerName = playerName.strip('\r')
+    
+    return playerName

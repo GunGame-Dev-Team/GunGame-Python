@@ -37,8 +37,8 @@ info.author   = 'GunGame Development Team'
 #   GLOBALS
 # ==============================================================================
 dict_settings = {}
-dict_menus = {}
 dict_commands = {}
+dict_menus = {}
 dict_admins = {}
 dict_cfgMenus = {}
 
@@ -61,116 +61,6 @@ es.server.queuecmd('gauth group create ggadmin1 1')
 es.server.queuecmd('gauth group create ggadmin2 1')
 es.server.queuecmd('gauth group create ggadmin3 1')
 es.server.queuecmd('gauth group create gguser 128')
-
-# ==============================================================================
-#   ADMIN CLASS
-# ==============================================================================
-class Admin:
-    def __init__(self, name, steamid, level):
-        '''Initializes the admin class.'''
-        level = int(level)
-        
-        # Set default variables
-        self.name = name
-        self.steamid = steamid
-        self.level = level
-        
-        # Create user
-        es.server.queuecmd('gauth user create %s %s' % (name, steamid))
-        
-        # Join groups
-        for level in range(1, level+1):
-            es.server.queuecmd('gauth user join %s ggadmin%s' % (name, level))
-    
-    def initialCreation(self, setterUserid=None):
-        '''Creates all the required information in the admins.txt (used to
-        dynamically add admins).'''
-        # Create log message
-        if setterUserid:
-            logMessage = '%s <%s>' % (es.getplayername(setterUserid), es.getplayersteamid(setterUserid))
-        else:
-            logMessage = '<SCRIPT>'
-        
-        # Open file
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'a+')
-        
-        # Do we exist in the file?
-        for line in adminFile.readlines():
-            if line.startswith(self.steamid):
-                raise ValueError('Cannot do initial creation for admin (%s): already exist in admins.txt' % self.steamid)
-        
-        # Write to file
-        adminFile.write('\n%s %s %s\t// LOG: Added by %s\n' % (self.steamid, self.name, self.level, logMessage))
-        
-        # Close file
-        adminFile.close()
-    
-    def hasLevel(self, level):
-        return self.level >= level
-    
-    def remove(self):
-        '''Removes the admin of all priviledges.'''
-        # Open file and remove the line that starts with <steamid>
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
-        lines = filter(lambda x: not x.startswith(self.steamid), adminFile.readlines())
-        adminFile.close()
-        
-        # Open the file again, but write the new lines to it
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
-        adminFile.write(''.join(lines))
-        adminFile.close()
-        
-        # Remove from groups
-        for level in range(1, self.level+1):
-            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, level))
-        
-        # Delete
-        es.server.queuecmd('gauth user delete %s' % self.name)
-    
-    def setLevel(self, level, setterUserid=None):
-        '''Sets the admins level.'''
-        level = int(level)
-        
-        # Open file, get lines then close
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
-        lines = adminFile.readlines()
-        adminFile.close()
-        
-        # Check level is in the right range
-        if level < 1: level = 1
-        if level > 3: level = 3
-        
-        # Loop through the lines
-        for line in lines:
-            # Is it the line we want?
-            if not line.startswith(self.steamid): continue
-            
-            # Get the index and set the logMessage
-            index = lines.index(line)
-            
-            # Create log message
-            if setterUserid:
-                logMessage = '%s <%s>' % (es.getplayername(setterUserid), es.getplayersteamid(setterUserid))
-            else:
-                logMessage = '<SCRIPT>'
-            
-            lines[index] = '%s %s %s\t// LOG: Level set by %s\n' % (self.steamid, self.name, level, logMessage)
-        
-        # Open the file again, but write the new lines to it
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
-        adminFile.write(''.join(lines))
-        adminFile.close()
-        
-        # Remove from groups
-        for level in range(1, self.level+1):
-            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, level))
-        
-        # Re-add to groups
-        for level in range(1, level+1):
-            es.server.queuecmd('gauth user join %s ggadmin%s' % (self.name, level))
-        
-        # Set level
-        self.level = level
 
 # ==============================================================================
 #   GAME EVENTS
@@ -230,18 +120,39 @@ def load():
     
     # Close file
     cmdFile.close()
+    
+    # Get menu permissions
+    menuFile = open(gungamelib.getGameDir('cfg/gungame/admin_menus.txt'), 'r')
+    
+    # Format lines
+    lines = map(lambda x: x.strip(), menuFile.readlines())
+    lines = filter(lambda x: not x.startswith('//') and x, lines)
+    
+    # Close file
+    menuFile.close()
+    
+    # Register admins
+    for line in lines:
+        # Fix for in-line comments
+        line = line.split('//')[0]
+        line = line.strip()
+        
+        # Get data from the line
+        name, level = line.split(' ', 1)
+        
+        # Register them
+        dict_menus[name] = level
 
 def unload():
     # Unregister commands
-    for command in dict_commands:
-        es.unregsaycmd('!gg%s' % command)
-        es.unregclientcmd('gg_%s' % command)
+    for command in dict_commands.copy():
+        del dict_commands[command]
     
     # Unregister addon
     gungamelib.unregisterAddon('gg_admin')
 
 # ==============================================================================
-#   COMMANDS
+#   CONSOLE COMMANDS
 # ==============================================================================
 def cmd_admin_add(userid, steamid, name, level):
     # Check the admin exists
@@ -323,19 +234,29 @@ def cmd_admins(userid):
 # ==============================================================================
 #   ADMIN MENU
 # ==============================================================================
-def buildAdminMenu():
+def buildAdminMenu(userid):
+    # Get admin instance
+    admin = dict_admins[es.getplayersteamid(userid)]
+    
     # Create main menu
     menu_admin_main = popuplib.easymenu('gg_admin_main', None, selectAdminMenu)
     menu_admin_main.settitle('GG:Admin: Admin Main Menu')
     menu_admin_main.setdescription('%s\n * Select an option...' % menu_admin_main.c_beginsep)
     
-    menu_admin_main.addoption('load', 'Load / Unload Addons')
-    menu_admin_main.addoption('menus', 'Addon Menus')
-    menu_admin_main.addoption('settings', 'Variable Settings')
-    menu_admin_main.addoption('commands', 'Commands')
+    if admin.hasLevel(dict_menus['load']):
+        menu_admin_main.addoption('load', 'Load / Unload Addons')
+    
+    if admin.hasLevel(dict_menus['menus']):
+        menu_admin_main.addoption('menus', 'Addon Menus')
+    
+    if admin.hasLevel(dict_menus['settings']):
+        menu_admin_main.addoption('settings', 'Variable Settings')
+    
+    if admin.hasLevel(dict_menus['commands']):
+        menu_admin_main.addoption('commands', 'Commands')
 
 def sendAdminMenu(userid):
-    buildAdminMenu()
+    buildAdminMenu(userid)
     popuplib.send('gg_admin_main', userid)
 
 def selectAdminMenu(userid, choice, popupid):
@@ -536,11 +457,11 @@ def selectCommandAddonMenu(userid, choice, popupid):
     # Loop through the commands available for the admin
     for command in addonObj.commands:
         # Make sure the command is registered
-        if command not in dict_commands:
+        if not dict_commands.has_key(command):
             continue
         
         # Make sure we can run this command
-        if not dict_admins[steamid].hasLevel(dict_commands[command]):
+        if not dict_admins[steamid].hasLevel(int(dict_commands[command])):
             continue
         
         # Add to menu
@@ -606,7 +527,7 @@ def regAdmin(steamid, name, level):
     # Announce admin registration
     gungamelib.echo('gg_admin', 0, 0, 'AddedAdmin', {'name': name, 'steamid': steamid, 'level': level})
 
-def regCmd(command, permission):
+def regCmd(command, level):
     '''Registers commands with client command and group_auth.'''
     consoleCmd = 'gg_%s' % command
     
@@ -618,18 +539,198 @@ def regCmd(command, permission):
     if dict_commands.has_key(command):
         return
     
-    # Add to dictionary of commands
-    dict_commands[command] = int(permission)
+    # Register the command
+    dict_commands[command] = Command(command, level)
+
+# ==============================================================================
+#   COMMAND CLASS
+# ==============================================================================
+class Command:
+    def __init__(self, name, level):
+        '''Initializes the command class.'''
+        level = int(level)
+        
+        # Set default variables
+        self.name = name
+        self.level = level
+        self.group = 'ggadmin%s' % level
+        
+        # Create the command (say)
+        es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s #admin' % (name, name))
+        es.server.queuecmd('gauth power create !gg%s 128' % name)
+        es.server.queuecmd('gauth power give !gg%s %s' % (name, self.group))
+        
+        # Create the command (console)
+        es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s #admin' % (name, name))
+        es.server.queuecmd('gauth power create gg_%s 128' % name)
+        es.server.queuecmd('gauth power give gg_%s %s' % (name, self.group))
     
-    # Set group
-    group = 'ggadmin%s' % permission
+    def __del__(self):
+        '''Unregisters the say and client commands.'''
+        es.unregsaycmd('!gg%s' % self.name)
+        es.unregclientcmd('gg_%s' % self.name)
     
-    # Create the command (say)
-    es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s #admin' % (command, command))
-    es.server.queuecmd('gauth power create !gg%s 128' % command)
-    es.server.queuecmd('gauth power give !gg%s %s' % (command, group))
+    def __int__(self):
+        '''int() on this object will return the level.'''
+        return self.level
     
-    # Create the command (console)
-    es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s #admin' % (command, command))
-    es.server.queuecmd('gauth power create gg_%s 128' % command)
-    es.server.queuecmd('gauth power give gg_%s %s' % (command, group))
+    def setLevel(self, level, setterUserid):
+        '''Set the required level for this command.'''
+        level = int(level)
+        
+        # Open file, get lines then close
+        commandFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'r')
+        lines = commandFile.readlines()
+        commandFile.close()
+        
+        # Check level is in the right range
+        if level < 1: level = 1
+        if level > 3: level = 3
+        
+        # Loop through the lines
+        for line in lines:
+            # Is it the line we want?
+            if not line.startswith(self.name): continue
+            
+            # Get the index and set the logMessage
+            index = lines.index(line)
+            
+            # Create log message
+            if setterUserid:
+                logMessage = '%s <%s>' % (es.getplayername(setterUserid), es.getplayersteamid(setterUserid))
+            else:
+                logMessage = '<SCRIPT>'
+            
+            lines[index] = '%s %s\t// LOG: Level set by %s\n' % (self.name, level, logMessage)
+        
+        # Open the file again, but write the new lines to it
+        commandFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'w')
+        commandFile.write(''.join(lines))
+        commandFile.close()
+        
+        # Get group
+        group = 'ggadmin%s' % level
+        
+        # Leave groups
+        es.server.queuecmd('gauth power delete !gg%s' % self.name)
+        es.server.queuecmd('gauth power delete gg_%s' % self.name)
+        
+        # Re-create
+        es.server.queuecmd('gauth power create !gg%s 128' % self.name)
+        es.server.queuecmd('gauth power create gg_%s 128' % self.name)
+        es.server.queuecmd('gauth power give !gg%s %s' % (self.name, group))
+        es.server.queuecmd('gauth power give gg_%s %s' % (self.name, group))
+        
+        # Move variables to the class's
+        self.group = group
+        self.level = level
+
+# ==============================================================================
+#   ADMIN CLASS
+# ==============================================================================
+class Admin:
+    def __init__(self, name, steamid, level):
+        '''Initializes the admin class.'''
+        level = int(level)
+        
+        # Set default variables
+        self.name = name
+        self.steamid = steamid
+        self.level = level
+        
+        # Create user
+        es.server.queuecmd('gauth user create %s %s' % (name, steamid))
+        
+        # Join groups
+        for level in range(1, level+1):
+            es.server.queuecmd('gauth user join %s ggadmin%s' % (name, level))
+    
+    def initialCreation(self, setterUserid=None):
+        '''Creates all the required information in the admins.txt (used to
+        dynamically add admins).'''
+        # Create log message
+        if setterUserid:
+            logMessage = '%s <%s>' % (es.getplayername(setterUserid), es.getplayersteamid(setterUserid))
+        else:
+            logMessage = '<SCRIPT>'
+        
+        # Open file
+        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'a+')
+        
+        # Do we exist in the file?
+        for line in adminFile.readlines():
+            if line.startswith(self.steamid):
+                raise ValueError('Cannot do initial creation for admin (%s): already exist in admins.txt' % self.steamid)
+        
+        # Write to file
+        adminFile.write('\n%s %s %s\t// LOG: Added by %s\n' % (self.steamid, self.name, self.level, logMessage))
+        
+        # Close file
+        adminFile.close()
+    
+    def hasLevel(self, level):
+        return self.level >= level
+    
+    def remove(self):
+        '''Removes the admin of all priviledges.'''
+        # Open file and remove the line that starts with <steamid>
+        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
+        lines = filter(lambda x: not x.startswith(self.steamid), adminFile.readlines())
+        adminFile.close()
+        
+        # Open the file again, but write the new lines to it
+        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
+        adminFile.write(''.join(lines))
+        adminFile.close()
+        
+        # Remove from groups
+        for level in range(1, self.level+1):
+            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, level))
+        
+        # Delete
+        es.server.queuecmd('gauth user delete %s' % self.name)
+    
+    def setLevel(self, level, setterUserid=None):
+        '''Sets the admins level.'''
+        level = int(level)
+        
+        # Open file, get lines then close
+        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
+        lines = adminFile.readlines()
+        adminFile.close()
+        
+        # Check level is in the right range
+        if level < 1: level = 1
+        if level > 3: level = 3
+        
+        # Loop through the lines
+        for line in lines:
+            # Is it the line we want?
+            if not line.startswith(self.steamid): continue
+            
+            # Get the index and set the logMessage
+            index = lines.index(line)
+            
+            # Create log message
+            if setterUserid:
+                logMessage = '%s <%s>' % (es.getplayername(setterUserid), es.getplayersteamid(setterUserid))
+            else:
+                logMessage = '<SCRIPT>'
+            
+            lines[index] = '%s %s %s\t// LOG: Level set by %s\n' % (self.steamid, self.name, level, logMessage)
+        
+        # Open the file again, but write the new lines to it
+        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
+        adminFile.write(''.join(lines))
+        adminFile.close()
+        
+        # Remove from groups
+        for level in range(1, self.level+1):
+            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, level))
+        
+        # Re-add to groups
+        for level in range(1, level+1):
+            es.server.queuecmd('gauth user join %s ggadmin%s' % (self.name, level))
+        
+        # Set level
+        self.level = level

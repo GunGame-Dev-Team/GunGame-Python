@@ -1,7 +1,8 @@
 //----------------------------------------------------------------------------
 // admins.txt -- Admin configuration.
 //
-// All admins for gg_admin are stored in this file.
+// All admins for GG are stored in this file. The levels for each player will
+// decide what menus and commands they can access.
 //
 // Format: <Steam ID> <Name> <Level>
 //
@@ -14,5 +15,3 @@
 
 STEAM_ID_LAN Local 3		// Lan ID
 STEAM_0:1:3360502 Cheezus 3	// Cheezus
-
-STEAM_LOL_O_BOT Lolbot 3	// LOG: Added by Cheezus <STEAM_0:1:3360502>

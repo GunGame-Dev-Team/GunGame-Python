@@ -488,6 +488,9 @@ def load():
         # Load sound pack
         gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
         
+        # Load gg_console -- for console -> gungame interaction
+        es.load('gungame/included_addons/gg_console')
+        
         # Fire gg_load event
         es.event('initialize', 'gg_load')
         es.event('fire', 'gg_load')

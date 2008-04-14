@@ -985,11 +985,21 @@ class Addon:
             return False
     
     '''Command options:'''
-    def registerCommand(self, command, function, syntax):
+    def registerCommand(self, command, function, syntax=''):
         if not callable(function):
             raise AddonError('Cannot register command (%s): callback is not callable.' % command)
         
+        # Add command to commands dictionary
         self.commands[command] = function, syntax
+        
+        # Register command
+        es.addons.registerBlock('gungamelib', command, self.__functionCallback)
+        es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+    
+    def unregisterCommands(self):
+        # Unregister the block of each command
+        for command in self.commands:
+            es.addons.unregisterBlock('gungamelib', command)
     
     def callCommand(self, command, userid, arguments):
         if not self.commands.has_key(command):
@@ -999,21 +1009,23 @@ class Addon:
         userid = int(userid)
         arguments = list(arguments)
         
-        # Get details on the player
-        adminIndex = getPlayer(userid)['index']
-        name = es.getplayername(userid)
-        steamid = es.getplayersteamid(userid)
+        # Get details of the admin who called the command
+        adminIndex = getPlayer(userid)['index'] if userid else -1
+        name = es.getplayername(userid) if userid else 'CONSOLE'
+        steamid = es.getplayersteamid(userid) if userid else 'CONSOLE'
         
         try:
+            # Call the command
             self.commands[command][0](userid, *arguments)
             
-            # Show a "Player ... ran" message            
+            # Tell everyone about what the admin ran
             saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
             
             # Print to the admin log
-            logFile = open(getGameDir('addons/eventscripts/gungame/logs/adminlog.txt'), 'a')
-            logFile.write('%s Admin (%s:%s) ran: %s %s\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), steamid, name, command, ' '.join(arguments)))
-            logFile.close()
+            if userid:
+                logFile = open(getGameDir('addons/eventscripts/gungame/logs/adminlog.txt'), 'a')
+                logFile.write('%s Admin %s <%s> ran: %s %s\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), name, steamid, command, ' '.join(arguments)))
+                logFile.close()
         except TypeError:
             # Show an Invalid Syntax message to the player
             msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': self.commands[command][1]})
@@ -1026,6 +1038,10 @@ class Addon:
             raise AddonError('Cannot get command syntax (%s): not registered.' % command)
         
         return self.commands[command][1]
+    
+    def __functionCallback(self):
+        # Call command
+        self.callCommand(es.getargv(0)[3:], 0, formatArgs())
     
     '''Menu options:'''
     def createMenu(self, selectfunc):
@@ -1133,7 +1149,7 @@ class addonDependency:
                     # Set Variable back to it's original value
                     setVariableValue(self.dependency, self.dependencyOriginalValue)
                 
-                # Delete depdencyfc
+                # Delete dependency
                 del dict_dependencies[self.dependency]
 
 # ==============================================================================
@@ -1150,18 +1166,17 @@ class Message:
         if os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName)):
             self.strings = langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName))
         else:
-            raise FileError('Cannot load strings (%s): no string file exists.' % self.addonName)
+            raise IOError('Cannot load strings (%s): no string file exists.' % self.addonName)
     
     def __cleanString(self, string):
         string = string.replace('\3', '').replace('\4', '').replace('\1', '')
         return string
     
-    def __formatString(self, string, tokens, player = None):
-        # Parse the string
+    def __formatString(self, string, tokens, player=None):
+        # Try to get string
         try:
-            # Get the string
             rtnStr = self.strings(string, tokens, player.get('lang'))
-        except:
+        except AttributeError:
             rtnStr = self.strings(string, tokens)
         
         # Format it
@@ -1485,13 +1500,19 @@ def getWinner(uniqueid):
 #  MESSAGE FUNCTIONS
 # ==============================================================================
 def msg(addon, filter, string, tokens={}, showPrefix=True):
-    Message(addon, filter).msg(string, tokens, showPrefix)
+    if filter == 0:
+        echo(addon, 0, 0, string, tokens, showPrefix)
+    else:
+        Message(addon, filter).msg(string, tokens, showPrefix)
     
 def echo(addon, filter, level, string, tokens={}, showPrefix=True):
     Message(addon, filter).echo(level, string, tokens, showPrefix)
 
 def saytext2(addon, filter, index, string, tokens={}, showPrefix=True):
-    Message(addon, filter).saytext2(index, string, tokens, showPrefix)
+    if filter == 0:
+        echo(addon, 0, 0, string, tokens, showPrefix)
+    else:
+        Message(addon, filter).saytext2(index, string, tokens, showPrefix)
 
 def hudhint(addon, filter, string, tokens={}):
     Message(addon, filter).hudhint(string, tokens)
@@ -1988,6 +2009,9 @@ def getAddon(addonName):
 
 def unregisterAddon(addonName):
     if dict_addons.has_key(addonName):
+        # Unregister commands
+        dict_addons[addonName].unregisterCommands()
+        
         del dict_addons[addonName]
     else:
         raise AddonError('Cannot unregister addon (%s): not registered.' % addonName)

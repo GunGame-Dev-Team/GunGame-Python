@@ -199,8 +199,8 @@ def exceptHook(type, value, tb):
     
     # Print finishing
     es.dbgmsg(0, '\n%s' % ('*' * 79))
-    es.dbgmsg(0, '  Please open "addons/eventscripts/gungame/logs/errorlog %s.txt" and report the' % es.ServerVar('eventscripts_ggp'))
-    es.dbgmsg(0, '  contained exceptions in the GunGame "Bug Reports" topic.')
+    es.dbgmsg(0, '  Please open "addons/eventscripts/gungame/logs/errorlog %s.txt" and' % es.ServerVar('eventscripts_ggp'))
+    es.dbgmsg(0, '  report the bug in the "Bug Reports" topic.')
     es.dbgmsg(0, '%s\n' % ('*' * 79))
     
 def getErrorLine():

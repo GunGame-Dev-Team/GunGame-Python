@@ -97,6 +97,10 @@ def load():
         # Get data from the line
         steamid, name, level = line.split(' ', 2)
         
+        # Make sure level is numerical
+        if not gungamelib.isNumeric(level):
+            raise ValueError('Level (%s) is not numeric.' % level)
+        
         # Register them
         regAdmin(steamid, name, level)
     
@@ -114,6 +118,10 @@ def load():
         
         # Get data from the line
         command, level = line.split(' ', 1)
+        
+        # Make sure level is numerical
+        if not gungamelib.isNumeric(level):
+            raise ValueError('Level (%s) is not numeric.' % level)
         
         # Register it
         regCmd(command, level)
@@ -140,8 +148,12 @@ def load():
         # Get data from the line
         name, level = line.split(' ', 1)
         
+        # Make sure level is numerical
+        if not gungamelib.isNumeric(level):
+            raise ValueError('Level (%s) is not numeric.' % level)
+        
         # Register them
-        dict_menus[name] = level
+        dict_menus[name] = int(level)
 
 def unload():
     # Unregister commands
@@ -242,6 +254,8 @@ def buildAdminMenu(userid):
     menu_admin_main = popuplib.easymenu('gg_admin_main', None, selectAdminMenu)
     menu_admin_main.settitle('GG:Admin: Admin Main Menu')
     menu_admin_main.setdescription('%s\n * Select an option...' % menu_admin_main.c_beginsep)
+    
+    print 'Load menu: %s (%s)' % (dict_menus['load'], admin.hasLevel(dict_menus['load']))
     
     if admin.hasLevel(dict_menus['load']):
         menu_admin_main.addoption('load', 'Load / Unload Addons')
@@ -576,6 +590,10 @@ class Command:
     
     def setLevel(self, level, setterUserid):
         '''Set the required level for this command.'''
+        # Make sure level is numerical
+        if not gungamelib.isNumeric(level):
+            raise ValueError('Level (%s) is not numeric.' % level)
+        
         level = int(level)
         
         # Open file, get lines then close
@@ -669,7 +687,7 @@ class Admin:
         adminFile.close()
     
     def hasLevel(self, level):
-        return self.level >= level
+        return (self.level >= level)
     
     def remove(self):
         '''Removes the admin of all priviledges.'''
@@ -692,6 +710,10 @@ class Admin:
     
     def setLevel(self, level, setterUserid=None):
         '''Sets the admins level.'''
+        # Make sure level is numerical
+        if not gungamelib.isNumeric(level):
+            raise ValueError('Level (%s) is not numeric.' % level)
+        
         level = int(level)
         
         # Open file, get lines then close

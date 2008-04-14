@@ -992,9 +992,12 @@ class Addon:
         # Add command to commands dictionary
         self.commands[command] = function, syntax
         
-        # Register command
+        # Register block
         es.addons.registerBlock('gungamelib', command, self.__functionCallback)
-        es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+        
+        # Register command if its not already registered
+        if not es.exists('command', 'gg_%s' % command):
+            es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
     
     def unregisterCommands(self):
         # Unregister the block of each command

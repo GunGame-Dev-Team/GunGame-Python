@@ -255,8 +255,6 @@ def buildAdminMenu(userid):
     menu_admin_main.settitle('GG:Admin: Admin Main Menu')
     menu_admin_main.setdescription('%s\n * Select an option...' % menu_admin_main.c_beginsep)
     
-    print 'Load menu: %s (%s)' % (dict_menus['load'], admin.hasLevel(dict_menus['load']))
-    
     if admin.hasLevel(dict_menus['load']):
         menu_admin_main.addoption('load', 'Load / Unload Addons')
     
@@ -467,6 +465,7 @@ def selectCommandAddonMenu(userid, choice, popupid):
     # Get variables
     addonObj = gungamelib.getAddon(choice)
     steamid = es.getplayersteamid(userid)
+    adminObj = dict_admins[steamid]
     
     # Loop through the commands available for the admin
     for command in addonObj.commands:
@@ -475,7 +474,7 @@ def selectCommandAddonMenu(userid, choice, popupid):
             continue
         
         # Make sure we can run this command
-        if not dict_admins[steamid].hasLevel(int(dict_commands[command])):
+        if not adminObj.hasLevel(dict_commands[command].level):
             continue
         
         # Add to menu
@@ -543,10 +542,8 @@ def regAdmin(steamid, name, level):
 
 def regCmd(command, level):
     '''Registers commands with client command and group_auth.'''
-    consoleCmd = 'gg_%s' % command
-    
     # Does the command exist?
-    if es.exists('clientcommand', consoleCmd) or es.exists('command', consoleCmd):
+    if es.exists('clientcommand', 'gg_%s' % command):
         return
     
     # Does the command exist in the commands dict?

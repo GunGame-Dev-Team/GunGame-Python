@@ -71,12 +71,12 @@ def load():
     gg_admin.setDisplayName('GG Admin')
     
     # Command registration
-    gg_admin.registerCommand('admin', sendAdminMenu, '')
+    gg_admin.registerCommand('admin', sendAdminMenu, log=False, console=False)
     gg_admin.registerCommand('admin_add', cmd_admin_add, '<steamid> <name> <level>')
     gg_admin.registerCommand('admin_remove', cmd_admin_remove, '<steamid>')
-    gg_admin.registerCommand('admin_show', cmd_admin_show, '')
+    gg_admin.registerCommand('admin_show', cmd_admin_show, log=False)
     gg_admin.registerCommand('admin_set', cmd_admin_set, '<steamid> <new level>')
-    gg_admin.registerCommand('admins', cmd_admins, '')
+    gg_admin.registerCommand('admins', cmd_admins, log=False)
     
     # Get admins
     adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
@@ -256,16 +256,22 @@ def buildAdminMenu(userid):
     menu_admin_main.setdescription('%s\n * Select an option...' % menu_admin_main.c_beginsep)
     
     if admin.hasLevel(dict_menus['load']):
-        menu_admin_main.addoption('load', 'Load / Unload Addons')
+        menu_admin_main.addoption('load', 'Load and Unload Addons')
     
     if admin.hasLevel(dict_menus['menus']):
         menu_admin_main.addoption('menus', 'Addon Menus')
     
     if admin.hasLevel(dict_menus['settings']):
-        menu_admin_main.addoption('settings', 'Variable Settings')
+        menu_admin_main.addoption('settings', 'Set Config Variables')
     
     if admin.hasLevel(dict_menus['commands']):
-        menu_admin_main.addoption('commands', 'Commands')
+        menu_admin_main.addoption('commands', 'View Command List')
+    
+    if admin.hasLevel(dict_menus['permissions']):
+        menu_admin_main.addoption('permissions', 'Set Permissions')
+    
+    if admin.hasLevel(dict_menus['admins']):
+        menu_admin_main.addoption('permissions', 'Admin Management')
 
 def sendAdminMenu(userid):
     buildAdminMenu(userid)

@@ -8,7 +8,7 @@
 # ==============================================================================
 #   IMPORTS
 # ==============================================================================
-# System imports
+# Python imports
 import os.path
 import string
 import random
@@ -76,10 +76,10 @@ def load():
     # Commands
     gg_deathmatch.registerCommand('dm_add', cmd_dm_add, '<players userid to from>')
     gg_deathmatch.registerCommand('dm_remove', cmd_dm_remove, '<index>')
-    gg_deathmatch.registerCommand('dm_remove_all', cmd_dm_remove_all, '')
-    gg_deathmatch.registerCommand('dm_show', cmd_dm_show, '')
-    gg_deathmatch.registerCommand('dm_print', cmd_dm_print, '')
-    gg_deathmatch.registerCommand('dm_convert', cmd_dm_convert, '')
+    gg_deathmatch.registerCommand('dm_remove_all', cmd_dm_remove_all)
+    gg_deathmatch.registerCommand('dm_show', cmd_dm_show)
+    gg_deathmatch.registerCommand('dm_print', cmd_dm_print)
+    gg_deathmatch.registerCommand('dm_convert', cmd_dm_convert)
     
     # Do we have EST?
     if not gungamelib.hasEST():
@@ -120,10 +120,10 @@ def player_team(event_var):
         return
     
     # Get the userid
-    userid = event_var['userid']
+    userid = int(event_var['userid'])
     
     # Respawn the player
-    gamethread.delayed(5, es.server.cmd, ('%s %s' % (str(dict_variables['cmd']), userid)))
+    respawn(userid)
     
     # Tell them they will respawn soon
     gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
@@ -251,6 +251,7 @@ def cmd_dm_print(userid):
     # Do we have spawnpoints?
     if not spawnPoints:
         gungamelib.msg('gg_deathmatch', userid, 'NoSpawnpointsToShow')
+        return
     
     # Send message
     gungamelib.echo('gg_deathmatch', userid, 0, 'SpawnpointsFor', {'map': mapName})
@@ -277,6 +278,7 @@ def cmd_dm_show(userid):
     # Do we have spawnpoints?
     if not spawnPoints:
         gungamelib.msg('gg_deathmatch', userid, 'NoSpawnpointsToShow')
+        return
     
     # Loop through spawn points
     for index in spawnPoints:
@@ -549,9 +551,11 @@ def removeSpawnPoint(index):
 def RespawnCountdown(userid, repeatInfo):
     # Is it in warmup?
     if not int(gungamelib.getGlobal('isWarmup')) and not int(gungamelib.getGlobal('voteActive')):
+        # Send respawn message
         if respawnCounters[userid] > 1:
             gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Plural', {'time': respawnCounters[userid]})
-        # Is the counter 1?
+        
+        # Is the counter at 1?
         elif respawnCounters[userid] == 1:
             gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Singular')
     
@@ -563,8 +567,14 @@ def RespawnCountdown(userid, repeatInfo):
     respawnCounters[userid] -= 1
 
 def respawn(userid):
-    # Tell the userid they are respawning
+    # Add a respawn counter for them
     respawnCounters[userid] = int(dict_variables['delay'])
+    
+    # Is there a respawn counter already running?
+    if repeat.status('RespawnCounter%s' % userid):
+        repeat.delete('RespawnCounter%s' % userid)
+    
+    # Create and start the spawn counter
     repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
     repeat.start('RespawnCounter%s' % userid, 1, int(dict_variables['delay']) + 1)
 

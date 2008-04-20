@@ -985,23 +985,25 @@ class Addon:
             return False
     
     '''Command options:'''
-    def registerCommand(self, command, function, syntax=''):
+    def registerCommand(self, command, function, syntax='', console=True, log=True):
         if not callable(function):
             raise AddonError('Cannot register command (%s): callback is not callable.' % command)
         
         # Add command to commands dictionary
-        self.commands[command] = function, syntax
+        self.commands[command] = function, syntax, console, log
         
-        # Register block
-        es.addons.registerBlock('gungamelib', command, self.__functionCallback)
-        
-        # Register command if its not already registered
-        if not es.exists('command', 'gg_%s' % command):
-            es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+        # Register console command (set console to False if you are getting conflicts)
+        if console:
+            # Register block
+            es.addons.registerBlock('gungamelib', command, self.__functionCallback)
+            
+            # Register command if its not already registered
+            if not es.exists('command', 'gg_%s' % command):
+                es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
     
     def unregisterCommands(self):
         # Unregister the block of each command
-        for command in self.commands:
+        for command in filter(lambda x: x[2], self.commands):
             es.addons.unregisterBlock('gungamelib', command)
     
     def callCommand(self, command, userid, arguments):
@@ -1017,21 +1019,36 @@ class Addon:
         name = es.getplayername(userid) if userid else 'CONSOLE'
         steamid = es.getplayersteamid(userid) if userid else 'CONSOLE'
         
+        # Get command info
+        callback, syntax, console, log = self.commands[command]
+        
+        # Try and call the command
         try:
-            # Call the command
-            self.commands[command][0](userid, *arguments)
-            
-            # Tell everyone about what the admin ran
-            saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
-            
-            # Print to the admin log
-            if userid:
-                logFile = open(getGameDir('addons/eventscripts/gungame/logs/adminlog.txt'), 'a')
-                logFile.write('%s Admin %s <%s> ran: %s %s\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), name, steamid, command, ' '.join(arguments)))
-                logFile.close()
+            callback(userid, *arguments)
         except TypeError:
             # Show an Invalid Syntax message to the player
-            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': self.commands[command][1]})
+            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            return
+        
+        # Tell everyone about what the admin ran
+        saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
+        
+        # Print to the admin log
+        if userid and log and gungamelib.getVariableValue('gg_admin_log'):
+            # Get file info
+            logFileName = getGameDir('addons/eventscripts/gungame/logs/adminlog.txt')
+            size = os.path.getsize(logFileName) / 1024
+            
+            # Set log file opening mode
+            if size > gungamelib.getVariableValue('gg_admin_log'):
+                logFile = open(logFileName, 'w')
+                logFile.write('%s Log cleared, limit reached.\n' % time.strftime('[%d/%m/%Y %H:%M:%S]'))
+            else:
+                logFile = open(logFileName, 'a')
+            
+            # Open write to log then close
+            logFile.write('%s Admin %s <%s> ran: %s %s\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), name, steamid, command, ' '.join(arguments)))
+            logFile.close()
     
     def hasCommand(self, command):
         return self.commands.has_key(command)
@@ -1172,8 +1189,7 @@ class Message:
             raise IOError('Cannot load strings (%s): no string file exists.' % self.addonName)
     
     def __cleanString(self, string):
-        string = string.replace('\3', '').replace('\4', '').replace('\1', '')
-        return string
+        return string.replace('\3', '').replace('\4', '').replace('\1', '')
     
     def __formatString(self, string, tokens, player=None):
         # Try to get string
@@ -1219,7 +1235,7 @@ class Message:
                 player = playerlib.getPlayer(userid)
                 
                 es.tell(int(player), '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
-                
+    
     def hudhint(self, string, tokens):
         # Load the strings
         self.__loadStrings()
@@ -1335,12 +1351,10 @@ class Message:
                 usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
 # ==============================================================================
-#  EASYINPUT CLASS
+#   EASYINPUT CLASS
 # ==============================================================================
 class EasyInput:
     '''Makes "Esc"-style input boxes quickly and simply.
-    
-    <insert cool slogan here>
     
     Inspiration:
      * SuperDave (http://forums.mattie.info/cs/forums/viewtopic.php?t=21958)
@@ -1355,8 +1369,8 @@ class EasyInput:
         
         # Set variables
         self.name = name
-        self.callback = callback
         self.userid = 0
+        self.callback = callback
         self.extras = extras
         self.setTimeout(199)
         
@@ -1370,11 +1384,11 @@ class EasyInput:
         # Unregister command
         if es.exists('clientcommand', self.cmd):
             es.unregclientcmd(self.cmd)
-            es.addons.unregisterBlock('gungamelib', 'input_cmd')
+            es.addons.unregisterBlock('gungamelib', self.cmd)
         
         # Register the command again
-        es.addons.registerBlock('gungamelib', 'input_cmd', self.__inputCallback)
-        es.regclientcmd(self.cmd, 'gungamelib/input_cmd', 'Command for retrieving input box data.') 
+        es.addons.registerBlock('gungamelib', self.cmd, self.__inputCallback)
+        es.regclientcmd(self.cmd, 'gungamelib/%s' % self.cmd, 'Command for retrieving input box data.') 
     
     def setTitle(self, title):
         '''Self-explantory.'''
@@ -1429,22 +1443,22 @@ class EasyInput:
 #  WINNERS CLASS
 # ==============================================================================
 class Winners:
-    global dict_winners
     ''' Class used for tracking and storing Winners'''
+    
     def __init__(self, uniqueid):
         self.uniqueid = str(uniqueid)
-    
+        
         # Make sure that the winner's database has been loaded
         if not getGlobal('winnersloaded'):
-            # Load the database using cpickle
+            # Load the database using pickle
             loadWinnerDatabase()
-            
+        
         if not dict_winners.has_key(self.uniqueid):
-            self.attributes = {'wins':0, 'timestamp':time.time()}
+            self.attributes = {'wins': 0, 'timestamp': time.time()}
             dict_winners[self.uniqueid] = self.attributes
         else:
             self.attributes = dict_winners[self.uniqueid]
-        
+    
     def __getitem__(self, item):
         # We will be nice and convert the "item" to a lower-cased string
         item = str(item).lower()
@@ -1453,7 +1467,7 @@ class Winners:
         if item in self.attributes:
             # Allowing the retrieving of attributes in the dictionary
             return self.attributes[item]
-        
+    
     def __setitem__(self, item, value):
         # We will be nice and convert the "item" to a lower-cased string
         item = str(item).lower()
@@ -1500,7 +1514,7 @@ def getWinner(uniqueid):
         raise e
 
 # ==============================================================================
-#  MESSAGE FUNCTIONS
+#   MESSAGE FUNCTIONS
 # ==============================================================================
 def msg(addon, filter, string, tokens={}, showPrefix=True):
     if filter == 0:

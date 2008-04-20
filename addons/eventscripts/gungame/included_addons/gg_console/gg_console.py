@@ -34,8 +34,8 @@ def load():
     gg_console.setDisplayName('GG Console')
     
     # Command registration
-    #  Format: registerCommand(name   , callback , syntax               )
     gg_console.registerCommand('isafk', cmd_isafk, '<variable> <userid>')
+    gg_console.registerCommand('seteyeangle', cmd_seteyeangle, '<userid> <pitch> <yaw>')
 
 # ==============================================================================
 #   CONSOLE COMMANDS
@@ -49,23 +49,17 @@ def cmd_isafk(userid, variable, player):
     playerObj = gungamelib.getPlayer(player)
     es.ServerVar(variable).set(int(playerObj.isPlayerAFK()))
 
-"""
-TODO (Gulp):
-
-def cmd_seteyeangle():
-    '''gg_seteyeangle <userid> <pitch> <yaw>
-    
-    Sets a player's eye angles.
-    '''
-    if not checkArgs(3, '<userid> <pitch> <yaw>'): return
-    
-    userid, pitch, yaw = gungamelib.formatArgs()
-    
+def cmd_seteyeangle(userid, player, pitch, yaw):
+    # Make sure the client is in the server
     if not gungamelib.clientInServer(userid):
         gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': userid})
     
+    # Get player then set the eye angles
     player = gungamelib.getPlayer(userid)
     player.setPlayerEyeAngles(pitch, yaw)
+
+"""
+TODO (Gulp):
 
 def cmd_teleport():
     '''gg_teleport <userid> <x> <y> <z> <pitch> <yaw>

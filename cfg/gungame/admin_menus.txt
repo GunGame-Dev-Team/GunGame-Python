@@ -21,3 +21,5 @@ load 2
 menus 3
 settings 2
 commands 1
+permissions 3	// NOT IMPLEMENTED
+admins 3	// NOT IMPLEMENTED

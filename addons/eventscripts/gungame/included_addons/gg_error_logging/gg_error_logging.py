@@ -6,7 +6,7 @@
 '''
 
 # ==============================================================================
-#  IMPORTS
+#   IMPORTS
 # ==============================================================================
 # Python imports
 import sys
@@ -22,7 +22,7 @@ import popuplib
 import gungamelib
 
 # ==============================================================================
-#  ADDON REGISTRATION
+#   ADDON REGISTRATION
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
@@ -33,14 +33,14 @@ info.basename = 'gungame/included_addons/gg_error_logging'
 info.author   = 'GunGame Development Team'
 
 # ==============================================================================
-#  GLOBALS
+#   GLOBALS
 # ==============================================================================
 dict_errorTracking = {}
 dateFormat = '%d/%m/%Y @ [%H:%M:%S]'
 errorFile = None
 
 # ==============================================================================
-#  ERROR TRACKING CLASS
+#   ERROR TRACKING CLASS
 # ==============================================================================
 class ErrorTracking:
     '''Tracks the count and line number of the errors that are logged.'''
@@ -48,7 +48,7 @@ class ErrorTracking:
     errorCount = 1
 
 # ==============================================================================
-#  GAME EVENTS
+#   GAME EVENTS
 # ==============================================================================
 def load():
     global errorFile
@@ -100,7 +100,7 @@ def unload():
     gungamelib.unregisterAddon('gg_error_logging')
 
 # ==============================================================================
-#  HELPER FUNCTIONS
+#   HELPER FUNCTIONS
 # ==============================================================================
 def clearExistingLogs():
     # Get base directory
@@ -125,8 +125,8 @@ def clearExistingLogs():
             continue
         
         # Remove the file
-        if name != str(es.ServerVar('eventscripts_ggp')):
-            os.remove(baseDir + f)
+        if name != 'errorlog %s' % str(es.ServerVar('eventscripts_ggp')):
+            os.remove('%s%s' % (baseDir, f))
 
 def openFile(type):
     global errorFile

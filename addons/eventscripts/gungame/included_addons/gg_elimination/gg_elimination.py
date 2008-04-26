@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.285'
+info.version  = '1.0.292'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -38,6 +38,7 @@ info.author   = 'GunGame Development Team'
 dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
 dict_addonVars['currentRound'] = 0
+dict_addonVars['respawnCmd'] = gungamelib.getVariable('gg_dm_respawn_cmd')
 
 # Player Database
 dict_playersEliminated = {}
@@ -53,7 +54,6 @@ def load():
     gg_elimination.addDependency('gg_dead_strip', 1)
     gg_elimination.addDependency('gg_dissolver', 1)
     gg_elimination.addDependency('gg_knife_elite', 0)
-    gg_elimination.addDependency('gg_deathmatch', 0)
 
     # Get userids of all connected players
     for userid in es.getUseridList():
@@ -137,11 +137,11 @@ def respawnPlayer(userid, respawnRound):
         index = playerlib.getPlayer(userid).attributes['index']
         for sendid in es.getUseridList():
             usermsg.saytext2(sendid, index, '\4[Elimination]\1 Respawning: \3%s\1' %es.getplayername(userid))
-        es.server.cmd('est_spawn %s' %userid)
+        es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], userid))
 
 def respawnEliminated(userid, respawnRound):
     # Format respawning message
-    msgFormat = None
+    msgFormat = ''
     
     # Check if round is over
     if dict_addonVars['roundActive'] and dict_addonVars['currentRound'] == respawnRound:
@@ -150,13 +150,13 @@ def respawnEliminated(userid, respawnRound):
         # Respawn all victims eliminated players
         for player in dict_playersEliminated[userid]:
             if es.exists('userid', player):
-                es.server.cmd('est_spawn %s' %player)
+                es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], player))
                 msgFormat = '%s\3%s\1, ' %(msgFormat, es.getplayername(player))
                 if not index:
                     index = playerlib.getPlayer(player).attributes['index']
         # Show respawning players
         if msgFormat:
-            # es.msg('#multi', '#green[Elimination] #lightgreenRespawning: #default%s' %msgFormat[0:-2])
+            es.msg('#multi', '#green[Elimination] #lightgreenRespawning: #default%s' %msgFormat[0:-2])
             for sendid in es.getUseridList():
                 usermsg.saytext2(sendid, index, '\4[Elimination]\1 Respawning: %s' %msgFormat[0:-2])
         # Clear victims eliminated player list

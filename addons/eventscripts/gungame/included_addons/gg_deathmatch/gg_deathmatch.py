@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.285
+    Version: 1.0.293
     Description: Deathmatch addon for GunGame:Python
 '''
 
@@ -32,7 +32,7 @@ from gungamelib import ArgumentError
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.285'
+info.version  = '1.0.293'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -242,11 +242,13 @@ def cmd_dm_remove_all(userid):
         getSpawnPoints(mapName)
         
         # Tell them the spawnpoints are removed
-        gungamelib.msg('gg_deathmatch', userid, '')
+        gungamelib.msg('gg_deathmatch', userid, 'RemovedAllSpawnpoints')
 
 def cmd_dm_print(userid):
     # Get map name
     mapName = gungamelib.getMapName()
+    
+    gungamelib.msg('gungame', userid, 'CheckYourConsole')
     
     # Do we have spawnpoints?
     if not spawnPoints:
@@ -321,7 +323,7 @@ def selectAddMenu(userid, choice, popupid):
     # Get view angles etc.
     viewAngle = playerlib.getPlayer(choice).get('viewangle')[1]
     x, y, z = es.getplayerlocation(choice)
-    
+    cmd_dm_add(userid, choice)
     # Add spawnpoint
     addSpawnPoint(x, y, z, viewAngle)
     gungamelib.msg('gg_deathmatch', userid, 'AddedSpawnpoint', {'index': len(spawnPoints)-1})

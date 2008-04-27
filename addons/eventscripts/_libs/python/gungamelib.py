@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.285
+    Version: 1.0.293
     Description:
 '''
 
@@ -1176,12 +1176,24 @@ class addonDependency:
 #   MESSAGE CLASS
 # ==============================================================================
 class Message:
+    '''Message class is used to broadcast linguistic messages around the server,
+    with the use of translation files.'''
+    
     def __init__(self, addonName, filter):
-        self.filter = filter
+        '''Initializes the class.'''
+        # Format filter
+        filter = str(filter)
+        if filter.isdigit():
+            self.filter = int(filter)
+        else:
+            self.filter = filter
+        
+        # Set other variables
         self.addonName = addonName
         self.strings = None
 
     def __loadStrings(self):
+        '''Loads the Strings instance into the class.'''
         # Does the language file exist?
         if os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName)):
             self.strings = langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName))
@@ -1189,9 +1201,11 @@ class Message:
             raise IOError('Cannot load strings (%s): no string file exists.' % self.addonName)
     
     def __cleanString(self, string):
+        '''Cleans the string for output to the console.'''
         return string.replace('\3', '').replace('\4', '').replace('\1', '')
     
     def __formatString(self, string, tokens, player=None):
+        '''Retrieves and formats the string.'''
         # Try to get string
         try:
             rtnStr = self.strings(string, tokens, player.get('lang'))

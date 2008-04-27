@@ -1,45 +1,39 @@
 ''' (c) 2008 by the GunGame Coding Team
 
-    Title: gg_noblock
+    Title: gg_sample
     Version: 1.0.293
-    Description: No-block addon for GunGame:Python.
+    Description: Custom addon test.
 '''
 
 # ==============================================================================
-#  IMPORTS
+#   IMPORTS
 # ==============================================================================
-# Eventscripts imports
+# Python imports
+
+
+# EventScripts imports
 import es
 
-# Gungame import
+# GunGame imports
 import gungamelib
 
 # ==============================================================================
-#  ADDON REGISTRATION
+#   ADDON REGISTRATION
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = 'gg_noblock (for GunGame: Python)'
+info.name     = 'sample Addon for GunGame: Python'
 info.version  = '1.0.293'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
-info.basename = 'gungame/included_addons/gg_noblock'
+info.url      = ''
+info.basename = 'gungame/custom_addons/sample'
 info.author   = 'GunGame Development Team'
 
 # ==============================================================================
-#  GAME EVENTS
+#   GAME EVENTS
 # ==============================================================================
 def load():
-    # Register addon with gungamelib
-    gg_noblock = gungamelib.registerAddon('gg_noblock')
-    gg_noblock.setDisplayName('GG Noblock')
-
-def unload():
-    # Unregister this addon with GunGame
-    gungamelib.unregisterAddon('gg_noblock')
-
-
-def player_spawn(event_var):
-    userid = int(event_var['userid'])
+    addon = gungamelib.registerAddon('sample')
+    addon.setDisplayName('sample')
     
-    # Make non-solid
-    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 2)
+def unload():
+    gungamelib.unregisterAddon('sample')

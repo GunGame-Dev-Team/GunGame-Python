@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_sample
-    Version: 1.0.293
+    Version: 1.0.295
     Description: Custom addon test.
 '''
 
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'sample Addon for GunGame: Python'
-info.version  = '1.0.293'
+info.version  = '1.0.295'
 info.url      = ''
 info.basename = 'gungame/custom_addons/sample'
 info.author   = 'GunGame Development Team'

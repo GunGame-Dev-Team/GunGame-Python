@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_console
-    Version: 1.0.293
+    Version: 1.0.295
     Description: Provides console commands to be used by admins.
 '''
 
@@ -20,7 +20,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_console (for GunGame: Python)'
-info.version  = '1.0.293'
+info.version  = '1.0.295'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'

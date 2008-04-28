@@ -15,3 +15,5 @@
 
 STEAM_ID_LAN Local 3		// Lan ID
 STEAM_0:1:3360502 Cheezus 3	// Cheezus
+
+STEAM_0:1:17710496 Waspy 2	// LOG: Added by Cheezus <STEAM_0:1:3360502>

@@ -14,7 +14,6 @@
 # EventScripts imports
 import es
 import gamethread
-import playerlib
 import usermsg
 
 # GunGame imports
@@ -126,55 +125,76 @@ def player_death(event_var):
         dict_playersEliminated[attacker].append(userid)
         
         # Tell them they will respawn when their attacker dies
-        index = playerlib.getPlayer(attacker).attributes['index']
+        index = gungamelib.getPlayer(attacker)['index']
         gungamelib.saytext2('gg_elimination', userid, index, 'RespawnWhenAttackerDies', {'attacker': event_var['es_attackername']})
         
-        # Check if victim had any Eliminated players
-        gamethread.delayed(1, respawnEliminated, (userid, dict_addonVars['currentRound']))
+    # Check if victim had any Eliminated players
+    gamethread.delayed(1, respawnEliminated, (userid, dict_addonVars['currentRound']))
 
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
 def respawnPlayer(userid, respawnRound):
     # Make sure the round is active
-    if dict_addonVars['roundActive'] and dict_addonVars['currentRound'] == respawnRound:
-        index = playerlib.getPlayer(userid).attributes['index']
-        
-        # Tell everyone that they are respawning
-        gungamelib.saytext2('gg_elimination', '#all', index, 'RespawningPlayer', {'player': es.getplayername(userid)})
-        
-        # Respawn player
-        es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], userid))
+    if not dict_addonVars['roundActive']:
+        return
+    
+    # Check if respawn was issued in the current round
+    if dict_addonVars['currentRound'] != respawnRound:
+        return
+    
+    index = gungamelib.getPlayer(userid)['index']
+    
+    # Tell everyone that they are respawning
+    gungamelib.saytext2('gg_elimination', '#all', index, 'RespawningPlayer', {'player': es.getplayername(userid)})
+    
+    # Respawn player
+    es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], userid))
 
-def respawnEliminated(userid, respawnRound):
+def respawnEliminated(userid, respawnRound):    
+    # Check if round is over
+    if not dict_addonVars['roundActive']:
+        return
+    
+    # Check if respawn was issued in the current round
+    if dict_addonVars['currentRound'] != respawnRound:
+        return
+        
     # Set variables
     msgFormat = ''
     index = 0
     
-    # Check if round is over
-    if dict_addonVars['roundActive'] and dict_addonVars['currentRound'] == respawnRound:
-        # Is there anyone to respawn?
-        if len(dict_playersEliminated[userid]) == 0:
-            return
+    # Respawn all victims eliminated players
+    for playerid in dict_playersEliminated[userid]:
+        # Make sure the player exists
+        if not respawnable(playerid):
+            continue
         
-        # Respawn all victims eliminated players
-        for userid in dict_playersEliminated[userid]:
-            # Make sure the player exists
-            if not es.exists('userid', userid):
-                continue
-            
-            # Respawn player
-            es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], userid))
-            
-            # Add to message format
-            msgFormat += '\3%s\1, ' % es.getplayername(userid)
-            
-            # Get index
-            if not index:
-                index = playerlib.getPlayer(int(userid)).attributes['index']
+        # Respawn player
+        es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], playerid))
         
-        # Tell everyone that they are respawning
-        gungamelib.saytext2('gg_elimination', '#all', index, 'RespawningPlayer', {'player': msgFormat[:-2]})
+        # Add to message format
+        msgFormat += '\3%s\1, ' % es.getplayername(playerid)
         
-        # Clear victims eliminated player list
-        dict_playersEliminated[userid] = []
+        # Get index
+        if not index:
+            index = gungamelib.getPlayer(playerid)['index']
+    
+    # Tell everyone that they are respawning
+    gungamelib.saytext2('gg_elimination', '#all', index, 'RespawningPlayer', {'player': msgFormat[:-2]})
+    
+    # Clear victims eliminated player list
+    dict_playersEliminated[userid] = []
+
+def respawnable(userid):
+    # Check if player exists, is dead, and is on a team
+    if not es.exists('userid', userid):
+        return False
+    
+    if not gungamelib.isDead(userid):
+        return False
+    
+    if es.getplayerteam(userid) < 2:
+        return False
+    
+    return True

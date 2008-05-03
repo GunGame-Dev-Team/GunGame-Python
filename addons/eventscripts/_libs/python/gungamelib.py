@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.295
+    Version: 1.0.296
     Description:
 '''
 
@@ -369,6 +369,13 @@ class Player:
     
     def stripPlayer(self):
         '''Strips a player of all their weapons, except knife.'''
+        
+        es.server.cmd('es_xgive %s weapon_knife' % self.userid)
+        es.server.cmd('es_xgive %s player_weaponstrip' % self.userid)
+        es.server.cmd('es_xfire %s player_weaponstrip Strip' % self.userid)
+        es.server.cmd('es_xfire %s player_weaponstrip Kill' % self.userid)
+        
+        '''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to strip player (%s): not on a team' % self.userid)
@@ -391,6 +398,7 @@ class Player:
         # Remove secondary
         if secondary:
             es.server.cmd('es_xremove %d' % int(playerObj.get('weaponindex', secondary)))
+        '''
     
     def giveWeapon(self):
         '''Gives a player their current weapon.'''

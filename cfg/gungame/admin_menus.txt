@@ -1,15 +1,19 @@
 //----------------------------------------------------------------------------
 // admin_menus.txt -- Admin menu permission definitions.
 // 
-// Each menu has a required permission level, 1, 2 or 3. These permission
+// Each menu has a required permission level: 0, 1 or 2. These permission
 // values will decide if admins can access them.
 // 
 // Format: <Menu> <Required Level>
 // 
 // Example: commands 2
-//            Will mean only level 2 admins and above will be able to access
-//            this menu.
+//           * Will mean only level 2 admins and below will be able to access
+//             this menu.
 // 
+// Level Info: 0 = Root
+//             1 = Super Admin
+//             2 = Admin
+//
 // Note: Any edit of this file will require a server restart for changes to
 //       take effect.
 // 
@@ -17,9 +21,9 @@
 //       set in "admin_commands.txt".
 //----------------------------------------------------------------------------
 
-load 2
-menus 3
-settings 2
-commands 1
-permissions 3	// NOT IMPLEMENTED
-admins 3	// NOT IMPLEMENTED
+load 1
+menus 2
+settings 1
+commands 2
+permissions 0
+admins 0

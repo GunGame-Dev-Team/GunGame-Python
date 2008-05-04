@@ -9,11 +9,14 @@
 // Example: STEAM_0:1:3360502 Cheezus 3
 // Example: STEAM_0:0:450504 HitThePipe 3
 //
+// Level Info: 0 = Root: server owner or a well trusted player.
+//             1 = Super Admin: a high-level admin, like a Super Moderator on
+//                              a forum.
+//             2 = Admin: a normal admin.
+// 
 // Note: Any edit of this file will require a server restart for changes to
 //       take effect.
 //----------------------------------------------------------------------------
 
-STEAM_ID_LAN Local 3		// Lan ID
-STEAM_0:1:3360502 Cheezus 3	// Cheezus
-
-STEAM_0:1:17710496 Waspy 2	// LOG: Added by Cheezus <STEAM_0:1:3360502>
+STEAM_ID_LAN Local 0		// Lan ID
+STEAM_0:1:3360502 Cheezus 0	// LOG: Level set by <SCRIPT>

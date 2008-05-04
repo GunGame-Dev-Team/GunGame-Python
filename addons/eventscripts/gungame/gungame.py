@@ -507,7 +507,7 @@ def load():
         es.unload('gungame')
 
 def es_map_start(event_var):
-    #Load custom GunGame events
+    # Load custom GunGame events
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Make sounds downloadbale
@@ -541,7 +541,7 @@ def es_map_start(event_var):
         # Fire gg_start event
         es.event('initialize','gg_start')
         es.event('fire','gg_start')
-            
+    
     # Reset the GunGame Round
     gungamelib.resetGunGame()
     
@@ -563,69 +563,53 @@ def round_start(event_var):
     
     # Disable Buyzones
     userid = es.getuserid()
-    es.server.cmd('es_xfire %d func_buyzone disable' %userid)
+    es.server.cmd('es_xfire %d func_buyzone Disable' %userid)
     
-    # REMOVE WEAPONS BUILT INTO THE MAP
-    # Loop through all weapons
+    # Remove weapons
     for weapon in list_allWeapons:
         # Make sure that the admin doesn't want the weapon left on the map
         if weapon not in list_stripExceptions:
             # Remove the weapon from the map
             es.server.cmd('es_xfire %d weapon_%s kill' %(userid, weapon))
     
-    # Set up the "game_player_equip" entity to auto-strip the players for us
+    # Equip players
     equipPlayer()
 
-    # Check to see if objectives need to be enabled/disabled
+    # Get map info
     mapObjectives = gungamelib.getVariableValue('gg_map_obj')
-    
-    # Get the map prefix for the following checks
     mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
     
     # If both the BOMB and HOSTAGE objectives are enabled, we don't do anything else
     if mapObjectives < 3:
-        # If ALL Objectives are DISABLED
+        # Remove all objectives
         if mapObjectives == 0:
-            # Since objectives are disabled, if this is a "de_" map, we disable only BOMB Objectives
             if mapPrefix == 'de':
-                # Disable the bomb zones
                 es.server.cmd('es_xfire %d func_bomb_target Disable' %userid)
-                
-                # Kill/remove the C4
                 es.server.cmd('es_xfire %d weapon_c4 Kill' %userid)
-            # Since objectives are disabled, if this is a "cs_" map, we disable only HOSTAGE Objectives
+            
             elif mapPrefix == 'cs':
-                # Disable the ability to rescue hostages
                 es.server.cmd('es_xfire %d func_hostage_rescue Disable' %userid)
-                
-                # Remove the hostages from the map
                 es.server.cmd('es_xfire %d hostage_entity Kill' %userid)
-        # If only the HOSTAGE Objective is enabled
+        
+        # Remove bomb objectives
         elif mapObjectives == 1:
-            # Since the BOMB objective is disabled, if this is a "de_" map, we disable only BOMB Objectives
             if mapPrefix == 'de':
-                # Disable the bomb zones
                 es.server.cmd('es_xfire %d func_bomb_target Disable' %userid)
-                
-                # Kill/remove the C4
                 es.server.cmd('es_xfire %d weapon_c4 Kill' %userid)
-        # If only the BOMB Objective is enabled
+        
+        # Remove hostage objectives
         elif mapObjectives == 2:
-            # Since the HOSTAGE objective is disabled, if this is a "cs_" map, we disable only HOSTAGE Objectives
             if mapPrefix == 'cs':
-                # Disable the ability to rescue hostages
                 es.server.cmd('es_xfire %d func_hostage_rescue Disable' %userid)
-                
-                # Remove the hostages from the map
                 es.server.cmd('es_xfire %d hostage_entity Kill' %userid)
-                
+    
     if gungamelib.getVariableValue('gg_leaderweapon_warning'):
         leaderWeapon = gungamelib.getLevelWeapon(gungamelib.getLeaderLevel())
         if leaderWeapon == 'knife':
             if gungamelib.getSound('knifelevel'):
                 for userid in es.getUseridList():
                     es.playsound(userid, gungamelib.getSound('knifelevel'), 1.0)
-
+    
         if leaderWeapon == 'hegrenade':
             if gungamelib.getSound('nadelevel'):
                 for userid in es.getUseridList():
@@ -643,7 +627,7 @@ def round_end(event_var):
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
-    # Set up the "game_player_equip" entity to auto-strip the players for us
+    # Equip player
     equipPlayer()
     
     # Make sure we don't count them as AFK if there was a ROUND_DRAW or GAME_COMMENCING reason code
@@ -663,11 +647,14 @@ def round_end(event_var):
                     afkPunishCheck(int(userid))
 
 def player_activate(event_var):
-    # We will use this to set up players as they connect
-    gungamePlayer = gungamelib.getPlayer(event_var['userid'])
+    # Setup the player
+    gungamelib.getPlayer(event_var['userid'])
     
 def player_disconnect(event_var):
     userid = int(event_var['userid'])
+    
+    if gungamelib.getGlobal('gameOver') == 1:
+        return
     
     if not gungamelib.playerExists(userid):
         return
@@ -731,169 +718,175 @@ def player_spawn(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
     
-    if not gungamelib.isSpectator(userid):
-        if not es.isbot(userid):
-            # Reset the player's location with GunGame's AFK Checker
-            gamethread.delayed(0.6, gungamePlayer.resetPlayerLocation, ())
+    if gungamelib.isSpectator(userid):
+        return
+    
+    # Reset AFK status
+    if not es.isbot(userid):
+        gamethread.delayed(0.6, gungamePlayer.resetPlayerLocation, ())
 
-        # Check to see if the WarmUp Round is Active
-        if not gungamelib.getGlobal('isWarmup'):
-            # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
-            gungamePlayer.giveWeapon()
+    # Check to see if the WarmUp Round is Active
+    if not gungamelib.getGlobal('isWarmup'):
+        # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
+        gungamePlayer.giveWeapon()
+        
+        levelInfoHudHint(userid)
+    
+    if gungamelib.getVariableValue('gg_map_obj') > 1:
+        # Check to see if this player is a CT
+        if int(event_var['es_userteam']) == 3:
             
-            levelInfoHudHint(userid)
-            
-        if gungamelib.getVariableValue('gg_map_obj') > 1:
-            # Check to see if this player is a CT
-            if int(event_var['es_userteam']) == 3:
-                # Check to see if the map is a "de_*" map
-                if gungamelib.getGlobal('gungame_currentmap_prefix') == 'de':
-                    # See if the admin wants us to give them a defuser
-                    if gungamelib.getVariableValue('gg_player_defuser') > 0:
-                        playerlibPlayer = playerlib.getPlayer(userid)
-                        
-                        # Make sure the player doesn't already have a defuser
-                        if not playerlibPlayer.get('defuser'):
-                            es.server.cmd('es_xgive %d item_defuser' %userid)
+            # Are we in a de_ map and want to give defuser?
+            if gungamelib.getGlobal('gungame_currentmap_prefix') == 'de' and gungamelib.getVariableValue('gg_player_defuser') > 0:
+                # Get player object
+                playerlibPlayer = playerlib.getPlayer(userid)
+                
+                # Make sure the player doesn't already have a defuser
+                if not playerlibPlayer.get('defuser'):
+                    es.server.cmd('es_xgive %d item_defuser' % userid)
 
 def player_jump(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
     
-    # Is player human?
+    # Set to not be AFK
     if not es.isbot(userid):
-        # Here, we will make sure that the player isn't counted as AFK
         gungamePlayer.playerNotAFK()
 
 def player_death(event_var):
     global countBombDeathAsSuicide
     
-    # Set vars
+    # Is warmup round?
+    if gungamelib.getGlobal('isWarmup'):
+        return
+    
+    # Get player stuff
     userid = int(event_var['userid'])
     attacker = int(event_var['attacker'])
+    
+    # Is the attacker on the server?
+    if not gungamelib.clientInServer(attacker):
+        return
+    
+    # Get victim object
     gungameVictim = gungamelib.getPlayer(userid)
     
-    # If the attacker is not "world"
-    if attacker != 0:
-        gungameAttacker = gungamelib.getPlayer(attacker)
+    # =============
+    # SUICIDE CHECK
+    # =============
+    if (attacker == 0 or attacker == userid) and gungamelib.getVariableValue('gg_suicide_punish') > 0 and countBombDeathAsSuicide:
+        # Set vars
+        oldLevel = gungameVictim['level']
+        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_suicide_punish'), 1)
         
-        # If the attacker is not on the same team
-        if int(event_var['es_userteam']) != int(event_var['es_attackerteam']):
-            # If the weapon is the correct weapon
-            weapon = event_var['weapon']
-            if weapon == gungameAttacker.getWeapon():
-                # If the victim was not AFK
-                if not gungameVictim.isPlayerAFK():
-                    # Make sure that PreventLevel is not set to "1"
-                    if int(gungameAttacker['preventlevel']) == 0:
-                        # If multikill is active we need to set up for it
-                        multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
-                        if multiKill > 1:
-                        
-                            if weapon == 'knife' or weapon == 'hegrenade':
-                                if gungamelib.getVariableValue('gg_multikill_override'):
-                                    gungameAttacker['multikill'] = gungamelib.getVariableValue('gg_multikill_override')
-                            else:
-                                gungameAttacker['multikill'] += 1
-                                
-                            if gungameAttacker['multikill'] == multiKill:
-                                levelUpOldLevel = gungameAttacker['level']
-                                levelUpNewLevel = levelUpOldLevel + 1
-                                
-                                gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
-                                gungameAttacker['multikill'] = 0
-                                
-                                # Play the levelup sound
-                                if gungamelib.getSound('levelup'):
-                                    es.playsound(attacker, gungamelib.getSound('levelup'), 1.0)
-                            else:
-                                # Message the attacker
-                                multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
-                                gungamelib.hudhint('gungame', attacker, 'KillsThisLevel', {'kills': gungameAttacker['multikill'], 'togo': multiKill})
-                                
-                                # Message the victim
-                                multiKill = gungamelib.getLevelMultiKill(gungameVictim['level'])
-                                gungamelib.hudhint('gungame', userid, 'KillsThisLevel', {'kills': gungameVictim['multikill'], 'togo': multiKill})
-                                
-                                # Play the multikill sound
-                                if gungamelib.getSound('multikill'):
-                                    es.playsound(attacker, gungamelib.getSound('multikill'), 1.0)
-                                
-                        # Multikill was not active
-                        else:
-                            levelUpOldLevel = gungameAttacker['level']
-                            levelUpNewLevel = levelUpOldLevel + 1
-                            
-                            gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelUpOldLevel, levelUpNewLevel, userid, event_var['es_username'])
-                            
-                            # Play the levelup sound
-                            if gungamelib.getSound('levelup'):
-                                es.playsound(attacker, gungamelib.getSound('levelup'), 1.0)
-                            
-                # The victim was AFK
-                else:
-                    gungamelib.hudhint('gungame', attacker, 'PlayerAFK', {'player': event_var['es_username']})
-                    
-                    # Check to see if AFK punishment is active
-                    if gungamelib.getVariableValue('gg_afk_rounds') > 0:
-                        # BOTs are never AFK
-                        if not es.isbot(userid):
-                            # Run the AFK punishment code
-                            afkPunishCheck(userid)
-        else:
-            # Must be a team kill or a suicide
-            if userid == attacker:
-                # Yep! They killed themselves. Now let's see if we are going to punish the dead...
-                if gungamelib.getVariableValue('gg_tk_punish') > 0:
-                    # Set vars
-                    levelDownOldLevel = int(gungameAttacker['level'])
-                    levelDownNewLevel = levelDownOldLevel - gungamelib.getVariableValue('gg_tk_punish')
-                    
-                    # Let's not put them on a non-existant level 0...
-                    if levelDownNewLevel > 0:
-                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
-                    else:
-                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
-                        
-                    # Play the leveldown sound
-                    if gungamelib.getSound('leveldown'):
-                        es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
-            else:
-                # Let's see if we get to punish the vile TK'er...
-                if gungamelib.getVariableValue('gg_tk_punish') > 0:
-                    # Set vars
-                    levelDownOldLevel = gungameAttacker['level']
-                    levelDownNewLevel = levelDownOldLevel - gungamelib.getVariableValue('gg_tk_punish')
-                    
-                    # Let's not put them on a non-existant level 0...
-                    if levelDownNewLevel > 0:
-                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
-                        
-                    else:
-                        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], levelDownOldLevel, 1, userid, event_var['es_username'])
-                        
-                    # Play the leveldown sound
-                    if gungamelib.getSound('leveldown'):
-                        es.playsound(attacker, gungamelib.getSound('leveldown'), 1.0)
-    else:
-        # Killed by "world"
-        gungameAttacker = gungamelib.getPlayer(userid)
+        # Trigger level down
+        gungamelib.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], oldLevel, newLevel, userid, event_var['es_username'])
         
-        if gungamelib.getVariableValue('gg_suicide_punish') > 0:
-            # Make sure that the explosion of the bomb doesn't count as a suicide to punish
-            if countBombDeathAsSuicide:
-                # Set vars
-                levelDownOldLevel = gungameAttacker['level']
-                levelDownNewLevel = levelDownOldLevel - gungamelib.getVariableValue('gg_suicide_punish')
-                
-                # Let's not put them on a non-existant level 0...
-                if levelDownNewLevel > 0:
-                    gungamelib.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], levelDownOldLevel, levelDownNewLevel, userid, event_var['es_username'])
-                    
-                # Play the leveldown sound
-                if gungamelib.getSound('leveldown'):
-                    es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
+        gungamelib.msg('gungame', attacker, 'Suicide_LevelDown', {'newlevel': newLevel})
+        
+        # Play the leveldown sound
+        if gungamelib.getSound('leveldown'):
+            es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
+        
+        return
     
+    # Get attacker object
+    gungameAttacker = gungamelib.getPlayer(attacker)
+    
+    # ===============
+    # TEAM-KILL CHECK
+    # ===============
+    if (event_var['es_userteam'] == event_var['es_attackerteam']) and gungamelib.getVariableValue('gg_tk_punish') > 0:
+        # Set vars
+        oldLevel = gungameAttacker['level']
+        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_tk_punish'), 1)
+        
+        # Trigger level down
+        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
+        
+        gungamelib.msg('gungame', attacker, 'TeamKill_LevelDown', {'newlevel': newLevel})
+        
+        # Play the leveldown sound
+        if gungamelib.getSound('leveldown'):
+            es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
+        
+        return
+    
+    # ===========
+    # NORMAL KILL
+    # ===========
+    # Get weapon name
+    weapon = event_var['weapon']
+    
+    # Check the weapon was correct
+    if weapon != gungameAttacker.getWeapon():
+        return
+    
+    # Don't continue if the victim is AFK
+    if gungameVictim.isPlayerAFK():
+        # Tell the attacker they were AFK
+        gungamelib.hudhint('gungame', attacker, 'PlayerAFK', {'player': event_var['es_username']})
+        
+        # Check AFK punishment
+        if not es.isbot(userid) and gungamelib.getVariableValue('gg_afk_rounds') > 0:
+            afkPunishCheck(userid)
+        
+        return
+    
+    # Can't level up if the attacker can't
+    if int(gungameAttacker['preventlevel']) == 1:
+        return
+    
+    # No multikill? Just level up...
+    multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
+    if multiKill == 1:
+        # Set level variables
+        oldLevel = gungameAttacker['level']
+        newLevel = oldLevel + 1
+        
+        # Level them up
+        gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
+        
+        # Play the levelup sound
+        if gungamelib.getSound('levelup'):
+            es.playsound(attacker, gungamelib.getSound('levelup'), 1.0)
+        
+        return
+    
+    # Using multikill
+    if weapon != 'knife' and weapon != 'hegrenade':
+        gungameAttacker['multikill'] += 1
+        
+        # Finished the multikill
+        if gungameAttacker['multikill'] == multiKill:
+            # Set level variables
+            oldLevel = gungameAttacker['level']
+            newLevel = oldLevel + 1
+            
+            # Level them up
+            gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
+            
+            # Reset multikill
+            gungameAttacker['multikill'] = 0
+            
+            # Play the levelup sound
+            if gungamelib.getSound('levelup'):
+                es.playsound(attacker, gungamelib.getSound('levelup'), 1.0)
+        
+        # Increment their current multikill value
+        else:
+            # Message the attacker
+            multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
+            gungamelib.hudhint('gungame', attacker, 'KillsThisLevel', {'kills': gungameAttacker['multikill'], 'togo': multiKill})
+            
+            # Message the victim
+            multiKill = gungamelib.getLevelMultiKill(gungameVictim['level'])
+            gungamelib.hudhint('gungame', userid, 'KillsThisLevel', {'kills': gungameVictim['multikill'], 'togo': multiKill})
+            
+            # Play the multikill sound
+            if gungamelib.getSound('multikill'):
+                es.playsound(attacker, gungamelib.getSound('multikill'), 1.0)
+
 def bomb_defused(event_var):
     # Set vars
     userid = int(event_var['userid'])
@@ -906,9 +899,9 @@ def bomb_defused(event_var):
         return
     
     # Level them up
-    levelUpOldLevel = gungamePlayer['level']
-    levelUpNewLevel = levelUpOldLevel + 1
-    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
+    oldLevel = gungamePlayer['level']
+    newLevel = oldLevel + 1
+    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], oldLevel, newLevel, '0', '0')
 
 def bomb_exploded(event_var):
     # Set vars
@@ -922,16 +915,21 @@ def bomb_exploded(event_var):
         return
     
     # Level them up
-    levelUpOldLevel = gungamePlayer['level']
-    levelUpNewLevel = levelUpOldLevel + 1
-    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], levelUpOldLevel, levelUpNewLevel, '0', '0')
+    oldLevel = gungamePlayer['level']
+    newLevel = oldLevel + 1
+    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], oldLevel, newLevel, '0', '0')
     
 def player_team(event_var):
+    # Get userid
     userid = int(event_var['userid'])
-    if int(event_var['oldteam']) < 2 and int(event_var['team']) > 1:
-        # Play the welcome sound
-        if gungamelib.getSound('welcome'):
-            es.playsound(userid, gungamelib.getSound('welcome'), 1.0)
+    
+    # Was a disconnect?
+    if int(event_var['disconnect']) == 1:
+        return
+    
+    # Play welcome sound
+    if int(event_var['oldteam']) < 2 and int(event_var['team']) > 1 and gungamelib.getSound('welcome'):
+        es.playsound(userid, gungamelib.getSound('welcome'), 1.0)
 
 def gg_levelup(event_var):
     # Check for a winner first
@@ -980,10 +978,10 @@ def gg_levelup(event_var):
         
         if leaderLevel == int(event_var['new_level']):
             rebuildLeaderMenu()
-            
+        
         if not gungamelib.addonRegistered('gg_warmup_round'):
             levelInfoHudHint(userid)
-
+        
         if leaderLevel == gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_vote_trigger'):
             if es.ServerVar('eventscripts_nextmapoverride') == '':
                 if not dict_variables['gungame_voting_started']:
@@ -997,7 +995,7 @@ def gg_leveldown(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
     
-    # Set the player's level in the GunGame Core Dictionary
+    # Set the player's level
     gungamePlayer['level'] = int(event_var['new_level'])
 
 def gg_new_leader(event_var):
@@ -1005,6 +1003,7 @@ def gg_new_leader(event_var):
     leaderLevel = gungamelib.getLeaderLevel()
     
     gungamelib.saytext2('gungame', '#all', event_var['es_userindex'], 'NewLeader', {'player': playerName, 'level': leaderLevel}, False)
+    
     rebuildLeaderMenu()
 
 def gg_tied_leader(event_var):
@@ -1020,13 +1019,14 @@ def gg_tied_leader(event_var):
         gungamelib.saytext2('gungame', '#all', index, 'TiedLeader_Plural', {'count': leaderCount, 'player': playerName, 'level': leaderLevel}, False)
 
     rebuildLeaderMenu()
-    
+
 def gg_leader_lostlevel(event_var):
     rebuildLeaderMenu()
-    
+
 def unload():
     global gungameWeaponOrderMenu
     
+    # Unload all enabled addons
     for addonName in gungamelib.getRegisteredAddonlist():
         if addonName in list_includedAddonsDir:
             es.unload('gungame/included_addons/%s' % addonName)
@@ -1035,40 +1035,32 @@ def unload():
         
     # Enable Buyzones
     userid = es.getuserid()
-    es.server.cmd('es_xfire %d func_buyzone Enable' %userid)
+    es.server.cmd('es_xfire %d func_buyzone Enable' % userid)
     
-    # Check to see if objectives need to be enabled/disabled
+    # Get map if
     mapObjectives = gungamelib.getVariableValue('gg_map_obj')
-    
-    # Get the map prefix for the following checks
     mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
     
-    # If both the BOMB and HOSTAGE objectives were enabled, we don't do anything else
+    # Re-enable objectives
     if mapObjectives < 3:
-        # If ALL Objectives were DISABLED
+        # Re-enable all objectives
         if mapObjectives == 0:
-            # Since objectives were disabled, if this is a "de_" map, we enable only BOMB Objectives
             if mapPrefix == 'de':
-                # Enable the bomb zones
                 es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
-            # Since objectives were disabled, if this is a "cs_" map, we enable only HOSTAGE Objectives
             elif mapPrefix == 'cs':
-                # Enable the ability to rescue hostages
                 es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
-        # If only the HOSTAGE Objective was enabled
+        
+        # Enable bomb zone
         elif mapObjectives == 1:
-            # Since the BOMB objective was disabled, if this is a "de_" map, we enable only BOMB Objectives
             if mapPrefix == 'de':
-                # Disable the bomb zones
                 es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
-        # If only the BOMB Objective was enabled
+        
+        # Enable hostage objectives
         elif mapObjectives == 2:
-            # Since the HOSTAGE objective was disabled, if this is a "cs_" map, we enable only HOSTAGE Objectives
             if mapPrefix == 'cs':
-                # Enable the ability to rescue hostages
                 es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
     
-    # Unregister all GunGame Say and Client Commands
+    # Unregister commands
     if es.exists('saycommand', '!weapons'):
         es.unregsaycmd('!weapons')
         
@@ -1127,36 +1119,37 @@ def gg_round_win(event_var):
         es.load('gungame/included_addons/gg_warmup_round')
     
     # Reset all the players
-    for userid in playerlib.getUseridList('#all'):
-        gungamePlayer = gungamelib.getPlayer(userid)
-        
-        # Reset Players in the GunGame Core Database
-        gungamePlayer.resetPlayer()
+    for userid in es.getUseridList():
+        gungamelib.getPlayer(userid).resetPlayer()
     
     # Tell the world
     gungamelib.msg('gungame', '#all', 'PlayerWonRound', {'player': playerName})
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
     
     # Play the winner sound
-    for userid in es.getUseridList():
-        if gungamelib.getSound('roundwinner'):
+    if gungamelib.getSound('roundwinner'):
+        for userid in es.getUseridList():
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
-    # Remove all old players from the dict_gungameCore    
+    # Remove all old players
     gungamelib.clearOldPlayers()
 
 def gg_win(event_var):
     global countBombDeathAsSuicide
     
+    # Get player info
     userid = int(event_var['userid'])
     index = playerlib.getPlayer(userid).get('index')
     playerName = event_var['name']
     steamid = event_var['steamid']
-
+    
+    # Game is over
+    gungamelib.setGlobal('gameOver', 1)
+    
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
-    # End the GunGame Round
+    # End game
     es.server.cmd('es_xgive %d game_end' % userid)
     es.server.cmd('es_xfire %d game_end EndGame' % userid)
     
@@ -1164,40 +1157,39 @@ def gg_win(event_var):
     es.server.cmd('sv_alltalk 1')
     
     # Reset all the players
-    for userid in playerlib.getUseridList('#all'):
-        gungamePlayer = gungamelib.getPlayer(userid)
-        
-        # Reset Players in the GunGame Core Database
-        gungamePlayer.resetPlayer()
+    for userid in es.getUseridList():
+        gungamelib.getPlayer(userid).resetPlayer()
     
     # Tell the world
     gungamelib.msg('gungame', '#all', 'PlayerWon', {'player': playerName})
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
     
     # Play the winner sound
-    for userid in es.getUseridList():
-        if gungamelib.getSound('winner'):
+    if gungamelib.getSound('winner'):
+        for userid in es.getUseridList():
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
     # Remove all old players from the dict_players    
     gungamelib.clearOldPlayers()
-    
+
 def server_cvar(event_var):
     cvarName = event_var['cvarname']
     newValue = event_var['cvarvalue']
-
+    
     if gungamelib.isNumeric(newValue):
         newValue = int(newValue)
     
     if cvarName not in gungamelib.getVariableList():
         return
     
+    # Is a dependency?
     if cvarName in gungamelib.getDependencyList() and newValue != gungamelib.getDependencyValue(cvarName):
         # Tell them its protected
         gungamelib.echo('gungame', 0, 0, 'ProtectedDependency', {'name': cvarName})
         
         # Set back value
         gungamelib.setVariableValue(cvarName, gungamelib.getDependencyValue(cvarName))
+        
         return
     
     # GG_MAPVOTE
@@ -1235,6 +1227,11 @@ def server_cvar(event_var):
         elif newValue == 0 and 'gg_friendlyfire' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_friendlyfire')
     
+    # GG Multi Round
+    elif cvarName == 'gg_multi_round':
+        # Reset the "rounds remaining" variable for multi-rounds
+        dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
+    
     # Included addons
     elif cvarName in list_includedAddonsDir:
         if newValue == 1:
@@ -1265,8 +1262,3 @@ def server_cvar(event_var):
         # Set multikill override
         if gungamelib.getVariableValue('gg_multikill_override') > 1:
             myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
-    
-    # GG Multi Round
-    elif cvarName == 'gg_multi_round':
-        # Reset the "rounds remaining" variable for multi-rounds
-        dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')

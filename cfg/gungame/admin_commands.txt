@@ -12,7 +12,14 @@
 // Example: setlevel 1
 //            Will allow level 1, 2 and 3 admins to use gg_setlevel and
 //            !ggsetlevel
-//
+// 
+// Level Info: 0 = Root: this level should be used for really high-level
+//                       commands that should only be used by the server owner.
+//             1 = Super Admin: can run high-level commands such as
+//                              "admin_add".
+//             2 = Admin: can run simple command such as "dm_add", etc.
+//             3 = All Users: any player can run this command.
+// 
 // Note: Any edit of this file will require a server restart for changes to
 //       take effect.
 //----------------------------------------------------------------------------
@@ -20,24 +27,24 @@
 //----------------------------------------------------------------------------
 // gungame
 //----------------------------------------------------------------------------
-isafk 1
+isafk 2
 
 //----------------------------------------------------------------------------
 // gg_admin
 //----------------------------------------------------------------------------
-admin 1
-admin_add 3
-admin_remove 3
-admin_show 1
-admin_set 3
-admins 1
+admin 2
+admin_add 0
+admin_remove 0
+admin_show 2
+admin_set 0
+admins 3
 
 //----------------------------------------------------------------------------
 // gg_deathmatch
 //----------------------------------------------------------------------------
 dm_add 2
 dm_remove 2
-dm_remove_all 3
-dm_show 1
-dm_print 1
-dm_convert 3
+dm_remove_all 0
+dm_show 2
+dm_print 2
+dm_convert 0

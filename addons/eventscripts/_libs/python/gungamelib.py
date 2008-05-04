@@ -91,6 +91,9 @@ class Player:
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
+        # Check the userid is numeric
+        if not isNumeric(userid):
+            raise ValueError('Cannot get player (%s): userid must be numerical.' % userid)
         
         # Make userid an int
         self.userid = int(userid)
@@ -193,7 +196,7 @@ class Player:
                             leaderLevel = 0
                             
                             # Set the old leader's level to the new value prior to checking the highest level
-                            self.attributes[item] = int(value)
+                            self.attributes[item] = value
                             
                             # Check for a new leader
                             for userid in dict_players:
@@ -210,22 +213,22 @@ class Player:
                             es.event('initialize', 'gg_leader_lostlevel')
                             es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
                             es.event('fire', 'gg_leader_lostlevel')
-                        
-                self.attributes[item] = int(value)
+                
+                self.attributes[item] = value
             else:
                 raise ValueError('Invalid value (%s): level value must be greater than 0 and less than %s.' % (value, getTotalLevels() + 1))
         
         # AFK ROUNDS
         elif item == 'afkrounds':
             if value > -1:
-                self.attributes[item] = int(value)
+                self.attributes[item] = value
             else:
                 raise ValueError('Invalid value (%s): AFK Rounds value must be a positive number.' % value)
         
         # MULTIKILL
         elif item == 'multikill':
             if value > -1:
-                self.attributes[item] = int(value)
+                self.attributes[item] = value
             else:
                 raise ValueError('Invalid value (%s): multikill value must be a positive number.' % value)
         
@@ -239,14 +242,13 @@ class Player:
         # PREVENT LEVEL
         elif item == 'preventlevel':
             if value == 0 or value == 1:
-                self.attributes[item] = int(value)
+                self.attributes[item] = value
             else:
                 raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
         
-        # CUSTOM ATTRIBUTEs
+        # CUSTOM ATTRIBUTES
         else:
-            # Allow the setting of attributes in the dictionary
-            self.attributes[item] = int(value)
+            self.attributes[item] = value
     
     def __int__(self):
         '''Returns the players userid.'''
@@ -366,7 +368,6 @@ class Player:
     
     def stripPlayer(self):
         '''Strips a player of all their weapons, except knife.'''
-        
         es.server.cmd('es_xgive %s weapon_knife' % self.userid)
         es.server.cmd('es_xgive %s player_weaponstrip' % self.userid)
         es.server.cmd('es_xfire %s player_weaponstrip Strip' % self.userid)
@@ -1039,7 +1040,7 @@ class Addon:
         saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
         
         # Print to the admin log
-        if userid and log and gungamelib.getVariableValue('gg_admin_log'):
+        if userid and log and getVariableValue('gg_admin_log'):
             # Get file info
             logFileName = getGameDir('addons/eventscripts/gungame/logs/adminlog.txt')
             size = os.path.getsize(logFileName) / 1024
@@ -1593,6 +1594,9 @@ def resetGunGame():
     dict_leaderInfo['currentLeaders'] = []
     dict_leaderInfo['oldLeaders'] = []
     dict_leaderInfo['leaderLevel'] = 1
+    
+    # Game is no longer over
+    setGlobal('gameOver', 0)
     
     # Reset the player information dictionary
     dict_players.clear()
@@ -2182,3 +2186,12 @@ def removeReturnChars(playerName):
     playerName = playerName.strip('\r')
     
     return playerName
+
+def clamp(value, low=False, high=False):
+    if low != False:
+        if value < low: value = low
+    
+    if high != False:
+        if value > high: value = high
+    
+    return value

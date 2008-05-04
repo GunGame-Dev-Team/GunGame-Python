@@ -47,19 +47,19 @@ dict_cfgMenus = {}
 # ==============================================================================
 try:
     # Not compatible with basic_auth
-    if services.use('auth').name == 'basic_auth':
-        gungamelib.echo('gg_admin', 0, 0, 'NoBasicAuth')
+    if services.use('auth').name != 'group_auth':
+        gungamelib.echo('gg_admin', 0, 0, 'NeedGroupAuth')
         es.unload('gungame/included_addons/gg_admin')
-except:
+except KeyError:
     pass
 
 # Load group auth
 es.load('examples/auth/group_auth')
 
 # Create groups
+es.server.queuecmd('gauth group create ggadmin0 1')
 es.server.queuecmd('gauth group create ggadmin1 1')
 es.server.queuecmd('gauth group create ggadmin2 1')
-es.server.queuecmd('gauth group create ggadmin3 1')
 es.server.queuecmd('gauth group create gguser 128')
 
 # ==============================================================================
@@ -565,22 +565,29 @@ def regCmd(command, level):
 class Command:
     def __init__(self, name, level):
         '''Initializes the command class.'''
-        level = int(level)
+        # Make sure level is numerical
+        if not gungamelib.isNumeric(level):
+            raise ValueError('Level (%s) is not numeric.' % level)
+        
+        level = gungamelib.clamp(int(level), 0, 3)
         
         # Set default variables
         self.name = name
+        self.type = '#all' if level == 3 else '#admin'
         self.level = level
         self.group = 'ggadmin%s' % level
         
         # Create the command (say)
-        es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s #admin' % (name, name))
+        es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s %s' % (name, name, self.type))
         es.server.queuecmd('gauth power create !gg%s 128' % name)
-        es.server.queuecmd('gauth power give !gg%s %s' % (name, self.group))
+        for level in range(level, 3):
+            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, level))
         
         # Create the command (console)
-        es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s #admin' % (name, name))
+        es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (name, name, self.type))
         es.server.queuecmd('gauth power create gg_%s 128' % name)
-        es.server.queuecmd('gauth power give gg_%s %s' % (name, self.group))
+        for level in range(level, 3):
+            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, level))
     
     def __del__(self):
         '''Unregisters the say and client commands.'''
@@ -597,16 +604,14 @@ class Command:
         if not gungamelib.isNumeric(level):
             raise ValueError('Level (%s) is not numeric.' % level)
         
-        level = int(level)
+        # Set level and type
+        level = gungamelib.clamp(int(level), 0, 3)
+        self.type = '#all' if level == 3 else '#admin'
         
         # Open file, get lines then close
         commandFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'r')
         lines = commandFile.readlines()
         commandFile.close()
-        
-        # Check level is in the right range
-        if level < 1: level = 1
-        if level > 3: level = 3
         
         # Loop through the lines
         for line in lines:
@@ -632,6 +637,14 @@ class Command:
         # Get group
         group = 'ggadmin%s' % level
         
+        # Erase command
+        es.server.queuecmd('clientcmd delete say !gg%s' % self.name)
+        es.server.queuecmd('clientcmd delete console gg_%s' % self.name)
+        
+        # Re-create command
+        es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s %s' % (self.name, self.name, self.type))
+        es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (self.name, self.name, self.type))
+        
         # Leave groups
         es.server.queuecmd('gauth power delete !gg%s' % self.name)
         es.server.queuecmd('gauth power delete gg_%s' % self.name)
@@ -639,8 +652,9 @@ class Command:
         # Re-create
         es.server.queuecmd('gauth power create !gg%s 128' % self.name)
         es.server.queuecmd('gauth power create gg_%s 128' % self.name)
-        es.server.queuecmd('gauth power give !gg%s %s' % (self.name, group))
-        es.server.queuecmd('gauth power give gg_%s %s' % (self.name, group))
+        for level in range(level, 3):
+            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, level))
+            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, level))
         
         # Move variables to the class's
         self.group = group
@@ -663,7 +677,7 @@ class Admin:
         es.server.queuecmd('gauth user create %s %s' % (name, steamid))
         
         # Join groups
-        for level in range(1, level+1):
+        for level in range(level, 3):
             es.server.queuecmd('gauth user join %s ggadmin%s' % (name, level))
     
     def initialCreation(self, setterUserid=None):
@@ -690,7 +704,7 @@ class Admin:
         adminFile.close()
     
     def hasLevel(self, level):
-        return (self.level >= level)
+        return (self.level <= level)
     
     def remove(self):
         '''Removes the admin of all priviledges.'''
@@ -724,9 +738,7 @@ class Admin:
         lines = adminFile.readlines()
         adminFile.close()
         
-        # Check level is in the right range
-        if level < 1: level = 1
-        if level > 3: level = 3
+        level = gungamelib.clamp(level, 0, 2)
         
         # Loop through the lines
         for line in lines:

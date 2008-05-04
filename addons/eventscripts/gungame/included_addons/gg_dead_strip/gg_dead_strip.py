@@ -62,10 +62,10 @@ def round_start(event_var):
     global roundActive
     roundActive = 1
     
-    # This makes it so there can be no idle weapons in the world, other than what is native to the map
-    # When ever a player drops a weapon, and it comes to rest, it is removed
-    es.server.cmd('es_xfire %s game_weapon_manager addoutput "maxpieces 0"' % es.getuserid())
-    
+    # This makes it so there can be no idle weapons in the world, other than the
+    # BSP entities.
+    es.server.cmd('es_xfire %s game_weapon_manager AddOutput "maxpieces 0"' % es.getuserid())
+
 def round_end(event_var):
     global roundActive
     roundActive = 0
@@ -77,6 +77,10 @@ def item_pickup(event_var):
     
     # Is a weapon?
     if item not in list_allWeapons:
+        return
+    
+    # Client in server?
+    if not gungamelib.clientInServer(userid):
         return
     
     # Get player objects
@@ -91,25 +95,27 @@ def item_pickup(event_var):
             es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
     else:
         # Check to see if this is the right weapon for their level
-        if playerWeapon != item:
-            if playerWeapon == 'hegrenade':
-                # Is nade bonus loaded?
-                nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
+        if playerWeapon == item:
+            return
+        
+        if playerWeapon == 'hegrenade':
+            # Is nade bonus loaded?
+            nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
                 
-                # Check to see if the grenade level bonus weapon is active
-                if nadeBonus:
-                    # Only remove if the item is not the nade bonus weapon
-                    if nadeBonus != item:
-                        es.sexec(userid, 'use weapon_%s' % nadeBonus)
-                        es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
-                else:
-                    es.sexec(userid, 'use weapon_knife')
-                    es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
+            # Check to see if the grenade level bonus weapon is active
+            if nadeBonus:
+                # Only remove if the item is not the nade bonus weapon
+                if nadeBonus != item:
+                    es.sexec(userid, 'use weapon_%s' % nadeBonus)
+                    es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
             else:
-                es.sexec(userid, 'use weapon_%s' % playerWeapon)
-                es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
+                es.sexec(userid, 'use weapon_knife')
+                es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+        else:
+            es.sexec(userid, 'use weapon_%s' % playerWeapon)
+            es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
 
-'''
+'''OLD CODE:
 def player_death(event_var):
     global roundActive
     if not roundActive:

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.297
+    Version: 1.0.298
     Description: Removes dead player's weapons.
 '''
 
@@ -103,6 +103,9 @@ def item_pickup(event_var):
                         es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
                 else:
                     es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
+            else:
+                es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
+                es.sexec(userid, 'use weapon_%s' % playerWeapon)
 
 '''
 def player_death(event_var):

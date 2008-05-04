@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.295
+    Version: 1.0.297
     Description: Removes dead player's weapons.
 '''
 
@@ -62,6 +62,10 @@ def round_start(event_var):
     global roundActive
     roundActive = 1
     
+    # This makes it so there can be no idle weapons in the world, other than what is native to the map
+    # When ever a player drops a weapon, and it comes to rest, it is removed
+    es.server.cmd('es_xfire %s game_weapon_manager addoutput "maxpieces 0"' % es.getuserid())
+    
 def round_end(event_var):
     global roundActive
     roundActive = 0
@@ -100,6 +104,7 @@ def item_pickup(event_var):
                 else:
                     es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
 
+'''
 def player_death(event_var):
     global roundActive
     if not roundActive:
@@ -118,6 +123,7 @@ def player_death(event_var):
     # Remove weapon
     for idleWeapon in list_idleWeapons:
         es.server.cmd('es_xremove %d' % idleWeapon)
+'''
 
 # ==============================================================================
 #  HELPER FUNCTIONS

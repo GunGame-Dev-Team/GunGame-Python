@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.298
+    Version: 1.0.299
     Description: Removes dead player's weapons.
 '''
 
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.295'
+info.version  = '1.0.299'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -100,12 +100,14 @@ def item_pickup(event_var):
                 if nadeBonus:
                     # Only remove if the item is not the nade bonus weapon
                     if nadeBonus != item:
+                        es.sexec(userid, 'use weapon_%s' % nadeBonus)
                         es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
                 else:
+                    es.sexec(userid, 'use weapon_knife')
                     es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
             else:
-                es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
                 es.sexec(userid, 'use weapon_%s' % playerWeapon)
+                es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
 
 '''
 def player_death(event_var):

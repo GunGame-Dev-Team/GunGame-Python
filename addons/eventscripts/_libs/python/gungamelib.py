@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.296
+    Version: 1.0.299
     Description:
 '''
 
@@ -91,9 +91,6 @@ class Player:
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
-        # Check the userid is numeric
-        if not isNumeric(userid):
-            raise ValueError('Cannot get player: invalid userid (must be numerical)')
         
         # Make userid an int
         self.userid = int(userid)

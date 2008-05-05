@@ -1,20 +1,23 @@
 //----------------------------------------------------------------------------
-// This file holds the Welcome message that will be shown in the welcome
-// message popup.
+// welcome message.txt -- Welcome Message Message
+// 
+// This file contains the message that will be shown in the welcome message
+// popup, which is shown whenever a player connects.
 //
-// Variables:
-//	$version -- Version of GG:Python running
-//	$author -- Names of the people who wrote GG:Python
+// Variables: $version -- Version of GG:Python running
+//            $author -- Names of the people who wrote GG:Python
 //
-//	$server -- Name of the server
-//	$date -- Date, in DD/MM/YY format
-//	$time -- Time, in HH:MM:SS format
+//            $server -- Name of the server
+//            $date -- Date, in DD/MM/YY format
+//            $time -- Time, in HH:MM:SS format
 //
-//	{...} -- Console variable value
-//	  (e.g: {gg_spawn_protect} will be replaced with the value of
-//	        gg_spawn_protect)
+//            {...} -- Variable value
+//                     Example: {gg_spawn_protect} will be replaced with the
+//                              value of gg_spawn_protect.
+//
+// Note: gg_welcome_msg will need to be reloaded if you edit this file for
+//       changes to take place.
 //----------------------------------------------------------------------------
+Welcome to $server.
 This server is running GG:Python ($version)
-You are playing on $server ($date at $time)
-
-Multikill override: {gg_multikill_override}
+You are playing on $date at $time

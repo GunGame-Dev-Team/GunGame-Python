@@ -580,14 +580,14 @@ class Command:
         # Create the command (say)
         es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s %s' % (name, name, self.type))
         es.server.queuecmd('gauth power create !gg%s 128' % name)
-        for level in range(level, 3):
-            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, level))
+        for groupLevel in range(level, 3):
+            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, groupLevel))
         
         # Create the command (console)
         es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (name, name, self.type))
         es.server.queuecmd('gauth power create gg_%s 128' % name)
-        for level in range(level, 3):
-            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, level))
+        for groupLevel in range(level, 3):
+            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, groupLevel))
     
     def __del__(self):
         '''Unregisters the say and client commands.'''
@@ -652,9 +652,9 @@ class Command:
         # Re-create
         es.server.queuecmd('gauth power create !gg%s 128' % self.name)
         es.server.queuecmd('gauth power create gg_%s 128' % self.name)
-        for level in range(level, 3):
-            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, level))
-            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, level))
+        for groupLevel in range(level, 3):
+            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, groupLevel))
+            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, groupLevel))
         
         # Move variables to the class's
         self.group = group
@@ -677,8 +677,8 @@ class Admin:
         es.server.queuecmd('gauth user create %s %s' % (name, steamid))
         
         # Join groups
-        for level in range(level, 3):
-            es.server.queuecmd('gauth user join %s ggadmin%s' % (name, level))
+        for groupLevel in range(level, 3):
+            es.server.queuecmd('gauth user join %s ggadmin%s' % (name, groupLevel))
     
     def initialCreation(self, setterUserid=None):
         '''Creates all the required information in the admins.txt (used to
@@ -719,7 +719,7 @@ class Admin:
         adminFile.close()
         
         # Remove from groups
-        for level in range(1, self.level+1):
+        for level in range(self.level, 3):
             es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, level))
         
         # Delete
@@ -731,14 +731,12 @@ class Admin:
         if not gungamelib.isNumeric(level):
             raise ValueError('Level (%s) is not numeric.' % level)
         
-        level = int(level)
+        level = gungamelib.clamp(int(level), 0, 2)
         
         # Open file, get lines then close
         adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
         lines = adminFile.readlines()
         adminFile.close()
-        
-        level = gungamelib.clamp(level, 0, 2)
         
         # Loop through the lines
         for line in lines:
@@ -762,12 +760,12 @@ class Admin:
         adminFile.close()
         
         # Remove from groups
-        for level in range(1, self.level+1):
-            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, level))
+        for groupLevel in range(level, 3):
+            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, groupLevel))
         
         # Re-add to groups
-        for level in range(1, level+1):
-            es.server.queuecmd('gauth user join %s ggadmin%s' % (self.name, level))
+        for groupLevel in range(level, 3):
+            es.server.queuecmd('gauth user join %s ggadmin%s' % (self.name, groupLevel))
         
         # Set level
         self.level = level

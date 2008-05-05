@@ -109,21 +109,21 @@ def buildMenu():
     # Get addon list
     registeredAddons = gungamelib.getRegisteredAddonlist()
     
-    # Strip lines
-    list_addonNames = map(lambda x: x.strip(), list_addonsToShow)
-    # Filter commented blank and unregistered addons
+    # Get addon names to show
+    list_addonNames = [x.strip() for x in list_addonsToShow]
     list_addonNames = filter(lambda x: x[:2] != '//' and x and x in registeredAddons, list_addonNames)
-    # Now change each item in the list to its display name
-    list_addonNames = map(lambda x: gungamelib.getAddonDisplayName(x), list_addonNames)
+    list_addonNames = [gungamelib.getAddonDisplayName(x) for x in list_addonNames]
     
-    # Loop through each line
+    # Get welcome message lines
+    list_rawWelcomeMsg = [x.strip() for x in list_rawWelcomeMsg]
+    list_rawWelcomeMsg = filter(lambda x: x[:2] != '//', list_rawWelcomeMsg)
+    
+    # Format the lines
     list_welcomeMsg = []
     for line in list_rawWelcomeMsg:
-        # Strip line
-        line = line.strip()
-        
-        # Ignore comments and skip to the next line
-        if line[:2] == '//' or not line:
+        # Is a blank line?
+        if not line:
+            list_welcomeMsg.append(' ')
             continue
         
         # Replace variables
@@ -134,13 +134,18 @@ def buildMenu():
         newLine = newLine.replace('$server', str(es.ServerVar('hostname')))
         
         # Replace ServerVars
-        newLine = re.sub('{+(.*?)}', lambda x: str(es.ServerVar(str(x.group())[1:-1])), newLine)
+        newLine = re.sub('{+(.*?)}', getServerVar, newLine)
         
         # Set to new line
         list_welcomeMsg.append(newLine)
     
-    # Create instance and set title
-    menu = popuplib.easymenu('gg_welcome_msg', None, lambda x, y, z: True)
+    # No need for EasyMenu?
+    if len(list_addonNames) < 10:
+        createSmallMenu(list_welcomeMsg, list_addonNames)
+        return
+    
+    # Create menu
+    menu = popuplib.easymenu('gg_welcome_msg', None, None)
     menu.settitle('GunGame:Python -- Welcome Message')
     menu.setdescription('%s\n%s\n%s\nThis server uses:' % (menu.c_beginsep, '\n'.join(list_welcomeMsg), menu.c_beginsep))
     
@@ -153,13 +158,46 @@ def buildMenu():
     menu.timeout('send', menuTimeout)
     menu.timeout('view', menuTimeout)
 
+def createSmallMenu(welcomeMsg, addonNames):
+    # Create menu
+    menu = popuplib.create('gg_welcome_msg')
+    menu.addline('GunGame:Python -- Welcome Message')
+    menu.addline('-----------------------------')
+    menu.addline('\n'.join(welcomeMsg))
+    menu.addline('-----------------------------')
+    menu.addline('This server uses:')
+    menu.addline('-----------------------------')
+    
+    # Add addons
+    count = 0
+    for addon in addonNames:
+        count += 1
+        menu.addline('->%s. %s' % (count, addon))
+    
+    # Finalize the menu
+    menu.addline('-----------------------------')
+    menu.addline('0. Cancel')
+    
+    # Set timeout
+    menuTimeout = gungamelib.getVariableValue('gg_welcome_msg_timeout')
+    menu.timeout('send', menuTimeout)
+    menu.timeout('view', menuTimeout)
+
 # ==============================================================================
 #   HELPER FUNCTIONS
 # ==============================================================================
+def getServerVar(match):
+    variable = match.group()[1:-1]
+    
+    if gungamelib.variableExists(variable):
+        return str(gungamelib.getVariableValue(variable))
+    else:
+        return str(es.ServerVar(variable))
+
 def regCmd(name, function):
     if es.exists('saycommand', name):
         return
-        
+    
     es.regsaycmd('!gg%s' % name, 'gungame/included_addons/gg_welcome_msg/%s' % function.__name__)
     
     if es.exists('clientcommand', name):

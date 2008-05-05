@@ -1046,7 +1046,7 @@ class Addon:
             size = os.path.getsize(logFileName) / 1024
             
             # Set log file opening mode
-            if size > gungamelib.getVariableValue('gg_admin_log'):
+            if size > getVariableValue('gg_admin_log'):
                 logFile = open(logFileName, 'w')
                 logFile.write('%s Log cleared, limit reached.\n' % time.strftime('[%d/%m/%Y %H:%M:%S]'))
             else:
@@ -1907,6 +1907,9 @@ def getOldLeaderCount():
 # ==============================================================================
 #   CONFIG RELATED COMMANDS
 # ==============================================================================
+def variableExists(variableName):
+    return dict_variables.has_key(variableName.lower())
+
 def getVariable(variableName):
     variableName = variableName.lower()
     

@@ -1,9 +1,13 @@
 //----------------------------------------------------------------------------
+// addons.txt -- Welcome Message Addons List
+// 
 // This file contains a list of addons to show in the welcome popup.
-//
-// If an addon is NOT loaded, it will have (DISABLED) suffixed.
-// If an addon IS loaded, it will have (ENABLED) suffixed.
+// If an addon listed in not loaded, it won't be shown in the popup.
+// 
+// Note: gg_welcome_msg will need to be reloaded if you edit this file for
+//       changes to take place.
 //----------------------------------------------------------------------------
 gg_knife_pro
 gg_turbo
 gg_deathmatch
+gg_elimination

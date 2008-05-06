@@ -1,0 +1,17 @@
+//----------------------------------------------------------------------------
+// stats logging.txt -- Events to log.
+//
+// This file defines all the events to log for use with third-party
+// statistic applications. (e.g. HLstatsX, PsychoStats, etc.)
+//
+// Note: Any alteration of this file requires a server restart or a reload of
+//       GunGame.
+//
+// Note: gg_stats_logging must be loaded for events to be logged.
+//----------------------------------------------------------------------------
+
+gg_levelup
+gg_leveldown
+gg_levelsteal
+gg_win
+gg_triplelevel

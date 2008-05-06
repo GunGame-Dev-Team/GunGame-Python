@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.299
+    Version: 1.0.302
     Description: Removes dead player's weapons.
 '''
 
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.299'
+info.version  = '1.0.302'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -101,7 +101,7 @@ def item_pickup(event_var):
         if playerWeapon == 'hegrenade':
             # Is nade bonus loaded?
             nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
-                
+            
             # Check to see if the grenade level bonus weapon is active
             if nadeBonus:
                 # Only remove if the item is not the nade bonus weapon

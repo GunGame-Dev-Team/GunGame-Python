@@ -27,9 +27,17 @@ info.basename = 'gungame/included_addons/gg_stats_logging'
 info.author   = 'GunGame Development Team'
 
 # ==============================================================================
+#  GLOBALS
+# ==============================================================================
+events = []
+this = __import__('gg_stats_logging.gg_stats_logging')
+
+# ==============================================================================
 #  GAME EVENTS
 # ==============================================================================
 def load():
+    global events
+    
     # Register
     gg_stats = gungamelib.registerAddon('gg_stats_logging')
     gg_stats.setDisplayName('GG Stats Logging')
@@ -47,11 +55,18 @@ def load():
     
     # Register events
     for line in lines:
-        es.addons.registerForEvent(__import__(__name__), line, lambda x: logEvent(x['userid'], line))
+        es.addons.registerForEvent(this, line, lambda x: logEvent(x['userid'], line))
+        events.append()
 
 def unload():
+    global events
+    
     # Unregister
     gungamelib.unregisterAddon('gg_stats_logging')
+    
+    # Unregister events
+    for event in events:
+        es.addons.unregisterForEvent(this, event)
 
 # ==============================================================================
 #  HELPER FUNCTIONS

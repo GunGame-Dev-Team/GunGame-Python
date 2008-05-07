@@ -30,13 +30,16 @@ info.author   = 'GunGame Development Team'
 #  GLOBALS
 # ==============================================================================
 events = []
-this = __import__('gg_stats_logging.gg_stats_logging')
+this = None
 
 # ==============================================================================
 #  GAME EVENTS
 # ==============================================================================
 def load():
     global events
+    global this
+    
+    this = __import__(__name__)
     
     # Register
     gg_stats = gungamelib.registerAddon('gg_stats_logging')
@@ -56,10 +59,13 @@ def load():
     # Register events
     for line in lines:
         es.addons.registerForEvent(this, line, lambda x: logEvent(x['userid'], line))
-        events.append()
+        events.append(line)
 
 def unload():
     global events
+    global this
+    
+    this = __import__(__name__)
     
     # Unregister
     gungamelib.unregisterAddon('gg_stats_logging')

@@ -1038,7 +1038,7 @@ def afkPunishCheck(userid):
                 # Send an easymenu saying they were switched
                 menu = popuplib.easymenu('gungame_afk', None, lambda x, y, z: True)
                 menu.settitle('GG Message')
-                menu.setdescription('%s\nYou were switched to Spectator for being AFK.' % menu.c_beginsep)
+                menu.setdescription('%s\n%s' % (menu.c_beginsep, gungamelib.lang('gungame', 'SwitchedToSpectator')))
                 menu.send(userid)
 
 def equipPlayer():
@@ -1065,18 +1065,18 @@ def levelInfoHint(userid):
     multiKill = gungamelib.getLevelMultiKill(gungamePlayer['level'])
     
     # Start text
-    text =  'Current level: %d / %d\n' % (gungamePlayer['level'], gungamelib.getTotalLevels())
-    text += 'Current weapon: %s\n' % (gungamelib.getLevelWeapon(gungamePlayer['level']))
+    text =  gungamelib.lang('gungame', 'LevelInfo_CurrentLevel', {'level': gungamePlayer['level'], 'total': gungamelib.getTotalLevels()})
+    text += gungamelib.lang('gungame', 'LevelInfo_CurrentWeapon', {'weapon': gungamelib.getLevelWeapon(gungamePlayer['level'])})
     
     # Multikill?
     if multiKill > 1:
-        text += 'Required Kills: %d / %d\n' % (gungamePlayer['multikill'], multiKill)
+        text += gungamelib.lang('gungame', 'LevelInfo_RequiredKills', {'kills': gungamePlayer['multikill'], 'total': multiKill})
     
     # ===========
     # ONLY LEADER
     # ===========
     if levelsBehindLeader == 0 and gungamelib.getCurrentLeaderCount() == 1:
-        text += '\nYou are the current leader.'
+        text += gungamelib.lang('gungame', 'LevelInfo_CurrentLeader')
         
         # Send hint
         sendLevelInfoHint(userid, text)
@@ -1086,7 +1086,7 @@ def levelInfoHint(userid):
     # NO LEADERS
     # ==========
     if levelsBehindLeader == 0 and leaderLevel == 1:
-        text += '\nThere are no leaders.'
+        text += gungamelib.lang('gungame', 'LevelInfo_NoLeaders')
         
         # Send hint
         sendLevelInfoHint(userid, text)
@@ -1096,7 +1096,7 @@ def levelInfoHint(userid):
     # MULTIPLE LEADERS
     # ================
     if levelsBehindLeader == 0 and gungamelib.getCurrentLeaderCount() > 1:
-        text += '\nYou are amongst the leaders:\n'
+        text += gungamelib.lang('gungame', 'LevelInfo_AmongstLeaders')
         
         # Get the first 2 leaders
         leadersCount = 1
@@ -1112,7 +1112,6 @@ def levelInfoHint(userid):
             
             # Don't add ourselves
             if leader == userid:
-                leaders -= 1
                 continue
             
             # Don't add the comma if there is 2 or less leaders

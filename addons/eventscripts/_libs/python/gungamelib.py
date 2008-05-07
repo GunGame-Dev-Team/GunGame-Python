@@ -1537,6 +1537,14 @@ def getWinner(uniqueid):
 # ==============================================================================
 #   MESSAGE FUNCTIONS
 # ==============================================================================
+def lang(addon, string, tokens={}):
+    # Check the translations exist
+    if not os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % addon)):
+        raise IOError('Cannot load strings (%s): no string file exists.' % addon)
+    
+    langStrings = langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % addon))
+    return langStrings(string, tokens)
+
 def msg(addon, filter, string, tokens={}, showPrefix=True):
     if filter == 0:
         echo(addon, 0, 0, string, tokens, showPrefix)
@@ -1664,65 +1672,6 @@ def getWeaponOrderList():
     
 def getLevelWeapon(levelNumber):
     levelNumber = int(levelNumber)
-    if dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber):
-        return str(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber][0])
-    else:
-        raise ValueError('Cannot get weapon information (%s): doesn\'t exist' % levelNumber)
-
-def sendWeaponOrderMenu(userid):
-    popuplib.send('gungameWeaponOrderMenu_page1', userid)
-
-def weaponOrderMenuHandler(userid, choice, popupname):
-    pass
-
-# ==============================================================================
-#   LEVEL RELATED COMMANDS
-# ==============================================================================
-def getTotalLevels():
-    list_weaponOrderKeys = dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].keys()
-    return int(len(list_weaponOrderKeys))
-    
-def setPreventLevelAll(value):
-    for userid in es.getUseridList():
-        gungamePlayer = getPlayer(userid)
-        gungamePlayer['preventlevel'] = int(value)
-
-def getAverageLevel():
-    averageLevel = 0
-    averageDivider = 0
-    
-    for userid in es.getUseridList():
-        if dict_players.has_key(userid):
-            averageDivider += 1
-            averageLevel += int(dict_players[userid]['level'])
-    
-    return int(round(averageLevel / averageDivider)) if averageDivider else 0
-
-def getLevelUseridList(levelNumber):
-    levelNumber = int(levelNumber)
-    list_levelUserids = []
-    
-    for userid in dict_players:
-        if dict_players[int(userid)]['level'] == levelNumber:
-            list_levelUserids.append(userid)
-    
-    return list_levelUserids
-    
-def getLevelUseridString(levelNumber):
-    levelNumber = int(levelNumber)
-    levelUseridString = None
-    
-    for userid in dict_players:
-        if dict_players[int(userid)]['level'] == levelNumber:
-            if not levelUseridString:
-                levelUseridString = userid
-            else:
-                levelUseridString = '%s,%s' %(levelUseridString, userid)
-    
-    return levelUseridString
-    
-def getLevelWeapon(levelNumber):
-    levelNumber = int(levelNumber)
     
     if not levelExists(levelNumber):
         raise ValueError('Unable to retrieve weapon information: level \'%d\' does not exist' % levelNumber)
@@ -1741,12 +1690,12 @@ def weaponOrderMenuHandler(userid, choice, popupname):
 def getTotalLevels():
     list_weaponOrderKeys = dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].keys()
     return len(list_weaponOrderKeys)
+
+def setPreventLevelAll(state):
+    state = clamp(state, 0, 1)
     
-def setPreventLevelAll(value):
-    value = clamp(value, 0, 1)
-    
-    for player in dict_players:
-        player['preventlevel'] = value
+    for userid in es.getUseridList():
+        getPlayer(userid)['preventlevel'] = state
 
 def getAverageLevel():
     averageLevel = 0
@@ -1806,7 +1755,7 @@ def createScoreList(keyGroupName=None):
         dict_gungameScores[userid] = dict_players[userid]['level']
     
     return sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
-    
+
 # ==============================================================================
 #   LEADER RELATED COMMANDS
 # ==============================================================================
@@ -2117,6 +2066,9 @@ def isNumeric(string):
         return True
     except ValueError:
         return False
+
+def getCfgDir(dir):
+    return getGameDir('cfg/gungame/%s' % dir)
 
 def getGameDir(dir):
     # Get game dir

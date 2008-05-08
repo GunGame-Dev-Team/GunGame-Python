@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_triple_level
-    Version: 1.0.302
+    Version: 1.0.307
     Description: When a player makes 3 levels in one round the player will be
                  faster and have an effect for 10 secs.
 '''
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_triple_level Addon for GunGame: Python"
-info.version  = '1.0.302'
+info.version  = '1.0.307'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_triple_level"
 info.author   = "GunGame Development Team"
@@ -48,7 +48,8 @@ def unload():
 
 
 def gg_levelup(event_var):
-    userid = event_var['userid']
+    userid = int(event_var['userid'])
+    
     # Add 1 to triple level counter
     gungamePlayer = gungamelib.getPlayer(userid)
     gungamePlayer['triple'] += 1
@@ -56,11 +57,14 @@ def gg_levelup(event_var):
     # If is it a Triple Level
     if gungamePlayer['triple'] == 3:
         name = event_var['name']
+        
         # Add the player to the triple level list
         list_currentTripleLevel.append(userid)
+        
         # Sound and Messages
         if gungamelib.getSound('triplelevel'):
             es.emitsound('player', userid, gungamelib.getSound('triplelevel'), 1.0, 1.0)
+        
         gungamelib.msg('gg_triple_level', '#all', 'MsgTripleLevelled', {'name': name})
         gungamelib.centermsg('gg_triple_level', '#all', 'CenterTripleLevelled', {'name': name})
         
@@ -79,7 +83,7 @@ def gg_levelup(event_var):
         
         # Gravity
         es.server.cmd("es_xfire %s !self \"gravity 400\"" %userid)
-
+        
         # Reset the level counter to 0 since they just tripled
         gungamePlayer['triple'] = 0
         

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 1.0.302
+    Version: 1.0.307
     Description: Adds map voting capabilities to GunGame.
 '''
 
@@ -30,7 +30,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_map_vote (for GunGame: Python)'
-info.version  = '1.0.302'
+info.version  = '1.0.307'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_map_vote'
 info.author   = 'GunGame Development Team'

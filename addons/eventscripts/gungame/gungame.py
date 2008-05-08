@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.302
+    Version: 1.0.306
     Description: The main addon, handles leaders and events.
 '''
 
@@ -607,19 +607,20 @@ def player_death(event_var):
     # ===============
     # TEAM-KILL CHECK
     # ===============
-    if (event_var['es_userteam'] == event_var['es_attackerteam']) and gungamelib.getVariableValue('gg_tk_punish') > 0:
-        # Set vars
-        oldLevel = gungameAttacker['level']
-        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_tk_punish'), 1)
-        
-        # Trigger level down
-        gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
-        
-        gungamelib.msg('gungame', attacker, 'TeamKill_LevelDown', {'newlevel': newLevel})
-        
-        # Play the leveldown sound
-        if gungamelib.getSound('leveldown'):
-            es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
+    if (event_var['es_userteam'] == event_var['es_attackerteam']):
+        if gungamelib.getVariableValue('gg_tk_punish') > 0:
+            # Set vars
+            oldLevel = gungameAttacker['level']
+            newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_tk_punish'), 1)
+            
+            # Trigger level down
+            gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
+            
+            gungamelib.msg('gungame', attacker, 'TeamKill_LevelDown', {'newlevel': newLevel})
+            
+            # Play the leveldown sound
+            if gungamelib.getSound('leveldown'):
+                es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
         
         return
     

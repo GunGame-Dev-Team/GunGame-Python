@@ -136,5 +136,5 @@ def player_death(event_var):
     
     # Announce the level stealing
     index = playerlib.getPlayer(attacker).attributes['index']
-    gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': attackername, 'victim': username})
+    gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': event_var['es_attackername'], 'victim': event_var['es_username']})
     

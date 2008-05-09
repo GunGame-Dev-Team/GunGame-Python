@@ -1626,7 +1626,7 @@ def triggerLevelChange(userid, oldLevel, newLevel, victim=0, weapon=''):
         event['victim'] = int(victim)
     else:
         event = EasyEvent('gg_leveldown')
-        event['attacker'] = int(attacker)
+        event['attacker'] = int(victim)
     
     # Create event variables
     event['userid'] = int(userid)

@@ -2163,7 +2163,7 @@ def getESTVersion():
         return 0.000
 
 def isDead(userid):
-    return bool(int(es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag')))
+    return es.getplayerprop(userid, 'CBasePlayer.pl.deadflag')
     
 def getPlayerUniqueID(userid):
     userid = int(userid)

@@ -2119,7 +2119,7 @@ def getESTVersion():
         return 0.000
 
 def isDead(userid):
-    return es.getplayerprop(self.userid, 'CBasePlayer.pl.deadflag')
+    return es.getplayerprop(userid, 'CBasePlayer.pl.deadflag')
     
 def getPlayerUniqueID(userid):
     userid = int(userid)

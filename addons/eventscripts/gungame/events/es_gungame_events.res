@@ -1,6 +1,6 @@
 //=========== (C) Copyright 2007 GunGame 4 All rights reserved. ===========
 //
-// Events triggered by GunGame mod version 1.0.255
+// Events triggered by GunGame mod version 1.0.313
 //
 // No spaces in event names, max length 32
 // All strings are case sensitive
@@ -19,37 +19,24 @@
 {
 	"gg_levelup"
 	{
-		"userid"	"short"		// The userid of the player that levelled up
-		"steamid"	"string"	// The steamid of player that levelled up
+		"attacker"	"short"		// The userid of the player that levelled up
 		"old_level"	"byte"		// The old level of the player that levelled up
 		"new_level"	"byte"		// The new level of the player that levelled up
-		"team"		"byte"		// The team # of the player that levelled up: team 2= Terrorists, 3= CT
-		"name"		"string"	// The name of the player that levelled up
-		"victim"	"short"		// The userid of victim
-		"victimname" "string"	// The victim's name
-        "weapon"    "string"    // The attackers weapon
+		"userid"	"short"		// The userid of victim
 	}
 	"gg_leveldown"
 	{
 		"userid"	"short"		// userid of player
 		"attacker"	"short"		// userid of the attacker
-		"steamid"	"string"	// steamid of player
 		"old_level"	"byte"		// old player level
 		"new_level"	"byte"		// new player level
-		"team"		"byte"		// player team 2= Terrorists, 3= CT
-		"name"		"string"	// player name
-		"attackername"	"string"	// attacker's name
 	}
 	"gg_knife_steal"
 	{
-		"userid"	"short"		// The userid of the player that stole the level
-		"steamid"	"string"	// The steamid of player that stole the level
-        "name"		"string"	// The name of the player that stole the level
-        "team"		"byte"		// The team # of the player that stole the level up: team 2= Terrorists, 3= CT
+		"attacker"	"short"		// The userid of the player that stole the level
 		"attacker_level" "byte"	// The new level of the player that stole the level
-		"victim_level" "byte"	// The new level of the victim
-        "victim"    "short"     // The userid of victim
-        "victimname" "string"	// The victim's name
+		"userid_level" "byte"	// The new level of the victim
+        "userid"    "short"     // The userid of victim
 	}
     "gg_new_leader"
     {

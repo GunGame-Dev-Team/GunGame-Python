@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.306
+    Version: 1.0.313
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.302'
+__version__ = '1.0.313'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -591,7 +591,7 @@ def player_death(event_var):
         newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_suicide_punish'), 1)
         
         # Trigger level down
-        gungamelib.triggerLevelDownEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_attackername'], event_var['es_userteam'], oldLevel, newLevel, userid, event_var['es_username'])
+        gungamelib.triggerLevelDownEvent(userid, oldLevel, newLevel, userid)
         
         gungamelib.msg('gungame', attacker, 'Suicide_LevelDown', {'newlevel': newLevel})
         
@@ -614,7 +614,7 @@ def player_death(event_var):
             newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_tk_punish'), 1)
             
             # Trigger level down
-            gungamelib.triggerLevelDownEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
+            gungamelib.triggerLevelDownEvent(attacker, oldLevel, newLevel, userid)
             
             gungamelib.msg('gungame', attacker, 'TeamKill_LevelDown', {'newlevel': newLevel})
             
@@ -657,7 +657,7 @@ def player_death(event_var):
         newLevel = oldLevel + 1
         
         # Level them up
-        gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
+        gungamelib.triggerLevelUpEvent(attacker, oldLevel, newLevel, userid)
         
         # Play the levelup sound
         if gungamelib.getSound('levelup'):
@@ -676,7 +676,7 @@ def player_death(event_var):
             newLevel = oldLevel + 1
             
             # Level them up
-            gungamelib.triggerLevelUpEvent(attacker, playerlib.uniqueid(attacker, 1), event_var['es_attackername'], event_var['es_attackerteam'], oldLevel, newLevel, userid, event_var['es_username'])
+            gungamelib.triggerLevelUpEvent(attacker, oldLevel, newLevel, userid)
             
             # Reset multikill
             gungameAttacker['multikill'] = 0
@@ -709,7 +709,7 @@ def bomb_defused(event_var):
     # Level them up
     oldLevel = gungamePlayer['level']
     newLevel = oldLevel + 1
-    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], oldLevel, newLevel, '0', '0')
+    gungamelib.triggerLevelUpEvent(userid, oldLevel, newLevel, '0')
 
 def bomb_exploded(event_var):
     # Set vars
@@ -725,7 +725,7 @@ def bomb_exploded(event_var):
     # Level them up
     oldLevel = gungamePlayer['level']
     newLevel = oldLevel + 1
-    gungamelib.triggerLevelUpEvent(userid, playerlib.uniqueid(userid, 1), event_var['es_username'], event_var['es_userteam'], oldLevel, newLevel, '0', '0')
+    gungamelib.triggerLevelUpEvent(userid, oldLevel, newLevel, '0')
     
 def player_team(event_var):
     # Get userid
@@ -745,24 +745,24 @@ def gg_levelup(event_var):
         # Check if multi-round has any rounds left
         if dict_variables['roundsRemaining'] > 1:
             es.event('initialize', 'gg_round_win')
-            es.event('setint', 'gg_round_win', 'userid', event_var['userid'])
-            es.event('setint', 'gg_round_win', 'loser', event_var['victim'])
-            es.event('setstring', 'gg_round_win', 'steamid', event_var['steamid'])
-            es.event('setint', 'gg_round_win', 'team', event_var['team'])
-            es.event('setstring', 'gg_round_win', 'name', event_var['name'])
+            es.event('setint', 'gg_round_win', 'userid', event_var['attacker'])
+            es.event('setint', 'gg_round_win', 'loser', event_var['userid'])
+            es.event('setstring', 'gg_round_win', 'steamid', event_var['es_attackersteamid'])
+            es.event('setint', 'gg_round_win', 'team', event_var['es_attackerteam'])
+            es.event('setstring', 'gg_round_win', 'name', event_var['es_attackername'])
             es.event('fire', 'gg_round_win')        
         else:
             es.event('initialize', 'gg_win')
-            es.event('setint', 'gg_win', 'userid', event_var['userid'])
-            es.event('setint', 'gg_win', 'loser', event_var['victim'])
-            es.event('setstring', 'gg_win', 'steamid', event_var['steamid'])
-            es.event('setint', 'gg_win', 'team', event_var['team'])
-            es.event('setstring', 'gg_win', 'name', event_var['name'])
+            es.event('setint', 'gg_win', 'userid', event_var['attacker'])
+            es.event('setint', 'gg_win', 'loser', event_var['userid'])
+            es.event('setstring', 'gg_win', 'steamid', event_var['es_attackersteamid'])
+            es.event('setint', 'gg_win', 'team', event_var['es_attackerteam'])
+            es.event('setstring', 'gg_win', 'name', event_var['es_attackername'])
             es.event('fire', 'gg_win')
     else:
         # Regular levelup code...
-        userid = int(event_var['userid'])
-        gungamePlayer = gungamelib.getPlayer(userid)
+        attacker = int(event_var['attacker'])
+        gungamePlayer = gungamelib.getPlayer(attacker)
         
         if gungamelib.getLevelWeapon(event_var['new_level']) == 'knife':
             # Play sound
@@ -788,7 +788,7 @@ def gg_levelup(event_var):
             rebuildLeaderMenu()
         
         if not gungamelib.addonRegistered('gg_warmup_round'):
-            levelInfoHint(userid)
+            levelInfoHint(attacker)
         
         if leaderLevel == gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_vote_trigger'):
             if es.ServerVar('eventscripts_nextmapoverride') == '':

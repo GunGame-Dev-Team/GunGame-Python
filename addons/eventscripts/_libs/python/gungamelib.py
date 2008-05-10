@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.312
+    Version: 1.0.313
     Description:
 '''
 
@@ -1569,29 +1569,32 @@ def centermsg(addon, filter, string, tokens={}):
 # ==============================================================================
 #   LEVEL UP AND LEVEL DOWN TRIGGERING
 # ==============================================================================
-def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
+# def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
+def triggerLevelUpEvent(levelUpUserid, levelUpOldLevel, levelUpNewLevel, victimUserid=0):
     es.event('initialize', 'gg_levelup')
-    es.event('setint', 'gg_levelup', 'userid', levelUpUserid)
-    es.event('setstring', 'gg_levelup', 'steamid', levelUpSteamid)
-    es.event('setstring', 'gg_levelup', 'name', levelUpName)
-    es.event('setstring', 'gg_levelup', 'team', levelUpTeam)                                
+    es.event('setint', 'gg_levelup', 'attacker', levelUpUserid)
+    # es.event('setstring', 'gg_levelup', 'steamid', levelUpSteamid)
+    # es.event('setstring', 'gg_levelup', 'name', levelUpName)
+    # es.event('setstring', 'gg_levelup', 'team', levelUpTeam)                                
     es.event('setint', 'gg_levelup', 'old_level', levelUpOldLevel)
     es.event('setint', 'gg_levelup', 'new_level', levelUpNewLevel)
-    es.event('setint', 'gg_levelup', 'victim', victimUserid)
-    es.event('setstring', 'gg_levelup', 'victimname', victimName)
-    es.event('setstring', 'gg_levelup', 'weapon', weapon)
+    es.event('setint', 'gg_levelup', 'userid', victimUserid)
+    # es.event('setstring', 'gg_levelup', 'victimname', victimName)
+    # es.event('setstring', 'gg_levelup', 'weapon', weapon)
     es.event('fire', 'gg_levelup')
     
-def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, attackerName=None):
+# def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, attackerName=None):
+def triggerLevelDownEvent(levelDownUserid, levelDownOldLevel, levelDownNewLevel, attackerUserid=0):
+
     es.event('initialize', 'gg_leveldown')
     es.event('setint', 'gg_leveldown', 'userid', levelDownUserid)
-    es.event('setstring', 'gg_leveldown', 'steamid', levelDownSteamid)
-    es.event('setstring', 'gg_leveldown', 'name', levelDownName)
-    es.event('setint', 'gg_leveldown', 'team', levelDownTeam)
+    # es.event('setstring', 'gg_leveldown', 'steamid', levelDownSteamid)
+    # es.event('setstring', 'gg_leveldown', 'name', levelDownName)
+    # es.event('setint', 'gg_leveldown', 'team', levelDownTeam)
     es.event('setint', 'gg_leveldown', 'old_level', levelDownOldLevel)
     es.event('setint', 'gg_leveldown', 'new_level', levelDownNewLevel)
     es.event('setint', 'gg_leveldown', 'attacker', attackerUserid)
-    es.event('setstring', 'gg_leveldown', 'attackername', attackerName)
+    # es.event('setstring', 'gg_leveldown', 'attackername', attackerName)
     es.event('fire', 'gg_leveldown')
     
 # ==============================================================================

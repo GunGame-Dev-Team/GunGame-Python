@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_triple_level
-    Version: 1.0.302
+    Version: 1.0.313
     Description: When a player makes 3 levels in one round the player will be
                  faster and have an effect for 10 secs.
 '''
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_triple_level Addon for GunGame: Python"
-info.version  = '1.0.302'
+info.version  = '1.0.313'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_triple_level"
 info.author   = "GunGame Development Team"
@@ -48,43 +48,43 @@ def unload():
 
 
 def gg_levelup(event_var):
-    userid = event_var['userid']
+    attacker = event_var['attacker']
     # Add 1 to triple level counter
-    gungamePlayer = gungamelib.getPlayer(userid)
+    gungamePlayer = gungamelib.getPlayer(attacker)
     gungamePlayer['triple'] += 1
     
     # If is it a Triple Level
     if gungamePlayer['triple'] == 3:
-        name = event_var['name']
+        name = event_var['es_attackername']
         # Add the player to the triple level list
-        list_currentTripleLevel.append(userid)
+        list_currentTripleLevel.append(attacker)
         # Sound and Messages
         if gungamelib.getSound('triplelevel'):
-            es.emitsound('player', userid, gungamelib.getSound('triplelevel'), 1.0, 1.0)
+            es.emitsound('player', attacker, gungamelib.getSound('triplelevel'), 1.0, 1.0)
         gungamelib.msg('gg_triple_level', '#all', 'MsgTripleLevelled', {'name': name})
         gungamelib.centermsg('gg_triple_level', '#all', 'CenterTripleLevelled', {'name': name})
         
         # Effect to player
-        es.server.cmd("es_xgive %s env_spark" %userid)
-        es.server.cmd("es_xfire %s env_spark setparent !activator" %userid)
-        es.server.cmd("es_xfire %s env_spark addoutput \"spawnflags 896\"" %userid)
-        es.server.cmd("es_xfire %s env_spark addoutput \"angles -90 0 0\"" %userid)
-        es.server.cmd("es_xfire %s env_spark addoutput \"magnitude 8\"" %userid)
-        es.server.cmd("es_xfire %s env_spark addoutput \"traillength 3\"" %userid)
-        es.server.cmd("es_xfire %s env_spark startspark" %userid)
+        es.server.cmd("es_xgive %s env_spark" %attacker)
+        es.server.cmd("es_xfire %s env_spark setparent !activator" %attacker)
+        es.server.cmd("es_xfire %s env_spark addoutput \"spawnflags 896\"" %attacker)
+        es.server.cmd("es_xfire %s env_spark addoutput \"angles -90 0 0\"" %attacker)
+        es.server.cmd("es_xfire %s env_spark addoutput \"magnitude 8\"" %attacker)
+        es.server.cmd("es_xfire %s env_spark addoutput \"traillength 3\"" %attacker)
+        es.server.cmd("es_xfire %s env_spark startspark" %attacker)
         
         # Speed
-        player = playerlib.getPlayer(userid)
+        player = playerlib.getPlayer(attacker)
         player.set("speed", 1.5)
         
         # Gravity
-        es.server.cmd("es_xfire %s !self \"gravity 400\"" %userid)
+        es.server.cmd("es_xfire %s !self \"gravity 400\"" %attacker)
 
         # Reset the level counter to 0 since they just tripled
         gungamePlayer['triple'] = 0
         
         # Stop Triple Level Bonus after 10 secs
-        gamethread.delayed(10, removeTriple, (userid))
+        gamethread.delayed(10, removeTriple, (attacker))
 
 def player_death(event_var):
     userid = event_var['userid']

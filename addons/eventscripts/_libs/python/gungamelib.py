@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.302
+    Version: 1.0.312
     Description:
 '''
 
@@ -2119,7 +2119,7 @@ def getESTVersion():
         return 0.000
 
 def isDead(userid):
-    return bool(int(es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag')))
+    return es.getplayerprop(self.userid, 'CBasePlayer.pl.deadflag')
     
 def getPlayerUniqueID(userid):
     userid = int(userid)

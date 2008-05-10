@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 1.0.310
+    Version: 1.0.302
     Description: Adds map voting capabilities to GunGame.
 '''
 
@@ -30,7 +30,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_map_vote (for GunGame: Python)'
-info.version  = '1.0.307'
+info.version  = '1.0.302'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_map_vote'
 info.author   = 'GunGame Development Team'
@@ -69,8 +69,8 @@ dict_addonVars['voteActive'] = 0
 dict_addonVars['voteTimer'] = 0
 
 # Old maphandler value
-oldEventscriptsMaphandler = es.ServerVar('eventscripts_maphandler')
-es.ServerVar('eventscripts_maphandler').set(1)
+# oldEventscriptsMaphandler = es.ServerVar('eventscripts_maphandler')
+# es.ServerVar('eventscripts_maphandler').set(1)
 
 # ==============================================================================
 #  GAME EVENTS
@@ -100,7 +100,7 @@ def unload():
     gungamelib.unregisterAddon('gg_map_vote')
         
     # Restore original value for eventscripts_maphandler
-    es.ServerVar('eventscripts_maphandler').set(oldEventscriptsMaphandler)
+    # es.ServerVar('eventscripts_maphandler').set(oldEventscriptsMaphandler)
     
     # Delete popup
     if popuplib.exists('voteMenu'):
@@ -296,7 +296,7 @@ def voteResults():
     # Announce winning map
     if dict_playerChoice['totalVotes']:
         # Set eventscripts_nextmapoverride to the winning map
-        es.ServerVar('eventscripts_nextmapoverride').set(dict_playerChoice['winningMap'])
+        # es.ServerVar('eventscripts_nextmapoverride').set(dict_playerChoice['winningMap'])
         
         # Announce the winning map
         gungamelib.msg('gg_map_vote', '#all', 'WinningMap', {'map': dict_playerChoice['winningMap'], 'votes': dict_playerChoice['winningMapVotes'], 'totalVotes': dict_playerChoice['totalVotes']})

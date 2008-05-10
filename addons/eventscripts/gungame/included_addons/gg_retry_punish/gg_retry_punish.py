@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_retry_punish
-    Version: 1.0.307
+    Version: 1.0.302
     Description: Punishes players for disconnecting and
                  reconnecting in the same GunGame round.
 '''
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_retry_punish (for GunGame: Python)'
-info.version  = '1.0.307'
+info.version  = '1.0.302'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_retry_punish'
 info.author   = 'GunGame Development Team'

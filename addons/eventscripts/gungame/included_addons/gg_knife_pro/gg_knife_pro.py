@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_pro
-    Version: 1.0.307
+    Version: 1.0.302
     Description: When one player knife kills another player, the attacker steals
                  a level from the victim.
 '''
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = '1.0.307'
+info.version  = '1.0.302'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -106,35 +106,41 @@ def player_death(event_var):
     if ((gungameAttackerLevel - gungameVictimLevel) >= int(proLimit)) and int(proLimit) != 0:
         gungamelib.msg('gg_knife_pro', attacker, 'LevelDifferenceLimit')
         return
-    
+        
+    steamid = gungameVictim['steamid']
+    username = event_var['es_username']
     gungameVictimNewLevel = gungameVictimLevel - 1
+    attackersteamid = gungameAttacker['steamid']
+    attackername = event_var['es_attackername']
     gungameAttackerNewLevel = gungameAttackerLevel + 1
     
     # Trigger level down for the victim
-    #gungamelib.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
-    gungamelib.triggerLevelChange(userid, gungameVictimLevel, gungameVictimNewLevel, attacker)
+    gungamelib.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
     
     # Play the leveldown sound
     if gungamelib.getSound('leveldown'):
         es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
     
     # Trigger level up for the attacker
-    #gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
-    gungamelib.triggerLevelChange(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid, 'knife')
+    gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
     
     # Play the leveldown sound
     if gungamelib.getSound('levelsteal'):
         es.playsound(attacker, gungamelib.getSound('levelsteal'), 1.0)
     
     # Event code
-    event = gungamelib.EasyEvent('gg_knife_steal')
-    event['userid'] = int(attacker)
-    event['attacker_level'] = int(gungameAttackerNewLevel)
-    event['victim'] = int(userid)
-    event['victim_level'] = int(gungameVictimNewLevel)
-    event.send()
+    es.event('initialize', 'gg_knife_steal')
+    es.event('setint', 'gg_knife_steal', 'userid', attacker)
+    es.event('setstring', 'gg_knife_steal', 'steamid', attackersteamid)
+    es.event('setstring', 'gg_knife_steal', 'name', attackername)
+    es.event('setstring', 'gg_knife_steal', 'team', attackerteam)
+    es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttackerNewLevel)
+    es.event('setint', 'gg_knife_steal', 'victim_level', gungameVictimNewLevel)
+    es.event('setint', 'gg_knife_steal', 'victim', userid)
+    es.event('setstring', 'gg_knife_steal', 'victimname', username)
+    es.event('fire', 'gg_knife_steal')
     
     # Announce the level stealing
     index = playerlib.getPlayer(attacker).attributes['index']
-    gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': event_var['es_attackername'], 'victim': event_var['es_username']})
+    gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': attackername, 'victim': username})
     

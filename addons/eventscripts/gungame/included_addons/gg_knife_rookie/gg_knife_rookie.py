@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_rookie
-    Version: 1.0.307
+    Version: 1.0.302
     Description:    This is the same as gg_knife_pro, but a few small
                     differences. When one player knife kills another player,
                     the attacker will ALWAYS level up, unless on knife level.
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = '1.0.307'
+info.version  = '1.0.302'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -102,17 +102,15 @@ def player_death(event_var):
     # Only trigger level down for the victim if above level 1
     if not gungameVictim['level'] == 1:
         # Trigger level down for the victim
-        #gungamelib.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
-        gungamelib.triggerLevelChange(userid, gungameVictimLevel, gungameVictimNewLevel, attacker)
-        
+        gungamelib.triggerLevelDownEvent(userid, steamid, username, userteam, gungameVictimLevel, gungameVictimNewLevel, attacker, attackername)
+    
         # Play the leveldown sound
         if gungamelib.getSound('leveldown'):
             es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
     
     if gungameAttacker.getWeapon() != 'hegrenade':
         # Trigger level up for the attacker
-        #gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
-        gungamelib.triggerLevelChange(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid, 'knife')
+        gungamelib.triggerLevelUpEvent(attacker, attackersteamid, attackername, event_var['es_attackerteam'], gungameAttackerLevel, gungameAttackerNewLevel, userid, username, 'knife')
     
     # Play the leveldown sound
     if gungamelib.getSound('levelsteal'):

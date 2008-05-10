@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.307
+    Version: 1.0.302
     Description:
 '''
 
@@ -86,12 +86,16 @@ gungameDebugLevel.makepublic()
 # ==============================================================================
 #   PLAYER CLASS
 # ==============================================================================
-class Player(object):
-    '''Holds all a players information and attributes.'''
+class Player:
+    '''Player class, holds all a players information and attributes.'''
     
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
+        # Check the userid is numeric
+        if not isNumeric(userid):
+            raise ValueError('Cannot get player (%s): userid must be numerical.' % userid)
+        
         # Make userid an int
         self.userid = int(userid)
         
@@ -144,35 +148,35 @@ class Player(object):
                         # Check to see if this is a new leader for the first time in the GunGame round
                         if len(dict_leaderInfo['currentLeaders']) == 0:
                             dict_leaderInfo['currentLeaders'].append(self.userid)
-                            
-                            event = EasyEvent('gg_new_leader')
-                            event['userid'] = self.userid
-                            event.send()
+                            # FIRE NEW LEADER EVENT HERE event gg_new_leader
+                            es.event('initialize', 'gg_new_leader')
+                            es.event('setint', 'gg_new_leader', 'userid', self.userid)
+                            es.event('fire', 'gg_new_leader')
                         
                         # Check to see if this is a new leader
                         elif len(dict_leaderInfo['currentLeaders']) > 1:
                             if self.userid in dict_leaderInfo['currentLeaders']:
                                 dict_leaderInfo['currentLeaders'].remove(self.userid)
-                            
                             dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
                             dict_leaderInfo['currentLeaders'] = [self.userid]
-                            
-                            event = EasyEvent('gg_new_leader')
-                            event['userid'] = self.userid
-                            event.send()
+                            # FIRE NEW LEADER EVENT HERE event gg_new_leader
+                            es.event('initialize', 'gg_new_leader')
+                            es.event('setint', 'gg_new_leader', 'userid', self.userid)
+                            es.event('fire', 'gg_new_leader')
                         
                         # The leader is the same leader
                         else:
                             dict_leaderInfo['oldLeaders'] = [self.userid]
-                    
+                        
                     # See if they tied the leader
                     elif value == dict_leaderInfo['leaderLevel']:
                         dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
                         dict_leaderInfo['currentLeaders'].append(self.userid)
                         
-                        event = EasyEvent('gg_tied_leader')
-                        event['userid'] = self.userid
-                        event.send()
+                        # FIRE TIED LEADER EVENT HERE event gg_tied_leader
+                        es.event('initialize', 'gg_tied_leader')
+                        es.event('setint', 'gg_tied_leader', 'userid', self.userid)
+                        es.event('fire', 'gg_tied_leader')
                 
                 # Let's see if the new level that they are trying to set is less than their current level
                 elif value < currentLevel:
@@ -182,9 +186,10 @@ class Player(object):
                             dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
                             dict_leaderInfo['currentLeaders'].remove(self.userid)
                             
-                            event = EasyEvent('gg_leader_lostlevel')
-                            event['userid'] = self.userid
-                            event.send()
+                            # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
+                            es.event('initialize', 'gg_leader_lostlevel')
+                            es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
+                            es.event('fire', 'gg_leader_lostlevel')
                         else:
                             dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
                             
@@ -205,9 +210,10 @@ class Player(object):
                             # Set the leader level to the new level
                             dict_leaderInfo['leaderLevel'] = leaderLevel
                             
-                            event = EasyEvent('gg_leader_lostlevel')
-                            event['userid'] = self.userid
-                            event.send()
+                            # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
+                            es.event('initialize', 'gg_leader_lostlevel')
+                            es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
+                            es.event('fire', 'gg_leader_lostlevel')
                 
                 self.attributes[item] = value
             else:
@@ -420,7 +426,7 @@ class Player(object):
 # ==============================================================================
 #   WEAPON ORDER CLASS
 # ==============================================================================
-class WeaponOrder(object):
+class WeaponOrder:
     '''Parses weapon order files.'''
     
     def __init__(self, fileName):
@@ -792,7 +798,7 @@ class WeaponOrder(object):
 # ==============================================================================
 #   CONFIG CLASS
 # ==============================================================================
-class Config(object):
+class Config:
     '''Class for registration of config files used by GunGame.'''
     
     def __init__(self, name):
@@ -882,7 +888,7 @@ class InvalidSoundPack(Exception):
 class SoundError(Exception):
     pass
 
-class Sounds(object):
+class Sounds:
     '''Soundpack class, adds sounds from a soundpack.'''
     
     def __init__(self, soundPackName):
@@ -947,7 +953,7 @@ class Sounds(object):
 class AddonError(Exception):
     pass
     
-class Addon(object):
+class Addon:
     def __init__(self, addonName):
         self.addon = str(addonName)
         
@@ -1107,7 +1113,7 @@ class Addon(object):
                 self.dependencies.append(dependencyName)
                 
                 # Create dependency class
-                dict_dependencies[dependencyName] = AddonDependency(dependencyName, value, self.addon)
+                dict_dependencies[dependencyName] = addonDependency(dependencyName, value, self.addon)
                 
                 # Set GunGame variable to dependents value
                 setVariableValue(dependencyName, value)
@@ -1132,7 +1138,7 @@ class Addon(object):
 # ==============================================================================
 #   ADDON DEPENDENCY CLASS
 # ==============================================================================
-class AddonDependency(object):
+class addonDependency:
     def __init__(self, dependencyName, value, dependentName):
         # Setup dependency class vars
         self.dependency = dependencyName
@@ -1176,7 +1182,7 @@ class AddonDependency(object):
 # ==============================================================================
 #   MESSAGE CLASS
 # ==============================================================================
-class Message(object):
+class Message:
     '''Message class is used to broadcast linguistic messages around the server,
     with the use of translation files.'''
     
@@ -1368,7 +1374,7 @@ class Message(object):
 # ==============================================================================
 #   EASYINPUT CLASS
 # ==============================================================================
-class EasyInput(object):
+class EasyInput:
     '''Makes "Esc"-style input boxes quickly and simply.
     
     Inspiration:
@@ -1455,66 +1461,10 @@ class EasyInput(object):
         self.callback(userid, formatArgs(), self.extras)
 
 # ==============================================================================
-#   EASYEVENT CLASS
-# ==============================================================================
-class EasyEvent(object):
-    '''Creates EventScripts events quickly and simply.'''
-    acceptedTypes = (int, basestring, float)
-    
-    def __init__(self, name):
-        '''Called on initialization; sets class variables.'''
-        # Set variables
-        self.name = name
-        self.variables = {}
-    
-    def __setitem__(self, name, value):
-        # Valid type?
-        if True not in [isinstance(value, x) for x in self.acceptedTypes]:
-            raise TypeError('Cannot set variable (%s): invalid type: %s' % (name, type(value)))
-        
-        self.variables[name] = value
-    
-    def send(self):
-        # Create event
-        es.event('initialize', self.name)
-        
-        # Add victim variables
-        if self.variables.has_key('victim'):
-            userid = int(self.variables['victim'])
-            
-            self.variables['victim_name'] = es.getplayername(userid)
-            self.variables['victim_steamid'] = es.getplayersteamid(userid)
-            self.variables['victim_team'] = int(es.getplayerteam(userid))
-        
-        # Add variables
-        for variable in self.variables:
-            # Get value
-            value = self.variables[variable]
-            
-            # Is a string?
-            if isinstance(value, basestring):
-                es.event('setstring', self.name, variable, value)
-            
-            # Is an integer?
-            elif isinstance(value, int):
-                es.event('setint', self.name, variable, value)
-            
-            # Is a float?
-            elif isinstance(value, float):
-                es.event('setfloat', self.name, variable, value)
-            
-            # Invalid type
-            else:
-                raise TypeError('Cannot send event (%s): invalid variable (%s) of type: %s' % (self.name, variable, type(value)))
-        
-        # Fire event
-        es.event('fire', self.name)
-
-# ==============================================================================
 #  WINNERS CLASS
 # ==============================================================================
-class Winners(object):
-    '''Tracks and stores winner information.'''
+class Winners:
+    ''' Class used for tracking and storing Winners'''
     
     def __init__(self, uniqueid):
         self.uniqueid = str(uniqueid)
@@ -1617,29 +1567,35 @@ def centermsg(addon, filter, string, tokens={}):
     Message(addon, filter).centermsg(string, tokens)
 
 # ==============================================================================
-#   LEVEL TRIGGERING
+#   LEVEL UP AND LEVEL DOWN TRIGGERING
 # ==============================================================================
-def triggerLevelChange(userid, oldLevel, newLevel, victim=0, weapon=''):
-    # Level up or down
-    if oldLevel < newLevel:
-        event = EasyEvent('gg_levelup')
-        event['victim'] = int(victim)
-    else:
-        event = EasyEvent('gg_leveldown')
-        event['attacker'] = int(victim)
+def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
+    es.event('initialize', 'gg_levelup')
+    es.event('setint', 'gg_levelup', 'userid', levelUpUserid)
+    es.event('setstring', 'gg_levelup', 'steamid', levelUpSteamid)
+    es.event('setstring', 'gg_levelup', 'name', levelUpName)
+    es.event('setstring', 'gg_levelup', 'team', levelUpTeam)                                
+    es.event('setint', 'gg_levelup', 'old_level', levelUpOldLevel)
+    es.event('setint', 'gg_levelup', 'new_level', levelUpNewLevel)
+    es.event('setint', 'gg_levelup', 'victim', victimUserid)
+    es.event('setstring', 'gg_levelup', 'victimname', victimName)
+    es.event('setstring', 'gg_levelup', 'weapon', weapon)
+    es.event('fire', 'gg_levelup')
     
-    # Create event variables
-    event['userid'] = int(userid)
-    event['old_level'] = int(oldLevel)
-    event['new_level'] = int(newLevel)
-    event['victim'] = int(victim)
-    event['weapon'] = str(weapon)
+def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, attackerName=None):
+    es.event('initialize', 'gg_leveldown')
+    es.event('setint', 'gg_leveldown', 'userid', levelDownUserid)
+    es.event('setstring', 'gg_leveldown', 'steamid', levelDownSteamid)
+    es.event('setstring', 'gg_leveldown', 'name', levelDownName)
+    es.event('setint', 'gg_leveldown', 'team', levelDownTeam)
+    es.event('setint', 'gg_leveldown', 'old_level', levelDownOldLevel)
+    es.event('setint', 'gg_leveldown', 'new_level', levelDownNewLevel)
+    es.event('setint', 'gg_leveldown', 'attacker', attackerUserid)
+    es.event('setstring', 'gg_leveldown', 'attackername', attackerName)
+    es.event('fire', 'gg_leveldown')
     
-    # Send event
-    event.send()
-
 # ==============================================================================
-#   CLEAR COMMANDS
+#   RESET GUNGAME --- WARNING: POWERFUL COMMAND
 # ==============================================================================
 def resetGunGame():
     # Reset the Leader Information Database in the dict_leaderInfo
@@ -2163,7 +2119,7 @@ def getESTVersion():
         return 0.000
 
 def isDead(userid):
-    return es.getplayerprop(userid, 'CBasePlayer.pl.deadflag')
+    return bool(int(es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag')))
     
 def getPlayerUniqueID(userid):
     userid = int(userid)

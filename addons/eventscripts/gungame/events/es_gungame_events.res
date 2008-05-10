@@ -1,104 +1,115 @@
-//    +-------------------------------------------------------------------------
-//    |   Copyright (C) 2007-2008 Saul Rennison
-//    |   Author: Saul Rennison <saul.rennison@gmail.com>
-//    +-------------------------------------------------------------------------
-//    |   es_gungame_events.res
-//    |       GunGame event definition file.
-//    |       
-//    |       If a "victim" event_var is supplied, the following will also be
-//    |       automagically added:
-//    |         * victim_name, victim_steamid and victim_team
-//    |
-//    |       EventScripts automatically provides a lot of event_vars if "userid"
-//    |       or "attacker" event_var's has been passed.
-//    +-------------------------------------------------------------------------
+//=========== (C) Copyright 2007 GunGame 4 All rights reserved. ===========
+//
+// Events triggered by GunGame mod version 1.0.255
+//
+// No spaces in event names, max length 32
+// All strings are case sensitive
+// total game event byte length must be < 1024
+//
+// valid data key types are:
+//   none   : value is not networked
+//   string : a zero terminated string
+//   bool   : unsigned int, 1 bit
+//   byte   : unsigned int, 8 bit
+//   short  : signed int, 16 bit
+//   long   : signed int, 32 bit
+//   float  : float, 32 bit
 
 "gungame_events"
 {
-
 	"gg_levelup"
 	{
-		"userid"	"short"		// userid of player that levelled up
-		"victim"	"short"		// userid of victim
-		"old_level"	"byte"		// old player level
-		"new_level"	"byte"		// new player level
-		"weapon"        "string"        // weapon
+		"userid"	"short"		// The userid of the player that levelled up
+		"steamid"	"string"	// The steamid of player that levelled up
+		"old_level"	"byte"		// The old level of the player that levelled up
+		"new_level"	"byte"		// The new level of the player that levelled up
+		"team"		"byte"		// The team # of the player that levelled up: team 2= Terrorists, 3= CT
+		"name"		"string"	// The name of the player that levelled up
+		"victim"	"short"		// The userid of victim
+		"victimname" "string"	// The victim's name
+        "weapon"    "string"    // The attackers weapon
 	}
-	
 	"gg_leveldown"
 	{
-		"userid"	"short"		// userid of player that levelled down
+		"userid"	"short"		// userid of player
 		"attacker"	"short"		// userid of the attacker
+		"steamid"	"string"	// steamid of player
 		"old_level"	"byte"		// old player level
 		"new_level"	"byte"		// new player level
-		"weapon"        "string"        // weapon
+		"team"		"byte"		// player team 2= Terrorists, 3= CT
+		"name"		"string"	// player name
+		"attackername"	"string"	// attacker's name
 	}
-	
 	"gg_knife_steal"
 	{
-		"userid"	"short"		// The userid of the attacker
-		"attacker_level" "byte"	        // The new level of the attacker
-		"victim"        "short"         // The userid of victim
-		"victim_level"  "byte"	        // The new level of the victim
+		"userid"	"short"		// The userid of the player that stole the level
+		"steamid"	"string"	// The steamid of player that stole the level
+        "name"		"string"	// The name of the player that stole the level
+        "team"		"byte"		// The team # of the player that stole the level up: team 2= Terrorists, 3= CT
+		"attacker_level" "byte"	// The new level of the player that stole the level
+		"victim_level" "byte"	// The new level of the victim
+        "victim"    "short"     // The userid of victim
+        "victimname" "string"	// The victim's name
 	}
-	
-	"gg_new_leader"
-	{
-		"userid"	"short"		// The userid of the player that became the new leader
-	}
-	
-	"gg_tied_leader"
-	{
-		"userid"	"short"		// The userid of the player that tied the leader(s)
-	}
-	
-	"gg_leader_lostlevel"
-	{
-		"userid"	"short"		// The userid of the leader that lost a level
-	}
-	
+    "gg_new_leader"
+    {
+        "userid"	"short"		// The userid of the player that became the new leader
+    }
+    "gg_tied_leader"
+    {
+        "userid"	"short"		// The userid of the player that tied the leader(s)
+    }
+    "gg_leader_lostlevel"
+    {
+        "userid"	"short"		// The userid of the leader that lost a level
+    }
 	"gg_start"
 	{
-		// This event fires at the end of the warmup round
+		// No event_vars for this event
+		// This event only fires at the end of the warmup round
 		// This will fire on es_map_start if there is no warmup round
 	}
-	
 	"gg_vote"
 	{
-		// This event fires when a vote had started
-	}
-	
+		// No event_vars for this event
+		// This event only fires when the leader has reached the max level - 2
+		// and no other scripts has set the nextmap and a vote has not already been started
+    }
 	"gg_win"
 	{
-		"userid"	"short"		// userid of player that won the game
+		"userid"	"short"		// userid of player
+		"steamid"	"string"	// steamid of player
+		"team"		"byte"		// player team 2= Terrorists, 3= CT
+		"name"		"string"	// player name
 		"loser"		"short"		// userid of player that gave up the win
 	}
-	
-	"gg_round_win"
+    "gg_round_win"
 	{
-		"userid"	"short"		// userid of player that won
+		"userid"	"short"		// userid of player
+		"steamid"	"string"	// steamid of player
+		"team"		"byte"		// player team 2= Terrorists, 3= CT
+		"name"		"string"	// player name
 		"loser"		"short"		// userid of player that gave up the win
 	}
-	
 	"gg_map_end"
 	{
-		// This event fires at the end of a map when there is no winner
+		// No event_vars for this event
+		// This event only at the end of a map when there is no winner
 	}
-	
-	"gg_variable_changed"
-	{
-		"cvarname"      "string"        // The name of the cvar that was changed
-		"value"         "string"        // The new value of the cvar
-	}
-	
-	"gg_load"
-	{
-		// This event fires when GG is loaded
-	}
-	
-	"gg_unload"
-	{
-		// This event fires when GG is unloaded
-	}
-
+    "gg_variable_changed"
+    {
+        "cvarname"  "string"    // The name of the GunGame cvar that was changed
+        "oldvalue"  "string"    // The old value of the GunGame cvar that was changed
+        "newvalue"  "string"    // The new value of the GunGame cvar that was changed
+    }
+    "gg_load"
+    {
+		// No event_vars for this event
+		// This event only fires when gungame is loaded
+    }
+    "gg_unload"
+    {
+		// No event_vars for this event
+		// This event only fires when gungame is unloaded
+    }
 }

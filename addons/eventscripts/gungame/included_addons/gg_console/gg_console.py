@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_console
-    Version: 1.0.307
+    Version: 1.0.302
     Description: Provides console commands to be used by admins.
 '''
 
@@ -20,7 +20,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_console (for GunGame: Python)'
-info.version  = '1.0.307'
+info.version  = '1.0.302'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -40,22 +40,22 @@ def load():
 # ==============================================================================
 #   CONSOLE COMMANDS
 # ==============================================================================
-def cmd_isafk(userid, variable, target):
+def cmd_isafk(userid, variable, player):
     # Make sure the client is in the server
-    if not gungamelib.clientInServer(target):
-        gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': target})
+    if not gungamelib.clientInServer(player):
+        gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': userid})
     
     # Get player then set the variable
-    player = gungamelib.getPlayer(target)
-    es.ServerVar(variable).set(int(player.isPlayerAFK()))
+    playerObj = gungamelib.getPlayer(player)
+    es.ServerVar(variable).set(int(playerObj.isPlayerAFK()))
 
-def cmd_seteyeangle(userid, target, pitch, yaw):
+def cmd_seteyeangle(userid, player, pitch, yaw):
     # Make sure the client is in the server
-    if not gungamelib.clientInServer(target):
-        gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': target})
+    if not gungamelib.clientInServer(userid):
+        gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': userid})
     
     # Get player then set the eye angles
-    player = gungamelib.getPlayer(target)
+    player = gungamelib.getPlayer(userid)
     player.setPlayerEyeAngles(pitch, yaw)
 
 """

@@ -140,7 +140,9 @@ def gg_win(event_var):
     if dict_addonVars['voteActive']:
         repeat.delete('voteCounter')
         voteResults()
+    
     winningMap = dict_playerChoice['winningMap']
+    
     if winningMap != None:
         es.set('nextlevel', winningMap)
         gungamelib.msg('gg_map_vote','#all', 'Nextmap', {'map': winningMap})

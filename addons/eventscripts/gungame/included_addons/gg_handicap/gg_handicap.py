@@ -88,11 +88,13 @@ def handicapUpdate(repeatInfo):
         if gungamePlayer['level'] < averageLevel:
             # Set their level
             gungamePlayer['level'] = averageLevel
+            gungamePlayer['multikill'] = 0
             
             # Give new weapon if turbo mode is on
             if gungamelib.getVariableValue('gg_turbo'):
                 if gungamePlayer.getWeapon() == 'knife':
                     es.sexec(userid, 'use weapon_knife')
+                
                 if not gungamelib.isDead(userid):
                     gungamePlayer.stripPlayer()
                     

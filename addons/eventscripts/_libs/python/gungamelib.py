@@ -524,7 +524,7 @@ class WeaponOrder:
         es.dbgmsg(0, '[GunGame] ')
         echo('gungame', 0, 0, 'WeaponOrder:Echo:FileName', {'file': self.fileName})
         echo('gungame', 0, 0, 'WeaponOrder:Echo:DisplayName', {'name': dict_weaponOrderSettings[self.fileName]['displayName']})
-        echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': self.getWeaponOrderType()})
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': getVariableValue('gg_weapon_order')})
         es.dbgmsg(0, '[GunGame] ')
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
         echo('gungame', 0, 0, 'WeaponOrder:Echo:TableColumns')
@@ -535,10 +535,9 @@ class WeaponOrder:
             # Set variables
             weaponName = dict_weaponOrders[self.fileName][level][0]
             multiKillValue = dict_weaponOrders[self.fileName][level][1]
-            cleanLevel = '0%d' % level if level < 10 else level
             
             # Print to console
-            es.dbgmsg(0, '[GunGame] |  %s   |     %d     | %s%s|' % (cleanLevel, multiKillValue, weaponName, ' ' * (14-len(weaponName))))
+            es.dbgmsg(0, '[GunGame] |  %2s   |     %d     | %13s |' % (level, multiKillValue, weaponName))
         
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
         es.dbgmsg(0, '[GunGame] ')
@@ -980,16 +979,15 @@ class Addon:
         echo('gungame', 0, 0, 'Addon:Unregistered', {'name': self.addon})
     
     def validateAddon(self):
-        if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % self.addon)):
-            # Is an included addon
-            self.addonType = 'included'
-            return True
-        elif os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % self.addon)):
-            # Is a custom addon
-            self.addonType = 'custom'
-            return True
-        else:
+        if not addonExists(self.addon):
             return False
+        
+        if getAddonType(self.addon) == 0:
+            self.addonType = 'custom'
+        else:
+            self.addonType = 'included'
+        
+        return True
     
     '''Command options:'''
     def registerCommand(self, command, function, syntax='', console=True, log=True):
@@ -1032,7 +1030,11 @@ class Addon:
         # Try and call the command
         try:
             callback(userid, *arguments)
-        except TypeError:
+        except TypeError, e:
+            # Not an argument error?
+            if 'arguments' in e == False:
+                callback(userid, *arguments)
+            
             # Show an Invalid Syntax message to the player
             msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
             return
@@ -1076,7 +1078,8 @@ class Addon:
         self.menu.settitle(self.displayName)
     
     def setDescription(self, description):
-        if not self.hasMenu(): raise AddonError('Cannot set menu description (%s): menu hasn\'t been created.' % self.addon)
+        if not self.hasMenu():
+            raise AddonError('Cannot set menu description (%s): menu hasn\'t been created.' % self.addon)
         
         self.menu.setdescription('%s\n * %s' % (self.menu.c_beginsep, description))
     
@@ -1084,7 +1087,8 @@ class Addon:
         return (self.menu != None)
     
     def sendMenu(self, userid):
-        if not self.hasMenu(): raise AddonError('Cannot show menu (%s): menu hasn\'t been created.' % self.addon)
+        if not self.hasMenu():
+            raise AddonError('Cannot show menu (%s): menu hasn\'t been created.' % self.addon)
         
         self.menu.send(userid)
     
@@ -1113,7 +1117,7 @@ class Addon:
                 self.dependencies.append(dependencyName)
                 
                 # Create dependency class
-                dict_dependencies[dependencyName] = addonDependency(dependencyName, value, self.addon)
+                dict_dependencies[dependencyName] = AddonDependency(dependencyName, value, self.addon)
                 
                 # Set GunGame variable to dependents value
                 setVariableValue(dependencyName, value)
@@ -1138,7 +1142,7 @@ class Addon:
 # ==============================================================================
 #   ADDON DEPENDENCY CLASS
 # ==============================================================================
-class addonDependency:
+class AddonDependency:
     def __init__(self, dependencyName, value, dependentName):
         # Setup dependency class vars
         self.dependency = dependencyName
@@ -1149,11 +1153,12 @@ class addonDependency:
         echo('gungame', 0, 2, 'Dependency:Registered', {'name': self.dependency})
     
     def addDependent(self, value, dependentName):
-        # Check if dependents value is the same as the previous dependents value
+        # Dependant value the same?
         if self.dependencyValue == value:
             # Add dependent to list of dependencies dependents
             self.dependentList.append(dependentName)
             echo('gungame', 0, 1, 'Dependency:Registered', {'name': self.dependency})
+        
         # Dependent has a different value
         else:
             # Unload addon since it conflicts with existant dependents
@@ -1377,7 +1382,7 @@ class Message:
 class EasyInput:
     '''Makes "Esc"-style input boxes quickly and simply.
     
-    Inspiration:
+    Inspired by:
      * SuperDave (http://forums.mattie.info/cs/forums/viewtopic.php?t=21958)
     '''
     
@@ -1424,15 +1429,8 @@ class EasyInput:
     def setTimeout(self, timeout):
         '''Sets timeout for the player to press "Esc" before the menu is
         discarded. Value must be between 10 and 199, inclusive.'''
-        # Make timeout an integer
-        timeout = int(timeout)
-        
-        # Check timeout
-        if timeout not in range(10, 200):
-            raise ValueError('Cannot set timeout (%s): value must be between 10 and 200.' % timeout)
-        
         # Set timeout
-        self.timeout = timeout
+        self.timeout = clamp(timeout, 10, 199)
     
     def send(self, userid):
         '''Sends the input box to <userid>.'''
@@ -1481,19 +1479,18 @@ class Winners:
             self.attributes = dict_winners[self.uniqueid]
     
     def __getitem__(self, item):
-        # We will be nice and convert the "item" to a lower-cased string
+        # Make the item a lower-case string
         item = str(item).lower()
         
-        # Let's make sure that the item that they are trying to change exists
+        # Return the attribute
         if item in self.attributes:
-            # Allowing the retrieving of attributes in the dictionary
             return self.attributes[item]
     
     def __setitem__(self, item, value):
-        # We will be nice and convert the "item" to a lower-cased string
+        # Make the item a lower-case string
         item = str(item).lower()
         
-        # Let's make sure that the item that they are trying to change exists
+        # Does the attribute exist?
         if item in self.attributes:
             if item == 'wins':
                 self.attributes[item] = int(value)
@@ -1505,34 +1502,19 @@ class Winners:
 # ==============================================================================
 def getPlayer(userid):
     userid = int(userid)
-    try:
-        return Player(userid)
-    except (UseridError, TypeError), e:
-        raise e
+    return Player(userid)
 
 def getWeaponOrderFile(weaponOrderFile):
-    try:
-        return WeaponOrder(weaponOrderFile)
-    except TypeError, e:
-        raise e
+    return WeaponOrder(weaponOrderFile)
 
 def getConfig(configName):
-    try:
-        return Config(configName)
-    except TypeError, e:
-        raise e
+    return Config(configName)
 
 def getSoundPack(soundPackName):
-    try:
-        return Sounds(soundPackName)
-    except TypeError, e:
-        raise e
+    return Sounds(soundPackName)
 
 def getWinner(uniqueid):
-    try:
-        return Winners(uniqueid)
-    except TypeError, e:
-        raise e
+    return Winners(uniqueid)
 
 # ==============================================================================
 #   MESSAGE FUNCTIONS
@@ -1650,7 +1632,8 @@ def clearOldPlayers():
     # Loop through the players
     for userid in dict_players.copy():
         # Remove from dict_players if they aren't in the server
-        if not clientInServer(userid): del dict_players[userid]
+        if not clientInServer(userid):
+            del dict_players[userid]
 
 # ==============================================================================
 #   WEAPON RELATED COMMANDS
@@ -1697,17 +1680,16 @@ def getTotalLevels():
 def setPreventLevelAll(state):
     state = clamp(state, 0, 1)
     
-    for userid in es.getUseridList():
-        getPlayer(userid)['preventlevel'] = state
+    for userid in dict_players:
+        dict_players[userid]['preventlevel'] = state
 
 def getAverageLevel():
     averageLevel = 0
     averageDivider = 0
     
-    for userid in es.getUseridList():
-        if dict_players.has_key(userid):
-            averageDivider += 1
-            averageLevel += int(dict_players[userid]['level'])
+    for userid in dict_players:
+        averageDivider += 1
+        averageLevel += int(dict_players[userid]['level'])
     
     if averageDivider:
         return int(round(averageLevel / averageDivider))
@@ -1729,11 +1711,11 @@ def getLevelUseridString(levelNumber):
     levelUseridString = None
     
     for userid in dict_players:
-        if dict_players[int(userid)]['level'] == levelNumber:
+        if dict_players[userid]['level'] == levelNumber:
             if not levelUseridString:
                 levelUseridString = userid
             else:
-                levelUseridString = '%s,%s' %(levelUseridString, userid)
+                levelUseridString = '%s,%s' % (levelUseridString, userid)
     
     return levelUseridString
 
@@ -1769,7 +1751,8 @@ def getCurrentLeaderList():
     # Loop through the current leaders
     for userid in dict_leaderInfo['currentLeaders']:
         # Append to the leaders list if the player is in the server
-        if clientInServer(userid): leaders.append(userid)
+        if clientInServer(userid):
+            leaders.append(userid)
     
     # No leaders in the server?
     if len(leaders) == 0:
@@ -1794,7 +1777,7 @@ def getNewLeaderList():
     # Loop through the players
     for userid in dict_players:
         player = dict_players[userid]
-        level = dict_players[userid]['level']
+        level = player['level']
         
         # Is the player on the server?
         if not clientInServer(userid):
@@ -1823,15 +1806,8 @@ def removeLeader(userid):
     if userid in dict_leaderInfo['currentLeaders']:
         dict_leaderInfo['currentLeaders'].remove(userid)
         
-        if len(dict_leaderInfo['currentLeaders']) == 0:
-            leaderLevel = 1
-            
-            for userid in dict_players:
-                if int(dict_players[userid]['level']) > leaderLevel:
-                    dict_leaderInfo['currentLeaders'] = [userid]
-                    leaderLevel = int(dict_players[userid]['level'])
-                elif dict_players[userid]['level'] == leaderLevel:
-                    dict_leaderInfo['currentLeaders'].append(userid)
+        # Get new leaders
+        getNewLeaderList()
 
 def getCurrentLeaderString():
     currentLeaderString = None
@@ -2098,7 +2074,7 @@ def getAddonDir(addonName, dir):
     return '%s/%s/%s' % (addonPath, 'custom_addons' if getAddonType(addonName) else 'included_addons', dir)
 
 def clientInServer(userid):
-    return (not es.getplayername(userid) == 0) or es.exists('userid', userid)
+    return (es.getplayername(userid) != 0) or es.exists('userid', userid)
 
 def inMap():
     return (str(es.ServerVar('eventscripts_currentmap')) != '')
@@ -2123,11 +2099,11 @@ def getESTVersion():
 
 def isDead(userid):
     return es.getplayerprop(userid, 'CBasePlayer.pl.deadflag')
-    
+
 def getPlayerUniqueID(userid):
     userid = int(userid)
     return dict_uniqueIds[userid]
-    
+
 def playerExists(userid):
     userid = int(userid)
     return dict_players.has_key(userid)

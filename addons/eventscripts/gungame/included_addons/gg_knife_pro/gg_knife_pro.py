@@ -49,17 +49,17 @@ def player_death(event_var):
     # Skip if not a knife kill
     if event_var['weapon'] != 'knife':
         return
-        
+    
     if gungamelib.getGlobal('isWarmup'):
         return
-        
+    
     userteam = event_var['es_userteam']
     attackerteam = event_var['es_attackerteam']
     
     # Check for teamkill or suicide
     if attackerteam == userteam:
         return
-
+    
     # Get attacker info
     attacker = int(event_var['attacker'])
     gungameAttacker = gungamelib.getPlayer(attacker)

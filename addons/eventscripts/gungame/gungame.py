@@ -790,7 +790,7 @@ def gg_levelup(event_var):
         if not gungamelib.addonRegistered('gg_warmup_round'):
             levelInfoHint(attacker)
         
-        if leaderLevel == gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_vote_trigger'):
+        if leaderLevel == (gungamelib.getTotalLevels() - gungamelib.getVariableValue('gg_vote_trigger')):
             if es.ServerVar('eventscripts_nextmapoverride') == '':
                 if not dict_variables['gungame_voting_started']:
                     if dict_variables['roundsRemaining'] < 2:
@@ -909,7 +909,7 @@ def gg_win(event_var):
         for userid in es.getUseridList():
             es.playsound(userid, gungamelib.getSound('winner'), 1.0)
     
-    # Remove all old players from the dict_players    
+    # Remove all old players from the dict_players
     gungamelib.clearOldPlayers()
 
 def server_cvar(event_var):
@@ -1005,8 +1005,13 @@ def server_cvar(event_var):
         myWeaponOrder.setWeaponOrderFile()
         
         # Set multikill override
-        if gungamelib.getVariableValue('gg_multikill_override') > 1:
+        if gungamelib.getVariableValue('gg_multikill_override') != 0:
             myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
+    
+    es.event('initialize', 'gg_variable_changed')
+    es.event('setstring', 'gg_variable_changed', 'name', cvarName)
+    es.event('setstring', 'gg_variable_changed', 'value', newValue)
+    es.event('fire', 'gg_variable_changed')
 
 # ==============================================================================
 #   HELPER FUNCTIONS
@@ -1099,9 +1104,10 @@ def levelInfoHint(userid):
     if levelsBehindLeader == 0 and gungamelib.getCurrentLeaderCount() > 1:
         text += gungamelib.lang('gungame', 'LevelInfo_AmongstLeaders')
         
-        # Get the first 2 leaders
+        # Get the first 3 leaders
         leadersCount = 1
         leaderUserids = gungamelib.getCurrentLeaderList()
+        leaderUserids.remove(userid)
         leaders = len(leaderUserids)
         
         # Loop through the leaders
@@ -1110,10 +1116,6 @@ def levelInfoHint(userid):
             if leadersCount == 3:
                 text += '...'
                 break
-            
-            # Don't add ourselves
-            if leader == userid:
-                continue
             
             # Don't add the comma if there is 2 or less leaders
             if leaders == leadersCount:

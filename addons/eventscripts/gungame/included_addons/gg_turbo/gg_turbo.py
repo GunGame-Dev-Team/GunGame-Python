@@ -26,11 +26,11 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_turbo Addon for GunGame: Python"
-info.version  = "1.0.313"
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_turbo"
-info.author   = "GunGame Development Team"
+info.name     = 'gg_turbo Addon for GunGame: Python'
+info.version  = '1.0.313'
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_turbo'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #  GAME EVENTS
@@ -47,14 +47,23 @@ def unload():
 
 
 def gg_levelup(event_var):
-    attacker = int(event_var['attacker'])
-    gungamePlayer = gungamelib.getPlayer(attacker)
+    giveNewWeapon(event_var['attacker'])
+
+def gg_leveldown(event_var):
+    giveNewWeapon(event_var['userid'])
+
+# ==============================================================================
+#  HELPER FUNCTIONS
+# ==============================================================================
+def giveNewWeapon(userid):
+    userid = int(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
     
-    if gungamelib.isDead(attacker):
+    if gungamelib.isDead(userid):
         return
     
     if gungamePlayer.getWeapon() == 'knife':
-        es.sexec(attacker, 'use weapon_knife')
+        es.sexec(userid, 'use weapon_knife')
     
     gungamePlayer.stripPlayer()
     

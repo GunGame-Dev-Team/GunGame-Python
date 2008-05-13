@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.316
+    Version: 1.0.317
     Description:
 '''
 
@@ -92,9 +92,6 @@ class Player:
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
-        # Check the userid is numeric
-        if not isNumeric(userid):
-            raise ValueError('Cannot get player (%s): userid must be numerical.' % userid)
         
         # Make userid an int
         self.userid = int(userid)
@@ -2083,9 +2080,6 @@ def getMapName():
     return str(es.ServerVar('eventscripts_currentmap'))
 
 def isSpectator(userid):
-    if not clientInServer(userid):
-        return 0
-    
     return (es.getplayerteam(userid) <= 1)
 
 def hasEST():

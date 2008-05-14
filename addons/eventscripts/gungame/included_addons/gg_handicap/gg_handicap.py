@@ -85,28 +85,12 @@ def handicapUpdate(repeatInfo):
         gungamePlayer = gungamelib.getPlayer(userid)
         
         # Is level below average?
-        if gungamePlayer['level'] < averageLevel:
-            # Set their level
-            gungamePlayer['level'] = averageLevel
-            gungamePlayer['multikill'] = 0
-            
-            # Give new weapon if turbo mode is on
-            if gungamelib.getVariableValue('gg_turbo'):
-                if gungamePlayer.getWeapon() == 'knife':
-                    es.sexec(userid, 'use weapon_knife')
-                
-                if not gungamelib.isDead(userid):
-                    gungamePlayer.stripPlayer()
-                    
-                    # Only delay if we are on linux
-                    if os.name == 'posix':
-                        gamethread.delayed(0.01, gungamePlayer.giveWeapon, ())
-                    else:
-                        gungamePlayer.giveWeapon()
-            
-            # Play sound
-            if gungamelib.getSound('handicap'):
-                es.playsound(userid, gungamelib.getSound('handicap'), 1.0)
-            
-            # Tell them
-            gungamelib.msg('gg_handicap', userid, 'LevelAveraged', {'level': averageLevel})
+        if gungamePlayer['level'] >= averageLevel:
+            continue
+        
+        # Level them up
+        triggerLevelUpEvent(userid, gungamePlayer['level'], averageLevel)
+        
+        # Play sound and tell them
+        gungamelib.playSound(userid, 'handicap')
+        gungamelib.msg('gg_handicap', userid, 'LevelAveraged', {'level': averageLevel})

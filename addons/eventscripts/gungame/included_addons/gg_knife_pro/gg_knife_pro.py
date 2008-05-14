@@ -22,11 +22,11 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_knife_pro Addon for GunGame: Python"
+info.name     = 'gg_knife_pro Addon for GunGame: Python'
 info.version  = '1.0.316'
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_knife_pro"
-info.author   = "GunGame Development Team"
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_knife_pro'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #  GLOBALS
@@ -45,51 +45,66 @@ def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_knife_pro')
 
+
 def player_death(event_var):
-    # Skip if not a knife kill
+    # ============
+    # BASIC CHECKS
+    # ============
     if event_var['weapon'] != 'knife':
         return
     
     if gungamelib.getGlobal('isWarmup'):
         return
     
+    # ===============
+    # GET PLAYER INFO
+    # ===============
+    attacker = int(event_var['attacker'])
+    userid = int(event_var['userid'])
     userteam = event_var['es_userteam']
     attackerteam = event_var['es_attackerteam']
     
-    # Check for teamkill or suicide
-    if attackerteam == userteam:
+    # =============
+    # SUICIDE CHECK
+    # =============
+    if (attackerteam == userteam) or (userid == attacker) or (attacker == 0):
         return
-    
-    # Get attacker info
-    attacker = int(event_var['attacker'])
+
+    # =================
+    # GET ATTACKER INFO
+    # =================
     gungameAttacker = gungamelib.getPlayer(attacker)
     gungameAttackerLevel = gungameAttacker['level']
     
-    # Can they levelup anyway?
+    # ===============
+    # ATTACKER CHECKS
+    # ===============
+    # Fix duplicate winning
+    if (gungameAttackerLevel + 1) == gungamelib.getTotalLevels():
+        return
+    
+    # Can they levelup?
     if gungameAttacker['preventlevel'] == 1:
         gungamelib.msg('gg_knife_pro', attacker, 'AttackerPreventLevel')
         return
-        
-    # Get victim info
-    userid = event_var['userid']
+    
+    # Is the attacker on knife or grenade level?
+    if gungameAttacker.getWeapon() in ('knife', 'hegrenade'):
+        gungamelib.msg('gg_knife_pro', attacker, 'CannotSkipThisLevel')
+        return
+    
+    # ===============
+    # GET VICTIM INFO
+    # ===============
     gungameVictim = gungamelib.getPlayer(userid)
     gungameVictimLevel = gungameVictim['level']
     
+    # =============
+    # VICTIM CHECKS
+    # =============
     # Can the victim level down?
     if gungameVictim['preventlevel'] == 1:
-        return
-    
-    # Fix duplicate winning
-    if gungameAttackerLevel == gungamelib.getTotalLevels():
-        return
-    
-    # Is the attacker on the knife level?
-    if gungameAttacker.getWeapon() == 'knife':
-        return
-    
-    # Is the attacker on the grenade level?
-    if gungameAttacker.getWeapon() == 'hegrenade':
-        gungamelib.msg('gg_knife_pro', attacker, 'AttackerNadeLevel')
+        gungamelib.msg('gg_knife_pro', attacker, 'VictimPreventLevel')
         return
     
     # Is the victim on level 1?
@@ -103,28 +118,30 @@ def player_death(event_var):
         return
     
     # Is the level difference higher than the limit?
-    if ((gungameAttackerLevel - gungameVictimLevel) >= int(proLimit)) and int(proLimit) != 0:
+    if (gungameAttackerLevel - gungameVictimLevel) >= int(proLimit) and int(proLimit) != 0:
         gungamelib.msg('gg_knife_pro', attacker, 'LevelDifferenceLimit')
         return
-        
+    
+    # =============
+    # LEVEL CHANGES
+    # =============
+    # Get level info
     gungameVictimNewLevel = gungameVictimLevel - 1
     gungameAttackerNewLevel = gungameAttackerLevel + 1
     
-    # Trigger level down for the victim
+    # Level changes
     gungamelib.triggerLevelDownEvent(userid, gungameVictimLevel, gungameVictimNewLevel, attacker)
-    
-    # Play the leveldown sound
-    if gungamelib.getSound('leveldown'):
-        es.playsound(userid, gungamelib.getSound('leveldown'), 1.0)
-    
-    # Trigger level up for the attacker
     gungamelib.triggerLevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid)
     
-    # Play the leveldown sound
-    if gungamelib.getSound('levelsteal'):
-        es.playsound(attacker, gungamelib.getSound('levelsteal'), 1.0)
+    # ===========
+    # PLAY SOUNDS
+    # ===========
+    gungamelib.playSound(attacker, 'levelsteal')
+    gungamelib.playSound(userid, 'leveldown')
     
-    # Event code
+    # =====
+    # EVENT
+    # =====
     es.event('initialize', 'gg_knife_steal')
     es.event('setint', 'gg_knife_steal', 'attacker', attacker)
     es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttackerNewLevel)
@@ -135,4 +152,3 @@ def player_death(event_var):
     # Announce the level stealing
     index = playerlib.getPlayer(attacker).attributes['index']
     gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': event_var['es_attackername'], 'victim': event_var['es_username']})
-    

@@ -1832,7 +1832,7 @@ def getLeaderLevel():
     return dict_leaderInfo['leaderLevel']
     
 def getCurrentLeaderCount():
-    return len(dict_leaderInfo['currentLeaders'])
+    return len(getCurrentLeaderList())
     
 def getOldLeaderCount():
     return len(dict_leaderInfo['oldLeaders'])
@@ -2142,3 +2142,20 @@ def clamp(value, low=False, high=False):
     
     # Return value
     return value
+
+def playSound(filter, soundName, volume=1.0):
+    # Get sound object
+    sound = getSound(soundName)
+    
+    # Check the sound exists
+    if not sound:
+        return
+    
+    # Play to 1 player
+    if isNumeric(filter) or isinstance(filter, int):
+        es.playsound(filter, sound, volume)
+        return
+    
+    # Play to filter
+    for userid in playerlib.getUseridList(filter):
+        es.playsound(userid, sound, volume)

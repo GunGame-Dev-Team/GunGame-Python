@@ -1,60 +1,356 @@
-''' (c) 2008 by the GunGame Coding Team
-
-    Title: gg_deathmatch
-    Version: 1.0.316
-    Description: Deathmatch addon for GunGame:Python
-'''
-
 # ==============================================================================
-#   IMPORTS
+#  IMPORTS
 # ==============================================================================
-# Python imports
-import os.path
-import string
-import random
-
-# Eventscripts imports
+# EventScripts Imports
 import es
 import playerlib
-import popuplib
 import gamethread
-import repeat
-import usermsg
-import keyvalues
+import testrepeat as repeat
 
-# Gungame import
+# Python Imports
+import os
+import random
+
+# GunGame Imports
 import gungamelib
-from gungamelib import ArgumentError
 
 # ==============================================================================
-#   ADDON REGISTRATION
+#  ADDON REGISTRATION
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.316'
+info.version  = 'DM Revamp Test 318'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
+    
+# ==============================================================================
+#  GLOBALS
+# ==============================================================================
+# Set up variables for use throughout gg_deathmatch
+model = 'player/ct_gign.mdl'
+#modelIndex = es.precachemodel('models' + model)
+mySpawnFile = None
 
 # ==============================================================================
-#   GLOBALS
+#   ERROR CLASSES
 # ==============================================================================
-# Variables
-dict_variables = {}
-dict_variables['delay'] = gungamelib.getVariable('gg_dm_respawn_delay')
-dict_variables['cmd'] = gungamelib.getVariable('gg_dm_respawn_cmd')
+class SpawnPointError(Exception):
+    pass
+    
+    
+# ==============================================================================
+#   SPAWN POINT CLASS
+# ==============================================================================
+class SpawnPoints:
+    '''
+    Class for controlling spawn points in GunGame: DeathMatch.
+    This class is only usable when a map is loaded. If a map is
+    not loaded when the class is called, it will raise an error.
+    If no spawn point file is available, the class instance will
+    return False.
+    '''
+    
+    def __init__(self):
+        # Retrieve the current map's name
+        self.mapName = gungamelib.getMapName()
+        self.showToggle = 0
+        self.dict_spawnPoints = {}
+        self.list_randomSpawnPoints = []
+        self.list_spawnEntityIndexes = []
+        self.list_spawnPointIndexes = []
+        self.dict_propIndex = {}
+        
+        # Make sure we are currently in a map
+        if self.mapName != '':
+            self.spawnFile = gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' %self.mapName)
+            # We need to see if this spawn point file exists before doing anything
+            if not os.path.isfile(self.spawnFile):
+                return
+                
+            # Get the spawn file if it exists
+            self.dict_spawnPoints = self.__getNewSpawnFile()
+        else:
+            raise SpawnPointError('[gg_deathmatch] Unable to retrieve spawn points: not currently on a map!')
+        
+    def __getNewSpawnFile(self):
+        '''
+        PRIVATE FUNCTION: Used to load the spawn point file into
+        memory for usage in-game.
+        '''
+        
+        # We need to see if this spawn point file exists before doing anything
+        if not os.path.isfile(self.spawnFile):
+            return False
+            
+        # Open the spawn point file and read the lines
+        spawnPointFile = open(self.spawnFile, 'r')
+        fileLines = spawnPointFile.readlines()
+            
+        # Set up variables and lists for the loop
+        self.lineCount = 0
+        list_spawnCoordinates = []
+        list_counter = []
+        
+        # Loop through the lines
+        for line in fileLines:
+            # Strip the line
+            line = line.strip()
+            
+            # If the line is blank, do not continue
+            if line == '':
+                break
+        
+            # Split the line and append to the appropriate lists
+            list_spawnCoordinates.append(line.split(' '))
+            list_counter.append(self.lineCount)
+        
+            # Increment the amount of lines
+            self.lineCount += 1
+            
+        # Flush and close the spawn point file
+        spawnPointFile.flush()
+        spawnPointFile.close()
+        
+        return dict(zip(list_counter, list_spawnCoordinates))
+                
+                
+    def __createNewSpawnFile(self):
+        '''
+        PRIVATE FUNCTION: Used to create the spawn file's *.txt
+        on the physical disk in the 'cfg/gungame/spawnpoints'
+        directory.
+        '''
+        # The file will be created if it doesn't exist when opened for appending
+        spawnPointFile = open(self.spawnFile, 'w').close()
+        
+    def add(self, posX, posY, posZ, eyeYaw):
+        '''
+        Used to add a spawn point to a spawn points file. If
+        a file does not exist, one will be created for you.
+        '''
+        # We see if any information is in the spawn points dictionary (it needs to be empty)
+        if not self.dict_spawnPoints:
+            # Create the new spawn point file
+            self.__createNewSpawnFile()
+            
+        # Open the spawnpoint file
+        spawnPointFile = open(self.spawnFile, 'a')
+    
+        # Prep the vars
+        posX = float(posX)
+        posY = float(posY)
+        posZ = float(posZ)
+        eyeYaw = float(eyeYaw)
+    
+        # Write to file, flush and close
+        spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (posX, posY, posZ, eyeYaw))
+        spawnPointFile.flush()
+        spawnPointFile.close()
+        
+        # Add spawnpoint to memory
+        self.lineCount += 1
+        self.dict_spawnPoints[self.lineCount] = [posX, posY, posZ, 0.00000, eyeYaw, 0.00000]
+        
+        # Show spawnPoint with a prop
+        self.show(1)
+        self.__showProp(self.lineCount)
+        
+    def refresh(self):
+        '''
+        Used to reload a spawn file that exists. This is useful
+        for adding spawn points, and reloading the spawn points
+        file so that the changes will take effect.
+        '''
+        # We need to see if this spawn point file exists before doing anything
+        if os.path.isfile(self.spawnFile):
+            self.dict_spawnPoints = self.__getNewSpawnFile()
+            
+            # If the props are shown, refresh them
+            if self.getShow:
+                self.show(0)
+                self.show(1)
+        else:
+            raise SpawnPointError('[gg_deathmatch] Unable to refresh: \'%s\' does not exist!' %self.spawnFile)
+            
+    def delete(self, index):
+        '''
+        Used to delete a specific spawn point (via i' index)
+        from memory, as well as from the spawn poin' text file.
+        '''
+        # Convert index to an int
+        index = int(index)
+        
+        # We need to see if this spawn point file exists before doing anything
+        if os.path.isfile(self.spawnFile):
+            # Remove spawn point from dictionary
+            del self.dict_spawnPoints[index]
+            
+            # Open the spawn point file in 'write' mode (overwrite the old)
+            spawnPointFile = open(self.spawnFile, 'w')
+            
+            # Loop through the spawnpoints
+            for index in self.dict_spawnPoints:
+                # Get list
+                list_spawnCoordinates = self.dict_spawnPoints[index]
+        
+                # Write to file
+                spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (float(list_spawnCoordinates[0]),
+                    float(list_spawnCoordinates[1]), float(list_spawnCoordinates[2]), float(list_spawnCoordinates[4])))
+                
+            # Flush and close the file
+            spawnPointFile.flush()
+            spawnPointFile.close()
+            
+            # Refresh the current spawn points
+            self.refresh()
+        else:
+            raise SpawnPointError('[gg_deathmatch] Unable to delete spawn index: \'%s\' does not exist!' %self.spawnFile)
+            
+    def deleteAll(self):
+        '''
+        Used to delete alls specific spawn points from memory,
+        as well as from the spawn poin' text file. This will
+        also delete the spawn point text file from the
+        'cfg/gungame/spawnpoints' directory.
+        '''
+        # We need to see if this spawn point file exists before doing anything
+        if os.path.isfile(self.spawnFile):
+            # Clear the spawn point dictionary
+            self.dict_spawnPoints.clear()
+            
+            # Delete the spawn point file
+            os.remove(self.spawnFile)
+            
+            # Be sure that we turn off "show" if it was turned on
+            self.show(0)
+        else:
+            raise SpawnPointError('[gg_deathmatch] Unable to delete spawn points: \'%s\' does not exist!' %self.spawnFile)
+            
+    def getPoint(self):
+        '''
+        Retrieves a single spawn point from the list of spawn points.
+        Each time this command is called, it removes a spawn point from
+        the list until the list is empty. Once empty, the list of spawn
+        points is re-populated and randomized for reuse.
+        '''
+        if self.list_randomSpawnPoints:
+            return self.list_randomSpawnPoints.pop()
+        else:
+            self.list_randomSpawnPoints = self.dict_spawnPoints.values()
+            random.shuffle(self.list_randomSpawnPoints)
+            return self.list_randomSpawnPoints.pop()
+                
+    def getTotalPoints(self):
+        '''
+        Returns the total number of spawn points from the spawn point
+        text file located in the 'cfg/gungame/spawnpoints' directory.
+        '''
+        return len(self.dict_spawnPoints.keys())
+    
+    def hasPoints(self):
+        '''
+        Returns True if the spawn point file has at least 1 point.
+        '''
+        if self.dict_spawnPoints:
+            return True
+        return False
+        
+    def exists(self):
+        '''
+        This is intended for use on first calling the class. Coders can
+        use this to make sure that the instance does not refer to a
+        non-existant spawn point file.
+        EXAMPLE:
+                mySpawnFile = SpawnPoints()
+                if mySpawnFile.exists():
+                    # Code here
+        '''
+        return os.path.isfile(self.spawnFile)
+        
+    def show(self, toggle=None):
+        '''
+        This is used to show all spawn points that have been created by
+        the spawn point file. A model will be spawned at all spawn locations
+        that are in the spawn point file.
+        
+        EXAMPLES:
+                mySpawnFile = SpawnPoints()
+                # Toggles to on if off, off if on
+                mySpawnFile.show()
+                
+                # Turns on
+                mySpawnFile.show(1)
+                
+                # Turns off
+                mySpawnFile.show(0)
+        '''
+        # Set the original value of the toggle
+        originalToggle = self.showToggle
+        
+        # Check to see if an argument has been provided
+        if toggle != None:
+            if int(toggle) == 0:
+                self.showToggle = 0
+            elif int(toggle) == 1:
+                if not es.getuserid():
+                    raise SpawnPointError('[gg_deathmatch] Unable to show spawn points: no players on server!')
+                self.showToggle = 1
+        else:
+            if self.showToggle():
+                self.showToggle = 0
+            else:
+                if not es.getuserid():
+                    raise SpawnPointError('[gg_deathmatch] Unable to show spawn points: no players on server!')
+                self.showToggle = 1
+        
+        if originalToggle == 0 and self.showToggle == 1:
+            for spawnPointIndex in self.dict_spawnPoints:
+                self.__showProp(spawnPointIndex)
+            
+        elif originalToggle == 1 and self.showToggle == 0:
+            self.__hideAllProp()
+            
+    def getShow(self):
+        return self.showToggle
+    
+    def __showProp(self, spawnPointIndex):
+        userid = es.getuserid()
+        es.server.cmd('es_xprop_dynamic_create %s %s' % (userid, model))
+        es.server.cmd('es_entsetname %s tester%i' % (userid, spawnPointIndex))
+        propIndex = int(es.ServerVar('eventscripts_lastgive'))
+        es.setindexprop(propIndex, 'CBaseEntity.m_CollisionGroup', 17)
+        es.setindexprop(propIndex, 'CBaseEntity.m_vecOrigin', '%s, %s, %s' % (self.dict_spawnPoints[spawnPointIndex][0],
+                                                                              self.dict_spawnPoints[spawnPointIndex][1],
+                                                                              self.dict_spawnPoints[spawnPointIndex][2]))
+        es.setindexprop(propIndex, 'CBaseEntity.m_angRotation', '0, %s, 0' % self.dict_spawnPoints[spawnPointIndex][4])
+        es.server.cmd('es_xfire %s prop_dynamic SetAnimation \"walk_lower\"' %userid)
+        es.server.cmd('es_xfire %s prop_dynamic SetDefaultAnimation  \"walk_lower\"' %userid)
+        es.server.cmd('es_xfire %s prop_dynamic addOutput \"rendermode 1\"' %userid)
+        es.server.cmd('es_xfire %s prop_dynamic alpha \"185\"' %userid)
 
-# Globals
-respawnCounters = {}
-spawnPoints = {}
-list_randomSpawnIndex = []
-respawnAllowed = True
+        self.dict_propIndex[spawnPointIndex] = propIndex
+    
+    def __hideAllProp(self):
+        # Get a list of props
+        list_entityIndexes = es.createentitylist('prop_dynamic').keys()
+        for spawnPointIndex in self.dict_propIndex:
+            # Check to make sure the entity exists before we delete it.
+            if self.dict_propIndex[spawnPointIndex] in list_entityIndexes:
+                es.server.cmd('es_xremove tester%i' % int(spawnPointIndex))
+    
+    def __resetProps(self):
+        self.dict_propIndex = 0
+        for spawnPointIndex in self.dict_spawnPoints:
+            self.__showProp(spawnPointIndex)
 
 # ==============================================================================
-#   GAME EVENTS
+#  GAME EVENTS
 # ==============================================================================
 def load():
+    global mySpawnFile
+    
     # Register addon with gungamelib
     gg_deathmatch = gungamelib.registerAddon('gg_deathmatch')
     gg_deathmatch.addDependency('gg_turbo', 1)
@@ -64,6 +360,7 @@ def load():
     gg_deathmatch.addDependency('gg_knife_elite', 0)
     gg_deathmatch.addDependency('gg_elimination', 0)
     
+    '''
     # Menu settings
     gg_deathmatch.createMenu(menuCallback)
     gg_deathmatch.setDisplayName('GG Deathmatch')
@@ -80,68 +377,74 @@ def load():
     gg_deathmatch.registerCommand('dm_show', cmd_dm_show)
     gg_deathmatch.registerCommand('dm_print', cmd_dm_print)
     gg_deathmatch.registerCommand('dm_convert', cmd_dm_convert)
+    '''
     
-    # Do we have EST?
-    if not gungamelib.hasEST():
-        gungamelib.echo('gg_deathmatch', 0, 0, 'ESTWarning')
+    # Create the player's custom repeat for respawning into the game
+    for userid in es.getUseridList():    
+        repeat.create('respawnPlayer%s' %userid, respawnCountDown, (userid))
     
-    # Has map loaded?
-    if gungamelib.inMap():
-        # Get spawn points, map loaded
-        getSpawnPoints(gungamelib.getMapName())
-    
+    # Get the spawn points for the map
+    if es.ServerVar('eventscripts_currentmap') != '':
+        mySpawnFile = SpawnPoints()
+        
     # Get a player list of dead players then spawn them
     for userid in playerlib.getUseridList('#dead'):
-        respawn(userid)
+        repeat.start('respawnPlayer%s' %userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
     
     # Set freezetime and roundtime
     es.server.cmd('mp_freezetime 0')
     es.server.cmd('mp_roundtime 900')
-
+    
 def unload():
+    global mySpawnFile
+    
     # Unregister this addon with GunGame
     gungamelib.unregisterAddon('gg_deathmatch')
-
+    
+    for userid in es.getUseridList():
+        # Create the player's custom repeat for respawning into the game
+        repeat.delete('respawnPlayer%s' %userid)
+    
+    if mySpawnFile.getShow():
+        mySpawnFile.show(0)
 
 def es_map_start(event_var):
-    global respawnAllowed
+    global mySpawnFile
+    # Don't allow respawn
+    gungamelib.setGlobal('respawn_allowed', 0)
     
-    # Get spawnpoints and allow respawns
-    getSpawnPoints(event_var['mapname'])
-    respawnAllowed = False
-
+    del mySpawnFile
+    mySpawnFile = SpawnPoints()
+    
 def player_team(event_var):
     # Don't allow it if people are disconnecting
     if event_var['disconnect'] != '0':
         return
     
-    # Don't allow spectators
-    if event_var['team'] == '1':
+    # Get the userid
+    userid = event_var['userid']
+    
+    # If the player does not have a respawn repeat, create one
+    respawnPlayer = repeat.find('respawnPlayer%s' %userid)
+    if not respawnPlayer:
+        repeat.create('respawnPlayer%s' %userid, respawnCountDown, (userid))
+        
+    # Don't allow spectators or players that are unassigned to respawn
+    if int(event_var['team']) < 2:
+        # See if the player's repeat is currently running
+        if repeat.status('respawnPlayer%s' %userid) != 1:
+            # Stop the repeat
+            repeat.stop('respawnPlayer%s' %userid)
+            # Send the player a hudhint
+            gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_CancelTeam')
         return
     
-    # Get the userid
-    userid = int(event_var['userid'])
+    # Respawn the player (alive check in loop)
+    repeat.start('respawnPlayer%s' %userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
     
-    # Respawn the player
-    respawn(userid)
-    
-    # Tell them they will respawn soon
-    gungamelib.msg('gg_deathmatch', userid, 'ConnectRespawnIn')
-
-def player_death(event_var):
-    global respawnAllowed
-    
-    # Remove their defuser
-    gamethread.delayed(0.5, es.remove, ('item_defuser'))
-    
-    # Respawn the player if the round hasn't ended
-    if respawnAllowed:
-        respawn(event_var['userid'])
-
 def player_spawn(event_var):
-    global spawnPoints
-    
-    # Set vars
+    global mySpawnFile
+    # Get the userid
     userid = int(event_var['userid'])
     
     # Is a spectator?
@@ -153,56 +456,85 @@ def player_spawn(event_var):
     es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
     gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
     
-    # Skip if we dont have spawnpoints
-    if not spawnPoints:
+    # Do not continue if we have no spawn points
+    if not mySpawnFile.hasPoints():
         return
-    
-    # Sort out the random spawn indexes
-    if not list_randomSpawnIndex:
-        # Get the spawnpoints
-        for i in range(0, len(spawnPoints)):
-            list_randomSpawnIndex.append(i)
         
-        # Shuffle shuffle
-        random.shuffle(list_randomSpawnIndex)
-    
-    # Get the last spawnpoint
-    spawnindex = list_randomSpawnIndex.pop()
-    
     # Teleport the player
-    gungamelib.getPlayer(userid).teleportPlayer(spawnPoints[spawnindex][0],
-                                                spawnPoints[spawnindex][1],
-                                                spawnPoints[spawnindex][2],
+    list_teleportInfo = mySpawnFile.getPoint()
+    gungamelib.getPlayer(userid).teleportPlayer(list_teleportInfo[0],
+                                                list_teleportInfo[1],
+                                                list_teleportInfo[2],
                                                 0,
-                                                spawnPoints[spawnindex][4])
-
-def round_end(event_var):
-    global respawnAllowed
+                                                list_teleportInfo[4])
     
-    # Don't allow respawn
-    respawnAllowed = False
+def player_death(event_var):
+    # Get the userid
+    userid = event_var['userid']
     
-    # Stop everyones respawn counters
-    for userid in es.getUseridList():
-        if repeat.status('RespawnCounter%s' % userid): repeat.delete('RespawnCounter%s' % userid)
-
-def round_start(event_var):
-    global respawnAllowed
+    if playerlib.getPlayer(userid).get('defuser'):
+        gamethread.delayed(0.5, es.remove, ('item_defuser'))
     
-    # Allow respawn
-    respawnAllowed = True
-    
-    # Stop everyones respawn counters
-    for userid in es.getUseridList():
-        if repeat.status('RespawnCounter%s' % userid): repeat.delete('RespawnCounter%s' % userid)
-
+    # Respawn the player if the round hasn't ended
+    if gungamelib.getGlobal('respawn_allowed'):
+        repeat.start('respawnPlayer%s' %userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
+        
 def player_disconnect(event_var):
     # Get userid
     userid = event_var['userid']
     
-    # Remove the counter
-    if repeat.status('RespawnCounter%s' % userid): repeat.delete('RespawnCounter%s' % userid)
+    # Delete the player-specific repeat
+    if repeat.find('respawnPlayer%s' %userid):
+        repeat.delete('respawnPlayer%s' %userid)
+    
+def round_start(event_var):
+    global mySpawnFile
+    if mySpawnFile.getShow():
+        mySpawnFile.__resetProps()
+    # Allow respawn
+    gungamelib.setGlobal('respawn_allowed', 1)
+    
+def round_end(event_var):
+    # Don't allow respawn
+    gungamelib.setGlobal('respawn_allowed', 0)
+    
+    for userid in es.getUseridList():
+        playerRespawn = repeat.find('respawnPlayer%s' %userid)
+        if playerRespawn:
+            if playerRespawn.status() != 1:
+                gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_RoundEnd')
+    
+def respawnCountDown(userid):
+    # Make sure that the repeat exists
+    respawnRepeat = repeat.find('respawnPlayer%s' %userid)
+    if not respawnRepeat:
+        return
+        
+    # If the player is not dead, we don't need to respawn them
+    if not gungamelib.isDead(userid):
+        respawnRepeat.stop()
+        return
+        
+    # Do not display these messages during the warmup round or when a vote is active
+    if not int(gungamelib.getGlobal('isWarmup')) and not int(gungamelib.getGlobal('voteActive')):
+        if gungamelib.getGlobal('respawn_allowed'):
+            if respawnRepeat['remaining'] > 1:
+                gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Plural', {'time': respawnRepeat['remaining']})
+            # Is the counter 1?
+            elif respawnRepeat['remaining'] == 1:
+                gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Singular')
+            elif respawnRepeat['remaining'] == 0:
+                gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Ended')
+        else:
+            gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_RoundEnd')      
+    
+    # Respawn the player
+    if respawnRepeat['remaining'] == 0:
+        # See if we are going to allow them to respawn
+        if gungamelib.getGlobal('respawn_allowed'):
+            es.server.cmd('%s %s' %(gungamelib.getVariable('gg_dm_respawn_cmd'), userid))
 
+'''                                                        
 # ==============================================================================
 #   COMMANDS
 # ==============================================================================
@@ -242,13 +574,11 @@ def cmd_dm_remove_all(userid):
         getSpawnPoints(mapName)
         
         # Tell them the spawnpoints are removed
-        gungamelib.msg('gg_deathmatch', userid, 'RemovedAllSpawnpoints')
+        gungamelib.msg('gg_deathmatch', userid, '')
 
 def cmd_dm_print(userid):
     # Get map name
     mapName = gungamelib.getMapName()
-    
-    gungamelib.msg('gungame', userid, 'CheckYourConsole')
     
     # Do we have spawnpoints?
     if not spawnPoints:
@@ -323,7 +653,7 @@ def selectAddMenu(userid, choice, popupid):
     # Get view angles etc.
     viewAngle = playerlib.getPlayer(choice).get('viewangle')[1]
     x, y, z = es.getplayerlocation(choice)
-    cmd_dm_add(userid, choice)
+    
     # Add spawnpoint
     addSpawnPoint(x, y, z, viewAngle)
     gungamelib.msg('gg_deathmatch', userid, 'AddedSpawnpoint', {'index': len(spawnPoints)-1})
@@ -451,137 +781,9 @@ def selectShowMenu(userid, choice, popupid):
     
     # Return them
     popuplib.send('gg_deathmatch', userid)
-
+    
 # ==============================================================================
-#   SPAWNPOINT HELPERS
-# ==============================================================================
-def getSpawnPoints(_mapName):
-    global spawnPoints
-    global spawnFile
-    global spawnPointsExist
-    
-    # Open the file and clear the spawn point dictionary
-    spawnPoints = {}
-    spawnFile = gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % _mapName)
-    spawnPointsExist = os.path.isfile(spawnFile)
-    
-    # Does the spawn file exist
-    if not spawnPointsExist:
-        gungamelib.echo('gg_deathmatch', 0, 0, 'NoSpawnpoints', {'map': _mapName})
-        spawnPoints = 0
-        return
-    
-    # Load the file
-    spawnPointFile = open(spawnFile, 'r')
-    fileLines = spawnPointFile.readlines()
-    i = 0
-    
-    # Loop through the lines
-    for line in fileLines:
-        # Strip the line
-        line = line.strip()
-        
-        # Split the line
-        values = line.split(' ')
-        
-        # Get each value and put it into the spawnPoints dictionary
-        spawnPoints[i] = values
-        
-        # Increment the amount of lines
-        i += 1
-
-def addSpawnPoint(posX, posY, posZ, eyeYaw):
-    global spawnFile
-    
-    mapName = gungamelib.getMapName()
-    
-    # Do we have a spawn point file?
-    if not spawnPointsExist:
-        # Create spawnpoint file
-        spawnFile = gungamelib.getGameDir('cfg\\gungame\\spawnpoints\\%s.txt' % mapName)
-        spawnPointFile = open(spawnFile, 'w').close()
-        
-        # Rehash spawnpoints
-        getSpawnPoints(mapName)
-    
-    # Open the spawnpoint file
-    spawnPointFile = open(spawnFile, 'a')
-    
-    # Prep the vars
-    posX = float(posX)
-    posY = float(posY)
-    posZ = float(posZ)
-    eyeYaw = float(eyeYaw)
-    
-    # Write to file, flush and close
-    spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (posX, posY, posZ, eyeYaw))
-    spawnPointFile.flush()
-    spawnPointFile.close()
-    
-    # Get spawnpoints again
-    getSpawnPoints(mapName)
-    
-def removeSpawnPoint(index):
-    # Do we have a spawn point file?
-    if not spawnPointsExist:
-        return False
-    
-    # Remove spawn point from dictionary
-    del spawnPoints[int(index)]
-
-    # Load the file
-    spawnPointFile = open(spawnFile, 'w')
-    
-    # Loop through the spawnpoints
-    for index in spawnPoints:
-        # Get list
-        spawnLoc = spawnPoints[index]
-        
-        # Write to file
-        spawnPointFile.write('%f %f %f 0.000000 %f 0.000000\n' % (spawnLoc[0], spawnLoc[1], spawnLoc[2], spawnLoc[4]))
-    
-    # Flush and close the file
-    spawnPointFile.flush()
-    spawnPointFile.close()
-
-    # Get spawnpoints again
-    getSpawnPoints(gungamelib.getMapName())
-
-# ==============================================================================
-#   RESPAWN CODE
-# ==============================================================================
-def RespawnCountdown(userid, repeatInfo):
-    # Is it in warmup?
-    if not int(gungamelib.getGlobal('isWarmup')) and not int(gungamelib.getGlobal('voteActive')):
-        # Send respawn message
-        if respawnCounters[userid] > 1:
-            gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Plural', {'time': respawnCounters[userid]})
-        
-        # Is the counter at 1?
-        elif respawnCounters[userid] == 1:
-            gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_Singular')
-    
-    # Respawn the player
-    if respawnCounters[userid] == 0:
-        es.server.cmd('%s %s' % (str(dict_variables['cmd']), userid))
-    
-    # Decrement the timer
-    respawnCounters[userid] -= 1
-
-def respawn(userid):
-    # Add a respawn counter for them
-    respawnCounters[userid] = int(dict_variables['delay'])
-    
-    # Is there a respawn counter already running?
-    if repeat.status('RespawnCounter%s' % userid):
-        repeat.delete('RespawnCounter%s' % userid)
-    
-    # Create and start the spawn counter
-    repeat.create('RespawnCounter%s' % userid, RespawnCountdown, (userid))
-    repeat.start('RespawnCounter%s' % userid, 1, int(dict_variables['delay']) + 1)
-
-# ==============================================================================
-#   CONVERTION HELPERS
+#   CONVERSION HELPERS
 # ==============================================================================
 def cmd_dm_convert(userid):
     # Tell them to check their console
@@ -650,3 +852,4 @@ def parseLegacySpawnpoint(file):
     
     # Return
     return points
+'''

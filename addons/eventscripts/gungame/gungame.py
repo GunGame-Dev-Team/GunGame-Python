@@ -126,6 +126,9 @@ def load():
         gungamelib.getConfig('gg_default_addons.cfg')
         gungamelib.getConfig('gg_map_vote.cfg')
         
+        # Fire the gg_server.cfg
+        es.server.cmd('exec gungame/gg_server.cfg')
+        
         # Get strip exceptions
         if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:
             list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')

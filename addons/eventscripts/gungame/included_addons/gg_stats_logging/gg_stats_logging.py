@@ -11,6 +11,7 @@
 # ==============================================================================
 # EventScripts imports
 import es
+import gamethread
 
 # GunGame imports
 import gungamelib
@@ -30,14 +31,12 @@ info.author   = 'GunGame Development Team'
 #  GLOBALS
 # ==============================================================================
 events = []
-this = None
 
 # ==============================================================================
 #  GAME EVENTS
 # ==============================================================================
 def load():
     global events
-    global this
     
     this = __import__(__name__)
     
@@ -58,12 +57,11 @@ def load():
     
     # Register events
     for line in lines:
-        es.addons.registerForEvent(this, line, lambda x: logEvent(x['userid'], line))
+        es.addons.registerForEvent(this, line, logEvent)
         events.append(line)
 
 def unload():
     global events
-    global this
     
     this = __import__(__name__)
     
@@ -77,7 +75,11 @@ def unload():
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-def logEvent(userid, event):
+def logEvent(event_var):
+    # Get event info
+    event = event_var['es_event']
+    userid = event_var['userid']
+    
     # Make sure the player exists
     if not gungamelib.clientInServer(userid):
         return

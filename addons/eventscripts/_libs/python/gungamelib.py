@@ -32,11 +32,6 @@ dict_weaponOrders = {}
 dict_weaponOrderSettings = {}
 dict_weaponOrderSettings['currentWeaponOrderFile'] = None
 
-dict_leaderInfo = {}
-dict_leaderInfo['currentLeaders'] = []
-dict_leaderInfo['oldLeaders'] = []
-dict_leaderInfo['leaderLevel'] = 1
-
 dict_players = {}
 dict_variables = {}
 dict_globals = {}
@@ -77,6 +72,12 @@ class FileError(Exception):
 class ArgumentError(Exception):
     pass
 
+class InvalidSoundPack(Exception):
+    pass
+
+class SoundError(Exception):
+    pass
+
 # ==============================================================================
 #   CONVARS
 # ==============================================================================
@@ -86,7 +87,7 @@ gungameDebugLevel.makepublic()
 # ==============================================================================
 #   PLAYER CLASS
 # ==============================================================================
-class Player:
+class Player(object):
     '''Player class, holds all a players information and attributes.'''
     
     def __init__(self, userid):
@@ -116,11 +117,12 @@ class Player:
         # Lower-case the item
         item = str(item).lower()
         
-        # Return the attribute
-        if item in self.attributes:
-            return self.attributes[item]
-        else:
+        # Does the attribute exist?
+        if not self.attributes.has_key(item):
             raise ValueError('Unable to get attribute (%s): invalid attribute.' % item)
+        
+        # Return attribute
+        return self.attributes[item]
     
     def __setitem__(self, item, value):
         # Format the item and value
@@ -128,125 +130,67 @@ class Player:
         value = int(value)
         
         # Does the attribute exist?
-        if item not in self.attributes:
+        if not self.attributes.has_key(item):
             raise ValueError('Unable to set attribute (%s): invalid attribute.' % item)
         
         # LEVEL
         if item == 'level':
-            if value > 0 and value <= (getTotalLevels() + 1):
-                currentLevel = self.attributes['level']
-                
-                # Let's see if the new level that they are trying to set is greater than their current level
-                if value > currentLevel:
-                    # Let's see if the new level that they are trying to set is greater than the leader level
-                    if value > dict_leaderInfo['leaderLevel']:
-                        dict_leaderInfo['leaderLevel'] = value
-                        
-                        # Check to see if this is a new leader for the first time in the GunGame round
-                        if len(dict_leaderInfo['currentLeaders']) == 0:
-                            dict_leaderInfo['currentLeaders'].append(self.userid)
-                            # FIRE NEW LEADER EVENT HERE event gg_new_leader
-                            es.event('initialize', 'gg_new_leader')
-                            es.event('setint', 'gg_new_leader', 'userid', self.userid)
-                            es.event('fire', 'gg_new_leader')
-                        
-                        # Check to see if this is a new leader
-                        elif len(dict_leaderInfo['currentLeaders']) > 1:
-                            if self.userid in dict_leaderInfo['currentLeaders']:
-                                dict_leaderInfo['currentLeaders'].remove(self.userid)
-                            dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                            dict_leaderInfo['currentLeaders'] = [self.userid]
-                            # FIRE NEW LEADER EVENT HERE event gg_new_leader
-                            es.event('initialize', 'gg_new_leader')
-                            es.event('setint', 'gg_new_leader', 'userid', self.userid)
-                            es.event('fire', 'gg_new_leader')
-                        
-                        # The leader is the same leader
-                        else:
-                            dict_leaderInfo['oldLeaders'] = [self.userid]
-                        
-                    # See if they tied the leader
-                    elif value == dict_leaderInfo['leaderLevel']:
-                        dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                        dict_leaderInfo['currentLeaders'].append(self.userid)
-                        
-                        # FIRE TIED LEADER EVENT HERE event gg_tied_leader
-                        es.event('initialize', 'gg_tied_leader')
-                        es.event('setint', 'gg_tied_leader', 'userid', self.userid)
-                        es.event('fire', 'gg_tied_leader')
-                
-                # Let's see if the new level that they are trying to set is less than their current level
-                elif value < currentLevel:
-                    # Check to see if the player that lost the level is a leader
-                    if currentLevel == dict_leaderInfo['leaderLevel']:
-                        if len(dict_leaderInfo['currentLeaders']) > 1:
-                            dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                            dict_leaderInfo['currentLeaders'].remove(self.userid)
-                            
-                            # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
-                            es.event('initialize', 'gg_leader_lostlevel')
-                            es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
-                            es.event('fire', 'gg_leader_lostlevel')
-                        else:
-                            dict_leaderInfo['oldLeaders'][:] = dict_leaderInfo['currentLeaders']
-                            
-                            # Find the new leader level by looping though the GunGame Core Dictionary
-                            leaderLevel = 0
-                            
-                            # Set the old leader's level to the new value prior to checking the highest level
-                            self.attributes[item] = value
-                            
-                            # Check for a new leader
-                            for userid in dict_players:
-                                if int(dict_players[userid]['level']) > leaderLevel:
-                                    dict_leaderInfo['currentLeaders'] = [userid]
-                                    leaderLevel = int(dict_players[userid]['level'])
-                                elif dict_players[userid]['level'] == leaderLevel:
-                                    dict_leaderInfo['currentLeaders'].append(userid)
-                            
-                            # Set the leader level to the new level
-                            dict_leaderInfo['leaderLevel'] = leaderLevel
-                            
-                            # FIRE LEADER LOST LEVEL EVENT HERE event gg_leader_lostlevel
-                            es.event('initialize', 'gg_leader_lostlevel')
-                            es.event('setint', 'gg_leader_lostlevel', 'userid', self.userid)
-                            es.event('fire', 'gg_leader_lostlevel')
-                
-                self.attributes[item] = value
-            else:
+            # Value check...
+            if not (value > 0 and value <= (getTotalLevels() + 1)):
                 raise ValueError('Invalid value (%s): level value must be greater than 0 and less than %s.' % (value, getTotalLevels() + 1))
+            
+            # Get current leader
+            currentLevel = self.attributes['level']
+            
+            # Set level
+            self.attributes['level'] = value
+            
+            # Levelling up...
+            if value > currentLevel:
+                leaders.addLeader(self.userid)
+            
+            # Levelling down
+            elif value < currentLevel:
+                leaders.removeLeader(self.userid)
+            
+            return
         
         # AFK ROUNDS
-        elif item == 'afkrounds':
-            if value > -1:
-                self.attributes[item] = value
-            else:
+        if item == 'afkrounds':
+            # Value check...
+            if not (value > -1):
                 raise ValueError('Invalid value (%s): AFK Rounds value must be a positive number.' % value)
+            
+            self.attributes['afkrounds'] = value
+            
+            return
         
         # MULTIKILL
-        elif item == 'multikill':
-            if value > -1:
-                self.attributes[item] = value
-            else:
+        if item == 'multikill':
+            if not (value > -1):
                 raise ValueError('Invalid value (%s): multikill value must be a positive number.' % value)
+            
+            self.attributes['multikill'] = value
+            
+            return
         
         # TRIPLE
-        elif item == 'triple':
-            if value > -1 and value < 4:
-                self.attributes[item] = value
-            else:
+        if item == 'triple':
+            if not (value > -1 and value < 4):
                 raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
+            
+            self.attributes['triple'] = value
+            
+            return
         
         # PREVENT LEVEL
-        elif item == 'preventlevel':
-            if value == 0 or value == 1:
-                self.attributes[item] = value
-            else:
+        if item == 'preventlevel':
+            if not (value == 0 or value == 1):
                 raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
-        
-        # CUSTOM ATTRIBUTES
-        else:
-            self.attributes[item] = value
+            
+            self.attributes['preventlevel'] = value
+            
+            return
     
     def __int__(self):
         '''Returns the players userid.'''
@@ -261,7 +205,7 @@ class Player:
         names = ['level', 'afkrounds', 'multikill',
                 'triple', 'preventlevel', 'afkmathtotal',
                 'steamid', 'index']
-        values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(self.userid, 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
+        values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(str(self.userid), 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
         
         # Set attributes
         self.attributes = dict(zip(names, values))
@@ -370,31 +314,6 @@ class Player:
         es.server.cmd('es_xgive %s player_weaponstrip' % self.userid)
         es.server.cmd('es_xfire %s player_weaponstrip Strip' % self.userid)
         es.server.cmd('es_xfire %s player_weaponstrip Kill' % self.userid)
-        
-        '''
-        # Make sure player is on a team
-        if isSpectator(self.userid):
-            raise TeamError('Unable to strip player (%s): not on a team' % self.userid)
-        
-        # Make sure player is alive
-        if isDead(self.userid):
-            raise DeadError('Unable to strip player (%s): is not alive' % self.userid)
-        
-        # Get player object
-        playerObj = playerlib.getPlayer(self.userid)
-        
-        # Get player weapon names
-        primary = playerObj.get('primary')
-        secondary = playerObj.get('secondary')
-        
-        # Remove primary
-        if primary:
-            es.server.cmd('es_xremove %d' % int(playerObj.get('weaponindex', primary)))
-        
-        # Remove secondary
-        if secondary:
-            es.server.cmd('es_xremove %d' % int(playerObj.get('weaponindex', secondary)))
-        '''
     
     def giveWeapon(self):
         '''Gives a player their current weapon.'''
@@ -423,7 +342,7 @@ class Player:
 # ==============================================================================
 #   WEAPON ORDER CLASS
 # ==============================================================================
-class WeaponOrder:
+class WeaponOrder(object):
     '''Parses weapon order files.'''
     
     def __init__(self, fileName):
@@ -603,31 +522,49 @@ class WeaponOrder:
         '''Changes the weapon order type.'''
         weaponOrder = str(weaponOrder.lower())
         
-        # Is this the current value?
-        if weaponOrder == self.getWeaponOrderType():
-            raise ValueError('Cannot change weapon order type (%s): this is the current weapon order type.' % weaponOrder)
-        
         # Shuffled
         if weaponOrder == '#random':
             # Get temporary weapon order
-            dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
+            tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
             
-            # Get levels and shuffle it
-            list_gungameLevels = dict_tempWeaponOrder.keys()
-            random.shuffle(list_gungameLevels)
+            # Get weapons
+            weapons = tempWeaponOrder.values()
             
-            # Get weapons and shuffle it
-            list_gungameWeapons = dict_tempWeaponOrder.values()
-            random.shuffle(list_gungameWeapons)
+            # Setup variables
+            knifeData = None
+            nadeData = None
             
-            # Loop through the levels and set the weapons
-            weaponArrayNumber = 0
-            for level in list_gungameLevels:
-                dict_tempWeaponOrder[level] = list_gungameWeapons[weaponArrayNumber]
-                weaponArrayNumber += 1
+            # Get knife and grenade data
+            for weapon in weapons[:]:
+                if weapon[0] == 'knife':
+                    # Get data
+                    knifeData = weapon
+                    
+                    # Remove
+                    weapons.remove(weapon)
+                
+                elif weapon[0] == 'hegrenade':
+                    # Get data
+                    nadeData = weapon
+                    
+                    # Remove
+                    weapons.remove(weapon)
+            
+            # Shuffle
+            random.shuffle(weapons)
+            
+            # Set weapon order
+            tempWeaponOrder = dict(zip(range(1, len(weapons)+1), weapons))
+            
+            # Re-add knife and grenade to the end
+            if nadeData != None:
+                tempWeaponOrder[len(tempWeaponOrder)+1] = nadeData
+            
+            if knifeData != None:
+                tempWeaponOrder[len(tempWeaponOrder)+1] = knifeData
             
             # Set the weapon orders back
-            dict_weaponOrders[self.fileName] = dict_tempWeaponOrder
+            dict_weaponOrders[self.fileName] = tempWeaponOrder.copy()
             
             # Tell the players the weapon order has changed
             self.__setWeaponOrder('#random')
@@ -644,23 +581,46 @@ class WeaponOrder:
         # Reversed
         elif weaponOrder == '#reversed':
             # Get temporary weapon order
-            dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
+            tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
             
-            # Get levels and weapons
-            list_gungameLevels = dict_tempWeaponOrder.keys()
-            list_gungameWeapons = dict_tempWeaponOrder.values()
+            # Get weapons
+            weapons = tempWeaponOrder.values()
             
-            # Reverse it
-            list_gungameWeapons.reverse()
+            # Setup variables
+            knifeData = None
+            nadeData = None
             
-            # Loop through the levels and reverse the weapons
-            weaponArrayNumber = 0
-            for level in list_gungameLevels:
-                dict_tempWeaponOrder[level] = list_gungameWeapons[weaponArrayNumber]
-                weaponArrayNumber += 1
+            # Get knife and grenade data
+            for weapon in weapons[:]:
+                if weapon[0] == 'knife':
+                    # Get data
+                    knifeData = weapon
+                    
+                    # Remove
+                    weapons.remove(weapon)
+                
+                elif weapon[0] == 'hegrenade':
+                    # Get data
+                    nadeData = weapon
+                    
+                    # Remove
+                    weapons.remove(weapon)
+            
+            # Shuffle
+            random.reverse(weapons)
+            
+            # Set weapon order
+            tempWeaponOrder = dict(zip(range(1, len(weapons)+1), weapons))
+            
+            # Re-add knife and grenade to the end
+            if nadeData != None:
+                tempWeaponOrder[len(tempWeaponOrder)+1] = nadeData
+            
+            if knifeData != None:
+                tempWeaponOrder[len(tempWeaponOrder)+1] = knifeData
             
             # Set the weapon orders back
-            dict_weaponOrders[self.fileName] = dict_tempWeaponOrder
+            dict_weaponOrders[self.fileName] = tempWeaponOrder.copy()
             
             # Tell the players the weapon order has changed
             self.__setWeaponOrder('#reversed')
@@ -794,7 +754,7 @@ class WeaponOrder:
 # ==============================================================================
 #   CONFIG CLASS
 # ==============================================================================
-class Config:
+class Config(object):
     '''Class for registration of config files used by GunGame.'''
     
     def __init__(self, name):
@@ -878,13 +838,7 @@ class Config:
 # ==============================================================================
 #   SOUND CLASS
 # ==============================================================================
-class InvalidSoundPack(Exception):
-    pass
-
-class SoundError(Exception):
-    pass
-
-class Sounds:
+class Sounds(object):
     '''Soundpack class, adds sounds from a soundpack.'''
     
     def __init__(self, soundPackName):
@@ -949,7 +903,7 @@ class Sounds:
 class AddonError(Exception):
     pass
     
-class Addon:
+class Addon(object):
     def __init__(self, addonName):
         self.addon = str(addonName)
         
@@ -1139,7 +1093,7 @@ class Addon:
 # ==============================================================================
 #   ADDON DEPENDENCY CLASS
 # ==============================================================================
-class AddonDependency:
+class AddonDependency(object):
     def __init__(self, dependencyName, value, dependentName):
         # Setup dependency class vars
         self.dependency = dependencyName
@@ -1184,7 +1138,7 @@ class AddonDependency:
 # ==============================================================================
 #   MESSAGE CLASS
 # ==============================================================================
-class Message:
+class Message(object):
     '''Message class is used to broadcast linguistic messages around the server,
     with the use of translation files.'''
     
@@ -1376,7 +1330,7 @@ class Message:
 # ==============================================================================
 #   EASYINPUT CLASS
 # ==============================================================================
-class EasyInput:
+class EasyInput(object):
     '''Makes "Esc"-style input boxes quickly and simply.
     
     Inspired by:
@@ -1458,7 +1412,7 @@ class EasyInput:
 # ==============================================================================
 #  WINNERS CLASS
 # ==============================================================================
-class Winners:
+class Winners(object):
     ''' Class used for tracking and storing Winners'''
     
     def __init__(self, uniqueid):
@@ -1493,6 +1447,157 @@ class Winners:
                 self.attributes[item] = int(value)
             if item == 'timestamp':
                 self.attributes[item] = float(value)
+
+# ==============================================================================
+#  LEADER MANAGER CLASS
+# ==============================================================================
+class LeaderManager(object):
+    '''Manages all the leaders.'''
+    leaderLevel = 1
+    leaders = []
+    oldLeaders = []
+    
+    def __init__(self):
+        # Get leaders
+        self.getNewLeaders()
+    
+    def __leaderTied(self, userid):
+        '''Private function: Sets <userid> as a leader.'''
+        # Set old leaders
+        self.oldLeaders = self.leaders[:]
+        
+        # Add to leader list
+        self.leaders.append(userid)
+        
+        # Fire gg_tied_leader
+        es.event('initialize', 'gg_tied_leader')
+        es.event('setint', 'gg_tied_leader', 'userid', userid)
+        es.event('fire', 'gg_tied_leader')
+    
+    def __setLeader(self, userid):
+        '''Private function: Sets <userid> as the leader.'''
+        # Set old leaders
+        self.oldLeaders = self.leaders[:]
+        
+        # Set leader vars
+        self.leaders = [userid]
+        self.leaderLevel = getPlayer(userid)['level']
+        
+        # Fire gg_new_leader
+        es.event('initialize', 'gg_new_leader')
+        es.event('setint', 'gg_new_leader', 'userid', userid)
+        es.event('fire', 'gg_new_leader')
+    
+    def addLeader(self, userid):
+        '''Adds a new leader to the leader list.'''
+        if not clientInServer(userid):
+            raise ValueError('Cannot add leader (%s): client not in server.' % userid)
+        
+        # Get player object
+        playerObj = getPlayer(userid)
+        
+        # Is already a leader?
+        if userid in self.leaders:
+            # Set new leader
+            if self.leaderLevel < playerObj['level']:
+                self.__setLeader(userid)
+                return
+        
+        # Leader tied
+        if self.leaderLevel == playerObj['level']:
+            self.__leaderTied(userid)
+        
+        # New leader
+        elif self.leaderLevel < playerObj['level']:
+            self.__setLeader(userid)
+    
+    def removeLeader(self, userid):
+        '''Removes a leader from the leader list.'''
+        # Is the leader not already here?
+        if not self.isLeader(userid):
+            return
+        
+        # Set old leaders
+        self.oldLeaders = self.leaders[:]
+        
+        # Remove leader
+        self.leaders.remove(userid)
+        
+        # Fire gg_leader_lostlevel
+        es.event('initialize', 'gg_leader_lostlevel')
+        es.event('setint', 'gg_leader_lostlevel', 'userid', userid)
+        es.event('fire', 'gg_leader_lostlevel')
+        
+        # Need new leaders?
+        if self.getLeaderCount() == 0:
+            self.getNewLeaders()
+    
+    def getNewLeaders(self):
+        '''Finds new leaders from the players available.'''
+        # Var prep
+        self.leaderLevel = 1
+        self.leaders = []
+        
+        # Loop through the players
+        for userid in dict_players:
+            # Get player info
+            playerObj = dict_players[userid]
+            level = playerObj['level']
+            
+            # Is the player on the server?
+            if not clientInServer(userid):
+                continue
+            
+            # Create new leader variable and set new level
+            if level > self.leaderLevel:
+                self.leaders = userid
+                self.leaderLevel = level
+            
+            # Another leader
+            elif level == self.leaderLevel:
+                self.leaders.append(userid)
+        
+        # 1 new leader
+        if self.getLeaderCount() == 1:
+            # Fire gg_new_leader
+            es.event('initialize', 'gg_new_leader')
+            es.event('setint', 'gg_new_leader', 'userid', userid)
+            es.event('fire', 'gg_new_leader')
+        
+        # More than one leader?
+        elif self.getLeaderCount() > 1:
+            # Show message
+            gungamelib.msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(self.leaders), 'level': self.leaderLevel}, False)
+        
+        # Set old leaders, if they have changed
+        if self.leaders[:] != self.oldLeaders[:]:
+            self.oldLeaders = self.leaders[:]
+    
+    def isLeader(self, userid):
+        '''Checks if <userid> is a leader.'''
+        return (userid in self.leaders)
+    
+    def getLeaderCount(self):
+        '''Returns the amount of leaders.'''
+        return len(self.leaders[:])
+    
+    def getOldLeaderList(self):
+        '''Returns the userids of the old leader(s).'''
+        return self.oldLeaders[:]
+    
+    def getLeaderList(self):
+        '''Returns the userids of the current leader(s).'''
+        return self.leaders[:]
+    
+    def getLeaderNames(self):
+        '''Returns the names of the current leader(s).'''
+        return [removeReturnChars(es.getplayername(x)) for x in self.leaders]
+    
+    def getLeaderLevel(self):
+        '''Returns the current leader level.'''
+        return self.leaderLevel
+
+leaders = LeaderManager()
 
 # ==============================================================================
 #  CLASS WRAPPERS
@@ -1541,7 +1646,7 @@ def saytext2(addon, filter, index, string, tokens={}, showPrefix=True):
 
 def hudhint(addon, filter, string, tokens={}):
     Message(addon, filter).hudhint(string, tokens)
-    
+
 def centermsg(addon, filter, string, tokens={}):
     Message(addon, filter).centermsg(string, tokens)
 
@@ -1580,11 +1685,10 @@ def triggerLevelDownEvent(levelDownUserid, levelDownOldLevel, levelDownNewLevel,
 #   RESET GUNGAME --- WARNING: POWERFUL COMMAND
 # ==============================================================================
 def resetGunGame():
-    # Reset the Leader Information Database in the dict_leaderInfo
-    dict_leaderInfo.clear()
-    dict_leaderInfo['currentLeaders'] = []
-    dict_leaderInfo['oldLeaders'] = []
-    dict_leaderInfo['leaderLevel'] = 1
+    global leaders
+    
+    # Reset the leader information
+    leaders = LeaderManager()
     
     # Game is no longer over
     setGlobal('gameOver', 0)
@@ -1597,8 +1701,7 @@ def resetGunGame():
         gungamePlayer = getPlayer(userid)
 
 def clearGunGame():
-    # Clear the dict_leaderInfo
-    dict_leaderInfo.clear()
+    global leaders
     
     # Clear the dict_players
     dict_players.clear()
@@ -1610,14 +1713,8 @@ def clearGunGame():
     dict_weaponOrderSettings.clear()
     dict_weaponOrderSettings['currentWeaponOrderFile'] = None
     
-    # Reset the Leader Information Database in the dict_leaderInfo
-    dict_leaderInfo.clear()
-    dict_leaderInfo['currentLeaders'] = []
-    dict_leaderInfo['oldLeaders'] = []
-    dict_leaderInfo['leaderLevel'] = 1
-    
-    # Reset the Player Information dictionary
-    dict_players.clear()
+    # Reset the leader information
+    leaders = LeaderManager()
     
     # Reset the stored variables
     dict_variables.clear()
@@ -1698,11 +1795,11 @@ def getLevelUseridList(levelNumber):
     list_levelUserids = []
     
     for userid in dict_players:
-        if dict_players[int(userid)]['level'] == levelNumber:
+        if dict_players[userid]['level'] == levelNumber:
             list_levelUserids.append(userid)
     
     return list_levelUserids
-    
+
 def getLevelUseridString(levelNumber):
     levelNumber = int(levelNumber)
     levelUseridString = None
@@ -1729,7 +1826,7 @@ def getLevelInfo(levelNumber):
 def getLevelMultiKill(levelNumber):
     if levelExists(levelNumber):
         return getLevelInfo(levelNumber)[1]
-    
+
 def createScoreList(keyGroupName=None):
     dict_gungameScores = {}
     
@@ -1738,105 +1835,6 @@ def createScoreList(keyGroupName=None):
     
     return sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
 
-# ==============================================================================
-#   LEADER RELATED COMMANDS
-# ==============================================================================
-def getCurrentLeaderList():
-    # Var prep
-    leaders = []
-    
-    # Loop through the current leaders
-    for userid in dict_leaderInfo['currentLeaders']:
-        # Append to the leaders list if the player is in the server
-        if clientInServer(userid):
-            leaders.append(userid)
-    
-    # No leaders in the server?
-    if len(leaders) == 0:
-        # Get a list of players with the next highest level
-        return getNewLeaderList()
-    else:
-        # Set current leader info
-        dict_leaderInfo['oldLeaders'] = dict_leaderInfo['currentLeaders']
-        dict_leaderInfo['currentLeaders'] = leaders
-        
-        # Return list of leaders as usual
-        return leaders
-
-def getOldLeaderList():
-    return dict_leaderInfo['oldLeaders']
-
-def getNewLeaderList():
-    # Var prep
-    highestLevel = 1
-    players = []
-    
-    # Loop through the players
-    for userid in dict_players:
-        player = dict_players[userid]
-        level = player['level']
-        
-        # Is the player on the server?
-        if not clientInServer(userid):
-            continue
-        
-        # Is the players level higher than the highest level?
-        if level > highestLevel:
-            # Set list to them
-            players = [userid]
-            highestLevel = level
-        elif level == highestLevel:
-            # Append them to the current list
-            players.append(userid)
-    
-    # Set current leaders
-    dict_leaderInfo['oldLeaders'] = dict_leaderInfo['currentLeaders']
-    dict_leaderInfo['currentLeaders'] = players
-    dict_leaderInfo['leaderLevel'] = highestLevel
-    
-    # Return players
-    return players
-
-def removeLeader(userid):
-    userid = int(userid)
-    
-    if userid in dict_leaderInfo['currentLeaders']:
-        dict_leaderInfo['currentLeaders'].remove(userid)
-        
-        # Get new leaders
-        getNewLeaderList()
-
-def getCurrentLeaderString():
-    currentLeaderString = None
-    
-    for userid in dict_leaderInfo['currentLeaders']:
-        if not currentLeaderString:
-            currentLeaderString = userid
-        else:
-            currentLeaderString = '%s,%s' % (currentLeaderString, userid)
-    
-    return currentLeaderString
-    
-def getOldLeaderString():
-    oldLeaderString = None
-    
-    for userid in dict_leaderInfo['oldLeaders']:
-        if not oldLeaderString:
-            oldLeaderString = userid
-        else:
-            oldLeaderString = '%s,%s' %(oldLeaderString, userid)
-    
-    return oldLeaderString
-    
-def getLeaderLevel():
-    return dict_leaderInfo['leaderLevel']
-    
-def getCurrentLeaderCount():
-    return len(getCurrentLeaderList())
-    
-def getOldLeaderCount():
-    return len(dict_leaderInfo['oldLeaders'])
-    
 # ==============================================================================
 #   CONFIG RELATED COMMANDS
 # ==============================================================================
@@ -2159,3 +2157,6 @@ def playSound(filter, soundName, volume=1.0):
     # Play to filter
     for userid in playerlib.getUseridList(filter):
         es.playsound(userid, sound, volume)
+
+def canShowHints():
+    return (getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0)

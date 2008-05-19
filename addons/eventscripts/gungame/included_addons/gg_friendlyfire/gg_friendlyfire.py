@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_friendlyfire
-    Version: 1.0.316
+    Version: 1.0.321
     Description: Friendly fire will activate when a certain level is reached.
 '''
 
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_friendlyfire (for GunGame: Python)'
-info.version  = '1.0.316'
+info.version  = '1.0.321'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_friendlyfire'
 info.author   = 'GunGame Development Team'
@@ -66,7 +66,7 @@ def gg_levelup(event_var):
     activateLevel = gungamelib.getTotalLevels() - int(levelVariable)
     
     # If the Leader is on the friendlyfire level?
-    if gungamelib.getLeaderLevel() >= activateLevel:
+    if gungamelib.leaders.getLeaderLevel() >= activateLevel:
         # Check whether friendlyfire is enabled
         if int(es.ServerVar('mp_friendlyfire')) == 0:
             # Set friendlyfire to 1

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_rookie
-    Version: 1.0.316
+    Version: 1.0.321
     Description:    This is the same as gg_knife_pro, but a few small
                     differences. When one player knife kills another player,
                     the attacker will ALWAYS level up, unless on knife level.
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = '1.0.316'
+info.version  = '1.0.321'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -101,11 +101,6 @@ def player_death(event_var):
     # =============
     # VICTIM CHECKS
     # =============
-    # Can the victim level down?
-    if gungameVictim['preventlevel'] == 1:
-        gungamelib.msg('gg_knife_rookie', attacker, 'VictimPreventLevel')
-        return
-    
     # Is the victim AFK?
     if gungameVictim.isPlayerAFK():
         gungamelib.msg('gg_knife_rookie', attacker, 'VictimAFK')
@@ -119,14 +114,18 @@ def player_death(event_var):
     gungameAttackerNewLevel = gungameAttackerLevel + 1
     
     # Level changes
-    gungamelib.triggerLevelDownEvent(userid, gungameVictimLevel, gungameVictimNewLevel, attacker)
+    if gungameVictimNewLevel > 0 and gungameVictim['preventlevel'] != 1:
+        gungamelib.triggerLevelDownEvent(userid, gungameVictimLevel, gungameVictimNewLevel, attacker)
+    
     gungamelib.triggerLevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid)
     
     # ===========
     # PLAY SOUNDS
     # ===========
     gungamelib.playSound(attacker, 'levelsteal')
-    gungamelib.playSound(userid, 'leveldown')
+    
+    if gungameVictimNewLevel > 0 and gungameVictim['preventlevel'] != 1:
+        gungamelib.playSound(userid, 'leveldown')
     
     # =====
     # EVENT

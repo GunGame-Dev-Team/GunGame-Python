@@ -66,7 +66,7 @@ def hostage_killed(event_var):
     if es.exists('userid', userid):
         gungamePlayer = gungamelib.getPlayer(userid)
         gungamePlayerLevel = gungamePlayer['level']
-        gungamelib.triggerLevelDownEvent(userid, gungamePlayerLevel, gungamePlayerLevel - 1, 0)
+        gungamelib.triggerLevelDownEvent(userid, gungamePlayerLevel, gungamePlayerLevel - 1, 0, 'hostage_killed')
 
 def hostage_rescued(event_var):
     userid = event_var['userid']
@@ -74,7 +74,7 @@ def hostage_rescued(event_var):
     if dict_hostageTracker[userid]['rescues'] >= 2:
         gungamePlayer = gungamelib.getPlayer(userid)
         gungamePlayerLevel = gungamePlayer['level']
-        gungamelib.triggerLevelUpEvent(userid, gungamePlayerLevel, gungamePlayerLevel + 1, 0)
+        gungamelib.triggerLevelUpEvent(userid, gungamePlayerLevel, gungamePlayerLevel + 1, 0, 'hostage_rescued')
         dict_hostageTracker[userid]['rescues'] = 0
 
 def player_death(event_var):
@@ -85,5 +85,5 @@ def player_death(event_var):
         attacker = event_var['attacker']
         gungameAttacker = gungame.getPlayer(attacker)
         gungameAttackerLevel = int(gungameAttacker.get('level'))
-        gungamelib.triggerLevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerLevel + 1, userid)
+        gungamelib.LevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerLevel + 1, userid, 'hostage_stop')
         dict_hostageTracker[userid].clear()

@@ -115,9 +115,9 @@ def player_death(event_var):
     
     # Level changes
     if gungameVictimNewLevel > 0 and gungameVictim['preventlevel'] != 1:
-        gungamelib.triggerLevelDownEvent(userid, gungameVictimLevel, gungameVictimNewLevel, attacker)
+        gungamelib.triggerLevelDownEvent(userid, gungameVictimLevel, gungameVictimNewLevel, attacker, 'steal')
     
-    gungamelib.triggerLevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid)
+    gungamelib.triggerLevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid, 'steal')
     
     # ===========
     # PLAY SOUNDS

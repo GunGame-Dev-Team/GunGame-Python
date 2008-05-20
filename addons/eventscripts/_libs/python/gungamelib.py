@@ -1654,7 +1654,7 @@ def centermsg(addon, filter, string, tokens={}):
 #   LEVEL UP AND LEVEL DOWN TRIGGERING
 # ==============================================================================
 # def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
-def triggerLevelUpEvent(levelUpUserid, levelUpOldLevel, levelUpNewLevel, victimUserid=0):
+def triggerLevelUpEvent(levelUpUserid, levelUpOldLevel, levelUpNewLevel, victimUserid=0, reason=0):
     es.event('initialize', 'gg_levelup')
     es.event('setint', 'gg_levelup', 'attacker', levelUpUserid)
     # es.event('setstring', 'gg_levelup', 'steamid', levelUpSteamid)
@@ -1663,12 +1663,13 @@ def triggerLevelUpEvent(levelUpUserid, levelUpOldLevel, levelUpNewLevel, victimU
     es.event('setint', 'gg_levelup', 'old_level', levelUpOldLevel)
     es.event('setint', 'gg_levelup', 'new_level', levelUpNewLevel)
     es.event('setint', 'gg_levelup', 'userid', victimUserid)
+    es.event('setstring', 'gg_levelup', 'reason', reason)
     # es.event('setstring', 'gg_levelup', 'victimname', victimName)
     # es.event('setstring', 'gg_levelup', 'weapon', weapon)
     es.event('fire', 'gg_levelup')
     
 # def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, attackerName=None):
-def triggerLevelDownEvent(levelDownUserid, levelDownOldLevel, levelDownNewLevel, attackerUserid=0):
+def triggerLevelDownEvent(levelDownUserid, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, reason=0):
 
     es.event('initialize', 'gg_leveldown')
     es.event('setint', 'gg_leveldown', 'userid', levelDownUserid)
@@ -1678,6 +1679,7 @@ def triggerLevelDownEvent(levelDownUserid, levelDownOldLevel, levelDownNewLevel,
     es.event('setint', 'gg_leveldown', 'old_level', levelDownOldLevel)
     es.event('setint', 'gg_leveldown', 'new_level', levelDownNewLevel)
     es.event('setint', 'gg_leveldown', 'attacker', attackerUserid)
+    es.event('setstring', 'gg_leveldown', 'reason', reason)
     # es.event('setstring', 'gg_leveldown', 'attackername', attackerName)
     es.event('fire', 'gg_leveldown')
     

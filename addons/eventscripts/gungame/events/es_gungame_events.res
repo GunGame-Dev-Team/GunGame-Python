@@ -20,38 +20,38 @@
 {
 	"gg_levelup"
 	{
-		"attacker"	"short"		// The userid of the player that levelled up
-		"old_level"	"byte"		// The old level of the player that levelled up
-		"new_level"	"byte"		// The new level of the player that levelled up
-		"userid"	"short"		// The userid of victim
+        "attacker"  "short"     // The userid of the player that levelled up
+        "old_level" "byte"      // The old level of the player that levelled up
+        "new_level" "byte"      // The new level of the player that levelled up
+        "userid"	"short"     // The userid of victim
         "reason"    "string"    // The reason for the level up
 	}
 	"gg_leveldown"
 	{
-		"userid"	"short"		// userid of player
-		"attacker"	"short"		// userid of the attacker
-		"old_level"	"byte"		// old player level
-		"new_level"	"byte"		// new player level
+        "userid"    "short"     // userid of player
+        "attacker"  "short"     // userid of the attacker
+        "old_level" "byte"      // old player level
+        "new_level" "byte"      // new player level
         "reason"    "string"    // The reason for the level down
 	}
 	"gg_knife_steal"
 	{
-		"attacker"          "short"		// The userid of the player that stole the level
-		"attacker_level"    "byte"	    // The new level of the player that stole the level
-        "userid"            "short"     // The userid of victim
-        "userid_level"      "byte"	    // The new level of the victim
+        "attacker"          "short" // The userid of the player that stole the level
+        "attacker_level"    "byte"  // The new level of the player that stole the level
+        "userid"            "short" // The userid of victim
+        "userid_level"      "byte"  // The new level of the victim
 	}
     "gg_new_leader"
     {
-        "userid"	"short"		// The userid of the player that became the new leader
+        "userid"    "short" // The userid of the player that became the new leader
     }
     "gg_tied_leader"
     {
-        "userid"	"short"		// The userid of the player that tied the leader(s)
+        "userid"    "short" // The userid of the player that tied the leader(s)
     }
     "gg_leader_lostlevel"
     {
-        "userid"	"short"		// The userid of the leader that lost a level
+        "userid"    "short" // The userid of the leader that lost a level
     }
     "gg_start"
     {
@@ -64,19 +64,19 @@
     }
     "gg_win"
     {
-        "userid"	"short"		// userid of player
-        "steamid"	"string"	// steamid of player -- ALREADY PROVIDED, LEAVE OUT?
-        "team"		"byte"		// player team 2= Terrorists, 3= CT -- ALREADY PROVIDED, LEAVE OUT?
-        "name"		"string"	// player name -- ALREADY PROVIDED, LEAVE OUT?
-        "loser"		"short"		// userid of player that gave up the win
+        "userid"    "short"     // userid of player
+        "steamid"   "string"    // steamid of player -- ALREADY PROVIDED, LEAVE OUT?
+        "team"      "byte"      // player team 2= Terrorists, 3= CT -- ALREADY PROVIDED, LEAVE OUT?
+        "name"      "string"    // player name -- ALREADY PROVIDED, LEAVE OUT?
+        "loser"     "short"     // userid of player that gave up the win
     }        
     "gg_round_win"
     {
-        "userid"	"short"		// userid of player -- ALREADY PROVIDED, LEAVE OUT?
-        "steamid"	"string"	// steamid of player -- ALREADY PROVIDED, LEAVE OUT?
-        "team"	    "byte"		// player team 2= Terrorists, 3= CT -- ALREADY PROVIDED, LEAVE OUT?
-        "name"	    "string"	// player name -- ALREADY PROVIDED, LEAVE OUT?
-        "loser" 	"short"		// userid of player that gave up the win
+        "userid"    "short"     // userid of player
+        "steamid"   "string"    // steamid of player -- ALREADY PROVIDED, LEAVE OUT?
+        "team"	    "byte"      // player team 2= Terrorists, 3= CT -- ALREADY PROVIDED, LEAVE OUT?
+        "name"      "string"    // player name -- ALREADY PROVIDED, LEAVE OUT?
+        "loser"     "short"     // userid of player that gave up the win
     }
     "gg_map_end"
     {
@@ -84,8 +84,8 @@
     }    
     "gg_variable_changed"
     {
-        "cvarname"  "string"            // The name of the cvar that was changed
-        "value"     "string"            // The new value of the cvar
+        "cvarname"  "string"    // The name of the cvar that was changed
+        "value"     "string"    // The new value of the cvar
     }        
     "gg_load"
     {

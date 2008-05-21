@@ -7,12 +7,13 @@
 // Format: <Menu> <Required Level>
 // 
 // Example: commands 2
-//           * Will mean only level 2 admins and below will be able to access
-//             this menu.
+//           * Will mean level 0, 1 and 2 admins and below will be able to
+//             access this menu.
 // 
-// Level Info: 0 = Root
-//             1 = Super Admin
-//             2 = Admin
+// Level Info: 0 = Root: server owner or a well trusted player.
+//             1 = Super Admin: a high-level admin, like a Super Moderator on
+//                              a forum.
+//             2 = Admin: a normal admin.
 //
 // Note: Any edit of this file will require a server restart for changes to
 //       take effect.

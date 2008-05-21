@@ -1,17 +1,18 @@
 //----------------------------------------------------------------------------
 // admin_commands.txt -- Admin command permission definitions.
 //
-// Each command has a required permission level, 1, 2 or 3. What level each
-// admin is are defined in the admins.txt file.
+// Each command has a required permission level-- 0, 1, 2 or 3. Admin level
+// definitions are set in the admins.txt file.
 //
 // Format: <Command> <Level>
 //
-// Example: teleport 3
-//            Will allow only level 3 admins to use gg_teleport and
+// Example: teleport 2
+//            Will allow level 0, 1 and 2 admins to use gg_teleport and
 //            !ggteleport.
+//
 // Example: setlevel 1
-//            Will allow level 1, 2 and 3 admins to use gg_setlevel and
-//            !ggsetlevel
+//            Will allow level 0 and 1 admins to use gg_setlevel and
+//            !ggsetlevel.
 // 
 // Level Info: 0 = Root: this level should be used for really high-level
 //                       commands that should only be used by the server owner.
@@ -27,7 +28,8 @@
 //----------------------------------------------------------------------------
 // gungame
 //----------------------------------------------------------------------------
-isafk 2
+teleport 2
+setlevel 1
 
 //----------------------------------------------------------------------------
 // gg_admin
@@ -37,7 +39,7 @@ admin_add 0
 admin_remove 0
 admin_show 2
 admin_set 0
-admins 3
+admins 2
 
 //----------------------------------------------------------------------------
 // gg_deathmatch

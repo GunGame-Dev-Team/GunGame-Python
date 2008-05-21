@@ -215,7 +215,7 @@ def load():
         # Load sound pack
         gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
         
-        # Load gg_console -- for console -> gungame interaction
+        # Load gg_console -- the console interface
         es.load('gungame/included_addons/gg_console')
         
         # Fire gg_load event
@@ -323,9 +323,8 @@ def es_map_start(event_var):
     # Reset the "rounds remaining" variable for multi-rounds
     dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
     
-    # See if the option to randomize weapons is turned on
     if gungamelib.getVariableValue('gg_weapon_order') == '#random':
-        # Randomize the weapon order
+        # Re-randomize the weapon order
         myWeaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getCurrentWeaponOrderFile())
         myWeaponOrder.changeWeaponOrderType('#random')
     
@@ -382,13 +381,13 @@ def round_start(event_var):
         elif mapObjectives == 1:
             if mapPrefix == 'de':
                 es.server.cmd('es_xfire %d func_bomb_target Disable' %userid)
-                es.server.cmd('es_xfire %d weapon_c4 Kill' %userid)
+                es.server.cmd('es_xfire %d weapon_c4 Kill' % userid)
         
         # Remove hostage objectives
         elif mapObjectives == 2:
             if mapPrefix == 'cs':
                 es.server.cmd('es_xfire %d func_hostage_rescue Disable' %userid)
-                es.server.cmd('es_xfire %d hostage_entity Kill' %userid)
+                es.server.cmd('es_xfire %d hostage_entity Kill' % userid)
     
     if gungamelib.getVariableValue('gg_leaderweapon_warning'):
         leaderWeapon = gungamelib.getLevelWeapon(gungamelib.leaders.getLeaderLevel())
@@ -986,10 +985,9 @@ def afkPunishCheck(userid):
                 # Send them to spectator
                 es.server.cmd('es_xfire %d !self SetTeam 1' % userid)
                 
-                # Send an easymenu saying they were switched
-                menu = popuplib.easymenu('gungame_afk', None, lambda x, y, z: True)
-                menu.settitle('GG Message')
-                menu.setdescription('%s\n%s' % (menu.c_beginsep, gungamelib.lang('gungame', 'SwitchedToSpectator')))
+                # Send a popup saying they were switched
+                menu = popuplib.popup('gungame_afk', None, lambda x, y, z: True)
+                menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator'))
                 menu.send(userid)
 
 def equipPlayer():
@@ -1043,46 +1041,35 @@ def levelInfoHint(userid):
         # Send hint
         sendLevelInfoHint(userid, text)
         return
-
+    
     # ================
     # MULTIPLE LEADERS
     # ================
     if levelsBehindLeader == 0 and gungamelib.leaders.getLeaderCount() > 1:
         text += gungamelib.lang('gungame', 'LevelInfo_AmongstLeaders')
         
-        # Get the first 3 leaders
-        leadersCount = 1
-        leaderUserids = gungamelib.leaders.getLeaderList()
-        leaderUserids.remove(userid)
-        leaders = len(leaderUserids)
-        
-        # Loop through the leaders
-        for leader in leaderUserids:
-            # More than 2 leaders added?
-            if leadersCount == 3:
-                text += '...'
-                break
-            
-            # Don't add the comma if there is 2 or less leaders
-            if leaders == leadersCount:
-                text += es.getplayername(leader)
-                break
-            
-            # Add the name to the hudhint and increment the leaders count
-            text += '%s, ' % es.getplayername(leader)
-            
-            # Increment leader count
-            leadersCount += 1
+        # Add leader name(s)
+        text += gungamelib.lang('gungame', 'LevelInfo_LeaderName', {
+            'plural': 's',
+            'names': ', '.join(gungamelib.leaders.getLeaderNames())
+        })
         
         # Send hint
         sendLevelInfoHint(userid, text)
         return
     
-    # Add leader info
-    text += '\nLeader (%s) level: %d / %d (%s)' % (es.getplayername(gungamelib.leaders.getLeaderList()[0]),
-                                                 gungamelib.leaders.getLeaderLevel(),
-                                                 gungamelib.getTotalLevels(),
-                                                 gungamelib.getLevelWeapon(gungamelib.leaders.getLeaderLevel()))
+    # Add leader name(s)
+    text += gungamelib.lang('gungame', 'LevelInfo_LeaderName', {
+        'plural': 's' if gungamelib.leaders.getLeaderCount() > 1 else '',
+        'names': ', '.join(gungamelib.leaders.getLeaderNames())
+    })
+    
+    # Add leader level
+    text += gungamelib.lang('gungame', 'LevelInfo_LeaderLevel', {
+        'level': gungamelib.leaders.getLeaderLevel(),
+        'total': gungamelib.getTotalLevels(),
+        'weapon': gungamelib.getLevelWeapon(gungamelib.leaders.getLeaderLevel())
+    })
     
     # Send hint
     sendLevelInfoHint(userid, text)

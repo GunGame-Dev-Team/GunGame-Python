@@ -1,36 +1,38 @@
-// ************************************************************ 
-// WEAPON ORDER 
-// ************** 
-// Your choices are: 
+// #random makes the weapon order a random order, being re-randomized on
+// every map change.
+//
+// Format: <weapon name> <multikill>
+//
+// Options:
 // 
 // PISTOLS:
-// glock            usp 
-// p228             deagle 
-// fiveseven        elite 
+// glock            usp
+// p228             deagle
+// fiveseven        elite
 // 
-// SHOTGUNS: 
-// m3               xm1014 
+// SHOTGUNS:
+// m3               xm1014
 // 
-// SUB MACHINE GUNS: 
-// tmp              mac10 
-// mp5navy          ump45 
+// SUB MACHINE GUNS:
+// tmp              mac10
+// mp5navy          ump45
 // p90 
 // 
-// RIFLES: 
-// galil            famas 
-// ak47             scout 
-// m4a1             sg550 
-// g3sg1            awp 
-// sg552            aug 
+// RIFLES:
+// galil            famas
+// ak47             scout
+// m4a1             sg550
+// g3sg1            awp
+// sg552            aug
 // 
-// MACHINE GUN: 
-// m249 
+// MACHINE GUN:
+// m249
 // 
-// OTHER: 
-// hegrenade        knife 
-// 
-// Pick which ones you want and put them in order with level 1 being first in the list then level 2, level 3, etc.
-// ************************************************************ 
+// OTHER:
+// hegrenade        knife
+//
+// Note: this weapon order file must be defined in gg_weapon_orders.ini.
+//----------------------------------------------------------------------------
 
 glock
 usp

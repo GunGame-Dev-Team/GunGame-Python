@@ -115,6 +115,7 @@ def load():
     for line in lines:
         # Fix for in-line comments
         line = line.split('//')[0]
+        line = line.strip()
         
         # Get data from the line
         command, level = line.split(' ', 1)

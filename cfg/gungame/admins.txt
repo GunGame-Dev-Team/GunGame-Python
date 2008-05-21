@@ -18,5 +18,5 @@
 //       take effect.
 //----------------------------------------------------------------------------
 
-STEAM_ID_LAN Local 0		// Lan ID
+STEAM_ID_LAN Local 0		// Keep this for listen servers, remove for LAN
 STEAM_0:1:3360502 Cheezus 0	// LOG: Level set by <SCRIPT>

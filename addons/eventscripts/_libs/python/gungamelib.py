@@ -1433,9 +1433,11 @@ class Winners(object):
         # Make the item a lower-case string
         item = str(item).lower()
         
-        # Return the attribute
-        if item in self.attributes:
-            return self.attributes[item]
+        # Does the attribute exist?
+        if not self.attributes.has_key(item):
+            raise KeyError('Winners object does not have item "%s".' % item)
+        
+        return self.attributes[item]
     
     def __setitem__(self, item, value):
         # Make the item a lower-case string
@@ -1497,7 +1499,7 @@ class LeaderManager(object):
         playerObj = getPlayer(userid)
         
         # Is already a leader?
-        if userid in self.leaders:
+        if self.isLeader(userid):
             # Set new leader
             if self.leaderLevel < playerObj['level']:
                 self.__setLeader(userid)
@@ -1550,7 +1552,7 @@ class LeaderManager(object):
             
             # Create new leader variable and set new level
             if level > self.leaderLevel:
-                self.leaders = userid
+                self.leaders = [userid]
                 self.leaderLevel = level
             
             # Another leader
@@ -1579,7 +1581,7 @@ class LeaderManager(object):
     
     def getLeaderCount(self):
         '''Returns the amount of leaders.'''
-        return len(self.leaders[:])
+        return len(self.leaders)
     
     def getOldLeaderList(self):
         '''Returns the userids of the old leader(s).'''
@@ -1915,11 +1917,11 @@ def getWins(uniqueid):
 def addWin(uniqueid):
     gungameWinner = getWinner(uniqueid)
     gungameWinner['wins'] += 1
-    
+
 def updateTimeStamp(uniqueid):
     gungameWinner = getWinner(uniqueid)
     gungameWinner['timestamp'] = time.time()
-    
+
 def saveWinnerDatabase():
     global dict_winners
     
@@ -1930,7 +1932,7 @@ def saveWinnerDatabase():
     winnersDataBaseFile = open(winnersDataBasePath, 'w')
     cPickle.dump(dict_winners, winnersDataBaseFile)
     winnersDataBaseFile.close()
-    
+
 def loadWinnersDataBase():
     global dict_winners
     
@@ -1955,7 +1957,7 @@ def loadWinnersDataBase():
     
     # Set the global for having the database loaded
     setGlobal('winnersloaded', 1)
-    
+
 def cleanWinnersDataBase(days):
     global dict_winners
     
@@ -2126,9 +2128,6 @@ def removeReturnChars(playerName):
     return playerName
 
 def clamp(value, low=False, high=False):
-    if not isNumeric(value):
-        raise TypeError('Cannot clamp (%s): value not numerical.' % value)
-    
     # Make an integer
     value = int(value)
     
@@ -2144,10 +2143,14 @@ def clamp(value, low=False, high=False):
     return value
 
 def playSound(filter, soundName, volume=1.0):
+    # Does the sound exist?
+    if not dict_sounds.has_key(soundName):
+        return
+    
     # Get sound object
     sound = getSound(soundName)
     
-    # Check the sound exists
+    # Does the sound exist? (check 2)
     if not sound:
         return
     

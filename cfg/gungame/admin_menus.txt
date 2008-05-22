@@ -26,5 +26,3 @@ load 1
 menus 2
 settings 1
 commands 2
-permissions 0
-admins 0

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.321
+    Version: 1.0.324
     Description: Gives admins control over GunGame and its addons.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_admin (for GunGame: Python)'
-info.version  = '1.0.321'
+info.version  = '1.0.324'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_admin'
 info.author   = 'GunGame Development Team'
@@ -267,12 +267,6 @@ def buildAdminMenu(userid):
     
     if admin.hasLevel(dict_menus['commands']):
         menu_admin_main.addoption('commands', 'View Command List')
-    
-    if admin.hasLevel(dict_menus['permissions']):
-        menu_admin_main.addoption('permissions', 'Set Permissions')
-    
-    if admin.hasLevel(dict_menus['admins']):
-        menu_admin_main.addoption('permissions', 'Admin Management')
 
 def sendAdminMenu(userid):
     buildAdminMenu(userid)
@@ -516,7 +510,7 @@ def getCommandSyntax(command):
         if addonObj.hasCommand(command):
             return addonObj.getCommandSyntax(command)
     
-    return '<unknown>'
+    return ''
 
 def callCommand(userid, command, args):
     for addonName in gungamelib.getRegisteredAddonlist():

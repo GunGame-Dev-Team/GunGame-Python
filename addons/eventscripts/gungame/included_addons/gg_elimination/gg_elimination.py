@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 1.0.321
+    Version: 1.0.324
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -14,7 +14,10 @@
 # EventScripts imports
 import es
 import gamethread
-import usermsg
+import spawnpointlib
+
+# Python imports
+import time
 
 # GunGame imports
 import gungamelib
@@ -25,7 +28,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.321'
+info.version  = '1.0.324'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -38,14 +41,20 @@ dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
 dict_addonVars['currentRound'] = 0
 dict_addonVars['respawnCmd'] = gungamelib.getVariable('gg_dm_respawn_cmd')
+roundTime = 0
 
 # Player Database
 dict_playersEliminated = {}
+
+# Spawnpoints instance
+spawnPoints = None
 
 # ==============================================================================
 #  GAME EVENTS
 # ==============================================================================
 def load():
+    global spawnPoints
+    
     # Register addon with gungamelib
     gg_elimination = gungamelib.registerAddon('gg_elimination')
     gg_elimination.setDisplayName('GG Elimination')
@@ -57,19 +66,25 @@ def load():
     # Get userids of all connected players
     for userid in es.getUseridList():
         dict_playersEliminated[str(userid)] = []
+    
+    if gungamelib.inMap():
+        spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
 
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_elimination')
-    
-    # Prevent players from spawning after gg_elimination is disabled
-    dict_addonVars['roundActive'] = 0
 
 
 def es_map_start(event_var):
+    global spawnPoints
+    global dict_addonVars
+    
     # Reset round tracking
     dict_addonVars['roundActive'] = 0
     dict_addonVars['currentRound'] = 0
+    
+    # Reset spawnpoint manager
+    spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
 
 def round_start(event_var):
     # Round tracking
@@ -83,9 +98,41 @@ def round_start(event_var):
     gungamelib.msg('gg_elimination', '#all', 'RoundInfo')
 
 def round_end(event_var):
+    global roundTime
+    
+    # Set first spawn round time
+    roundTime = time.time()+8
+    
     # Set round inactive
     dict_addonVars['roundActive'] = 0
+
+def player_spawn(event_var):
+    global spawnPoints
+    global roundTime
     
+    # Get the userid
+    userid = int(event_var['userid'])
+    
+    # Is a spectator?
+    if gungamelib.isSpectator(userid) or gungamelib.isDead(userid):
+        return
+    
+    if time.time() < roundTime:
+        return
+    
+    # No-block for a second, to stop sticking inside other players
+    collisionBefore = es.getplayerprop(userid, 'CBaseEntity.m_CollisionGroup')
+    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
+    gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
+    
+    # Do not continue if we have no spawn points
+    if not spawnPoints.hasPoints():
+        return
+    
+    # Teleport the player
+    s = spawnPoints.getRandomPoint()
+    gungamelib.getPlayer(userid).teleportPlayer(s[0], s[1], s[2], 0, s[4])
+
 def player_activate(event_var):
     userid = event_var['userid']
     

@@ -1569,7 +1569,7 @@ class LeaderManager(object):
         # More than one leader?
         elif self.getLeaderCount() > 1:
             # Show message
-            gungamelib.msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(self.leaders), 'level': self.leaderLevel}, False)
+            msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(self.leaders), 'level': self.leaderLevel}, False)
         
         # Set old leaders, if they have changed
         if self.leaders[:] != self.oldLeaders[:]:

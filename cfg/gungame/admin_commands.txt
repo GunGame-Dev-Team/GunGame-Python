@@ -42,11 +42,11 @@ admin_set 0
 admins 2
 
 //----------------------------------------------------------------------------
-// gg_deathmatch
+// gg_spawnpoints
 //----------------------------------------------------------------------------
-dm_add 2
-dm_remove 2
-dm_remove_all 0
-dm_show 2
-dm_print 2
-dm_convert 0
+spawn_add 2
+spawn_remove 2
+spawn_remove_all 0
+spawn_show 2
+spawn_print 2
+spawn_convert 0

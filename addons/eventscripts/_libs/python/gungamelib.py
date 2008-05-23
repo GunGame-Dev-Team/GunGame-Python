@@ -2127,20 +2127,24 @@ def removeReturnChars(playerName):
     
     return playerName
 
+def inBounds(value, low=False, high=False):
+    return value == clamp(value, low, high)
+
 def clamp(value, low=False, high=False):
-    # Make an integer
-    value = int(value)
+    # Make all parameters floating point integers
+    value, low, high = float(value), float(low), float(high)
     
-    # Clamp if too low
-    if low != False:
-        if value < low: value = low
+    # High and low boundary
+    if low and high:
+        return max(low, min(value, high))
     
-    # Clamp if too high
-    if high != False:
-        if value > high: value = high
+    # Just a low boundary
+    if low:
+        return max(low, value)
     
-    # Return value
-    return value
+    # Just a high boundary
+    if high:
+        return min(high, value)
 
 def playSound(filter, soundName, volume=1.0):
     # Does the sound exist?

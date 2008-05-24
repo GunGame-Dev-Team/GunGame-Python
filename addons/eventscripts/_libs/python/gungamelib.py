@@ -2038,9 +2038,9 @@ def getGlobal(variableName):
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-def isNumeric(string):
+def isNumeric(value):
     try:
-        int(string)
+        int(value)
         return True
     except ValueError:
         return False
@@ -2130,21 +2130,26 @@ def removeReturnChars(playerName):
 def inBounds(value, low=False, high=False):
     return value == clamp(value, low, high)
 
-def clamp(value, low=False, high=False):
-    # Make all parameters floating point integers
-    value, low, high = float(value), float(low), float(high)
+def clamp(value, low=False, high=False, floats=False):
+    # Make all parameters floats or ints
+    if floats:
+        value, low, high = float(value), float(low), float(high)
+    else:
+        value, low, high = int(value), int(low), int(high)
     
     # High and low boundary
-    if low and high:
+    if low != False and high != False:
         return max(low, min(value, high))
     
     # Just a low boundary
-    if low:
+    if low != False:
         return max(low, value)
     
     # Just a high boundary
-    if high:
+    if high != False:
         return min(high, value)
+    
+    return value
 
 def playSound(filter, soundName, volume=1.0):
     # Does the sound exist?

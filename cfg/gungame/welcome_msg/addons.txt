@@ -8,6 +8,12 @@
 //       changes to take place.
 //----------------------------------------------------------------------------
 gg_knife_pro
+gg_kife_elite
+gg_knife_rookie
+gg_reload
+gg_triple_level
+gg_noblock
 gg_turbo
 gg_deathmatch
+gg_friendlyfire
 gg_elimination

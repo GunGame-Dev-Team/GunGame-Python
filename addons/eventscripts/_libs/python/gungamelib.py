@@ -1899,10 +1899,53 @@ def addDownloadableSounds():
 
 def getSound(soundName):
     if dict_sounds.has_key(soundName):
-        return dict_sounds[soundName]
+        if dict_sounds[soundName] == '#random':
+            return getRandomWinnerSound()
+        else:
+            return dict_sounds[soundName]
     else:
         raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
-
+        
+def playSound(filter, soundName, volume=1.0):
+    # Does the sound exist?
+    if not dict_sounds.has_key(soundName):
+        return
+    
+    # Get sound object
+    sound = getSound(soundName)
+    
+    # Does the sound exist? (check 2)
+    if not sound:
+        return
+        
+    if str(sound).lower() == '#random' and soundName == 'winner' or soundName == 'roundwinner':
+        sound = getRandomWinnerSound()
+    
+    # Play to 1 player
+    if isNumeric(filter) or isinstance(filter, int):
+        es.playsound(filter, sound, volume)
+        return
+    
+    # Play to filter
+    for userid in playerlib.getUseridList(filter):
+        es.playsound(userid, sound, volume)
+        
+def getRandomWinnerSound():
+    randomWinnerSoundsPath = getGameDir('cfg/gungame/random_winner_sounds.txt')
+    randomWinnerFile = open(randomWinnerSoundsPath, 'r')
+    if len(randomWinnerFile.readlines()):
+        list_randomWinnerSounds = []
+        for line in randomWinnerFile:
+            line = line.strip()
+            line = line.replace(' ', '')
+            if line:
+                list_randomWinnerSounds.append(line)
+        return random.choice(list_randomWinnerSounds)
+    else:
+        # We will return the default winner sound here
+        return 'music/HL2_song15.mp3'
+    randomWinnerFile.close()
+    
 # ==============================================================================
 #   WINNER RELATED COMMANDS
 # ==============================================================================
@@ -2150,27 +2193,6 @@ def clamp(value, low=False, high=False, floats=False):
         return min(high, value)
     
     return value
-
-def playSound(filter, soundName, volume=1.0):
-    # Does the sound exist?
-    if not dict_sounds.has_key(soundName):
-        return
-    
-    # Get sound object
-    sound = getSound(soundName)
-    
-    # Does the sound exist? (check 2)
-    if not sound:
-        return
-    
-    # Play to 1 player
-    if isNumeric(filter) or isinstance(filter, int):
-        es.playsound(filter, sound, volume)
-        return
-    
-    # Play to filter
-    for userid in playerlib.getUseridList(filter):
-        es.playsound(userid, sound, volume)
 
 def canShowHints():
     return (getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0)

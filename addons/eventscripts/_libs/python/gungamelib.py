@@ -873,7 +873,7 @@ class Sounds(object):
                 soundFile = soundPackINI[section][option]
                 
                 # Make sure there is a sound
-                if soundPackINI.get(section, option) == '0':
+                if soundFile == '0':
                     dict_sounds[option] = 0
                 
                 # Check to make sure that the sound file exists
@@ -1898,14 +1898,17 @@ def addDownloadableSounds():
             es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
 
 def getSound(soundName):
-    if dict_sounds.has_key(soundName):
-        if dict_sounds[soundName] == '#random':
-            return getRandomWinnerSound()
-        else:
-            return dict_sounds[soundName]
-    else:
+    if not dict_sounds.has_key(soundName):
         raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
-        
+    
+    # Is a random sound
+    if dict_sounds[soundName] == '@random':
+        return getRandomWinnerSound()
+    
+    # Just return the normal
+    else:
+        return dict_sounds[soundName]
+
 def playSound(filter, soundName, volume=1.0):
     # Does the sound exist?
     if not dict_sounds.has_key(soundName):
@@ -1914,12 +1917,13 @@ def playSound(filter, soundName, volume=1.0):
     # Get sound object
     sound = getSound(soundName)
     
-    # Does the sound exist? (check 2)
+    # Is the sound empty or 0?
     if not sound:
         return
-        
-    if str(sound).lower() == '#random' and soundName == 'winner' or soundName == 'roundwinner':
-        sound = getRandomWinnerSound()
+    
+    # Get a random sound file from the list of sounds
+    sound = sound.split(',')
+    sound = random.choice(sound)
     
     # Play to 1 player
     if isNumeric(filter) or isinstance(filter, int):
@@ -1929,29 +1933,31 @@ def playSound(filter, soundName, volume=1.0):
     # Play to filter
     for userid in playerlib.getUseridList(filter):
         es.playsound(userid, sound, volume)
-        
+
 def getRandomWinnerSound():
-    randomWinnerSoundsPath = getGameDir('cfg/gungame/random_winner_sounds.txt')
-    randomWinnerFile = open(randomWinnerSoundsPath, 'r')
-    if len(randomWinnerFile.readlines()):
-        list_randomWinnerSounds = []
-        for line in randomWinnerFile:
-            line = line.strip()
-            line = line.replace(' ', '')
-            if line:
-                list_randomWinnerSounds.append(line)
-        return random.choice(list_randomWinnerSounds)
-    else:
-        # We will return the default winner sound here
-        return 'music/HL2_song15.mp3'
-    randomWinnerFile.close()
+    # Open the file
+    file = open(getGameDir('cfg/gungame/random_winner_sounds.txt'), 'r')
     
+    # Read the lines
+    lines = [x.strip() for x in file.readlines()]
+    lines = filter(lambda x: x and (not x.startswith('//')), lines)
+    file.close()
+    
+    # Do we have any items?
+    if lines:
+        return random.choice(lines)
+    
+    # Return the default song
+    else:
+        return 'music/HL2_song15.mp3'
+
 # ==============================================================================
 #   WINNER RELATED COMMANDS
 # ==============================================================================
 def getWins(uniqueid):
     global dict_winners
     uniqueid = str(uniqueid)
+    
     if dict_winners.has_key(uniqueid):
         return dict_winners[uniqueid]['wins']
     else:

@@ -824,8 +824,7 @@ def gg_win(event_var):
     # Get player info
     userid = int(event_var['userid'])
     index = playerlib.getPlayer(userid).get('index')
-    playerName = event_var['name']
-    steamid = event_var['steamid']
+    playerName = es.getplayername(userid)
     
     # Game is over
     gungamelib.setGlobal('gameOver', 1)

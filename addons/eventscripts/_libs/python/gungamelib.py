@@ -1896,6 +1896,23 @@ def addDownloadableSounds():
     for soundName in dict_sounds:
         if dict_sounds[soundName] != 0:
             es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
+    
+    # Add winner sounds
+    addDownloadableWinnerSounds()
+
+def addDownloadableWinnerSounds():
+    # Make sure we are in a map
+    if not inMap():
+        return
+    
+    # Read the lines
+    lines = [x.strip() for x in file.readlines()]
+    sounds = filter(lambda x: x and (not x.startswith('//')), lines)
+    file.close()
+    
+    # Add sounds
+    for file in sounds:
+        es.stringtable('downloadables', 'sound/%s' % file)
 
 def getSound(soundName):
     if not dict_sounds.has_key(soundName):

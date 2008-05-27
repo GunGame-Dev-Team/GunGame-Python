@@ -31,7 +31,6 @@ info.author   = "GunGame Development Team"
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
-# Create a list to store those that are currently triple levelled
 list_currentTripleLevel = []
 
 # ==============================================================================
@@ -46,65 +45,67 @@ def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_triple_level')
 
+def player_death(event_var):
+    userid = int(event_var['userid'])
+    
+    # Reset triple level
+    player = gungamelib.getPlayer(userid)
+    player['triple'] = 0
+
+def round_start(event_var):
+    # Reset the current triple level list
+    list_currentTripleLevel = []
+    
+    # Reset the triple level counter for every player
+    for userid in es.getUseridList():
+        player = gungamelib.getPlayer(userid)['triple'] = 0
 
 def gg_levelup(event_var):
-    attacker = event_var['attacker']
+    attacker = int(event_var['attacker'])
+    
     # Add 1 to triple level counter
     gungamePlayer = gungamelib.getPlayer(attacker)
     gungamePlayer['triple'] += 1
     
-    # If is it a Triple Level
-    if gungamePlayer['triple'] == 3:
-        name = event_var['es_attackername']
-        # Add the player to the triple level list
-        list_currentTripleLevel.append(attacker)
-        # Sound and Messages
-        if gungamelib.getSound('triplelevel'):
-            es.emitsound('player', attacker, gungamelib.getSound('triplelevel'), 1.0, 1.0)
-        gungamelib.msg('gg_triple_level', '#all', 'MsgTripleLevelled', {'name': name})
-        gungamelib.centermsg('gg_triple_level', '#all', 'CenterTripleLevelled', {'name': name})
-        
-        # Effect to player
-        es.server.cmd("es_xgive %s env_spark" %attacker)
-        es.server.cmd("es_xfire %s env_spark setparent !activator" %attacker)
-        es.server.cmd("es_xfire %s env_spark addoutput \"spawnflags 896\"" %attacker)
-        es.server.cmd("es_xfire %s env_spark addoutput \"angles -90 0 0\"" %attacker)
-        es.server.cmd("es_xfire %s env_spark addoutput \"magnitude 8\"" %attacker)
-        es.server.cmd("es_xfire %s env_spark addoutput \"traillength 3\"" %attacker)
-        es.server.cmd("es_xfire %s env_spark startspark" %attacker)
-        
-        # Speed
-        player = playerlib.getPlayer(attacker)
-        player.set("speed", 1.5)
-        
-        # Gravity
-        es.server.cmd("es_xfire %s !self \"gravity 400\"" %attacker)
-
-        # Reset the level counter to 0 since they just tripled
-        gungamePlayer['triple'] = 0
-        
-        # Stop Triple Level Bonus after 10 secs
-        gamethread.delayed(10, removeTriple, (attacker))
-
-def player_death(event_var):
-    userid = event_var['userid']
-    # Get deaths player
-    gungamePlayer = gungamelib.getPlayer(userid)
+    # Still not on the 3rd level?
+    if gungamePlayer['triple'] != 3:
+        return
     
-    # Reset the triple level counter on player death
+    # Get player level
+    name = event_var['es_attackername']
+    index = playerlib.getPlayer(attacker).attributes['index']
+    
+    # Add the player to the triple level list
+    list_currentTripleLevel.append(attacker)
+    
+    # Play sound
+    gungamelib.playSound('#all', 'triplelevel')
+    
+    # Show messages
+    gungamelib.saytext2('gg_triple_level', '#all', index, 'TripleLevelled', {'name': name})
+    gungamelib.centermsg('gg_triple_level', '#all', 'CenterTripleLevelled', {'name': name})
+    
+    # Effect to player
+    es.server.cmd('es_xgive %s env_spark' % attacker)
+    es.server.cmd('es_xfire %s env_spark SetParent !activator' % attacker)
+    es.server.cmd('es_xfire %s env_spark AddOutput "spawnflags 896"' % attacker)
+    es.server.cmd('es_xfire %s env_spark AddOutput "angles -90 0 0"' % attacker)
+    es.server.cmd('es_xfire %s env_spark AddOutput "magnitude 8"' % attacker)
+    es.server.cmd('es_xfire %s env_spark AddOutput "traillength 3"' % attacker)
+    es.server.cmd('es_xfire %s env_spark StartSpark' % attacker)
+    
+    # Speed
+    player = playerlib.getPlayer(attacker)
+    player.set('speed', 1.5)
+    
+    # Gravity
+    es.server.cmd('es_xfire %s !self "gravity 400"' % attacker)
+    
+    # Reset the level counter to 0 since they just tripled
     gungamePlayer['triple'] = 0
-
-def round_start(event_var):
-    # Get all players
-    players = playerlib.getUseridList("#all")
     
-    # Reset the current triple level list
-    list_currentTripleLevel = []
-    
-    # Reset the triple level counter at the beginning of each round for every player
-    for userid in players:
-        gungamePlayer = gungamelib.getPlayer(userid)
-        gungamePlayer['triple'] = 0
+    # Stop the triple level after 10 seconds
+    gamethread.delayed(10, removeTriple, (attacker))
 
 # ==============================================================================
 #  HELPER FUNCTIONS
@@ -112,19 +113,22 @@ def round_start(event_var):
 def removeTriple(userid):
     # Remove the player from the current triple level list
     list_currentTripleLevel.remove(userid)
-    # Check if UserID exists
-    # In the 10 secs the user maybe left
-    if es.exists("userid", userid):
-        # Stop Effect
-        es.server.cmd("es_xfire %s env_spark stopspark" %userid)
-        
-        # Stop Speed
-        player = playerlib.getPlayer(userid)
-        player.set("speed", 1)
-        
-        # Stop Gravity (experimental)
-        es.server.cmd("es_xfire %s !self \"gravity 800\"" %userid)
-        
-        # Stop the sound playing for the triple
-        if gungamelib.getSound('triplelevel') != '0':
-            es.stopsound(userid, gungamelib.getSound('triplelevel'))
+    
+    # Client in server?
+    if not gungamelib.clientInServer(userid):
+        return
+    
+    # Stop effect
+    es.server.cmd('es_xfire %s env_spark StopSpark' % userid)
+    es.server.cmd('es_xfire %s env_spark Kill' % userid)
+    
+    # Reset speed
+    player = playerlib.getPlayer(userid)
+    player.set('speed', 1)
+    
+    # Reset gravity
+    es.server.cmd('es_xfire %s !self "gravity %s"' % (userid, es.ServerVar('sv_gravity')))
+    
+    # Stop the sound playing for the triple
+    if gungamelib.getSound('triplelevel'):
+        es.stopsound(userid, gungamelib.getSound('triplelevel'))

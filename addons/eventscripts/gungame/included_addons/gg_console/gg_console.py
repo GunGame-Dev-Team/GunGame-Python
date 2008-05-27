@@ -45,7 +45,7 @@ def cmd_setlevel(userid, target, level):
     if not gungamelib.clientInServer(target):
         gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': target})
     
-    player = gungamelib.getPlayer(userid)
+    player = gungamelib.getPlayer(target)
     player['level'] = level
 
 def cmd_teleport(userid, target, x, y, z):
@@ -58,5 +58,5 @@ def cmd_teleport(userid, target, x, y, z):
     y = int(y)
     z = int(z)
     
-    player = gungamelib.getPlayer(userid)
+    player = gungamelib.getPlayer(target)
     player.teleportPlayer(x, y, z)

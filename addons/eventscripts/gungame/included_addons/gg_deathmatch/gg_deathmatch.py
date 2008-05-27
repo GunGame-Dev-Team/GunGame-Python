@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.324
+    Version: 1.0.331
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -25,7 +25,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.324'
+info.version  = '1.0.331'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -135,8 +135,11 @@ def player_death(event_var):
     userid = event_var['userid']
     
     # Remove defuser
-    if playerlib.getPlayer(userid).get('defuser'):
-        gamethread.delayed(0.5, es.remove, ('item_defuser'))
+    try:
+        if playerlib.getPlayer(userid).get('defuser'):
+            gamethread.delayed(0.5, es.remove, ('item_defuser'))
+    except UseridError:
+        pass
     
     # Respawn the player if the round hasn't ended
     if gungamelib.getGlobal('respawn_allowed'):

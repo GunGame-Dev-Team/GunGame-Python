@@ -83,8 +83,9 @@ def round_start(event_var):
     global spawnPoints
     
     # Reset spawnpoints
-    if spawnPoints.getShow():
-        spawnPoints.__resetProps()
+    if spawnPoints:
+        if spawnPoints.getShow():
+            spawnPoints.__resetProps()
 
 # ==============================================================================
 #   COMMANDS

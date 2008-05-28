@@ -43,6 +43,9 @@ def load():
     
     # Register addon with gungamelib
     gg_deathmatch = gungamelib.registerAddon('gg_deathmatch')
+    gg_deathmatch.setDisplayName('GG Deathmatch')
+
+    # Add dependencies
     gg_deathmatch.addDependency('gg_turbo', 1)
     gg_deathmatch.addDependency('gg_dead_strip', 1)
     gg_deathmatch.addDependency('gg_dissolver', 1)

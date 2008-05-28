@@ -7,14 +7,18 @@
 // A sound file will be randomly picked from the list of files below and
 // played instead of just having a static winner sound.
 //
-// In the soundpack file, "winner" or "roundwinner" MUST be set to #random
+// In the soundpack file, "winner" or "roundwinner" MUST be set to @random
 // for this to work.
+//
+// All files are relative to "./cstrike/sound/".
+//
+// Example: gungame/winner.mp3 would be ./cstrike/sound/gungame/winner.mp3
+//          on the server.
 //
 // Note: Any alteration of this file requires a server restart or a reload of
 //       GunGame.
 //----------------------------------------------------------------------------
 
-music/HL2_song12.mp3
 music/HL2_song13.mp3
 music/HL2_song14.mp3
 music/HL2_song15.mp3

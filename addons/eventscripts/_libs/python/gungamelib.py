@@ -13,7 +13,6 @@ import string
 import random
 import os
 import time
-import ConfigParser
 import cPickle
 
 # EventScripts Imports
@@ -875,17 +874,14 @@ class Sounds(object):
                 # Make sure there is a sound
                 if soundFile == '0':
                     dict_sounds[option] = 0
+                    continue
                 
-                # Check to make sure that the sound file exists
-                if self.__checkSound(soundFile):
-                    # Add sound here
-                    dict_sounds[option] = soundFile
-                else:
-                    # The sound may not exist, so we warn them that we were unable to locate it
+                # Warn that we cannot find the sound
+                if (not self.__checkSound(soundFile)) and (soundFile != '@random') and (',' not in soundFile):
                     echo('gungame', 0, 0, 'Sounds:CannotAdd', {'file': soundFile})
-                    
-                    # Add it anyway
-                    dict_sounds[option] = soundFile
+                
+                # Add it anyway
+                dict_sounds[option] = soundFile
         
         # Add downloadables
         addDownloadableSounds()
@@ -1904,6 +1900,9 @@ def addDownloadableWinnerSounds():
     # Make sure we are in a map
     if not inMap():
         return
+
+    # Open the file
+    file = open(getGameDir('cfg/gungame/random_winner_sounds.txt'), 'r')
     
     # Read the lines
     lines = [x.strip() for x in file.readlines()]
@@ -1911,8 +1910,8 @@ def addDownloadableWinnerSounds():
     file.close()
     
     # Add sounds
-    for file in sounds:
-        es.stringtable('downloadables', 'sound/%s' % file)
+    for filename in sounds:
+        es.stringtable('downloadables', 'sound/%s' % filename)
 
 def getSound(soundName):
     if not dict_sounds.has_key(soundName):

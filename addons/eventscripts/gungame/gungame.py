@@ -781,6 +781,9 @@ def gg_vote(event_var):
     dict_variables['gungame_voting_started'] = True
     if gungamelib.getVariableValue('gg_map_vote') == 2:
         es.server.cmd('ma_voterandom end %s' %gungamelib.getVariableValue('gg_map_vote_size'))
+    elif gungamelib.getVariableValue('gg_map_vote') == 3:
+        es.server.cmd('admin_votemaps')
+
 
 def gg_round_win(event_var):
     global countBombDeathAsSuicide

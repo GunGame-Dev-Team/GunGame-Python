@@ -45,8 +45,9 @@ def cmd_setlevel(userid, target, level):
     if not gungamelib.clientInServer(target):
         gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': target})
     
+    # Get player and fire gg_levelup
     player = gungamelib.getPlayer(target)
-    player['level'] = level
+    gungamelib.triggerLevelUpEvent(target, player['level'], level)
 
 def cmd_teleport(userid, target, x, y, z):
     # Make sure the client is in the server

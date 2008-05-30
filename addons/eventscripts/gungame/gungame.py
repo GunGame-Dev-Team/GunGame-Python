@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.336
+    Version: 1.0.338
     Description: The main addon, handles leaders and events.
 '''
 
@@ -780,10 +780,7 @@ def gg_leader_lostlevel(event_var):
 def gg_vote(event_var):
     dict_variables['gungame_voting_started'] = True
     if gungamelib.getVariableValue('gg_map_vote') == 2:
-        es.server.cmd('ma_voterandom end %s' %gungamelib.getVariableValue('gg_map_vote_size'))
-    elif gungamelib.getVariableValue('gg_map_vote') == 3:
-        es.server.cmd('admin_votemaps')
-
+        es.server.queuecmd(gungamelib.getVariableValue('gg_map_vote_command'))
 
 def gg_round_win(event_var):
     global countBombDeathAsSuicide

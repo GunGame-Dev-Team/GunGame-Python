@@ -1925,7 +1925,7 @@ def getSound(soundName):
     else:
         return dict_sounds[soundName]
 
-def playSound(filter, soundName, volume=1.0):
+def getSoundSafe(soundName):
     # Does the sound exist?
     if not dict_sounds.has_key(soundName):
         return
@@ -1941,6 +1941,16 @@ def playSound(filter, soundName, volume=1.0):
     sound = sound.split(',')
     sound = random.choice(sound)
     
+    # Return sound
+    return sound
+
+def playSound(filter, soundName, volume=1.0):
+    # Get sound
+    sound = getSoundSafe(soundName)
+    
+    if not sound:
+        return
+    
     # Play to 1 player
     if isNumeric(filter) or isinstance(filter, int):
         es.playsound(filter, sound, volume)
@@ -1949,6 +1959,16 @@ def playSound(filter, soundName, volume=1.0):
     # Play to filter
     for userid in playerlib.getUseridList(filter):
         es.playsound(userid, sound, volume)
+
+def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
+    # Get sound
+    sound = getSoundSafe(soundName)
+    
+    if not sound:
+        return
+    
+    # Emit!
+    es.emitsound('player', emitter, sound, volume, attenuation)
 
 def getRandomWinnerSound():
     # Open the file

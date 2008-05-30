@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_rookie
-    Version: 1.0.331
+    Version: 1.0.335
     Description:    This is the same as gg_knife_pro, but a few small
                     differences. When one player knife kills another player,
                     the attacker will ALWAYS level up, unless on knife level.
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = '1.0.331'
+info.version  = '1.0.335'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -87,10 +87,13 @@ def player_death(event_var):
         gungamelib.msg('gg_knife_rookie', attacker, 'AttackerPreventLevel')
         return
     
+    '''
+    # The below code goes against what we coded this for, does it not?
     # Is the attacker on knife or grenade level?
     if gungameAttacker.getWeapon() in ('knife', 'hegrenade'):
         gungamelib.msg('gg_knife_rookie', attacker, 'CannotSkipThisLevel')
         return
+    '''
     
     # ===============
     # GET VICTIM INFO

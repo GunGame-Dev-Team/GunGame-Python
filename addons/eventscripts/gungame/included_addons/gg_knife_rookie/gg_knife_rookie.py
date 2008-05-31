@@ -79,7 +79,8 @@ def player_death(event_var):
     # ATTACKER CHECKS
     # ===============
     # Fix duplicate winning
-    if (gungameAttackerLevel + 1) == gungamelib.getTotalLevels():
+    #if (gungameAttackerLevel + 1) == gungamelib.getTotalLevels():
+    if (gungameAttackerLevel + 1) > gungamelib.getTotalLevels():
         return
     
     # Can they levelup?

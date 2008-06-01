@@ -45,6 +45,7 @@ def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_knife_rookie')
 
+
 def player_death(event_var):
     # ============
     # BASIC CHECKS
@@ -79,8 +80,7 @@ def player_death(event_var):
     # ATTACKER CHECKS
     # ===============
     # Fix duplicate winning
-    #if (gungameAttackerLevel + 1) == gungamelib.getTotalLevels():
-    if (gungameAttackerLevel + 1) > gungamelib.getTotalLevels():
+    if gungameAttackerLevel >= gungamelib.getTotalLevels():
         return
     
     # Can they levelup?
@@ -88,13 +88,10 @@ def player_death(event_var):
         gungamelib.msg('gg_knife_rookie', attacker, 'AttackerPreventLevel')
         return
     
-    '''
-    # The below code goes against what we coded this for, does it not?
     # Is the attacker on knife or grenade level?
     if gungameAttacker.getWeapon() in ('knife', 'hegrenade'):
         gungamelib.msg('gg_knife_rookie', attacker, 'CannotSkipThisLevel')
         return
-    '''
     
     # ===============
     # GET VICTIM INFO

@@ -49,6 +49,7 @@ list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
 
 list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
+list_usedRandomSounds = []
 
 # ==============================================================================
 #   ERROR CLASSES
@@ -434,9 +435,6 @@ class WeaponOrder(object):
         '''Echos the current weapon order to console.'''
         weaponOrder = dict_weaponOrders[self.fileName]
         
-        es.dbgmsg(0, '[GunGame] ')
-        echo('gungame', 0, 0, 'WeaponOrder:Echo:Info')
-        es.dbgmsg(0, '[GunGame] ')
         echo('gungame', 0, 0, 'WeaponOrder:Echo:FileName', {'file': self.fileName})
         echo('gungame', 0, 0, 'WeaponOrder:Echo:DisplayName', {'name': dict_weaponOrderSettings[self.fileName]['displayName']})
         echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': getVariableValue('gg_weapon_order')})
@@ -455,7 +453,6 @@ class WeaponOrder(object):
             es.dbgmsg(0, '[GunGame] |  %2s   |     %d     | %13s |' % (level, multiKillValue, weaponName))
         
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
-        es.dbgmsg(0, '[GunGame] ')
     
     def setMultiKillOverride(self, value):
         '''Sets the multikill override.'''
@@ -987,7 +984,8 @@ class Addon(object):
             return
         
         # Tell everyone about what the admin ran
-        saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
+        if log:
+            saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
         
         # Print to the admin log
         if userid and log and getVariableValue('gg_admin_log'):
@@ -1414,13 +1412,12 @@ class Winners(object):
     def __init__(self, uniqueid):
         self.uniqueid = str(uniqueid)
         
-        # Make sure that the winner's database has been loaded
+        # Load database
         if not getGlobal('winnersloaded'):
-            # Load the database using pickle
             loadWinnerDatabase()
         
         if not dict_winners.has_key(self.uniqueid):
-            self.attributes = {'wins': 0, 'timestamp': time.time()}
+            self.attributes = {'wins': 0, 'timestamp': time.time(), 'name': '<UNKNOWN>'}
             dict_winners[self.uniqueid] = self.attributes
         else:
             self.attributes = dict_winners[self.uniqueid]
@@ -1431,7 +1428,7 @@ class Winners(object):
         
         # Does the attribute exist?
         if not self.attributes.has_key(item):
-            raise KeyError('Winners object does not have item "%s".' % item)
+            raise KeyError(item)
         
         return self.attributes[item]
     
@@ -1440,11 +1437,15 @@ class Winners(object):
         item = str(item).lower()
         
         # Does the attribute exist?
-        if item in self.attributes:
-            if item == 'wins':
-                self.attributes[item] = int(value)
-            if item == 'timestamp':
-                self.attributes[item] = float(value)
+        if not self.attributes.has_key(item):
+            return
+        
+        if item == 'wins':
+            self.attributes[item] = int(value)
+        elif item == 'timestamp':
+            self.attributes[item] = float(value)
+        else:
+            self.attributes[item] = value
 
 # ==============================================================================
 #  LEADER MANAGER CLASS
@@ -1651,34 +1652,22 @@ def centermsg(addon, filter, string, tokens={}):
 # ==============================================================================
 #   LEVEL UP AND LEVEL DOWN TRIGGERING
 # ==============================================================================
-# def triggerLevelUpEvent(levelUpUserid, levelUpSteamid, levelUpName, levelUpTeam, levelUpOldLevel, levelUpNewLevel, victimUserid=0, victimName=None, weapon=None):
-def triggerLevelUpEvent(levelUpUserid, levelUpOldLevel, levelUpNewLevel, victimUserid=0, reason=0):
+def triggerLevelUpEvent(userid, oldLevel, newLevel, victim=0, reason=''):
     es.event('initialize', 'gg_levelup')
-    es.event('setint', 'gg_levelup', 'attacker', levelUpUserid)
-    # es.event('setstring', 'gg_levelup', 'steamid', levelUpSteamid)
-    # es.event('setstring', 'gg_levelup', 'name', levelUpName)
-    # es.event('setstring', 'gg_levelup', 'team', levelUpTeam)                                
-    es.event('setint', 'gg_levelup', 'old_level', levelUpOldLevel)
-    es.event('setint', 'gg_levelup', 'new_level', levelUpNewLevel)
-    es.event('setint', 'gg_levelup', 'userid', victimUserid)
+    es.event('setint', 'gg_levelup', 'attacker', userid)                               
+    es.event('setint', 'gg_levelup', 'old_level', oldLevel)
+    es.event('setint', 'gg_levelup', 'new_level', newLevel)
+    es.event('setint', 'gg_levelup', 'userid', victim)
     es.event('setstring', 'gg_levelup', 'reason', reason)
-    # es.event('setstring', 'gg_levelup', 'victimname', victimName)
-    # es.event('setstring', 'gg_levelup', 'weapon', weapon)
     es.event('fire', 'gg_levelup')
-    
-# def triggerLevelDownEvent(levelDownUserid, levelDownSteamid, levelDownName, levelDownTeam, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, attackerName=None):
-def triggerLevelDownEvent(levelDownUserid, levelDownOldLevel, levelDownNewLevel, attackerUserid=0, reason=0):
 
+def triggerLevelDownEvent(userid, oldLevel, newLevel, attacker=0, reason=''):
     es.event('initialize', 'gg_leveldown')
-    es.event('setint', 'gg_leveldown', 'userid', levelDownUserid)
-    # es.event('setstring', 'gg_leveldown', 'steamid', levelDownSteamid)
-    # es.event('setstring', 'gg_leveldown', 'name', levelDownName)
-    # es.event('setint', 'gg_leveldown', 'team', levelDownTeam)
-    es.event('setint', 'gg_leveldown', 'old_level', levelDownOldLevel)
-    es.event('setint', 'gg_leveldown', 'new_level', levelDownNewLevel)
-    es.event('setint', 'gg_leveldown', 'attacker', attackerUserid)
+    es.event('setint', 'gg_leveldown', 'userid', userid)
+    es.event('setint', 'gg_leveldown', 'old_level', oldLevel)
+    es.event('setint', 'gg_leveldown', 'new_level', newLevel)
+    es.event('setint', 'gg_leveldown', 'attacker', attacker)
     es.event('setstring', 'gg_leveldown', 'reason', reason)
-    # es.event('setstring', 'gg_leveldown', 'attackername', attackerName)
     es.event('fire', 'gg_leveldown')
     
 # ==============================================================================
@@ -1735,20 +1724,9 @@ def clearOldPlayers():
 def getCurrentWeaponOrderFile():
     return dict_weaponOrderSettings['currentWeaponOrderFile']
     
-def getWeaponOrderString():
-    weaponOrderString = None
-    currentWeaponOrder = dict_weaponOrderSettings['currentWeaponOrderFile']
-    for level in dict_weaponOrders[currentWeaponOrder]:
-        if not weaponOrderString:
-            weaponOrderString = dict_weaponOrders[currentWeaponOrder][level][0]
-        else:
-            weaponOrderString = '%s,%s' %(weaponOrderString, dict_weaponOrders[currentWeaponOrder][level][0])
-    return weaponOrderString
-    
 def getWeaponOrderList():
     currentWeaponOrder = dict_weaponOrderSettings['currentWeaponOrderFile']
-    list_weaponOrder = [dict_weaponOrders[currentWeaponOrder][level][0] for level in dict_weaponOrders[currentWeaponOrder]]
-    return list_weaponOrder
+    return [dict_weaponOrders[currentWeaponOrder][level][0] for level in dict_weaponOrders[currentWeaponOrder]]
     
 def getLevelWeapon(levelNumber):
     levelNumber = int(levelNumber)
@@ -1768,8 +1746,7 @@ def weaponOrderMenuHandler(userid, choice, popupname):
 #   LEVEL RELATED COMMANDS
 # ==============================================================================
 def getTotalLevels():
-    list_weaponOrderKeys = dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].keys()
-    return len(list_weaponOrderKeys)
+    return len(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']])
 
 def setPreventLevelAll(state):
     state = clamp(state, 0, 1)
@@ -1792,26 +1769,15 @@ def getAverageLevel():
 
 def getLevelUseridList(levelNumber):
     levelNumber = int(levelNumber)
-    list_levelUserids = []
+    levelUserids = []
     
     for userid in dict_players:
-        if dict_players[userid]['level'] == levelNumber:
-            list_levelUserids.append(userid)
+        level = dict_players[userid]['level']
+        
+        if level == levelNumber:
+            levelUserids.append(userid)
     
-    return list_levelUserids
-
-def getLevelUseridString(levelNumber):
-    levelNumber = int(levelNumber)
-    levelUseridString = None
-    
-    for userid in dict_players:
-        if dict_players[userid]['level'] == levelNumber:
-            if not levelUseridString:
-                levelUseridString = userid
-            else:
-                levelUseridString = '%s,%s' % (levelUseridString, userid)
-    
-    return levelUseridString
+    return levelUserids
 
 def levelExists(levelNumber):
     return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber)
@@ -1826,14 +1792,6 @@ def getLevelInfo(levelNumber):
 def getLevelMultiKill(levelNumber):
     if levelExists(levelNumber):
         return getLevelInfo(levelNumber)[1]
-
-def createScoreList(keyGroupName=None):
-    dict_gungameScores = {}
-    
-    for userid in dict_players:
-        dict_gungameScores[userid] = dict_players[userid]['level']
-    
-    return sorted(dict_gungameScores.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
 
 # ==============================================================================
 #   CONFIG RELATED COMMANDS
@@ -1894,9 +1852,11 @@ def addDownloadableSounds():
             es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
     
     # Add winner sounds
-    addDownloadableWinnerSounds()
+    addDownloadableWinnerSound()
 
-def addDownloadableWinnerSounds():
+def addDownloadableWinnerSound():
+    global list_usedRandomSounds
+    
     # Make sure we are in a map
     if not inMap():
         return
@@ -1909,9 +1869,27 @@ def addDownloadableWinnerSounds():
     sounds = filter(lambda x: x and (not x.startswith('//')), lines)
     file.close()
     
-    # Add sounds
-    for filename in sounds:
-        es.stringtable('downloadables', 'sound/%s' % filename)
+    # No random sounds, set default
+    if not sounds:
+        list_usedRandomSounds = ['music/HL2_song15.mp3']
+        return
+    
+    # Remove all the used sounds
+    for sound in list_usedRandomSounds:
+        sounds.remove(sound)
+    
+    # No sounds left
+    if not sounds:
+        # Reset used random sounds
+        list_usedRandomSounds = []
+        
+        # Re-call this function
+        addDownloadableWinnerSound()
+        return
+    
+    # Set random sound and make it downloadable
+    list_usedRandomSounds.append(random.choice(sounds))
+    es.stringtable('downloadables', 'sound/%s' % list_usedRandomSounds[-1])
 
 def getSound(soundName):
     if not dict_sounds.has_key(soundName):
@@ -1919,7 +1897,7 @@ def getSound(soundName):
     
     # Is a random sound
     if dict_sounds[soundName] == '@random':
-        return getRandomWinnerSound()
+        return list_usedRandomSounds[-1]
     
     # Just return the normal
     else:
@@ -1970,26 +1948,22 @@ def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
     # Emit!
     es.emitsound('player', emitter, sound, volume, attenuation)
 
-def getRandomWinnerSound():
-    # Open the file
-    file = open(getGameDir('cfg/gungame/random_winner_sounds.txt'), 'r')
-    
-    # Read the lines
-    lines = [x.strip() for x in file.readlines()]
-    lines = filter(lambda x: x and (not x.startswith('//')), lines)
-    file.close()
-    
-    # Do we have any items?
-    if lines:
-        return random.choice(lines)
-    
-    # Return the default song
-    else:
-        return 'music/HL2_song15.mp3'
-
 # ==============================================================================
 #   WINNER RELATED COMMANDS
 # ==============================================================================
+def getOrderedWinners():
+    return sorted(dict_winners,
+                  lambda x, y: cmp(dict_winners[x]['wins'], dict_winners[y]['wins']),
+                  reverse=True)
+
+def getWinnerName(uniqueid):
+    global dict_winners
+    
+    if dict_winners.has_key(uniqueid):
+        return dict_winners[uniqueid]['name']
+    else:
+        return '<UNKNOWN>'
+
 def getWins(uniqueid):
     global dict_winners
     uniqueid = str(uniqueid)
@@ -2002,6 +1976,7 @@ def getWins(uniqueid):
 def addWin(uniqueid):
     gungameWinner = getWinner(uniqueid)
     gungameWinner['wins'] += 1
+    gungameWinner['name'] = es.getplayername(es.getuserid(uniqueid))
 
 def updateTimeStamp(uniqueid):
     gungameWinner = getWinner(uniqueid)
@@ -2018,7 +1993,7 @@ def saveWinnerDatabase():
     cPickle.dump(dict_winners, winnersDataBaseFile)
     winnersDataBaseFile.close()
 
-def loadWinnersDataBase():
+def loadWinnerDatabase():
     global dict_winners
     
     # Set a variable for the path of the winner's database
@@ -2043,7 +2018,7 @@ def loadWinnersDataBase():
     # Set the global for having the database loaded
     setGlobal('winnersloaded', 1)
 
-def cleanWinnersDataBase(days):
+def pruneWinnerDatabase(days):
     global dict_winners
     
     daysInSeconds = float(days) * float(86400)

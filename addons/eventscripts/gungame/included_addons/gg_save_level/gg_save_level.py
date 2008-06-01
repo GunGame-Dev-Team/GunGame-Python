@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_save_level
-    Version: 1.0.331
+    Version: 1.0.340
     Description: Saves a players level when they disconnect and restores it when
                  they reconnect (will reset at the end of a game).
 '''
@@ -21,7 +21,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_save_level (for GunGame: Python)'
-info.version  = '1.0.331'
+info.version  = '1.0.340'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_save_level'
 info.author   = 'GunGame Development Team'

@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round Addon for GunGame: Python'
-info.version  = '1.0.331'
+info.version  = '1.0.340'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -35,15 +35,7 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 #  ERROR CLASSES
 # ==============================================================================
-# Begin Multiple Error Classes
-class _GunGameQueryError:
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return self.message
-
-class WarmUpWeaponError(_GunGameQueryError):
+class WarmUpWeaponError(Exception):
     pass
 
 # ==============================================================================
@@ -145,7 +137,7 @@ def player_spawn(event_var):
     # Is a spectator or dead?
     if int(event_var['es_userteam']) <= 1 or es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag'):
         return
-        
+    
     # See if the admin wants to give something other than the level 1 weapon
     if gungamelib.getVariableValue('gg_warmup_weapon') != 0:
         # Check to make sure that the WarmUp Weapon is not a knife
@@ -182,11 +174,11 @@ def startTimer():
 # ==============================================================================
 def countDown(repeatInfo):
     global warmupTime
-        
+    
     # If the remaining time is greater than 1
     if warmupTime >= 1:
         # Loop through the players
-        for userid in playerlib.getUseridList('#all'):
+        for userid in es.getUseridList():
             # Send a hudhint to userid with the remaining timeleft
             usermsg.hudhint(userid, 'Warmup round timer: %d' % warmupTime)
             
@@ -204,7 +196,7 @@ def countDown(repeatInfo):
         # Decrement the timeleft counter
         warmupTime -= 1
     elif warmupTime == 0:
-        for userid in playerlib.getUseridList('#all'):
+        for userid in es.getUseridList():
             # Send a hudhint to userid that the warmup round has ended
             usermsg.hudhint(userid, 'Warmup Round Completed!')
         

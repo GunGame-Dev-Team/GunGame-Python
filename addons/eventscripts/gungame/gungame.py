@@ -92,9 +92,9 @@ def load():
     global list_stripExceptions
     
     # Print load started
-    es.dbgmsg(0, '[GunGame] ')
+    es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     gungamelib.echo('gungame', 0, 0, 'LoadStarted')
-    es.dbgmsg(0, '[GunGame] ')
+    es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     
     try:
         # Load custom events
@@ -114,6 +114,7 @@ def load():
         gungamelib.getConfig('gg_en_config.cfg')
         gungamelib.getConfig('gg_default_addons.cfg')
         gungamelib.getConfig('gg_map_vote.cfg')
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         
         # Fire the gg_server.cfg
         es.server.cmd('exec gungame/gg_server.cfg')
@@ -154,7 +155,10 @@ def load():
                 weaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
             
             # Echo to console
+            gungamelib.echo('gungame', 0, 0, 'WeaponOrder:Echo:Info')
+            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
             weaponOrder.echo()
+            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         
         # !WEAPONS
         if not es.exists('saycommand', '!weapons'):
@@ -223,13 +227,14 @@ def load():
         es.event('fire', 'gg_load')
         
         # Print load completed
-        es.dbgmsg(0, '[GunGame] ')
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         gungamelib.echo('gungame', 0, 0, 'LoadCompleted')
-        es.dbgmsg(0, '[GunGame] ')
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     except Exception, e:
-        es.dbgmsg(0, '[GunGame] ')
-        es.dbgmsg(0, '[GunGame]    Unable to load GunGame: %s' % e)
-        es.dbgmsg(0, '[GunGame] ')
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
+        es.dbgmsg(0, '[GunGame] Unable to load GunGame, exception raised during load:')
+        es.dbgmsg(0, '[GunGame] %s: %s' % (e.__class__.__name__, e))
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         es.unload('gungame')
 
 def unload():
@@ -779,6 +784,7 @@ def gg_leader_lostlevel(event_var):
 
 def gg_vote(event_var):
     dict_variables['gungame_voting_started'] = True
+    
     if gungamelib.getVariableValue('gg_map_vote') == 2:
         es.server.queuecmd(gungamelib.getVariableValue('gg_map_vote_command'))
 

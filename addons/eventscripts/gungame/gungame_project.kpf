@@ -5,8 +5,6 @@
 </livefolder>
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
 </folder>
-<file id="79cb9fe1-0127-4892-a9c7-d2d8e6f813de" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="test.py" url="file:///f:/temp/test.py">
-</file>
 <file id="3d8f5c75-7a90-467f-95ab-89a95e9a878f" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="spawnpointlib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/spawnpointlib.py">
 </file>
 <file id="79d588fc-6aa4-4725-91fc-e2c377c893b4" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="playerlib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/playerlib.py">

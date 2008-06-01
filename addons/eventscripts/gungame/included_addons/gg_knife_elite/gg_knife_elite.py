@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_elite
-    Version: 1.0.331
+    Version: 1.0.340
     Description: After a player levels up, they only get a knife until the next
                  round.
 '''
@@ -12,7 +12,6 @@
 # EventScripts imports
 import es
 import playerlib
-import gamethread
 
 # GunGame imports
 import gungamelib
@@ -23,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_knife_elite (for GunGame: Python)'
-info.version  = '1.0.331'
+info.version  = '1.0.340'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_knife_elite'
 info.author   = 'GunGame Development Team'
@@ -38,7 +37,7 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite',
                    'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade',
                    'flashbang', 'smokegrenade']
 
-dict_playerIsElite = {}
+dict_elite = {}
 
 # ==============================================================================
 #  GAME EVENTS
@@ -51,8 +50,7 @@ def load():
     gg_knife_elite.addDependency('gg_turbo', 0)
     
     for userid in es.getUseridList():
-        userid = str(userid)
-        dict_playerIsElite[userid] = 0
+        dict_elite[userid] = 0
 
 def unload():
     # Unregister this addon with gungamelib
@@ -60,23 +58,46 @@ def unload():
 
 
 def player_spawn(event_var):
-    userid = event_var['userid']
-    dict_playerIsElite[userid] = 0
-    gungamePlayer = gungamelib.getPlayer(userid)
+    userid = int(event_var['userid'])
+    
+    # Reset elite status
+    dict_elite[userid] = 0
+    
+    # Use weapon
+    player = gungamelib.getPlayer(userid)
     es.sexec(userid, 'use weapon_%s' % gungamePlayer.getWeapon())
 
 def item_pickup(event_var):
-    userid = event_var['userid']
-    if dict_playerIsElite[userid]:
-        item = event_var['item']
-        if item in list_allWeapons:
-            playerlibPlayer = playerlib.getPlayer(userid)
-            es.server.cmd('es_remove %i' % playerlibPlayer.get('weaponindex', item))
+    userid = int(event_var['userid'])
+    item = event_var['item']
+    
+    # Not elite?
+    if not dict_elite[userid]:
+        return
+    
+    # Not a valid item?
+    if item not in list_allWeapons:
+        return
+    
+    # Remove item
+    player = playerlib.getPlayer(userid)
+    es.server.cmd('es_xremove %i' % player.get('weaponindex', item))
 
 def gg_levelup(event_var):
-    attacker = event_var['attacker']
-    gungamePlayer = gungamelib.getPlayer(attacker)
-    if gungamePlayer['preventlevel'] == 0 and gungamePlayer.getWeapon() != 'knife':
-        es.sexec(attacker, 'use weapon_knife')
-        gungamePlayer.stripPlayer()
-        dict_playerIsElite[attacker] = 1
+    attacker = int(event_var['attacker'])
+    player = gungamelib.getPlayer(attacker)
+    
+    # Can't level up?
+    if player['preventlevel']:
+        return
+    
+    # Is using knife already?
+    if player.getWeapon() == 'knife':
+        return
+    
+    # Strip them
+    es.sexec(attacker, 'use weapon_knife')
+    player.stripPlayer()
+    
+    # Set elite status
+    dict_elite[attacker] = 1

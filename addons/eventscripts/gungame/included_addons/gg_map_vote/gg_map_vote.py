@@ -30,7 +30,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_map_vote (for GunGame: Python)'
-info.version  = '1.0.331'
+info.version  = '1.0.340'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_map_vote'
 info.author   = 'GunGame Development Team'
@@ -98,7 +98,7 @@ def load():
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_map_vote')
-        
+    
     # Restore original value for eventscripts_maphandler
     es.ServerVar('eventscripts_maphandler').set(oldEventscriptsMaphandler)
     
@@ -116,19 +116,20 @@ def es_map_start(event_var):
     # Add current map to list of recent maps
     if int(dict_variables['showLastMaps']):
         dict_addonVars['recentMaps'].append(event_var['mapName'])
-        # check size of recent map list
+        
+        # Check size of recent map list
         if len(dict_addonVars['recentMaps']) > int(dict_variables['showLastMaps']):
             del dict_addonVars['recentMaps'][0]
-            
+    
     # Delete popup
     if popuplib.exists('voteMenu'):
         popuplib.unsendname('voteMenu', es.getUseridList())
         popuplib.delete('voteMenu')
-        
+    
     # Delete repeat
     if repeat.status('voteCounter'):
         repeat.delete('voteCounter')
-        
+    
     # Get vote ready
     initiateVote()
 
@@ -153,6 +154,7 @@ def gg_win(event_var):
 def initiateVote():
     # Get list of maps from cstrike/maps
     list_mapDir = []
+    
     mapsDir = os.listdir(os.getcwd() + '/cstrike/maps/')
     for map in mapsDir:
         (mapName, extension) = os.path.splitext(map)
@@ -176,6 +178,7 @@ def initiateVote():
     for map in dict_addonVars['recentMaps']:
         if map in dict_addonVars['mapList'] and len(dict_addonVars['mapList']) > int(dict_variables['voteSize']):
             dict_addonVars['mapList'].remove(map)
+    
     setVoteList()
 
 def setVoteList():
@@ -195,7 +198,7 @@ def setVoteList():
     # Loop through maps to build list
     for map in dict_addonVars['voteList']:
         votePopup.addoption(map, map)
-        
+    
     # Reset the player choice dict
     dict_playerChoice.clear()
     dict_playerChoice['votedMaps'] = {}

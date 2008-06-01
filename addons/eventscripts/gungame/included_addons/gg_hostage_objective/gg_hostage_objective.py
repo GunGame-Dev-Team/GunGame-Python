@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_hostage_objective
-    Version: 1.0.331
+    Version: 1.0.340
     Description: Adds rewards for rescuing or preventing the rescuing of
                  hostages.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_hostage_objective (for GunGame: Python)'
-info.version  = '1.0.331'
+info.version  = '1.0.340'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_hostage_objective'
 info.author   = 'GunGame Development Team'
@@ -49,41 +49,79 @@ def round_start(event_var):
     dict_hostageTracker.clear()
 
 def hostage_follows(event_var):
-    userid = event_var['userid']
-    if userid not in dict_hostageTracker:
-        dict_hostageTracker[userid] = {'hostages':[event_var['hostage']], 'rescues':0}
+    userid = int(event_var['userid'])
+    hostage = int(event_var['hostage'])
+    
+    # Add hostage to player
+    if dict_hostageTracker.has_key(userid):
+        dict_hostageTracker[userid]['hostages'].append(hostage)
     else:
-        dict_hostageTracker[userid]['hostages'].append(event_var['hostage'])
+        dict_hostageTracker[userid] = {'hostages': [hostage], 'rescues': 0}
 
 def hostage_stops_following(event_var):
-    userid = event_var['userid']
-    hostage = event_var['hostage']
+    userid = int(event_var['userid'])
+    hostage = int(event_var['hostage'])
+    
+    # Remove hostage from player
     if hostage in dict_hostageTracker[userid]['hostages']:
         dict_hostageTracker[userid]['hostages'].remove(hostage)
 
 def hostage_killed(event_var):
-    userid = event_var['userid']
-    if es.exists('userid', userid):
-        gungamePlayer = gungamelib.getPlayer(userid)
-        gungamePlayerLevel = gungamePlayer['level']
-        gungamelib.triggerLevelDownEvent(userid, gungamePlayerLevel, gungamePlayerLevel - 1, 0, 'hostage_killed')
+    userid = int(event_var['userid'])
+    
+    # Get player info
+    player = gungamelib.getPlayer(userid)
+    level = player['level']
+    
+    # Level them down
+    gungamelib.triggerLevelDownEvent(userid, level, level - 1, 0, 'hostage_killed')
 
 def hostage_rescued(event_var):
-    userid = event_var['userid']
+    userid = int(event_var['userid'])
+    
+    # Increment rescues
     dict_hostageTracker[userid]['rescues'] += 1
-    if dict_hostageTracker[userid]['rescues'] >= 2:
-        gungamePlayer = gungamelib.getPlayer(userid)
-        gungamePlayerLevel = gungamePlayer['level']
-        gungamelib.triggerLevelUpEvent(userid, gungamePlayerLevel, gungamePlayerLevel + 1, 0, 'hostage_rescued')
-        dict_hostageTracker[userid]['rescues'] = 0
+    
+    # No more than 2 rescues?
+    if dict_hostageTracker[userid]['rescues'] < 2:
+        return
+    
+    # Get player info
+    player = gungamelib.getPlayer(userid)
+    level = player['level']
+    
+    # Increment level
+    gungamelib.triggerLevelUpEvent(userid, level, level + 1, 0, 'hostage_rescued')
+    
+    # Reset rescues
+    dict_hostageTracker[userid]['rescues'] = 0
 
 def player_death(event_var):
-    userid = event_var['userid']
-    if userid in dict_hostageTracker and len(dict_hostageTracker[userid]['hostages']):
-        gungameVictim = gungame.getPlayer(userid)
-        gungameVictimLevel = int(gungameVictim.get('level'))
-        attacker = event_var['attacker']
-        gungameAttacker = gungame.getPlayer(attacker)
-        gungameAttackerLevel = int(gungameAttacker.get('level'))
-        gungamelib.LevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerLevel + 1, userid, 'hostage_stop')
-        dict_hostageTracker[userid].clear()
+    userid = int(event_var['userid'])
+    attacker = int(event_var['attacker'])
+    
+    # Suicide?
+    if userid == attacker or attacker == 0:
+        return
+    
+    # No hostages following?
+    if not dict_hostageTracker.has_key(userid):
+        return
+    
+    # No hostages following? (Check 2)
+    if not dict_hostageTracker[userid]['hostages']:
+        return
+    
+    # Get victim info
+    victimPlayer = gungamelib.getPlayer(userid)
+    victimLevel = victimPlayer['level']
+    
+    # Get attacker info
+    attackerPlayer = gungamelib.getPlayer(attacker)
+    attackerLevel = attackerPlayer['level']
+    
+    # Level up the attacker
+    gungamelib.triggerLevelUpEvent(attacker, level, level + 1, userid, 'hostage_stop')
+    
+    # Remove from hostage tracker
+    del dict_hostageTracker[userid]

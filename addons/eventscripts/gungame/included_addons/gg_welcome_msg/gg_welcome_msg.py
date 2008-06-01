@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_welcome_msg
-    Version: 1.0.331
+    Version: 1.0.340
     Description: Shows a simple popup message to every player that connects.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_welcome_msg (for GunGame: Python)'
-info.version  = '1.0.331'
+info.version  = '1.0.340'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_welcome_msg'
 info.author   = 'GunGame Development Team'
@@ -51,6 +51,9 @@ def load():
     gg_welcome_msg = gungamelib.registerAddon('gg_welcome_msg')
     gg_welcome_msg.setDisplayName('GG Welcome Message')
     
+    # Register command
+    gg_welcome_msg.registerCommand('welcomemsg', showPopup)
+    
     # Open file and read lines
     msgFileObj = open(gungamelib.getGameDir('cfg/gungame/welcome_msg/welcome message.txt'), 'r')
     list_rawWelcomeMsg = msgFileObj.readlines()
@@ -60,9 +63,6 @@ def load():
     addonsFileObj = open(gungamelib.getGameDir('cfg/gungame/welcome_msg/addons.txt'), 'r')
     list_addonsToShow = addonsFileObj.readlines()
     addonsFileObj.close()
-    
-    # Register command
-    regCmd('welcomemsg', showPopup)
 
 def unload():
     gungamelib.unregisterAddon('gg_welcome_msg')
@@ -88,16 +88,12 @@ def player_team(event_var):
     del dict_playerQueue[userid]
     
     # Send the popup
-    buildMenu()
-    gamethread.delayed(1, popuplib.send, ('gg_welcome_msg', userid))
+    es.server.cmd('es_xsexec %s gg_welcomemsg' % userid)
 
 # ==============================================================================
 #   MENU FUNCTIONS
 # ==============================================================================
-def showPopup():
-    # Get userid
-    userid = int(es.getcmduserid())
-    
+def showPopup(userid):
     # Send popup
     buildMenu()
     popuplib.send('gg_welcome_msg', userid)
@@ -193,14 +189,3 @@ def getServerVar(match):
         return str(gungamelib.getVariableValue(variable))
     else:
         return str(es.ServerVar(variable))
-
-def regCmd(name, function):
-    if es.exists('saycommand', name):
-        return
-    
-    es.regsaycmd('!gg%s' % name, 'gungame/included_addons/gg_welcome_msg/%s' % function.__name__)
-    
-    if es.exists('clientcommand', name):
-        return
-    
-    es.regclientcmd('gg_%s' % name, 'gungame/included_addons/gg_welcome_msg/%s' % function.__name__)

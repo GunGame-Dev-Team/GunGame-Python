@@ -22,11 +22,11 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_triple_level Addon for GunGame: Python"
+info.name     = 'gg_triple_level Addon for GunGame: Python'
 info.version  = '1.0.336'
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_triple_level"
-info.author   = "GunGame Development Team"
+info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.basename = 'gungame/included_addons/gg_triple_level'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #  GLOBALS

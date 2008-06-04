@@ -41,6 +41,7 @@ dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
 dict_addonVars['currentRound'] = 0
 dict_addonVars['respawnCmd'] = gungamelib.getVariable('gg_dm_respawn_cmd')
+dict_addonVars['randSpawn'] = gungamelib.getVariable('gg_elimination_randspawn')
 roundTime = 0
 
 # Player Database
@@ -124,6 +125,10 @@ def player_spawn(event_var):
     collisionBefore = es.getplayerprop(userid, 'CBaseEntity.m_CollisionGroup')
     es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
     gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
+    
+    # Do not continue random spawnpoints are disabled
+    if not dict_addonVars['randSpawn']:
+        return
     
     # Do not continue if we have no spawn points
     if not spawnPoints.hasPoints():

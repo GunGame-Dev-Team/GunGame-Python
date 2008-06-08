@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.340
+    Version: 1.0.343
     Description: Removes dead player's weapons.
 '''
 
@@ -11,6 +11,7 @@
 # Eventscripts imports
 import es
 import playerlib
+import gamethread
 
 # GunGame imports
 import gungamelib
@@ -21,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.340'
+info.version  = '1.0.343'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -85,7 +86,7 @@ def item_pickup(event_var):
     
     # Get player objects
     gungamePlayer = gungamelib.getPlayer(userid)
-    playerWeapon = gungamePlayer.getWeapon()
+    gungameWeapon = gungamePlayer.getWeapon()
     playerlibPlayer = playerlib.getPlayer(userid)
     
     # Is warmup round?
@@ -95,10 +96,12 @@ def item_pickup(event_var):
             es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
     else:
         # Check to see if this is the right weapon for their level
-        if playerWeapon == item:
+        if gungameWeapon == item:
             return
         
-        if playerWeapon == 'hegrenade':
+        weaponInHand = es.createplayerlist(userid)[userid]['weapon']
+        
+        if gungameWeapon == 'hegrenade':
             # Is nade bonus loaded?
             nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
             
@@ -112,8 +115,28 @@ def item_pickup(event_var):
                 es.sexec(userid, 'use weapon_knife')
                 es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
         else:
-            es.sexec(userid, 'use weapon_%s' % playerWeapon)
             es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+            
+            if weaponInHand[7:] != item:
+                return
+            
+            gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
+
+def getLastWeapon(userid, gungamePlayer, item):
+    gungameWeapon = gungamePlayer.getWeapon()
+    if gungameWeapon == item:
+        return
+    
+    dict_myWeapons = {1:'knife', 2:gungameWeapon, 3:gungameWeapon,
+                      4:'hegrenade', 5:'smokegrenade', 6:'flashbang'}
+
+    lastWeapon = es.getplayerprop(userid, 'CCSPlayer.baseclass.localdata.m_hLastWeapon')
+    for slot in dict_myWeapons:
+        slotWeapon = es.getplayerprop(userid,
+                     'CCSPlayer.baseclass.baseclass.bcc_localdata.m_hMyWeapons.00%i' % slot)
+        if lastWeapon != slotWeapon:
+            es.sexec(userid, 'use weapon_%s' % dict_myWeapons[slot])
+            break
 
 '''OLD CODE:
 def player_death(event_var):

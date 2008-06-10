@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.338
+    Version: 1.0.344
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.336'
+__version__ = '1.0.344'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -994,6 +994,9 @@ def afkPunishCheck(userid):
                 menu = popuplib.create('gungame_afk')
                 menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator'))
                 menu.send(userid)
+                
+            # Reset the AFK rounds back to 0
+            gungamePlayer['afkrounds'] = 0
 
 def equipPlayer():
     userid = es.getuserid()

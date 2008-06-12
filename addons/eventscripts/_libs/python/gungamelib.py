@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.317
+    Version: 1.0.347
     Description:
 '''
 
@@ -14,6 +14,7 @@ import random
 import os
 import time
 import cPickle
+import hashlib
 
 # EventScripts Imports
 import es
@@ -1166,7 +1167,7 @@ class Message(object):
         # Try to get string
         try:
             rtnStr = self.strings(string, tokens, player.get('lang'))
-        except AttributeError:
+        except (KeyError, AttributeError):
             rtnStr = self.strings(string, tokens)
         
         # Format it
@@ -2112,7 +2113,8 @@ def getGameDir(dir):
     # Get game dir
     gamePath = str(es.ServerVar('eventscripts_gamedir'))
     
-    # For linux...
+    # Linux path seperators
+    gamePath = gamePath.replace('\\', '/')
     dir = dir.replace('\\', '/')
     
     # Return
@@ -2124,9 +2126,9 @@ def getAddonDir(addonName, dir):
         raise ValueError('Cannot get addon directory (%s): doesn\'t exist.' % addonName)
     
     # Get game dir
-    addonPath = es.getAddonDir('gungame')
+    addonPath = getGameDir('addons/eventscripts/gungame')
     
-    # For linux...
+    # Linux path seperators
     dir = dir.replace('\\', '/')
     
     # Return
@@ -2213,3 +2215,82 @@ def clamp(value, low=False, high=False, floats=False):
 
 def canShowHints():
     return (getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0)
+
+def fileHashCheck():
+    # Open file and get lines
+    file = open(getGameDir('addons/eventscripts/gungame/data/hashlist.txt'), 'r')
+    lines = [x.strip() for x in file.readlines()]
+    file.close()
+    
+    # Get files to check
+    files = [x.split(' ', 2) for x in lines]
+    
+    for hashInfo in files:
+        # Get hash info
+        target, targetHash = hashInfo
+        
+        # Try to open file
+        try:
+            targetFile = open(getGameDir('addons/eventscripts/gungame' + target), 'r')
+        except IOError, e:
+            return False, target, e
+        
+        # Get hash
+        hash = hashlib.md5(targetFile.read()).hexdigest()
+        
+        # Check hash
+        if hash != targetHash:
+            return False, target, 'Hash mismatch.  Expecting: %s -- Got: %s' % (targetHash, hash)
+    
+    return True, 0, 0
+
+def generateHashes():
+    baseDir = getGameDir('addons/eventscripts/gungame')
+    
+    # Open file for writing
+    file = open(getGameDir('addons/eventscripts/gungame/data/hashlist.txt'), 'w')
+    
+    for x in os.walk(baseDir):
+        # Get directory in a getGameDir() safe format
+        dir = x[0].replace(baseDir, '').replace('\\', '/')
+        
+        # Append / if its not already there
+        if not dir.endswith('/'):
+            dir += '/'
+        
+        # Loop through the files in this directory
+        for f in x[2]:
+            # Get name and extension
+            name, ext = os.path.splitext(f)
+            fullDir = baseDir + dir + f
+            
+            # Skip compiled Python files
+            if ext == '.pyc': continue
+            
+            # Skip no extension files
+            if ext == '': continue
+            
+            # Skip temporary files
+            if ext == '.tmp': continue
+            
+            # Skip database files
+            if ext == '.db': continue
+            
+            # Skip hashlist (changes on generation)
+            if name == 'hashlist': continue
+            
+            # Skip SVN data files
+            if 'svn' in ext: continue
+            
+            # Skip log files
+            if 'log' in name: continue
+            
+            # Get hash
+            hash = hashlib.md5(open(fullDir).read()).hexdigest()
+            
+            # Announce adding hash and write to file
+            es.dbgmsg(0, '[GunGame] Adding Hash: %s - %s' % (f, hash))
+            file.write('%s %s\n' % (dir+f, hash))
+    
+    # Close file to save changes
+    file.close()

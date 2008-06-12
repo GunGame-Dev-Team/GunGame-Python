@@ -83,7 +83,13 @@ def player_activate(event_var):
 def player_disconnect(event_var):
     # Get player info
     userid = int(event_var['userid'])
-    player = gungamelib.getPlayer(userid)
+    
+    # Try to get the player
+    try:
+        player = gungamelib.getPlayer(userid)
+    except gungamelib.UseridError:
+        return
+    
     uniqueid = gungamelib.getPlayerUniqueID(userid)
     
     # Save level

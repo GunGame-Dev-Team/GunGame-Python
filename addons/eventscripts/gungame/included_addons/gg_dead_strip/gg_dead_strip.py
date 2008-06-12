@@ -55,6 +55,7 @@ def unload():
     
     es.addons.unregisterClientCommandFilter(filterDrop)
 
+
 def es_map_start(event_var):
     global roundActive
     roundActive = 0
@@ -94,74 +95,68 @@ def item_pickup(event_var):
         # Only remove if the weapon is not the warmup weapon
         if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
             es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
-    else:
-        # Check to see if this is the right weapon for their level
-        if gungameWeapon == item:
-            return
         
-        weaponInHand = es.createplayerlist(userid)[userid]['weapon']
-        
-        if gungameWeapon == 'hegrenade':
-            # Is nade bonus loaded?
-            nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
-            
-            # Check to see if the grenade level bonus weapon is active
-            if nadeBonus:
-                # Only remove if the item is not the nade bonus weapon
-                if nadeBonus != item:
-                    es.sexec(userid, 'use weapon_%s' % nadeBonus)
-                    es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
-            else:
-                es.sexec(userid, 'use weapon_knife')
-                es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
-        else:
-            es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
-            
-            if weaponInHand[7:] != item:
-                return
-            
-            gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
-
-def getLastWeapon(userid, gungamePlayer, item):
-    gungameWeapon = gungamePlayer.getWeapon()
+        return
+    
+    # Check to see if this is the right weapon for their level
     if gungameWeapon == item:
         return
     
-    dict_myWeapons = {1:'knife', 2:gungameWeapon, 3:gungameWeapon,
-                      4:'hegrenade', 5:'smokegrenade', 6:'flashbang'}
-
-    lastWeapon = es.getplayerprop(userid, 'CCSPlayer.baseclass.localdata.m_hLastWeapon')
-    for slot in dict_myWeapons:
-        slotWeapon = es.getplayerprop(userid,
-                     'CCSPlayer.baseclass.baseclass.bcc_localdata.m_hMyWeapons.00%i' % slot)
-        if lastWeapon != slotWeapon:
-            es.sexec(userid, 'use weapon_%s' % dict_myWeapons[slot])
-            break
-
-'''OLD CODE:
-def player_death(event_var):
-    global roundActive
-    if not roundActive:
-        return
+    if gungameWeapon == 'hegrenade':
+        # Is nade bonus loaded?
+        nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
         
-    # Make sure the player is on a team
-    if int(event_var['es_userteam']) < 2:
-        return
+        # Check to see if the grenade level bonus weapon is active
+        if nadeBonus:
+            # Only remove if the item is not the nade bonus weapon
+            if nadeBonus != item:
+                es.sexec(userid, 'use weapon_%s' % nadeBonus)
+                es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+        else:
+            es.sexec(userid, 'use weapon_knife')
+            es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
         
-    # Get entity list
-    dict_entityList = es.createentitylist()
+        return
     
-    # Get list of idle weapons
-    list_idleWeapons = filter(lambda x: dict_entityList[x]['classname'].startswith('weapon_') and es.getindexprop(x, 'CBaseEntity.m_hOwnerEntity') == -1 and dict_entityList[x]['classname'] != 'weapon_c4', dict_entityList)
+    # Get their current weapon
+    currentWeapon = gungamePlayer.attributes['weapon']
     
-    # Remove weapon
-    for idleWeapon in list_idleWeapons:
-        es.server.cmd('es_xremove %d' % idleWeapon)
-'''
+    # Remove the weapon they just picked up
+    es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+    
+    if currentWeapon[7:] != item:
+        return
+    
+    gamethread.delayed(0, getLastWeapon, (userid, player, item))
 
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
+def getLastWeapon(userid, player, item):
+    weapon = player.getWeapon()
+    
+    if weapon == item:
+        return
+    
+    myWeapons = {1: 'knife',
+                 2: weapon,
+                 3: weapon,
+                 4: 'hegrenade',
+                 5: 'smokegrenade',
+                 6: 'flashbang'}
+    
+    # Get their last weapon index
+    lastWeapon = es.getplayerprop(userid, 'CBasePlayer.localdata.m_hLastWeapon')
+    
+    # Loop through all the current held weapons
+    for slot in myWeapons:
+        slotWeapon = es.getplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_hMyWeapons.%.3i' % slot)
+        
+        # Do the indexes not match?
+        if lastWeapon != slotWeapon:
+            es.sexec(userid, 'use weapon_%s' % myWeapons[slot])
+            break
+
 def filterDrop(userid, args):
     # If command not drop, continue
     if args[0] != 'drop':

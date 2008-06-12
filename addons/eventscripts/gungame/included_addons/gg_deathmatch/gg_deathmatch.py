@@ -141,7 +141,7 @@ def player_death(event_var):
     try:
         if playerlib.getPlayer(userid).get('defuser'):
             gamethread.delayed(0.5, es.remove, ('item_defuser'))
-    except UseridError:
+    except playerlib.UseridError:
         pass
     
     # Respawn the player if the round hasn't ended

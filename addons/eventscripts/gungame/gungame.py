@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.345
+    Version: 1.0.347
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.345'
+__version__ = '1.0.347'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -119,6 +119,30 @@ def load():
         # Fire the gg_server.cfg
         es.server.cmd('exec gungame/gg_server.cfg')
         
+        '''Possibly upcoming integrity checker code when we go gold... D:
+        
+        # Generate hashes
+        # DEVS: Comment this when commiting the code to SVN
+        gungamelib.generateHashes()
+        
+        # Integrity check
+        check = gungamelib.fileHashCheck()
+        if not check[0]:
+            # Announce that the check failed
+            es.dbgmsg(0, '[GunGame] Unable to load GunGame: integrity check failed:')
+            es.dbgmsg(0, '[GunGame]  File: %s' % check[1])
+            es.dbgmsg(0, '[GunGame]  Reason: %s' % check[2])
+            es.dbgmsg(0, '[GunGame] Please try the following solutions:')
+            es.dbgmsg(0, '[GunGame]  1. Re-upload GunGame to your server.')
+            es.dbgmsg(0, '[GunGame]  2. Re-download GunGame, then upload again.')
+            es.dbgmsg(0, '[GunGame]  3. If none of the above fix the issue then file a bug report.')
+            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
+            
+            # Unload gungame
+            es.unload('gungame')
+            return
+        '''
+        
         # Get strip exceptions
         if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:
             list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')
@@ -155,6 +179,7 @@ def load():
                 weaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
             
             # Echo to console
+            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
             gungamelib.echo('gungame', 0, 0, 'WeaponOrder:Echo:Info')
             es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
             weaponOrder.echo()
@@ -232,7 +257,7 @@ def load():
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     except Exception, e:
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-        es.dbgmsg(0, '[GunGame] Unable to load GunGame, exception raised during load:')
+        es.dbgmsg(0, '[GunGame] Unable to load GunGame: exception raised during load:')
         es.dbgmsg(0, '[GunGame] %s: %s' % (e.__class__.__name__, e))
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         es.unload('gungame')

@@ -85,6 +85,10 @@ def player_death(event_var):
     # Get weapon
     weapon = event_var['weapon']
     
+    # Not a weapon
+    if weapon[:6] != 'weapon':
+        return
+    
     # Is a hegrenade or knife kill?
     if weapon in ('hegrenade', 'knife'):
         return

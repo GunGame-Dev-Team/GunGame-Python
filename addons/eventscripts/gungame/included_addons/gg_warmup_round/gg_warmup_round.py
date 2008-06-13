@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 1.0.347
+    Version: 1.0.352
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round Addon for GunGame: Python'
-info.version  = '1.0.340'
+info.version  = '1.0.352'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -73,6 +73,14 @@ def load():
     # Set "isWarmup" global
     gungamelib.setGlobal('isWarmup', 1)
     
+    # Check to see if we should load deathmatch for warmup round
+    if gungamelib.getVariableValue('gg_warmup_deathmatch'):
+        es.server.cmd('gg_deathmatch 1')
+        
+    # Check to see if we should load elimination for warmup round
+    if gungamelib.getVariableValue('gg_warmup_elimination'):
+        es.server.cmd('gg_elimination 1')
+    
     # Cancel the delay to set PreventLevel for everyone to "0"
     gamethread.cancelDelayed('setPreventAll0')
     
@@ -106,6 +114,14 @@ def unload():
     
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_warmup_round')
+    
+    # Check to see if we should load deathmatch for warmup round
+    if gungamelib.getVariableValue('gg_warmup_deathmatch'):
+        es.server.cmd('gg_deathmatch 0')
+        
+    # Check to see if we should load elimination for warmup round
+    if gungamelib.getVariableValue('gg_warmup_elimination'):
+        es.server.cmd('gg_elimination 0')
     
     # Set everyone's PreventLevel to 0
     gungamelib.setPreventLevelAll(0)

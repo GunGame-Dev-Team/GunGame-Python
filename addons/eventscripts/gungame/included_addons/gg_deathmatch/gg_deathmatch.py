@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.350
+    Version: 1.0.352
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -25,7 +25,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.350'
+info.version  = '1.0.352'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -68,15 +68,26 @@ def load():
     for userid in playerlib.getUseridList('#dead'):
         repeat.start('respawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
     
-    # Set freezetime and roundtime
+    # Back up and set freezetime and roundtime
+    global mp_freezetimeBackUp
+    global mp_roundtimeBackUp
+    mp_freezetimeBackUp = es.ServerVar('mp_freezetime')
+    mp_roundtimeBackUp = es.ServerVar('mp_roundtime')
+    
     es.server.cmd('mp_freezetime 0')
     es.server.cmd('mp_roundtime 900')
 
 def unload():
     global spawnPoints
+    global mp_freezetimeBackUp
+    global mp_roundtimeBackUp
     
     # Unregister this addon with GunGame
     gungamelib.unregisterAddon('gg_deathmatch')
+    
+    # Reset freezetime and rountime to their original values
+    es.server.cmd('mp_freezetime %s' %mp_freezetimeBackUp)
+    es.server.cmd('mp_roundtime %s' %mp_roundtimeBackUp)
     
     # Delete all player respawns
     for userid in es.getUseridList():

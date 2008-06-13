@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_reload
-    Version: 1.0.340
+    Version: 1.0.348
     Description: When a player makes a kill the ammo in their clip is
                  replenished.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_reload Addon for GunGame: Python'
-info.version  = '1.0.340'
+info.version  = '1.0.348'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_reload'
 info.author   = 'GunGame Development Team'
@@ -30,30 +30,30 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
-clipSize = {'usp': 12, 
-            'glock': 20,
-            'deagle': 7,
-            'p228': 13,
-            'elite': 30,
-            'fiveseven': 20,
-            'm3': 8,
-            'xm1014': 7,
-            'mp5navy': 30,
-            'tmp': 30,
-            'p90': 50,
-            'mac10': 30,
-            'ump45': 25,
-            'galil': 35,
-            'famas': 25,
-            'ak47': 30,
-            'sg552': 30,
-            'm4a1': 30,
-            'aug': 30,
-            'scout': 10,
-            'awp': 10,
-            'g3sg1': 20,
-            'sg550': 30,
-            'm249': 100
+clipSize = {'weapon_usp': 12, 
+            'weapon_glock': 20,
+            'weapon_deagle': 7,
+            'weapon_p228': 13,
+            'weapon_elite': 30,
+            'weapon_fiveseven': 20,
+            'weapon_m3': 8,
+            'weapon_xm1014': 7,
+            'weapon_mp5navy': 30,
+            'weapon_tmp': 30,
+            'weapon_p90': 50,
+            'weapon_mac10': 30,
+            'weapon_ump45': 25,
+            'weapon_galil': 35,
+            'weapon_famas': 25,
+            'weapon_ak47': 30,
+            'weapon_sg552': 30,
+            'weapon_m4a1': 30,
+            'weapon_aug': 30,
+            'weapon_scout': 10,
+            'weapon_awp': 10,
+            'weapon_g3sg1': 20,
+            'weapon_sg550': 30,
+            'weapon_m249': 100
             }
 
 # ==============================================================================
@@ -83,14 +83,14 @@ def player_death(event_var):
         return
     
     # Get weapon
-    weapon = event_var['weapon']
+    weapon = 'weapon_%s' %event_var['weapon']
     
     # Not a weapon
     if weapon[:6] != 'weapon':
         return
     
     # Is a hegrenade or knife kill?
-    if weapon in ('hegrenade', 'knife'):
+    if weapon in ('weapon_hegrenade', 'weapon_knife'):
         return
     
     # Set clip

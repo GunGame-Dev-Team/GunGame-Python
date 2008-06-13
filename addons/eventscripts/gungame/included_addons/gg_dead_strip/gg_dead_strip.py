@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.348
+    Version: 1.0.351
     Description: Removes dead player's weapons.
 '''
 
@@ -127,13 +127,13 @@ def item_pickup(event_var):
     if currentWeapon[7:] != item:
         return
     
-    gamethread.delayed(0, getLastWeapon, (userid, player, item))
+    gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
 
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-def getLastWeapon(userid, player, item):
-    weapon = player.getWeapon()
+def getLastWeapon(userid, gungamePlayer, item):
+    weapon = gungamePlayer.getWeapon()
     
     if weapon == item:
         return

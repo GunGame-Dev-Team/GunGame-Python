@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.340
+    Version: 1.0.347
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -25,7 +25,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.340'
+info.version  = '1.0.347'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -56,6 +56,13 @@ def load():
     # Get the spawn points for the map
     if gungamelib.inMap():
         spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
+    
+    # Create repeats for all players on the server
+    for userid in es.getUseridList():
+        # If the player does not have a respawn repeat, create one
+        respawnPlayer = repeat.find('respawnPlayer%s' % userid)
+        if not respawnPlayer:
+            repeat.create('respawnPlayer%s' % userid, respawnCountDown, (userid))
     
     # Respawn all dead players
     for userid in playerlib.getUseridList('#dead'):

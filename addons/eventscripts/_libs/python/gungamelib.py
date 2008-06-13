@@ -1469,6 +1469,13 @@ class LeaderManager(object):
         # Add to leader list
         self.leaders.append(userid)
         
+        # Tied leader messaging
+        leaderCount = len(self.leaders)
+        if leaderCount == 2:
+            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Singular', {'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
+        else:
+            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Plural', {'count': leaderCount, 'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
+        
         # Fire gg_tied_leader
         es.event('initialize', 'gg_tied_leader')
         es.event('setint', 'gg_tied_leader', 'userid', userid)
@@ -1482,6 +1489,9 @@ class LeaderManager(object):
         # Set leader vars
         self.leaders = [userid]
         self.leaderLevel = getPlayer(userid)['level']
+        
+        # Message about new leader
+        saytext2('gungame', '#all', getPlayer(userid)['index'], 'NewLeader', {'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
         
         # Fire gg_new_leader
         es.event('initialize', 'gg_new_leader')
@@ -1559,15 +1569,30 @@ class LeaderManager(object):
         
         # 1 new leader
         if self.getLeaderCount() == 1:
+            # Message about new leader
+            saytext2('gungame', '#all', getPlayer(userid)['index'], 'NewLeader', {'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
+            
             # Fire gg_new_leader
             es.event('initialize', 'gg_new_leader')
             es.event('setint', 'gg_new_leader', 'userid', userid)
             es.event('fire', 'gg_new_leader')
         
+        '''
+        We can't use this message due to the fact that any message on level down will cause conflicting information being sent
+        to players. Example:
+        1. A player that is on level 11 knifes someone that is a leader on level 12.
+        2. The leader loses a level, and now it messages that those players are tied on level 11.
+        3. Another message is then sent to the players stating that the player that knifed the leader is now the new leader.
+        
+        ADDITIONAL NOTE:
+            May need to clean up the gungame.ini in the translations folder of the "NewLeaders" section (plural, not singular).
+        
+        
         # More than one leader?
-        elif self.getLeaderCount() > 1:
+        elif self.getLeaderCount() > 1 and self.leaderLevel != 1:
             # Show message
             msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(self.getLeaderNames()), 'level': self.leaderLevel}, False)
+        '''
         
         # Set old leaders, if they have changed
         if self.leaders[:] != self.oldLeaders[:]:

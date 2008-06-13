@@ -783,25 +783,9 @@ def gg_leveldown(event_var):
     gungamePlayer['level'] = int(event_var['new_level'])
 
 def gg_new_leader(event_var):
-    playerName = es.getplayername(event_var['userid'])
-    leaderLevel = gungamelib.leaders.getLeaderLevel()
-    
-    gungamelib.saytext2('gungame', '#all', event_var['es_userindex'], 'NewLeader', {'player': playerName, 'level': leaderLevel}, False)
-    
     rebuildLeaderMenu()
 
 def gg_tied_leader(event_var):
-    # Set variables
-    leaderCount = gungamelib.leaders.getLeaderCount()
-    index = playerlib.getPlayer(int(event_var['userid'])).get('index')
-    playerName = es.getplayername(event_var['userid'])
-    leaderLevel = gungamelib.leaders.getLeaderLevel()
-    
-    if leaderCount == 2:
-        gungamelib.saytext2('gungame', '#all', index, 'TiedLeader_Singular', {'player': playerName, 'level': leaderLevel}, False)
-    else:
-        gungamelib.saytext2('gungame', '#all', index, 'TiedLeader_Plural', {'count': leaderCount, 'player': playerName, 'level': leaderLevel}, False)
-
     rebuildLeaderMenu()
 
 def gg_leader_lostlevel(event_var):

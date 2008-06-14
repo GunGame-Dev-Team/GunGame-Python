@@ -115,20 +115,6 @@ def delete(repeatName):
     if (repeatName in dict_repeatInfo):
         # Delete the repeat instance from the dictionary
         del dict_repeatInfo[repeatName]
-        
-def find(repeatName):
-    '''
-    Returns the class instance of the repeat.
-    '''
-    # Convert to string
-    repeatName = str(repeatName)
-    
-    # Make sure the repeat exists
-    if (repeatName in dict_repeatInfo):
-        # Return the repeat instance from the dictionary
-        return dict_repeatInfo[repeatName]
-        
-    return None
     
 def start(repeatName, interval, limit):
     '''

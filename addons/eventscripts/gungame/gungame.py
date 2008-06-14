@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.352
+    Version: 1.0.353
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.352'
+__version__ = '1.0.353'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -909,7 +909,14 @@ def server_cvar(event_var):
         elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_spawn_protect')
             
-    # GG_SPAWN_PROTECTION
+    # GG_MULTI_LEVEL
+    elif cvarName == 'gg_multi_level':
+        if newValue > 0 and 'gg_multi_level' not in gungamelib.getRegisteredAddonlist():
+            es.server.queuecmd('es_load gungame/included_addons/gg_multi_level')
+        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
+            es.unload('gungame/included_addons/gg_multi_level')
+            
+    # GG_RETRY_PUNISH
     elif cvarName == 'gg_retry_punish':
         if newValue > 0 and 'gg_retry_punish' not in gungamelib.getRegisteredAddonlist():
             es.server.queuecmd('es_load gungame/included_addons/gg_retry_punish')

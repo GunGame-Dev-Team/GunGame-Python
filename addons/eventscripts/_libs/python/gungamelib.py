@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.347
+    Version: 1.0.353
     Description:
 '''
 
@@ -175,12 +175,12 @@ class Player(object):
             
             return
         
-        # TRIPLE
-        if item == 'triple':
-            if not (value > -1 and value < 4):
-                raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
+        # MULTILEVEL
+        if item == 'multilevel':
+            if not (value > -1):
+                raise ValueError('Invalid value (%s): multilevel value must be 0 or greater.' % value)
             
-            self.attributes['triple'] = value
+            self.attributes['multilevel'] = value
             
             return
         
@@ -204,7 +204,7 @@ class Player(object):
     def __createPlayer(self, connectFlag=None):
         '''Creates the player in the players database.'''
         names = ['level', 'afkrounds', 'multikill',
-                'triple', 'preventlevel', 'afkmathtotal',
+                'multilevel', 'preventlevel', 'afkmathtotal',
                 'steamid', 'index']
         values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(str(self.userid), 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
         

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.352
+    Version: 1.0.354
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -25,7 +25,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.352'
+info.version  = '1.0.354'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -69,6 +69,8 @@ def load():
         repeat.start('respawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
     
     # Back up and set freezetime and roundtime
+    es.server.cmd('exec %s' %es.ServerVar('servercfgfile'))
+    es.server.cmd('exec %s' %es.ServerVar('gungame/gg_server.cfg'))
     global mp_freezetimeBackUp
     global mp_roundtimeBackUp
     mp_freezetimeBackUp = es.ServerVar('mp_freezetime')

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.353
+    Version: 1.0.354
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.353'
+__version__ = '1.0.354'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -374,6 +374,9 @@ def round_start(event_var):
     global list_allWeapons
     global countBombDeathAsSuicide
     
+    # Set a global for round_active
+    gungamelib.setGlobal('round_active', 1)
+    
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
@@ -438,6 +441,9 @@ def round_freeze_end(event_var):
 
 def round_end(event_var):
     global countBombDeathAsSuicide
+    
+    # Set a global for round_active
+    gungamelib.setGlobal('round_active', 0)
     
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
@@ -548,7 +554,7 @@ def player_death(event_var):
     # SUICIDE CHECK
     # =============
     if (attacker == 0 or attacker == userid) and countBombDeathAsSuicide:
-        if gungamelib.getVariableValue('gg_suicide_punish') == 0:
+        if gungamelib.getVariableValue('gg_suicide_punish') == 0 or gungamelib.getGlobal('round_Active') == 0:
             return
         
         # Set vars

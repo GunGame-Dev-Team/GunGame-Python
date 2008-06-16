@@ -52,11 +52,11 @@ def load():
     gg_spawnpoints.menu.addoption('show', 'Show spawnpoints')
     
     # Commands
-    gg_spawnpoints.registerCommand('spawn_add', cmd_spawn_add, '<userid to create at>')
-    gg_spawnpoints.registerCommand('spawn_remove', cmd_spawn_remove, '<index>')
-    gg_spawnpoints.registerCommand('spawn_remove_all', cmd_spawn_remove_all)
-    gg_spawnpoints.registerCommand('spawn_show', cmd_spawn_show)
-    gg_spawnpoints.registerCommand('spawn_print', cmd_spawn_print)
+    gg_spawnpoints.registerAdminCommand('spawn_add', cmd_spawn_add, '<userid to create at>')
+    gg_spawnpoints.registerAdminCommand('spawn_remove', cmd_spawn_remove, '<index>')
+    gg_spawnpoints.registerAdminCommand('spawn_remove_all', cmd_spawn_remove_all)
+    gg_spawnpoints.registerAdminCommand('spawn_show', cmd_spawn_show)
+    gg_spawnpoints.registerAdminCommand('spawn_print', cmd_spawn_print)
     
     # Get the spawn points for the map
     if gungamelib.inMap():

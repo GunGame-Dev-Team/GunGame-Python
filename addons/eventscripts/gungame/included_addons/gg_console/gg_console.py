@@ -34,8 +34,8 @@ def load():
     gg_console.setDisplayName('GG Console Interface')
     
     # Command registration
-    gg_console.registerCommand('setlevel', cmd_setlevel, '<userid> <level>')
-    gg_console.registerCommand('teleport', cmd_teleport, '<userid> <x> <y> <z>')
+    gg_console.registerAdminCommand('setlevel', cmd_setlevel, '<userid> <level>')
+    gg_console.registerAdminCommand('teleport', cmd_teleport, '<userid> <x> <y> <z>')
 
 # ==============================================================================
 #   CONSOLE COMMANDS

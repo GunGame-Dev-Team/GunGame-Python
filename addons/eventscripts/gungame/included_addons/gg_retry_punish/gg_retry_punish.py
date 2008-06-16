@@ -57,10 +57,12 @@ def player_activate(event_var):
     if 'BOT' in steamid:
         return
     
+    player = gungamelib.getPlayer(event_var['userid'])
+    
     # Reconnecting?
     if dict_savedLevels.has_key(steamid):
         # Reset level
-        gungamePlayer['level'] = dict_savedLevels[steamid]
+        player['level'] = dict_savedLevels[steamid]
         
         # Delete the saved level
         del dict_savedLevels[steamid]

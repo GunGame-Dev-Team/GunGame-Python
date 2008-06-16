@@ -10,6 +10,9 @@
 // #random makes the weapon order a random order, being re-randomized on
 // every map change.
 //
+// The first line of each weapon order must be:
+// => Weapon order name here
+//
 // Format: <weapon name> <multikill>
 //
 // Options:
@@ -43,26 +46,10 @@
 // Note: this weapon order file must be defined in gg_weapon_orders.ini.
 //----------------------------------------------------------------------------
 
+=> Short weapon order
 glock
 usp
 p228
 deagle
 fiveseven
 elite
-m3
-xm1014
-tmp
-mac10
-mp5navy
-ump45
-p90
-galil
-famas
-ak47
-scout
-m4a1
-sg552
-aug
-m249
-hegrenade
-knife

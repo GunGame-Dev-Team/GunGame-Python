@@ -52,7 +52,7 @@ def load():
     gg_welcome_msg.setDisplayName('GG Welcome Message')
     
     # Register command
-    gg_welcome_msg.registerCommand('welcomemsg', showPopup)
+    gg_welcome_msg.registerPublicCommand('welcomemsg', showPopup, console=False)
     
     # Open file and read lines
     msgFileObj = open(gungamelib.getGameDir('cfg/gungame/welcome_msg/welcome message.txt'), 'r')

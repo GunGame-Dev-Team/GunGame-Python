@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.353
+    Version: 1.0.347
     Description:
 '''
 
@@ -15,6 +15,8 @@ import os
 import time
 import cPickle
 import hashlib
+
+import mp3lib
 
 # EventScripts Imports
 import es
@@ -175,12 +177,12 @@ class Player(object):
             
             return
         
-        # MULTILEVEL
-        if item == 'multilevel':
-            if not (value > -1):
-                raise ValueError('Invalid value (%s): multilevel value must be 0 or greater.' % value)
+        # TRIPLE
+        if item == 'triple':
+            if not (value > -1 and value < 4):
+                raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
             
-            self.attributes['multilevel'] = value
+            self.attributes['triple'] = value
             
             return
         
@@ -204,7 +206,7 @@ class Player(object):
     def __createPlayer(self, connectFlag=None):
         '''Creates the player in the players database.'''
         names = ['level', 'afkrounds', 'multikill',
-                'multilevel', 'preventlevel', 'afkmathtotal',
+                'triple', 'preventlevel', 'afkmathtotal',
                 'steamid', 'index']
         values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(str(self.userid), 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
         
@@ -349,7 +351,7 @@ class WeaponOrder(object):
     def __init__(self, fileName):
         '''Initializes the WeaponOrder class.'''
         # Set variables
-        self.filePath = getGameDir('cfg/gungame/weapon_order_files/%s' % fileName)
+        self.filePath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
         self.fileName = fileName
         
         # Check to see if it has been registered before
@@ -372,7 +374,7 @@ class WeaponOrder(object):
         levelCounter = 0
         
         # Clean and format the lines
-        lines = [x.strip().lower() for x in weaponOrderFile.readlines()]
+        lines = [x.strip() for x in weaponOrderFile.readlines()]
         lines = filter(lambda x: x and (not x.startswith('//')), lines)
         
         # Close the file, we have the lines
@@ -383,6 +385,15 @@ class WeaponOrder(object):
             # Remove double spacing
             while '  ' in line:
                 line = line.replace('  ', ' ')
+            
+            if line.startswith('=>'):
+                # Set display name
+                dict_tempWeaponOrderSettings['displayName'] = line[2:].strip()
+                
+                continue
+            
+            # Make the line lower-case
+            line = line.lower()
             
             # Split line
             list_splitLine = line.split()
@@ -413,13 +424,6 @@ class WeaponOrder(object):
             
             # Set level values
             dict_tempWeaponOrder[levelCounter] = list_splitLine
-        
-        # Get display names
-        weaponOrderINI = ConfigObj(getGameDir('cfg/gungame/gg_weapon_orders.ini'))
-        
-        # Loop through each section (the section name is the "Display Name") in the INI
-        for displayName in weaponOrderINI:
-            if weaponOrderINI[displayName]['fileName'] == self.fileName: dict_tempWeaponOrderSettings['displayName'] = displayName
         
         # Set the order type to default
         dict_tempWeaponOrderSettings['weaponOrder'] = '#default'
@@ -902,12 +906,13 @@ class Addon(object):
         self.addon = str(addonName)
         
         # Make sure the addon exists
-        if not self.validateAddon():
+        if not self.validateAddon() and addonName != 'gungame':
             raise AddonError('Cannot create addon (%s): addon folder doesn\'t exist.' % addonName)
         
         # Set up default attributes for this addon
         self.displayName = 'Untitled Addon'
         self.commands = {}
+        self.publicCommands = {}
         self.dependencies = []
         self.menu = None
         
@@ -935,9 +940,49 @@ class Addon(object):
         return True
     
     '''Command options:'''
-    def registerCommand(self, command, function, syntax='', console=True, log=True):
+    def registerPublicCommand(self, command, function, syntax='', console=True):
         if not callable(function):
-            raise AddonError('Cannot register command (%s): callback is not callable.' % command)
+            raise TypeError('Cannot register command (%s): callback is not callable.' % command)
+        
+        self.publicCommands[command] = function, syntax
+        
+        # Register block
+        es.addons.registerBlock('gungamelib', command, self.__publicCommandCallback)
+        
+        # Register command if its not already registered
+        if not es.exists('command', 'gg_%s' % command):
+            es.regclientcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+            es.regsaycmd('!gg%s' % command, 'gungamelib/%s' % command)
+            
+            # Register console command
+            if console:
+                es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+    
+    def __publicCommandCallback(self):
+        # Get variables
+        command = es.getargv(0)[3:]
+        userid = es.getcmduserid()
+        arguments = formatArgs()
+        
+        # Get command info
+        callback, syntax = self.publicCommands[command]
+        
+        # Try and call the command
+        try:
+            callback(userid, *arguments)
+        except TypeError, e:
+            # Not an argument error?
+            if 'arguments' not in e:
+                callback(userid, *arguments)
+                return
+            
+            # Show an Invalid Syntax message to the player
+            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            return
+    
+    def registerAdminCommand(self, command, function, syntax='', console=True, log=True):
+        if not callable(function):
+            raise TypeError('Cannot register command (%s): callback is not callable.' % command)
         
         # Add command to commands dictionary
         self.commands[command] = function, syntax, console, log
@@ -952,8 +997,12 @@ class Addon(object):
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
     
     def unregisterCommands(self):
-        # Unregister the block of each command
+        # Unregister admin commands
         for command in filter(lambda x: x[2], self.commands):
+            es.addons.unregisterBlock('gungamelib', command)
+        
+        # Unregister public commands
+        for command in filter(lambda x: x[2], self.publicCommands):
             es.addons.unregisterBlock('gungamelib', command)
     
     def callCommand(self, command, userid, arguments):
@@ -1006,13 +1055,16 @@ class Addon(object):
             logFile.close()
     
     def hasCommand(self, command):
-        return self.commands.has_key(command)
+        return self.commands.has_key(command) or self.publicCommands.has_key(command)
     
     def getCommandSyntax(self, command):
-        if not self.commands.has_key(command):
+        if not self.hasCommand(command):
             raise AddonError('Cannot get command syntax (%s): not registered.' % command)
         
-        return self.commands[command][1]
+        if self.commands.has_key(command):
+            return self.commands[command][1]
+        else:
+            return self.publicCommands[command][1]
     
     def __functionCallback(self):
         # Call command
@@ -1577,7 +1629,7 @@ class LeaderManager(object):
             es.event('setint', 'gg_new_leader', 'userid', userid)
             es.event('fire', 'gg_new_leader')
         
-        '''
+        '''XE_ManUp:
         We can't use this message due to the fact that any message on level down will cause conflicting information being sent
         to players. Example:
         1. A player that is on level 11 knifes someone that is a leader on level 12.
@@ -1592,6 +1644,8 @@ class LeaderManager(object):
         elif self.getLeaderCount() > 1 and self.leaderLevel != 1:
             # Show message
             msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(self.getLeaderNames()), 'level': self.leaderLevel}, False)
+        
+        Saul: good point...
         '''
         
         # Set old leaders, if they have changed
@@ -1631,8 +1685,8 @@ def getPlayer(userid):
     userid = int(userid)
     return Player(userid)
 
-def getWeaponOrderFile(weaponOrderFile):
-    return WeaponOrder(weaponOrderFile)
+def getWeaponOrder(file):
+    return WeaponOrder(file)
 
 def getConfig(configName):
     return Config(configName)
@@ -1916,6 +1970,29 @@ def addDownloadableWinnerSound():
     # Set random sound and make it downloadable
     list_usedRandomSounds.append(random.choice(sounds))
     es.stringtable('downloadables', 'sound/%s' % list_usedRandomSounds[-1])
+    
+    # Get path data
+    realPath = getGameDir('sound/%s' % list_usedRandomSounds[-1])
+    ext = os.path.splitext(realPath)[1:]
+    length = 5
+    
+    # Is an mp3 file, use mp3lib
+    if ext == 'mp3':
+        info = mp3lib.mp3info(realPath)
+        duration = clamp(info['MM'] * 60 + info['SS'], 5, 25)
+    
+    # Is a wav file, use the wave module
+    elif ext == 'wav':
+        w = wave.open(realPath, 'rb')
+        duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 25)
+        w.close()
+    
+    # Unsupported file format, by Source Engine AND us...
+    else:
+        duration = 15
+    
+    # Set chattime
+    es.server.queuecmd('mp_chattime %s' % duration)
 
 def getSound(soundName):
     if not dict_sounds.has_key(soundName):
@@ -1977,6 +2054,21 @@ def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
 # ==============================================================================
 #   WINNER RELATED COMMANDS
 # ==============================================================================
+def getWinnerList():
+    return dict_winners.keys()
+
+def getTotalWinners():
+    return len(getWinnerList())
+
+def getWinnerRank(steamid):
+    winners = getOrderedWinners()
+    
+    # Not a winner?
+    if steamid not in winners:
+        return -1
+    
+    return winners.index(steamid)+1
+
 def getOrderedWinners():
     return sorted(dict_winners,
                   lambda x, y: cmp(dict_winners[x]['wins'], dict_winners[y]['wins']),

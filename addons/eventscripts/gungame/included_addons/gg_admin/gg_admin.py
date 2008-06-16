@@ -71,12 +71,12 @@ def load():
     gg_admin.setDisplayName('GG Admin')
     
     # Command registration
-    gg_admin.registerCommand('admin', sendAdminMenu, log=False, console=False)
-    gg_admin.registerCommand('admin_add', cmd_admin_add, '<steamid> <name> <level>')
-    gg_admin.registerCommand('admin_remove', cmd_admin_remove, '<steamid>')
-    gg_admin.registerCommand('admin_show', cmd_admin_show, log=False)
-    gg_admin.registerCommand('admin_set', cmd_admin_set, '<steamid> <new level>')
-    gg_admin.registerCommand('admins', cmd_admins, log=False)
+    gg_admin.registerAdminCommand('admin', sendAdminMenu, log=False, console=False)
+    gg_admin.registerAdminCommand('admin_add', cmd_admin_add, '<steamid> <name> <level>')
+    gg_admin.registerAdminCommand('admin_remove', cmd_admin_remove, '<steamid>')
+    gg_admin.registerAdminCommand('admin_show', cmd_admin_show, log=False)
+    gg_admin.registerAdminCommand('admin_set', cmd_admin_set, '<steamid> <new level>')
+    gg_admin.registerAdminCommand('admins', cmd_admins, log=False)
     
     # Get admins
     adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')

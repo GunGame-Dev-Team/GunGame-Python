@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.351
+    Version: 1.0.348
     Description: Removes dead player's weapons.
 '''
 
@@ -86,9 +86,9 @@ def item_pickup(event_var):
         return
     
     # Get player objects
-    gungamePlayer = gungamelib.getPlayer(userid)
-    gungameWeapon = gungamePlayer.getWeapon()
-    playerlibPlayer = playerlib.getPlayer(userid)
+    player = gungamelib.getPlayer(userid)
+    weapon = player.getWeapon()
+    player2 = playerlib.getPlayer(userid)
     
     # Is warmup round?
     if gungamelib.getGlobal('isWarmup') == 1:
@@ -99,10 +99,10 @@ def item_pickup(event_var):
         return
     
     # Check to see if this is the right weapon for their level
-    if gungameWeapon == item:
+    if weapon == item:
         return
     
-    if gungameWeapon == 'hegrenade':
+    if weapon == 'hegrenade':
         # Is nade bonus loaded?
         nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
         
@@ -111,29 +111,29 @@ def item_pickup(event_var):
             # Only remove if the item is not the nade bonus weapon
             if nadeBonus != item:
                 es.sexec(userid, 'use weapon_%s' % nadeBonus)
-                es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+                es.server.cmd('es_xremove %d' % player2.get('weaponindex', item))
         else:
             es.sexec(userid, 'use weapon_knife')
-            es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+            es.server.cmd('es_xremove %d' % player2.get('weaponindex', item))
         
         return
     
     # Get their current weapon
-    currentWeapon = playerlibPlayer.attributes['weapon']
+    currentWeapon = player2.attributes['weapon']
     
     # Remove the weapon they just picked up
-    es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+    es.server.cmd('es_xremove %d' % player2.get('weaponindex', item))
     
     if currentWeapon[7:] != item:
         return
     
-    gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
+    gamethread.delayed(0, getLastWeapon, (userid, player, item))
 
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-def getLastWeapon(userid, gungamePlayer, item):
-    weapon = gungamePlayer.getWeapon()
+def getLastWeapon(userid, player, item):
+    weapon = player.getWeapon()
     
     if weapon == item:
         return

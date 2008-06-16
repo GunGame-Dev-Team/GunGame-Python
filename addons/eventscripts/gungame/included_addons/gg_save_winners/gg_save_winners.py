@@ -11,6 +11,8 @@
 # EventScripts Imports
 import es
 import popuplib
+import gamethread
+import usermsg
 
 # GunGame Imports
 import gungamelib
@@ -32,10 +34,12 @@ info.author   = 'GunGame Development Team'
 def load():
     # Register this addon with GunGame
     gg_save_winners = gungamelib.registerAddon('gg_save_winners')
-    gg_save_winners.setDisplayName('GG Save Winners')
+    gg_save_winners.setDisplayName('GG Winners')
     
     # Register command
-    gg_save_winners.registerCommand('winners', sendWinnerMenu, console=False, log=False)
+    gg_save_winners.registerPublicCommand('winners', sendWinnerMenu)
+    gg_save_winners.registerPublicCommand('top', sendTopMenu)
+    gg_save_winners.registerPublicCommand('rank', sendRankMsg)
     
     # Load the winners database into memory from file
     gungamelib.loadWinnerDatabase()
@@ -87,6 +91,44 @@ def gg_win(event_var):
     
 def gg_round_win(event_var):
     addWin(event_var['userid'])
+
+# ==============================================================================
+#  RANK MENU
+# ==============================================================================
+def sendRankMsg(userid):
+    steamid = es.getplayersteamid(userid)
+    wins = gungamelib.getWins(steamid)
+    
+    # No wins?
+    if not wins:
+        gungamelib.msg('gg_save_winners', userid, 'NoWins')
+        return
+    
+    # Get the rank
+    rank = gungamelib.getWinnerRank(steamid)
+    total = gungamelib.getTotalWinners()
+    
+    gungamelib.msg('gg_save_winners', userid, 'CurrentRank', {'rank': rank, 'total': total, 'wins': wins})
+
+# ==============================================================================
+#  TOP 10 WINNERS MENU
+# ==============================================================================
+def sendTopMenu(userid):
+    buildTopMenu()
+    popuplib.send('gg_top_winners', userid)
+
+def buildTopMenu():
+    menu = popuplib.easylist('gg_top_winners')
+    menu.settitle('GG Winners - Top 10')
+    
+    for winner in gungamelib.getOrderedWinners()[:10]:
+        # Get winner information
+        name = gungamelib.getWinnerName(winner)
+        wins = gungamelib.getWins(winner)
+        plural = '' if wins == 1 else 's'
+        
+        # Add menu item
+        menu.additem('%s: %s win%s' % (name, wins, plural))
 
 # ==============================================================================
 #  WINNER MENU

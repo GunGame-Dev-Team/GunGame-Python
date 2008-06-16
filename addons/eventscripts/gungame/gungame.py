@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.354
+    Version: 1.0.350
     Description: The main addon, handles leaders and events.
 '''
 
@@ -29,7 +29,7 @@ reload(gungamelib)
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.354'
+__version__ = '1.0.350'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -91,6 +91,10 @@ def load():
     global countBombDeathAsSuicide
     global list_stripExceptions
     
+    # Register addon
+    gungame = gungamelib.registerAddon('gungame')
+    gungame.setDisplayName('GunGame')
+    
     # Print load started
     es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     gungamelib.echo('gungame', 0, 0, 'LoadStarted')
@@ -148,20 +152,18 @@ def load():
             list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')
         
         # Get weapon order file
-        weaponOrderFile = ConfigObj(gungamelib.getGameDir('cfg/gungame/gg_weapon_orders.ini'))
+        baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
+        files = os.listdir(baseDir)
         
-        # Loop through weapon order
-        for name in weaponOrderFile:
-            # Get file name
-            file = weaponOrderFile[name]['fileName']
+        for x in files:
+            file, ext = os.path.splitext(x)
+            ext = ext[1:]
             
-            # Does the file exist?
-            if not os.path.isfile(gungamelib.getGameDir('cfg/gungame/weapon_order_files/%s' % file)):
-                gungamelib.echo('gungame', 0, 0, 'InvalidWeaponOrderFile', {'file': file})
+            if ext != 'txt':
                 continue
             
             # Parse the file
-            weaponOrder = gungamelib.getWeaponOrderFile(file)
+            weaponOrder = gungamelib.getWeaponOrder(file)
             
             # Is not the one we want?
             if file != gungamelib.getVariableValue('gg_weapon_order_file'):
@@ -185,31 +187,15 @@ def load():
             weaponOrder.echo()
             es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         
-        # !WEAPONS
-        if not es.exists('saycommand', '!weapons'):
-            es.regsaycmd('!weapons', 'gungame/displayWeaponOrderMenu')
-        if not es.exists('clientcommand', '!weapons'):
-            es.regclientcmd('!weapons', 'gungame/displayWeaponOrderMenu')
-        
-        # !LEVEL
+        # Build menus
         buildLevelMenu()
-        if not es.exists('saycommand', '!level'):
-            es.regsaycmd('!level', 'gungame/displayLevelMenu')
-        if not es.exists('clientcommand', '!level'):
-            es.regclientcmd('!level', 'gungame/displayLevelMenu')
-        
-        # !LEADER
         buildLeaderMenu()
-        if not es.exists('saycommand', '!leader'):
-            es.regsaycmd('!leader', 'gungame/displayLeadersMenu')
-        if not es.exists('clientcommand', '!leader'):
-            es.regclientcmd('!leader', 'gungame/displayLeadersMenu')
         
-        # !LEADERS
-        if not es.exists('saycommand', '!leaders'):
-            es.regsaycmd('!leaders', 'gungame/displayLeadersMenu')
-        if not es.exists('clientcommand', '!leaders'):
-            es.regclientcmd('!leaders', 'gungame/displayLeadersMenu')
+        # Register commands
+        gungame.registerPublicCommand('weapons', displayWeaponOrderMenu)
+        gungame.registerPublicCommand('level', displayLevelMenu)
+        gungame.registerPublicCommand('leader', displayLeadersMenu)
+        gungame.registerPublicCommand('leaders', displayLeadersMenu)
         
         # Clear out the GunGame system
         gungamelib.resetGunGame()
@@ -255,7 +241,7 @@ def load():
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         gungamelib.echo('gungame', 0, 0, 'LoadCompleted')
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-    except Exception, e:
+    except ValueError, e:
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         es.dbgmsg(0, '[GunGame] Unable to load GunGame: exception raised during load:')
         es.dbgmsg(0, '[GunGame] %s: %s' % (e.__class__.__name__, e))
@@ -355,7 +341,7 @@ def es_map_start(event_var):
     
     if gungamelib.getVariableValue('gg_weapon_order') == '#random':
         # Re-randomize the weapon order
-        myWeaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getCurrentWeaponOrderFile())
+        myWeaponOrder = gungamelib.getWeaponOrder(gungamelib.getCurrentWeaponOrderFile())
         myWeaponOrder.changeWeaponOrderType('#random')
     
     # Check to see if the warmup round needs to be activated
@@ -554,7 +540,7 @@ def player_death(event_var):
     # SUICIDE CHECK
     # =============
     if (attacker == 0 or attacker == userid) and countBombDeathAsSuicide:
-        if gungamelib.getVariableValue('gg_suicide_punish') == 0 or gungamelib.getGlobal('round_Active') == 0:
+        if gungamelib.getVariableValue('gg_suicide_punish') == 0:
             return
         
         # Set vars
@@ -908,20 +894,20 @@ def server_cvar(event_var):
         elif newValue == 0 and 'gg_nade_bonus' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_nade_bonus')
     
-    # GG_SPAWN_PROTECTION
-    elif cvarName == 'gg_spawn_protect':
-        if newValue > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonlist():
-            es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
-        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
-            es.unload('gungame/included_addons/gg_spawn_protect')
-            
     # GG_MULTI_LEVEL
     elif cvarName == 'gg_multi_level':
         if newValue > 0 and 'gg_multi_level' not in gungamelib.getRegisteredAddonlist():
             es.server.queuecmd('es_load gungame/included_addons/gg_multi_level')
         elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_multi_level')
-            
+    
+    # GG_SPAWN_PROTECTION
+    elif cvarName == 'gg_spawn_protect':
+        if newValue > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonlist():
+            es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
+        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
+            es.unload('gungame/included_addons/gg_spawn_protect')
+    
     # GG_RETRY_PUNISH
     elif cvarName == 'gg_retry_punish':
         if newValue > 0 and 'gg_retry_punish' not in gungamelib.getRegisteredAddonlist():
@@ -953,7 +939,7 @@ def server_cvar(event_var):
         newValue = gungamelib.clamp(newValue, 0)
         
         # Get weapon order
-        weaponOrder = gungamelib.getWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_file'))
+        weaponOrder = gungamelib.getWeaponOrder(gungamelib.getVariableValue('gg_weapon_order_file'))
         
         # Set multikill
         if newValue == 0:
@@ -970,7 +956,7 @@ def server_cvar(event_var):
             return
         
         # Parse the new file
-        myWeaponOrder = gungamelib.getWeaponOrderFile(newValue)
+        myWeaponOrder = gungamelib.getWeaponOrder(newValue)
         myWeaponOrder.setWeaponOrderFile()
         
         # Set multikill override
@@ -1119,21 +1105,22 @@ def sendLevelInfoHint(userid, text):
 # ==============================================================================
 #   POPUP COMMANDS
 # ==============================================================================
-def displayWeaponOrderMenu():
-    gungamelib.sendWeaponOrderMenu(es.getcmduserid())
+def displayWeaponOrderMenu(userid):
+    gungamelib.sendWeaponOrderMenu(userid)
 
-def displayLevelMenu(): 
-    userid = es.getcmduserid()
-    argCount = es.getargc()
-    if argCount == 1:
+def displayLevelMenu(userid, player=None):
+    if not player:
         popuplib.send('gungameLevelMenu', userid)
-    elif argCount == 2:
-        levelCheckUserid = es.getuserid(es.getargv(1))
-        if str(levelCheckUserid) != '0':
-            gungamePlayer = gungamelib.getPlayer(levelCheckUserid)
-            gungamelib.saytext2('gungame', userid, gungamePlayer['index'], 'LevelInfo_PlayerSearch', {'player': es.getplayername(levelCheckUserid), 'level': gungamePlayer['level'], 'weapon': gungamePlayer.getWeapon()}, False)
-        else:
-            gungamelib.msg('gungame', userid, 'LevelInfo_PlayerSearchFailed', {'player': str(es.getargv(1))})
+        return
+    
+    checkUserid = es.getuserid(player)
+    
+    if not checkUserid:
+        gungamelib.msg('gungame', userid, 'LevelInfo_PlayerSearchFailed', {'player': player})
+        return
+    
+    gungamePlayer = gungamelib.getPlayer(levelCheckUserid)
+    gungamelib.saytext2('gungame', userid, gungamePlayer['index'], 'LevelInfo_PlayerSearch', {'player': es.getplayername(levelCheckUserid), 'level': gungamePlayer['level'], 'weapon': gungamePlayer.getWeapon()}, False)
 
 def buildLevelMenu():
     # Delete the popup if it exists
@@ -1214,8 +1201,8 @@ def prepGunGameLevelMenu(userid, popupid):
         else:
             gungameLevelMenu.modline(6, '   * Leader Level: There are no leaders') # Line #6
 
-def displayLeadersMenu():
-    popuplib.send('gungameLeadersMenu', es.getcmduserid())
+def displayLeadersMenu(userid):
+    popuplib.send('gungameLeadersMenu', userid)
 
 def buildLeaderMenu():
     # Check if the popup exists

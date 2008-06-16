@@ -40,6 +40,8 @@ spawnPoints = None
 # ==============================================================================
 def load():
     global spawnPoints
+    global mp_freezetimeBackUp
+    global mp_roundtimeBackUp
     
     # Register addon with gungamelib
     gg_deathmatch = gungamelib.registerAddon('gg_deathmatch')
@@ -59,8 +61,8 @@ def load():
     
     # Create repeats for all players on the server
     for userid in es.getUseridList():
-        # If the player does not have a respawn repeat, create one
         respawnPlayer = repeat.find('respawnPlayer%s' % userid)
+        
         if not respawnPlayer:
             repeat.create('respawnPlayer%s' % userid, respawnCountDown, (userid))
     
@@ -69,10 +71,9 @@ def load():
         repeat.start('respawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
     
     # Back up and set freezetime and roundtime
-    es.server.cmd('exec %s' %es.ServerVar('servercfgfile'))
-    es.server.cmd('exec %s' %es.ServerVar('gungame/gg_server.cfg'))
-    global mp_freezetimeBackUp
-    global mp_roundtimeBackUp
+    es.server.cmd('exec %s' % es.ServerVar('servercfgfile'))
+    es.server.cmd('exec gungame/gg_server.cfg')
+
     mp_freezetimeBackUp = es.ServerVar('mp_freezetime')
     mp_roundtimeBackUp = es.ServerVar('mp_roundtime')
     
@@ -88,8 +89,8 @@ def unload():
     gungamelib.unregisterAddon('gg_deathmatch')
     
     # Reset freezetime and rountime to their original values
-    es.server.cmd('mp_freezetime %s' %mp_freezetimeBackUp)
-    es.server.cmd('mp_roundtime %s' %mp_roundtimeBackUp)
+    es.server.cmd('mp_freezetime %s' % mp_freezetimeBackUp)
+    es.server.cmd('mp_roundtime %s' % mp_roundtimeBackUp)
     
     # Delete all player respawns
     for userid in es.getUseridList():

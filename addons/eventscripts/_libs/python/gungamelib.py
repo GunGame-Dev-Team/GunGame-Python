@@ -16,6 +16,7 @@ import time
 import cPickle
 import hashlib
 
+import wave
 import mp3lib
 
 # EventScripts Imports
@@ -79,6 +80,9 @@ class InvalidSoundPack(Exception):
     pass
 
 class SoundError(Exception):
+    pass
+
+class AddonError(Exception):
     pass
 
 # ==============================================================================
@@ -632,125 +636,9 @@ class WeaponOrder(object):
             raise ValueError('Cannot change weapon order type (%s): must be: #default, #random or #reversed.' % weaponOrder)
     
     def buildWeaponOrderMenu(self):
-        '''Builds the weapon order menu.'''
-        dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
-        
-        # Create a list of level numbers to use for creating the popup
-        list_gungameLevels = dict_tempWeaponOrder.keys()
-        
-        # Create a list of weapon names to use for creating the popup
-        list_gungameWeapons = dict_tempWeaponOrder.values()
-        
-        # Find out how many menu pages there are going to be
-        totalMenuPages = int(round((int(getTotalLevels()) * 0.1) + 0.4))
-        
-        # Create a variable to store the current page count
-        buildPageCount = 1
-        
-        # Create a variable to keep track of the index number for pulling the level/weapon information from the list_gungameLevels and list_gungameWeapons
-        levelCountIndex = 0
-        
-        # Create a variable to track the "max" or the "cap" of indexes to retrieve from the lists
-        levelCountMaxIndex = 0
-        
-        # Do the following loop until we have reached the total number of pages that we have to create
-        while buildPageCount <= totalMenuPages:
-            # Set a Python variable so we don't have to keep on formatting text for the menu name
-            menuName = 'gungameWeaponOrderMenu_page%d' %buildPageCount
-            
-            # Check to see if the popup "gungameWeaponOrderMenu" exists
-            if popuplib.exists('gungameWeaponOrderMenu'):
-                # The popup exists...let's unsend it
-                popuplib.unsendname(menuName, playerlib.getUseridList('#human'))
-                
-                # Now, we need to delete it
-                popuplib.delete(menuName)
-            
-            # Let's create the "gungameWeaponOrderMenu" popup and name it according to the page number
-            gungameWeaponOrderMenu = popuplib.create(menuName)
-            
-            # Make sure there is more than 1 page of levels/weapons
-            if totalMenuPages > 1:
-                # Now, we add the "Title Text", along with the page number as well as the following line for aesthetic appearances, "--------"
-                gungameWeaponOrderMenu.addline('GunGame Weapon Order:  (%d/%d)\n----------------------------' %(buildPageCount, totalMenuPages))
-            # Wow. Only 1 page of levels/weapons...no page number needed, then.
-            else:
-                # Now we add the "Title Text" as well as the following line for aesthetic appearances, "--------"
-                gungameWeaponOrderMenu.addline('GunGame Weapon Order:\n----------------------------')
-            
-            levelCountMaxIndex += 10
-            if levelCountMaxIndex > len(list_gungameLevels) - 1:
-                levelCountMaxIndex = len(list_gungameLevels)
-                
-            for level in range(levelCountIndex, levelCountMaxIndex):
-                # For aesthetic purposes, I will be adding a "space" for weapons in the list below level 10
-                if int(list_gungameLevels[levelCountIndex]) < 10:
-                    # Now, we add the weapons to the popup, as well as number them by level (with the extra "space")
-                    gungameWeaponOrderMenu.addline('->%d.   [%d] %s' %(list_gungameLevels[levelCountIndex], list_gungameWeapons[levelCountIndex][1], list_gungameWeapons[levelCountIndex][0]))
-                else:
-                    # Now, we add the weapons to the popup, as well as number them by level (without the extra "space")
-                    gungameWeaponOrderMenu.addline('->%d. [%d] %s' %(list_gungameLevels[levelCountIndex], list_gungameWeapons[levelCountIndex][1],list_gungameWeapons[levelCountIndex][0]))
-                    
-                # Increment the index counter by 1 for the next for loop iteration
-                levelCountIndex += 1
-                
-            # Once again, for aesthetic purposes (to keep the menu the same size), we will add blank lines if the listed levels in the menu do not = 10
-            # See if this is the final page of the menu
-            if buildPageCount == totalMenuPages:
-                # Calculate the number of needed blank lines in the menu
-                neededBlankLines = 10 - int(round((len(list_gungameLevels) * 0.1) + 0.4))
-                
-                # Set a variable for the loop below to keep track of the number of blank lines left to add
-                blankLineCount = 0
-                
-                # Loop to add the blank lines to the menu
-                while blankLineCount < neededBlankLines:
-                    gungameWeaponOrderMenu.addline(' ')
-                    blankLineCount += 1
-                    
-            # Add the "----------" separator at the bottom of the menu
-            gungameWeaponOrderMenu.addline('----------------------------')
-            
-            # Add the "browsing pages" options at the bottom of the menu
-            # If this is NOT page #1 of the weapons menu
-            if buildPageCount != 1:
-                # If the current page number IS NOT == to the total number of pages
-                if buildPageCount != totalMenuPages:
-                    gungameWeaponOrderMenu.addline('->8. Previous Page')
-                    gungameWeaponOrderMenu.addline('->9. Next Page')
-                    gungameWeaponOrderMenu.submenu(8, 'gungameWeaponOrderMenu_page%d' %(buildPageCount - 1))
-                    gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page%d' %(buildPageCount + 1))
-                # The current page number IS == to the total number of pages
-                else:
-                    gungameWeaponOrderMenu.addline('->8. Previous Page')
-                    gungameWeaponOrderMenu.addline('->9. First Page')
-                    gungameWeaponOrderMenu.submenu(8, 'gungameWeaponOrderMenu_page%d' %(buildPageCount - 1))
-                    gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page1')
-            # This IS page #1 of the weapons menu
-            else:
-                # If the total number of pages is > 1
-                if totalMenuPages > 1:
-                    # If the total number of pages is > 2
-                    if totalMenuPages > 2:
-                        gungameWeaponOrderMenu.addline('->8. Last Page')
-                        gungameWeaponOrderMenu.addline('->9. Next Page')
-                        gungameWeaponOrderMenu.submenu(8, 'gungameWeaponOrderMenu_page%d' %totalMenuPages)
-                        gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page%d' %(buildPageCount + 1))
-                    # The total number of pages == 2
-                    else:
-                        gungameWeaponOrderMenu.addline('->9. Last Page')
-                        gungameWeaponOrderMenu.submenu(9, 'gungameWeaponOrderMenu_page%d' %(buildPageCount + 1))
-            # Make sure that the player can Exit out of the menu
-            gungameWeaponOrderMenu.select(10, weaponOrderMenuHandler)
-            
-            # Finally, we add the "Exit" option to the menu
-            gungameWeaponOrderMenu.addline('0. Exit')
-            
-            # Now, we end this whole menu-making debacle by making the menu "sticky"
-            gungameWeaponOrderMenu.displaymode = 'sticky'
-            
-            # Increment the page count for the next while loop iteration to create another menu page
-            buildPageCount += 1
+        menu = SimpleList('weapon_order')
+        menu.setTitle('GunGame -- Weapon Order')
+        [menu.addItem('%s [%s]' % (x[0], x[1])) for x in dict_weaponOrders[self.fileName].values()]
 
 # ==============================================================================
 #   CONFIG CLASS
@@ -898,9 +786,6 @@ class Sounds(object):
 # ==============================================================================
 #   ADDON CLASS
 # ==============================================================================
-class AddonError(Exception):
-    pass
-    
 class Addon(object):
     def __init__(self, addonName):
         self.addon = str(addonName)
@@ -912,6 +797,7 @@ class Addon(object):
         # Set up default attributes for this addon
         self.displayName = 'Untitled Addon'
         self.commands = {}
+        self.logger = Logger(addonName)
         self.publicCommands = {}
         self.dependencies = []
         self.menu = None
@@ -1679,6 +1565,128 @@ class LeaderManager(object):
 leaders = LeaderManager()
 
 # ==============================================================================
+#  SIMPLELIST CLASS
+# ==============================================================================
+def getSimpleListMenu(name):
+    return 'simplelist_%s:1' % name
+
+class SimpleList(object):
+    '''Exactly the same as popuplib's EasyList, but this carries on the numbers
+    throughout the pages.
+    
+    Example:
+     * easylist does:   1-10, 1-10, 1-10 on each page.
+     * simplelist does: 1-10, 11-20, 21-30'''
+    
+    def __init__(self, menu, items=[], options=10):
+        '''Initialize the class.'''
+        # Set variables
+        self.title = 'Untitled List'
+        self.menu = menu
+        self.items = []
+        self.options = options
+        
+        # Add items
+        [self.addItem(x) for x in items]
+    
+    def setTitle(self, title):
+        self.title = title
+    
+    def addItem(self, item):
+        self.items.append(item)
+        startTime = time.time()
+        self.rebuildMenu()
+        print 'Time to build menu:', time.time()-startTime
+    
+    def rebuildMenu(self):
+        # Set variables
+        totalPageCount = int(round((len(self.items) * 0.1) + 0.4))
+        pageCount = 1
+        formattedTitle = '%s%s' % (self.title, ' ' * (50-len(self.title)))
+        itemCount = 0
+        itemPageCount = 0
+        
+        while pageCount <= totalPageCount:
+            # Create menu variables
+            menuName = 'simplelist_%s:%s' % (self.menu, pageCount)
+            lastMenuName = 'simplelist_%s:%s' % (self.menu, pageCount-1)
+            nextMenuName = 'simplelist_%s:%s' % (self.menu, pageCount+1)
+            itemPageCount = 0
+            
+            # Delete the menu, then create it
+            if popuplib.exists(menuName):
+                popuplib.unsendname(menuName, es.getUseridList())
+                popuplib.delete(menuName)
+            menu = popuplib.create(menuName)
+            
+            # Add title bar
+            menu.addline('%s(%d/%d)' % (formattedTitle, pageCount, totalPageCount))
+            menu.addline('-----------------------------')
+            
+            # Add items for this page
+            while self.options > itemPageCount:
+                if itemCount == len(self.items):
+                    break
+                
+                itemCount += 1
+                itemPageCount += 1
+                
+                menu.addline('%d. %s' % (itemCount, self.items[itemCount-1]))
+            
+            # Add blank lines
+            while itemPageCount < self.options:
+                itemPageCount += 1
+                menu.addline(' ')
+            
+            # Add end seperator
+            menu.addline('----------------------------')
+            
+            # First page
+            if pageCount == 1:
+                menu.addline(' ')
+                
+                # Is the last page?
+                if pageCount != totalPageCount:
+                    menu.addline('->9. Next')
+                    menu.submenu(9, nextMenuName)
+                
+                # Is the first and final page
+                else:
+                    menu.addline(' ')
+            
+            # Last page
+            elif pageCount == totalPageCount:
+                menu.addline('->8. Back')
+                menu.addline(' ')
+                menu.submenu(8, lastMenuName)
+            
+            # Just a normal page
+            else:
+                menu.addline('->8. Back')
+                menu.addline('->9. Next')
+                menu.submenu(8, lastMenuName)
+                menu.submenu(9, nextMenuName)
+            
+            # Finalize
+            menu.addline('0. Exit')
+            menu.displaymode = 'sticky'
+            menu.select(10, lambda *args: True)
+            
+            # Increment the page count
+            pageCount += 1
+    
+    def send(self, users):
+        popuplib.send(getSimpleListName(self.menu), users)
+
+# ==============================================================================
+#   LOGGER CLASS
+# ==============================================================================
+class Logger(object):
+    '''Coming soon.'''
+    
+    def __init__(self, *args): pass
+
+# ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================
 def getPlayer(userid):
@@ -1817,7 +1825,7 @@ def getLevelWeapon(levelNumber):
     return getLevelInfo(levelNumber)[0]
 
 def sendWeaponOrderMenu(userid):
-    popuplib.send('gungameWeaponOrderMenu_page1', userid)
+    popuplib.send(getSimpleListMenu('weapon_order'), userid)
 
 def weaponOrderMenuHandler(userid, choice, popupname):
     pass
@@ -1942,12 +1950,7 @@ def addDownloadableWinnerSound():
         return
 
     # Open the file
-    file = open(getGameDir('cfg/gungame/random_winner_sounds.txt'), 'r')
-    
-    # Read the lines
-    lines = [x.strip() for x in file.readlines()]
-    sounds = filter(lambda x: x and (not x.startswith('//')), lines)
-    file.close()
+    sounds = getFileLines('cfg/gungame/random_winner_sounds.txt')
     
     # No random sounds, set default
     if not sounds:
@@ -1973,26 +1976,27 @@ def addDownloadableWinnerSound():
     
     # Get path data
     realPath = getGameDir('sound/%s' % list_usedRandomSounds[-1])
-    ext = os.path.splitext(realPath)[1:]
-    length = 5
+    
+    # If the file doesn't exist, just leave it
+    if not os.path.isfile(realPath):
+        return
+    
+    ext = os.path.splitext(realPath)[1][1:]
+    duration = int(es.ServerVar('mp_chattime'))
     
     # Is an mp3 file, use mp3lib
     if ext == 'mp3':
         info = mp3lib.mp3info(realPath)
-        duration = clamp(info['MM'] * 60 + info['SS'], 5, 25)
+        duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
     
     # Is a wav file, use the wave module
     elif ext == 'wav':
         w = wave.open(realPath, 'rb')
-        duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 25)
+        duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
         w.close()
     
-    # Unsupported file format, by Source Engine AND us...
-    else:
-        duration = 15
-    
     # Set chattime
-    es.server.queuecmd('mp_chattime %s' % duration)
+    es.delayed(5, 'mp_chattime %s' % duration)
 
 def getSound(soundName):
     if not dict_sounds.has_key(soundName):
@@ -2411,3 +2415,23 @@ def generateHashes():
     
     # Close file to save changes
     file.close()
+
+def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True):
+    # Open file and get lines
+    file = open(getGameDir(location), 'r')
+    lines = file.readlines()
+    file.close()
+    
+    # Strip lines
+    if stripLines:
+        lines = [x.strip() for x in lines]
+    
+    # Remove blank lines
+    if removeBlankLines:
+        lines = filter(lambda x: x, lines)
+    
+    # Remove commented lines
+    if comment:
+        lines = filter(lambda x: not x.startswith(comment), lines)
+    
+    return lines

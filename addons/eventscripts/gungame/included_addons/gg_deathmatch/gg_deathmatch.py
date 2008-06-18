@@ -69,13 +69,9 @@ def load():
     # Respawn all dead players
     for userid in playerlib.getUseridList('#dead'):
         repeat.start('respawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
-    
-    # Back up and set freezetime and roundtime
-    es.server.cmd('exec %s' % es.ServerVar('servercfgfile'))
-    es.server.cmd('exec gungame/gg_server.cfg')
 
-    mp_freezetimeBackUp = es.ServerVar('mp_freezetime')
-    mp_roundtimeBackUp = es.ServerVar('mp_roundtime')
+    mp_freezetimeBackUp = int(es.ServerVar('mp_freezetime'))
+    mp_roundtimeBackUp = int(es.ServerVar('mp_roundtime'))
     
     es.server.cmd('mp_freezetime 0')
     es.server.cmd('mp_roundtime 900')

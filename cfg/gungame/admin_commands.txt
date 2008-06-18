@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 // admin_commands.txt -- Admin command permission definitions.
 //
-// Each command has a required permission level-- 0, 1, 2 or 3. Admin level
+// Each command has a required permission level-- 0, 1 or 2. Admin level
 // definitions are set in the admins.txt file.
 //
 // Format: <Command> <Level>
@@ -19,7 +19,6 @@
 //             1 = Super Admin: can run high-level commands such as
 //                              "admin_add".
 //             2 = Admin: can run simple command such as "dm_add", etc.
-//             3 = All Users: any player can run this command.
 // 
 // Note: Any edit of this file will require a server restart for changes to
 //       take effect.
@@ -50,3 +49,11 @@ spawn_remove_all 0
 spawn_show 2
 spawn_print 2
 spawn_convert 0
+
+//----------------------------------------------------------------------------
+// gg_map_vote
+//----------------------------------------------------------------------------
+vote_cancel 2
+vote_list 2
+vote_shuffle 2
+vote_start 2

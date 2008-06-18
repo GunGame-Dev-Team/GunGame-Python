@@ -16,7 +16,7 @@
 //          on the server.
 //
 // Note: Any alteration of this file requires a server restart or a reload of
-//       GunGame.
+//       GunGame (well, just a map change).
 //----------------------------------------------------------------------------
 
 music/HL2_song13.mp3

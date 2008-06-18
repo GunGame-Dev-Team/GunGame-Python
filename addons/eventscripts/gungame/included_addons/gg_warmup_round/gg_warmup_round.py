@@ -104,8 +104,6 @@ def load():
             raise WarmUpWeaponError, warmupWeapon + ' is not a valid weapon. Setting \'gg_warmup_weapon\' to level 1\'s weapon.'
             
     # Backup "mp_freezetime" variable to reset it later
-    es.server.cmd('exec %s' %es.ServerVar('servercfgfile'))
-    es.server.cmd('exec %s' %es.ServerVar('gungame/gg_server.cfg'))
     mp_freezetimeBackUp = int(es.ServerVar('mp_freezetime'))
     
     # Set "mp_freezetime" to 0
@@ -195,17 +193,18 @@ def countDown(repeatInfo):
     
     # If the remaining time is greater than 1
     if warmupTime >= 1:
-        # Loop through the players
-        for userid in es.getUseridList():
-            # Send a hudhint to userid with the remaining timeleft
-            usermsg.hudhint(userid, 'Warmup round timer: %d' % warmupTime)
-            
-            # Set timeleft global
-            gungamelib.setGlobal('warmupTimeLeft', warmupTime)
-            
-            # Countdown 5 or less?
-            if warmupTime <= 5:
-                es.cexec(userid, 'playgamesound hl1/fvox/beep.wav')
+        # Send hint
+        if warmupTime > 1:
+            gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Plural', {'time': warmupTime})
+        else:
+            gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Singular')
+        
+        # Set timeleft global
+        gungamelib.setGlobal('warmupTimeLeft', warmupTime)
+        
+        # Countdown 5 or less?
+        if warmupTime <= 5:
+            gungamelib.playSound('#all', 'countDownBeep')
         
         # If warmuptime is 1, start game restart
         if warmupTime == 2:
@@ -214,12 +213,11 @@ def countDown(repeatInfo):
         # Decrement the timeleft counter
         warmupTime -= 1
     elif warmupTime == 0:
-        for userid in es.getUseridList():
-            # Send a hudhint to userid that the warmup round has ended
-            usermsg.hudhint(userid, 'Warmup Round Completed!')
+        # Send hint
+        gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Ended')
         
         # Play beep
-        es.cexec_all('playgamesound hl1/fvox/beep.wav')
+        gungamelib.playSound('#all', 'countDownBeep')
         
         # Stop the timer
         repeat.delete('WarmupTimer')

@@ -564,11 +564,11 @@ class Command:
         if not gungamelib.isNumeric(level):
             raise ValueError('Level (%s) is not numeric.' % level)
         
-        level = gungamelib.clamp(int(level), 0, 3)
+        level = gungamelib.clamp(int(level), 0, 2)
         
         # Set default variables
         self.name = name
-        self.type = '#all' if level == 3 else '#admin'
+        self.type = '#admin'
         self.level = level
         self.group = 'ggadmin%s' % level
         
@@ -600,8 +600,8 @@ class Command:
             raise ValueError('Level (%s) is not numeric.' % level)
         
         # Set level and type
-        level = gungamelib.clamp(int(level), 0, 3)
-        self.type = '#all' if level == 3 else '#admin'
+        level = gungamelib.clamp(int(level), 0, 2)
+        self.type = '#admin'
         
         # Open file, get lines then close
         commandFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'r')
@@ -647,6 +647,7 @@ class Command:
         # Re-create
         es.server.queuecmd('gauth power create !gg%s 128' % self.name)
         es.server.queuecmd('gauth power create gg_%s 128' % self.name)
+        
         for groupLevel in range(level, 3):
             es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, groupLevel))
             es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, groupLevel))

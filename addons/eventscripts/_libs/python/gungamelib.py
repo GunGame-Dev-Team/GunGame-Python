@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.359
+    Version: 1.0.360
     Description:
 '''
 
@@ -847,10 +847,11 @@ class Addon(object):
     
     def __publicCommandCallback(self):
         # Remove gg_ prefix
-        command = es.getargv(0)[3:]
+        if es.getargv(0).startswith('gg_'):
+            command = es.getargv(0)[3:]
         
         # Remove say command prefix
-        if es.getargv(0) == getSayCommandName(es.getargv(0)):
+        if es.getargv(0) == getSayCommandName(es.getargv(0)[1:]):
             command = es.getargv(0)[len(getVariableValue('gg_say_prefix')):]
         
         # Get variables

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.347
+    Version: 1.0.359
     Description:
 '''
 
@@ -13,6 +13,7 @@ import string
 import random
 import os
 import time
+import math
 import cPickle
 import hashlib
 
@@ -663,7 +664,7 @@ class Config(object):
         '''Checks to see if the config is already loaded.'''
         return (self.name in list_configs)
     
-    def __parse(self):9
+    def __parse(self):
         '''Parses the config file.'''
         # Try to open the config file
         try:

@@ -119,7 +119,7 @@ def sendTopMenu(userid):
 
 def buildTopMenu():
     menu = popuplib.easylist('gg_top_winners')
-    menu.settitle('GG Winners - Top 10')
+    menu.settitle('GunGame: Top 10 Winners')
     
     for winner in gungamelib.getOrderedWinners()[:10]:
         # Get winner information
@@ -135,11 +135,11 @@ def buildTopMenu():
 # ==============================================================================
 def sendWinnerMenu(userid):
     buildWinnerMenu()
-    popuplib.send('gg_winners', userid)
+    gungamelib.sendOrderedMenu('winners', userid)
 
 def buildWinnerMenu():
-    menu = popuplib.easylist('gg_winners')
-    menu.settitle('GG Winners')
+    menu = gungamelib.OrderedList('winners')
+    menu.setTitle('GunGame: All Winners')
     
     for winner in gungamelib.getOrderedWinners():
         # Get winner information
@@ -148,7 +148,7 @@ def buildWinnerMenu():
         plural = '' if wins == 1 else 's'
         
         # Add menu item
-        menu.additem('%s: %s win%s' % (name, wins, plural))
+        menu.addItem('%s: %s win%s' % (name, wins, plural))
 
 # ==============================================================================
 #  HELPER FUNCTIONS

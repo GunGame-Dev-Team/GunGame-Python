@@ -142,7 +142,7 @@ def buildMenu():
     
     # Create menu
     menu = popuplib.easymenu('gg_welcome_msg', None, None)
-    menu.settitle('GunGame:Python -- Welcome Message')
+    menu.settitle('GunGame -- Welcome Message')
     menu.setdescription('%s\n%s\n%s\nThis server uses:' % (menu.c_beginsep, '\n'.join(list_welcomeMsg), menu.c_beginsep))
     
     # Add all options

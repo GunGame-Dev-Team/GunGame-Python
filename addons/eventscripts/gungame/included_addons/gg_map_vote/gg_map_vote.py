@@ -202,7 +202,7 @@ def setVoteList():
     votePopup = popuplib.easymenu('voteMenu', '_popup_choice', voteMenuSelect)
     
     # Set title for the menu
-    votePopup.settitle('GG Map Vote -- Next Map')
+    votePopup.settitle('GG Map Vote: Next Map')
     
     # Loop through maps to build list
     for map in dict_addonVars['voteList']:

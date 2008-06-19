@@ -573,10 +573,10 @@ class Command:
         self.group = 'ggadmin%s' % level
         
         # Create the command (say)
-        es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s %s' % (name, name, self.type))
-        es.server.queuecmd('gauth power create !gg%s 128' % name)
+        es.server.queuecmd('clientcmd create say %s gungame/included_addons/gg_admin/cmdHandler %s %s' % (gungamelib.getSayCommandName(name), gungamelib.getSayCommandName(name), self.type))
+        es.server.queuecmd('gauth power create %s 128' % gungamelib.getSayCommandName(name))
         for groupLevel in range(level, 3):
-            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, groupLevel))
+            es.server.queuecmd('gauth power give %s ggadmin%s' % (gungamelib.getSayCommandName(name), groupLevel))
         
         # Create the command (console)
         es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (name, name, self.type))
@@ -586,7 +586,7 @@ class Command:
     
     def __del__(self):
         '''Unregisters the say and client commands.'''
-        es.unregsaycmd('!gg%s' % self.name)
+        es.unregsaycmd('%s' % gungamelib.getSayCommandName(self.name))
         es.unregclientcmd('gg_%s' % self.name)
     
     def __int__(self):
@@ -633,24 +633,24 @@ class Command:
         group = 'ggadmin%s' % level
         
         # Erase command
-        es.server.queuecmd('clientcmd delete say !gg%s' % self.name)
+        es.server.queuecmd('clientcmd delete say %s' % gungamelib.getSayCommandName(self.name))
         es.server.queuecmd('clientcmd delete console gg_%s' % self.name)
         
         # Re-create command
-        es.server.queuecmd('clientcmd create say !gg%s gungame/included_addons/gg_admin/cmdHandler !gg%s %s' % (self.name, self.name, self.type))
+        es.server.queuecmd('clientcmd create say %s gungame/included_addons/gg_admin/cmdHandler %s %s' % (gungamelib.getSayCommandName(self.name), gungamelib.getSayCommandName(self.name), self.type))
         es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (self.name, self.name, self.type))
         
         # Leave groups
-        es.server.queuecmd('gauth power delete !gg%s' % self.name)
+        es.server.queuecmd('gauth power delete %s' % gungamelib.getSayCommandName(self.name))
         es.server.queuecmd('gauth power delete gg_%s' % self.name)
         
         # Re-create
-        es.server.queuecmd('gauth power create !gg%s 128' % self.name)
+        es.server.queuecmd('gauth power create %s 128' % gungamelib.getSayCommandName(self.name))
         es.server.queuecmd('gauth power create gg_%s 128' % self.name)
         
         for groupLevel in range(level, 3):
-            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, groupLevel))
-            es.server.queuecmd('gauth power give !gg%s ggadmin%s' % (name, groupLevel))
+            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (self.name, groupLevel))
+            es.server.queuecmd('gauth power give %s ggadmin%s' % (gungamelib.getSayCommandName(self.name), groupLevel))
         
         # Move variables to the class's
         self.group = group

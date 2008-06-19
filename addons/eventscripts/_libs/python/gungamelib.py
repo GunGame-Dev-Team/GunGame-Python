@@ -636,8 +636,8 @@ class WeaponOrder(object):
             raise ValueError('Cannot change weapon order type (%s): must be: #default, #random or #reversed.' % weaponOrder)
     
     def buildWeaponOrderMenu(self):
-        menu = SimpleList('weapon_order')
-        menu.setTitle('GunGame -- Weapon Order')
+        menu = OrderedMenu('weapon_order')
+        menu.setTitle('GunGame: Weapon Order')
         [menu.addItem('%s [%s]' % (x[0], x[1])) for x in dict_weaponOrders[self.fileName].values()]
 
 # ==============================================================================
@@ -663,7 +663,7 @@ class Config(object):
         '''Checks to see if the config is already loaded.'''
         return (self.name in list_configs)
     
-    def __parse(self):
+    def __parse(self):9
         '''Parses the config file.'''
         # Try to open the config file
         try:
@@ -838,15 +838,21 @@ class Addon(object):
         # Register command if its not already registered
         if not es.exists('command', 'gg_%s' % command):
             es.regclientcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
-            es.regsaycmd('!gg%s' % command, 'gungamelib/%s' % command)
+            es.regsaycmd(getSayCommandName(command), 'gungamelib/%s' % command)
             
             # Register console command
             if console:
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
     
     def __publicCommandCallback(self):
-        # Get variables
+        # Remove gg_ prefix
         command = es.getargv(0)[3:]
+        
+        # Remove say command prefix
+        if es.getargv(0) == getSayCommandName(es.getargv(0)):
+            command = es.getargv(0)[len(getVariableValue('gg_say_prefix')):]
+        
+        # Get variables
         userid = es.getcmduserid()
         arguments = formatArgs()
         
@@ -953,8 +959,15 @@ class Addon(object):
             return self.publicCommands[command][1]
     
     def __functionCallback(self):
+        # Remove gg_ prefix
+        commandName = es.getargv(0)[3:]
+        
+        # Remove say command prefix
+        if es.getargv(0) == getSayCommandName(es.getargv(0)):
+            commandName = es.getargv(0)[len(getVariableValue('gg_say_prefix')):]
+        
         # Call command
-        self.callCommand(es.getargv(0)[3:], 0, formatArgs())
+        self.callCommand(commandName, 0, formatArgs())
     
     '''Menu options:'''
     def createMenu(self, selectfunc):
@@ -1565,18 +1578,15 @@ class LeaderManager(object):
 leaders = LeaderManager()
 
 # ==============================================================================
-#  SIMPLELIST CLASS
+#  ORDEREDMENU CLASS
 # ==============================================================================
-def getSimpleListMenu(name):
-    return 'simplelist_%s:1' % name
-
-class SimpleList(object):
-    '''Exactly the same as popuplib's EasyList, but this carries on the numbers
-    throughout the pages.
+class OrderedMenu(object):
+    '''This does basically the same as popuplib's EasyList, but the numbering
+    schema continues throughout the pages.
     
     Example:
-     * easylist does:   1-10, 1-10, 1-10 on each page.
-     * simplelist does: 1-10, 11-20, 21-30'''
+     * EasyList does:   1-10, 1-10, 1-10 on each page.
+     * OrderedMenu does: 1-10, 11-20, 21-30'''
     
     def __init__(self, menu, items=[], options=10):
         '''Initialize the class.'''
@@ -1594,13 +1604,11 @@ class SimpleList(object):
     
     def addItem(self, item):
         self.items.append(item)
-        startTime = time.time()
         self.rebuildMenu()
-        print 'Time to build menu:', time.time()-startTime
     
     def rebuildMenu(self):
         # Set variables
-        totalPageCount = int(round((len(self.items) * 0.1) + 0.4))
+        totalPageCount = math.ceil(float(len(self.items) / float(self.options)))
         pageCount = 1
         formattedTitle = '%s%s' % (self.title, ' ' * (50-len(self.title)))
         itemCount = 0
@@ -1608,9 +1616,9 @@ class SimpleList(object):
         
         while pageCount <= totalPageCount:
             # Create menu variables
-            menuName = 'simplelist_%s:%s' % (self.menu, pageCount)
-            lastMenuName = 'simplelist_%s:%s' % (self.menu, pageCount-1)
-            nextMenuName = 'simplelist_%s:%s' % (self.menu, pageCount+1)
+            menuName = 'OrderedMenu_%s:%s' % (self.menu, pageCount)
+            lastMenuName = 'OrderedMenu_%s:%s' % (self.menu, pageCount-1)
+            nextMenuName = 'OrderedMenu_%s:%s' % (self.menu, pageCount+1)
             itemPageCount = 0
             
             # Delete the menu, then create it
@@ -1676,7 +1684,7 @@ class SimpleList(object):
             pageCount += 1
     
     def send(self, users):
-        popuplib.send(getSimpleListName(self.menu), users)
+        popuplib.send(getOrderedMenuName(self.menu), users)
 
 # ==============================================================================
 #   LOGGER CLASS
@@ -1811,11 +1819,11 @@ def clearOldPlayers():
 # ==============================================================================
 def getCurrentWeaponOrderFile():
     return dict_weaponOrderSettings['currentWeaponOrderFile']
-    
+
 def getWeaponOrderList():
     currentWeaponOrder = dict_weaponOrderSettings['currentWeaponOrderFile']
     return [dict_weaponOrders[currentWeaponOrder][level][0] for level in dict_weaponOrders[currentWeaponOrder]]
-    
+
 def getLevelWeapon(levelNumber):
     levelNumber = int(levelNumber)
     
@@ -1825,10 +1833,7 @@ def getLevelWeapon(levelNumber):
     return getLevelInfo(levelNumber)[0]
 
 def sendWeaponOrderMenu(userid):
-    popuplib.send(getSimpleListMenu('weapon_order'), userid)
-
-def weaponOrderMenuHandler(userid, choice, popupname):
-    pass
+    sendOrderedMenu('weapon_order', userid)
 
 # ==============================================================================
 #   LEVEL RELATED COMMANDS
@@ -2054,6 +2059,15 @@ def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
     
     # Emit!
     es.emitsound('player', emitter, sound, volume, attenuation)
+
+# ==============================================================================
+#   MENU COMMANDS
+# ==============================================================================
+def getOrderedMenuMenu(name):
+    return 'OrderedMenu_%s:1' % name
+
+def sendOrderedMenu(name, users):
+    popuplib.send(getOrderedMenuName(name), users)
 
 # ==============================================================================
 #   WINNER RELATED COMMANDS
@@ -2435,3 +2449,6 @@ def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True)
         lines = filter(lambda x: not x.startswith(comment), lines)
     
     return lines
+
+def getSayCommandName(command):
+    return '%s%s' % (getVariableValue('gg_say_prefix'), command)

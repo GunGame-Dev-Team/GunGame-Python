@@ -846,15 +846,8 @@ class Addon(object):
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
     
     def __publicCommandCallback(self):
-        # Remove gg_ prefix
-        if es.getargv(0).startswith('gg_'):
-            command = es.getargv(0)[3:]
-        
-        # Remove say command prefix
-        if es.getargv(0) == getSayCommandName(es.getargv(0)[1:]):
-            command = es.getargv(0)[len(getVariableValue('gg_say_prefix')):]
-        
         # Get variables
+        command = removeCommandPrefix(es.getargv(0))
         userid = es.getcmduserid()
         arguments = formatArgs()
         
@@ -884,11 +877,15 @@ class Addon(object):
         # Register console command (set console to False if you are getting conflicts)
         if console:
             # Register block
-            es.addons.registerBlock('gungamelib', command, self.__functionCallback)
+            es.addons.registerBlock('gungamelib', command, self.__adminCommandCallback)
             
             # Register command if its not already registered
             if not es.exists('command', 'gg_%s' % command):
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+    
+    def __adminCommandCallback(self):
+        # Call command
+        self.callCommand(removeCommandPrefix(es.getargv(0)), 0, formatArgs())
     
     def unregisterCommands(self):
         # Unregister admin commands
@@ -920,8 +917,9 @@ class Addon(object):
             callback(userid, *arguments)
         except TypeError, e:
             # Not an argument error?
-            if 'arguments' in e == False:
+            if 'arguments' not in e:
                 callback(userid, *arguments)
+                return
             
             # Show an Invalid Syntax message to the player
             msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
@@ -959,17 +957,6 @@ class Addon(object):
             return self.commands[command][1]
         else:
             return self.publicCommands[command][1]
-    
-    def __functionCallback(self):
-        # Remove gg_ prefix
-        commandName = es.getargv(0)[3:]
-        
-        # Remove say command prefix
-        if es.getargv(0) == getSayCommandName(es.getargv(0)):
-            commandName = es.getargv(0)[len(getVariableValue('gg_say_prefix')):]
-        
-        # Call command
-        self.callCommand(commandName, 0, formatArgs())
     
     '''Menu options:'''
     def createMenu(self, selectfunc):
@@ -2065,7 +2052,7 @@ def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
 # ==============================================================================
 #   MENU COMMANDS
 # ==============================================================================
-def getOrderedMenuMenu(name):
+def getOrderedMenuName(name):
     return 'OrderedMenu_%s:1' % name
 
 def sendOrderedMenu(name, users):
@@ -2454,3 +2441,18 @@ def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True)
 
 def getSayCommandName(command):
     return '%s%s' % (getVariableValue('gg_say_prefix'), command)
+
+def removeCommandPrefix(command):
+    # Get say prefix
+    sayPrefix = getVariableValue('gg_say_prefix')
+    
+    # Starts with gg_ (console command)
+    if command.startswith('gg_'):
+        return command[3:]
+    
+    # Starts with the say prefix (say command)
+    elif command.startswith(sayPrefix):
+        return command[len(sayPrefix):]
+    
+    # Return the raw command
+    return command

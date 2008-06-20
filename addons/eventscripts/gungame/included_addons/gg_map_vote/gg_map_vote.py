@@ -68,7 +68,6 @@ dict_addonVars['mapList'] = []
 dict_addonVars['voteList'] = []
 dict_addonVars['voteActive'] = 0
 dict_addonVars['voteTimer'] = 0
-dict_addonVars['protectFinishTime'] = 0
 
 # Old maphandler value
 oldEventscriptsMaphandler = es.ServerVar('eventscripts_maphandler')
@@ -240,9 +239,6 @@ def startVote():
     # Set the active vars
     dict_addonVars['voteActive'] = 1
     gungamelib.setGlobal('voteActive', 1)
-    
-    # Add "anti 1 presser" protection
-    dict_addonVars['protectFinishTime'] = time.time() + 1
 
 def VoteCountdown(repeatInfo):
     if dict_addonVars['voteTimer']:
@@ -275,7 +271,7 @@ def VoteCountdown(repeatInfo):
     
 def voteMenuSelect(userid, mapChoice, popupid):
     # Pressed 1 before the anti-1 press protection time was up?
-    if dict_addonVars['protectFinishTime'] < time.time():
+    if dict_addonVars['voteTimer'] > int(dict_variables['voteTime'])-1:
         gungamelib.msg('gg_map_vote', userid, 'OnePressProtection')
         popuplib.send('voteMenu', userid)
         return

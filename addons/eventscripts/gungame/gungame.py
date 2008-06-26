@@ -21,15 +21,11 @@ import keyvalues
 import services
 from configobj import ConfigObj
 
-# GunGame Imports
-import gungamelib
-reload(gungamelib)
-
 # ==============================================================================
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.360'
+__version__ = '1.0.362'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -39,6 +35,12 @@ info.version  = __version__
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame'
 info.author   = 'XE_ManUp, RideGuy, Saul Rennison'
+
+# ==============================================================================
+#   LOAD GUNGAMELIB
+# ==============================================================================
+import gungamelib
+reload(gungamelib)
 
 # ==============================================================================
 #   GLOBALS
@@ -146,6 +148,8 @@ def load():
             es.unload('gungame')
             return
         '''
+        
+        gungamelib.update()
         
         # Get strip exceptions
         if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:

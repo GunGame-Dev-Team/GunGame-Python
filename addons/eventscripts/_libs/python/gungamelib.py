@@ -16,6 +16,7 @@ import time
 import math
 import cPickle
 import hashlib
+import urllib2
 
 import wave
 import mp3lib
@@ -1710,8 +1711,7 @@ def lang(addon, string, tokens={}):
     if not os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % addon)):
         raise IOError('Cannot load strings (%s): no string file exists.' % addon)
     
-    langStrings = langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % addon))
-    return langStrings(string, tokens)
+    return langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % addon))(string, tokens)
 
 def msg(addon, filter, string, tokens={}, showPrefix=True):
     if filter == 0:
@@ -1763,6 +1763,7 @@ def resetGunGame():
     
     # Reset the leader information
     leaders = LeaderManager()
+    leaders.getNewLeaders()
     
     # Game is no longer over
     setGlobal('gameOver', 0)
@@ -1789,13 +1790,14 @@ def clearGunGame():
     
     # Reset the leader information
     leaders = LeaderManager()
+    leaders.getNewLeaders()
     
     # Reset the stored variables
     dict_variables.clear()
     
     # Clear the gungame globals
     dict_globals.clear()
-    
+
 def clearOldPlayers():
     # Loop through the players
     for userid in dict_players.copy():
@@ -2455,4 +2457,117 @@ def removeCommandPrefix(command):
         return command[len(sayPrefix):]
     
     # Return the raw command
-    return command
+    return command.lower()
+
+def getLatestVersion():
+    # Open the page
+    page = urllib2.urlopen('http://code.google.com/p/gungame-python/source/list').read()
+    
+    # Return the part between <td class=id><a href="detail?r= and the "
+    return int(page.split('<td class=id><a href="detail?r=')[1].split('"')[0])
+
+def checkVersion(latestRevision=False):
+    currentRevision = int(str(es.ServerVar('eventscripts_ggp')).split('.')[2])
+    
+    if not latestRevision:
+        latestRevision = getLatestVersion()
+    
+    if latestRevision > currentRevision:
+        return 1
+    elif latestRevision < currentRevision:
+        return -1
+    else:
+        return 0
+
+def update():
+    # Get the latest revision
+    latestRevision = getLatestVersion()
+    
+    echo('gungame', 0, 0, 'Update_Started')
+    
+    # Any need to update?
+    if checkVersion(latestRevision) < 1:
+        echo('gungame', 0, 0, 'Update_LatestVersion')
+        return
+    
+    echo('gungame', 0, 0, 'Update_Available', {'version': latestRevision})
+    
+    # Open the page
+    page = urllib2.urlopen('http://code.google.com/p/gungame-python/source/detail?r=%s' % latestRevision).read()
+    
+    # Split up the page
+    rawMod = page.split('<td>Modified')[1:]
+    rawAdd = page.split('<td>Added')[1:]
+    rawDelete = page.split('<td>Deleted')[1:]
+    
+    # Initialize variables
+    modified = []
+    added    = []
+    removed  = []
+    
+    # Loop through the modified files
+    for x in rawMod:
+        # Get the file name
+        x = x.split('<a href="browse/trunk/')[1].split('?r=')[0]
+        
+        # Add to modified list
+        modified.append(x)
+    
+    # Loop through the added files
+    for x in rawAdd:
+        # Get the file name
+        x = x.split('<a href="browse/trunk/')[1].split('?r=')[0]
+        
+        # Add to modified list
+        added.append(x)
+    
+    # Loop through the deleted files
+    for x in rawDelete:
+        # Get the file name
+        x = x.split('<a href="browse/trunk/')[1].split('?r=')[0]
+        
+        # Add to modified list
+        removed.append(x)
+    
+    # Remove removed files
+    for x in removed:
+        # Is a file
+        if '.' in x:
+            os.remove(getGameDir(x))
+            echo('gungame', 0, 0, 'Update_RemovedFile', {'x': x})
+        
+        # Is a directory
+        else:
+            os.rmdir(getGameDir(x))
+            echo('gungame', 0, 0, 'Update_RemovedDirectory', {'x': x})
+    
+    # Add added files
+    for x in added:
+        # Is a file
+        if '.' in x:
+            open(getGameDir(x), 'w')
+            echo('gungame', 0, 0, 'Update_AddedFile', {'x': x})
+        
+        # Is a directory
+        else:
+            os.mkdir(getGameDir(x))
+            echo('gungame', 0, 0, 'Update_AddedDirectory', {'x': x})
+    
+    # Modify modified files
+    for x in modified:
+        # Get file lines from the SVN
+        newFile = urllib2.urlopen('http://gungame-python.googlecode.com/svn/trunk/%s' % x).read()
+        
+        # Write new lines to file
+        file = open(getGameDir(x), 'wb')
+        file.write(newFile)
+        file.close()
+        
+        echo('gungame', 0, 0, 'Update_ModifiedFile', {'x': x})
+
+def kv(iterable):
+    if isinstance(iterable, list) or isinstance(iterable, tuple):
+        return zip(range(0, len(iterable), iterable))
+    
+    if isinstance(iterable, dict):
+        return zip(iterable.keys(), iterable.values())

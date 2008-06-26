@@ -138,7 +138,7 @@ def sendWinnerMenu(userid):
     gungamelib.sendOrderedMenu('winners', userid)
 
 def buildWinnerMenu():
-    menu = gungamelib.OrderedList('winners')
+    menu = gungamelib.OrderedMenu('winners')
     menu.setTitle('GunGame: All Winners')
     
     for winner in gungamelib.getOrderedWinners():

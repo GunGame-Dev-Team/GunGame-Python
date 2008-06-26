@@ -2559,6 +2559,14 @@ def update():
             echo('gungame', 0, 0, 'Update_SkippedFile', {'x': x})
             continue
         
+        # Get the extension
+        ext = os.path.splitext(x)[1][1:]
+        
+        # Is a Python file?
+        if ext == 'py':
+            # Remove the .pyc file
+            os.remove(getGameDir(x+'c'))
+        
         # Get file lines from the SVN
         newFile = urllib2.urlopen('http://gungame-python.googlecode.com/svn/trunk/%s' % x).read()
         
@@ -2568,6 +2576,8 @@ def update():
         file.close()
         
         echo('gungame', 0, 0, 'Update_ModifiedFile', {'x': x})
+    
+    # Clean up .pyc files
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

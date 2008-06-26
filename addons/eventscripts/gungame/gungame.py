@@ -25,7 +25,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.365'
+__version__ = '1.0.366'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -349,9 +349,11 @@ def es_map_start(event_var):
         myWeaponOrder.changeWeaponOrderType('#random')
     
     # Update
+    es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     es.dbgmsg(0, '[GunGame]     * Update check')
     es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     gungamelib.update()
+    es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
     
     # Check to see if the warmup round needs to be activated
     if gungamelib.getVariableValue('gg_warmup_timer') > 0:

@@ -80,6 +80,9 @@ def logEvent(event_var):
     event = event_var['es_event']
     userid = event_var['userid']
     
+    if event in ('gg_levelup', 'gg_knife_steal'):
+        userid = event_var['attacker']
+    
     # Make sure the player exists
     if not gungamelib.clientInServer(userid):
         return

@@ -2555,6 +2555,10 @@ def update():
     
     # Modify modified files
     for x in modified:
+        if x.startswith('cfg/'):
+            echo('gungame', 0, 0, 'Update_SkippedFile', {'x': x})
+            continue
+        
         # Get file lines from the SVN
         newFile = urllib2.urlopen('http://gungame-python.googlecode.com/svn/trunk/%s' % x).read()
         

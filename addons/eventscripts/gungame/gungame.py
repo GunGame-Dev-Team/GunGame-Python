@@ -25,7 +25,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.364'
+__version__ = '1.0.365'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -34,7 +34,7 @@ info.name     = 'GunGame: Python'
 info.version  = __version__
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame'
-info.author   = 'XE_ManUp, RideGuy, Saul Rennison'
+info.author   = 'Michael Barr (XE_ManUp), Paul (RideGuy), Saul Rennison (Cheezus)'
 
 # ==============================================================================
 #   LOAD GUNGAMELIB
@@ -248,7 +248,7 @@ def load():
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         gungamelib.echo('gungame', 0, 0, 'LoadCompleted')
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-    except ValueError, e:
+    except Exception, e:
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         es.dbgmsg(0, '[GunGame] Unable to load GunGame: exception raised during load:')
         es.dbgmsg(0, '[GunGame] %s: %s' % (e.__class__.__name__, e))

@@ -184,11 +184,11 @@ class Player(object):
             return
         
         # TRIPLE
-        if item == 'triple':
+        if item == 'multilevel':
             if not (value > -1 and value < 4):
                 raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
             
-            self.attributes['triple'] = value
+            self.attributes['multilevel'] = value
             
             return
         
@@ -204,7 +204,7 @@ class Player(object):
     def __int__(self):
         '''Returns the players userid.'''
         return self.userid
-        
+    
     def __validatePlayer(self):
         '''Checks the player exists in the player database.'''
         return dict_players.has_key(self.userid)
@@ -212,7 +212,7 @@ class Player(object):
     def __createPlayer(self, connectFlag=None):
         '''Creates the player in the players database.'''
         names = ['level', 'afkrounds', 'multikill',
-                'triple', 'preventlevel', 'afkmathtotal',
+                'multilevel', 'preventlevel', 'afkmathtotal',
                 'steamid', 'index']
         values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(str(self.userid), 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
         
@@ -224,7 +224,7 @@ class Player(object):
         
         # Create them in the players dictionary
         dict_players[self.userid] = self.attributes
-        
+    
     def removePlayer(self):
         '''Removes a player from the GunGame player dictionary.'''
         if self.__validatePlayer():
@@ -242,7 +242,7 @@ class Player(object):
     def resetPlayer(self):
         '''Reset the players attributes.'''
         self.__createPlayer()
-        
+    
     def resetPlayerLocation(self):
         '''Resets a players AFK math total.'''
         # Check the player exists

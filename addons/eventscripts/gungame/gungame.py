@@ -25,7 +25,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.363'
+__version__ = '1.0.364'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -149,6 +149,9 @@ def load():
             return
         '''
         
+        # Update
+        es.dbgmsg(0, '[GunGame]     * Update check')
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         gungamelib.update()
         
         # Get strip exceptions
@@ -325,9 +328,6 @@ def es_map_start(event_var):
     # Load custom GunGame events
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
-    # Make sounds downloadbale
-    gungamelib.addDownloadableSounds()
-    
     # Execute GunGame's autoexec.cfg
     es.delayed('1', 'exec gungame/gg_server.cfg')
     
@@ -348,6 +348,11 @@ def es_map_start(event_var):
         myWeaponOrder = gungamelib.getWeaponOrder(gungamelib.getCurrentWeaponOrderFile())
         myWeaponOrder.changeWeaponOrderType('#random')
     
+    # Update
+    es.dbgmsg(0, '[GunGame]     * Update check')
+    es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
+    gungamelib.update()
+    
     # Check to see if the warmup round needs to be activated
     if gungamelib.getVariableValue('gg_warmup_timer') > 0:
         es.load('gungame/included_addons/gg_warmup_round')
@@ -358,6 +363,9 @@ def es_map_start(event_var):
     
     # Reset the GunGame Round
     gungamelib.resetGunGame()
+    
+    # Make sounds downloadbale
+    gungamelib.addDownloadableSounds()
 
 def round_start(event_var):
     global list_stripExceptions

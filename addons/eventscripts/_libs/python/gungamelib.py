@@ -2445,6 +2445,8 @@ def getSayCommandName(command):
     return '%s%s' % (getVariableValue('gg_say_prefix'), command)
 
 def removeCommandPrefix(command):
+    command = command.lower()
+    
     # Get say prefix
     sayPrefix = getVariableValue('gg_say_prefix')
     
@@ -2457,7 +2459,7 @@ def removeCommandPrefix(command):
         return command[len(sayPrefix):]
     
     # Return the raw command
-    return command.lower()
+    return command
 
 def getLatestVersion():
     # Open the page
@@ -2480,6 +2482,11 @@ def checkVersion(latestRevision=False):
         return 0
 
 def update():
+    # Shouldn't update?
+    if not getVariableValue('gg_auto_update'):
+        echo('gungame', 0, 0, 'Update_Disabled')
+        return
+    
     # Get the latest revision
     latestRevision = getLatestVersion()
     
@@ -2494,6 +2501,18 @@ def update():
     
     # Open the page
     page = urllib2.urlopen('http://code.google.com/p/gungame-python/source/detail?r=%s' % latestRevision).read()
+    
+    # Get the log message
+    logMessageLines = page.split('<pre style="margin-left:1em">')[1].split('</pre>')[0].split('\n')
+    
+    # Print the log message
+    echo('gungame', 0, 0, 'Update_StartLogMessage')
+    es.dbgmsg(0, '[GunGame]') 
+    [es.dbgmsg(0, '[GunGame] \t' + x) for x in logMessageLines]
+    es.dbgmsg(0, '[GunGame]') 
+    echo('gungame', 0, 0, 'Update_EndLogMessage')
+    
+    time.sleep(999)
     
     # Split up the page
     rawMod = page.split('<td>Modified')[1:]
@@ -2531,30 +2550,41 @@ def update():
     
     # Remove removed files
     for x in removed:
+        y = getGameDir(x)
+        
+        # Does the file exist?
+        if not os.path.exists(y):
+            continue
+        
         # Is a file
-        if '.' in x:
-            os.remove(getGameDir(x))
+        if os.path.isfile(y):
+            os.remove(y)
             echo('gungame', 0, 0, 'Update_RemovedFile', {'x': x})
         
         # Is a directory
         else:
-            os.rmdir(getGameDir(x))
+            os.rmdir(y)
             echo('gungame', 0, 0, 'Update_RemovedDirectory', {'x': x})
     
     # Add added files
     for x in added:
+        y = getGameDir(x)
+        
         # Is a file
-        if '.' in x:
-            open(getGameDir(x), 'w')
+        if '.' in y:
+            open(y, 'w')
             echo('gungame', 0, 0, 'Update_AddedFile', {'x': x})
         
         # Is a directory
         else:
-            os.mkdir(getGameDir(x))
+            os.mkdir(y)
             echo('gungame', 0, 0, 'Update_AddedDirectory', {'x': x})
     
     # Modify modified files
     for x in modified:
+        y = getGameDir(x)
+        
+        # Skip config files
         if x.startswith('cfg/'):
             echo('gungame', 0, 0, 'Update_SkippedFile', {'x': x})
             continue
@@ -2563,7 +2593,7 @@ def update():
         ext = os.path.splitext(x)[1][1:]
         
         # Is a Python file?
-        if ext == 'py':
+        if ext == 'py' and os.path.isfile(getGameDir(x+'c')):
             # Remove the .pyc file
             os.remove(getGameDir(x+'c'))
         
@@ -2576,8 +2606,6 @@ def update():
         file.close()
         
         echo('gungame', 0, 0, 'Update_ModifiedFile', {'x': x})
-    
-    # Clean up .pyc files
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

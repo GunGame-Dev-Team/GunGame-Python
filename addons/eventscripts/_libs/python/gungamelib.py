@@ -2583,7 +2583,7 @@ def update():
         y = getGameDir(x)
         
         # Skip config files
-        if x.startswith('cfg/'):
+        if x.endswith('.cfg'):
             echo('gungame', 0, 0, 'Update_SkippedFile', {'x': x})
             continue
         
@@ -2608,8 +2608,8 @@ def update():
     echo('gungame', 0, 0, 'Update_Restarting')
     
     # Reload gungame
-    es.delayed(3, 'es_xload gungame')
-    es.unload('gungame')
+    es.delayed(4, 'es_load gungame')
+    es.delayed(0, 'es_unload gungame')
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

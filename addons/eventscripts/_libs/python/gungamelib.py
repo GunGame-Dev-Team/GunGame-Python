@@ -2608,8 +2608,7 @@ def update():
     echo('gungame', 0, 0, 'Update_Restarting')
     
     # Reload gungame
-    es.delayed(4, 'es_load gungame')
-    es.delayed(0, 'es_unload gungame')
+    es.server.queuecmd('quit')
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

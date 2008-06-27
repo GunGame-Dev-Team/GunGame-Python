@@ -60,36 +60,18 @@ list_customAddonsDir = []
 list_stripExceptions = []
 
 # ==============================================================================
-#   ERROR CLASSES
-# ==============================================================================
-class UseridError(Exception):
-    pass
-
-class PlayerError(Exception):
-    pass
-
-class ArgumentError(Exception):
-    pass
-    
-class LevelValueError(Exception):
-    pass
-
-class MultiKillValueError(Exception):
-    pass
-    
-class AFKValueError(Exception):
-    pass
-
-class TripleValueError(Exception):
-    pass
-
-class VariableError(Exception):
-    pass
-
-# ==============================================================================
 #   GAME EVENTS
 # ==============================================================================
 def load():
+    try:
+        initialize()
+    finally:
+        #gungamelib.echo('gungame', 0, 0, 'Load_Exception')
+        #es.dbgmsg(0, '[GunGame] %s' % ('=' * 80))
+        #es.unload('gungame')
+        pass
+
+def initialize():
     global countBombDeathAsSuicide
     global list_stripExceptions
     
@@ -98,162 +80,157 @@ def load():
     gungame.setDisplayName('GunGame')
     
     # Print load started
-    es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-    gungamelib.echo('gungame', 0, 0, 'LoadStarted')
-    es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
+    es.dbgmsg(0, '[GunGame] %s' % ('=' * 80))
+    gungamelib.echo('gungame', 0, 0, 'Load_Start', {'version': __version__})
     
-    try:
-        # Load custom events
-        es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
-        
-        # Loop through included addons
-        for includedAddon in os.listdir(gungamelib.getGameDir('/addons/eventscripts/gungame/included_addons/')):
-            if includedAddon[0:3] == 'gg_':
-                list_includedAddonsDir.append(includedAddon)
-        
-        # Loop through custom addons
-        for customAddon in os.listdir(gungamelib.getGameDir('/addons/eventscripts/gungame/custom_addons/')):
-            if customAddon[0:3] == 'gg_':
-                list_customAddonsDir.append(customAddon)
-        
-        # Load configs
-        gungamelib.getConfig('gg_en_config.cfg')
-        gungamelib.getConfig('gg_default_addons.cfg')
-        gungamelib.getConfig('gg_map_vote.cfg')
+    # Load custom events
+    es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
+    
+    # Loop through included addons
+    for includedAddon in os.listdir(gungamelib.getGameDir('/addons/eventscripts/gungame/included_addons/')):
+        if includedAddon[0:3] == 'gg_':
+            list_includedAddonsDir.append(includedAddon)
+    
+    # Loop through custom addons
+    for customAddon in os.listdir(gungamelib.getGameDir('/addons/eventscripts/gungame/custom_addons/')):
+        if customAddon[0:3] == 'gg_':
+            list_customAddonsDir.append(customAddon)
+    
+    # Load configs
+    gungamelib.echo('gungame', 0, 0, 'Load_Configs')
+    gungamelib.getConfig('gg_en_config.cfg')
+    gungamelib.getConfig('gg_default_addons.cfg')
+    gungamelib.getConfig('gg_map_vote.cfg')
+    
+    # Fire the gg_server.cfg
+    es.server.cmd('exec gungame/gg_server.cfg')
+    
+    '''Possibly upcoming integrity checker code for when we go gold
+    
+    # Generate hashes
+    # DEVS: Comment this when commiting the code to SVN
+    gungamelib.generateHashes()
+    
+    # Integrity check
+    check = gungamelib.fileHashCheck()
+    if not check[0]:
+        # Announce that the check failed
+        es.dbgmsg(0, '[GunGame] Unable to load GunGame: integrity check failed:')
+        es.dbgmsg(0, '[GunGame]  File: %s' % check[1])
+        es.dbgmsg(0, '[GunGame]  Reason: %s' % check[2])
+        es.dbgmsg(0, '[GunGame] Please try the following solutions:')
+        es.dbgmsg(0, '[GunGame]  1. Re-upload GunGame to your server.')
+        es.dbgmsg(0, '[GunGame]  2. Re-download GunGame, then upload again.')
+        es.dbgmsg(0, '[GunGame]  3. If none of the above fix the issue then file a bug report.')
         es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
         
-        # Fire the gg_server.cfg
-        es.server.cmd('exec gungame/gg_server.cfg')
-        
-        '''Possibly upcoming integrity checker code when we go gold... D:
-        
-        # Generate hashes
-        # DEVS: Comment this when commiting the code to SVN
-        gungamelib.generateHashes()
-        
-        # Integrity check
-        check = gungamelib.fileHashCheck()
-        if not check[0]:
-            # Announce that the check failed
-            es.dbgmsg(0, '[GunGame] Unable to load GunGame: integrity check failed:')
-            es.dbgmsg(0, '[GunGame]  File: %s' % check[1])
-            es.dbgmsg(0, '[GunGame]  Reason: %s' % check[2])
-            es.dbgmsg(0, '[GunGame] Please try the following solutions:')
-            es.dbgmsg(0, '[GunGame]  1. Re-upload GunGame to your server.')
-            es.dbgmsg(0, '[GunGame]  2. Re-download GunGame, then upload again.')
-            es.dbgmsg(0, '[GunGame]  3. If none of the above fix the issue then file a bug report.')
-            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-            
-            # Unload gungame
-            es.unload('gungame')
-            return
-        '''
-        
-        # Update
-        es.dbgmsg(0, '[GunGame]     * Update check')
-        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-        gungamelib.update()
-        
-        # Get strip exceptions
-        if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:
-            list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')
-        
-        # Get weapon order file
-        baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
-        files = os.listdir(baseDir)
-        
-        for x in files:
-            file, ext = os.path.splitext(x)
-            ext = ext[1:]
-            
-            if ext != 'txt':
-                continue
-            
-            # Parse the file
-            weaponOrder = gungamelib.getWeaponOrder(file)
-            
-            # Is not the one we want?
-            if file != gungamelib.getVariableValue('gg_weapon_order_file'):
-                continue
-            
-            # Set this as the weapon order
-            weaponOrder.setWeaponOrderFile()
-            
-            # Set order type
-            if gungamelib.getVariableValue('gg_weapon_order') != '#default':
-                weaponOrder.changeWeaponOrderType(gungamelib.getVariableValue('gg_weapon_order'))
-            
-            # Set multikill override
-            if gungamelib.getVariableValue('gg_multikill_override') > 1:
-                weaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
-            
-            # Echo to console
-            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-            gungamelib.echo('gungame', 0, 0, 'WeaponOrder:Echo:Info')
-            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-            weaponOrder.echo()
-            es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-        
-        # Build menus
-        buildLevelMenu()
-        buildLeaderMenu()
-        
-        # Register commands
-        gungame.registerPublicCommand('weapons', displayWeaponOrderMenu)
-        gungame.registerPublicCommand('level', displayLevelMenu)
-        gungame.registerPublicCommand('leader', displayLeadersMenu)
-        gungame.registerPublicCommand('leaders', displayLeadersMenu)
-        
-        # Clear out the GunGame system
-        gungamelib.resetGunGame()
-        
-        # Set Up a custom variable for voting in dict_variables
-        dict_variables['gungame_voting_started'] = False
-        
-        # Set up a custom variable for tracking multi-rounds
-        dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
-        
-        # Start warmup timer
-        if gungamelib.inMap():
-            # Check to see if the warmup round needs to be activated
-            if gungamelib.getVariableValue('gg_warmup_timer') > 0:
-                es.load('gungame/included_addons/gg_warmup_round')
-            else:
-                # Fire gg_start event
-                es.event('initialize','gg_start')
-                es.event('fire','gg_start')
-        
-        # Restart map
-        gungamelib.msg('gungame', '#all', 'Loaded')
-        es.server.cmd('mp_restartgame 2')
-        
-        # Set map prefix global
-        list_mapPrefix = str(es.ServerVar('eventscripts_currentmap')).split('_')
-        gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
-        
-        # Create a variable to prevent bomb explosion deaths from counting a suicides
-        countBombDeathAsSuicide = False
-        
-        # Load sound pack
-        gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
-        
-        # Load gg_console -- the console interface
-        es.load('gungame/included_addons/gg_console')
-        
-        # Fire gg_load event
-        es.event('initialize', 'gg_load')
-        es.event('fire', 'gg_load')
-        
-        # Print load completed
-        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-        gungamelib.echo('gungame', 0, 0, 'LoadCompleted')
-        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-    except Exception, e:
-        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-        es.dbgmsg(0, '[GunGame] Unable to load GunGame: exception raised during load:')
-        es.dbgmsg(0, '[GunGame] %s: %s' % (e.__class__.__name__, e))
-        es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
+        # Unload gungame
         es.unload('gungame')
+        return
+    '''
+    
+    # Update
+    gungamelib.echo('gungame', 0, 0, 'Load_Update')
+    gungamelib.update()
+    
+    # Get strip exceptions
+    if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:
+        list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')
+    
+    # Get weapon order file
+    baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
+    files = os.listdir(baseDir)
+    
+    gungamelib.echo('gungame', 0, 0, 'Load_WeaponOrders')
+    
+    for x in files:
+        file, ext = os.path.splitext(x)
+        ext = ext[1:]
+        
+        if ext != 'txt':
+            continue
+        
+        # Parse the file
+        weaponOrder = gungamelib.getWeaponOrder(file)
+        
+        # Is not the one we want?
+        if file != gungamelib.getVariableValue('gg_weapon_order_file'):
+            continue
+        
+        # Set this as the weapon order
+        weaponOrder.setWeaponOrderFile()
+        
+        # Set order type
+        if gungamelib.getVariableValue('gg_weapon_order') != '#default':
+            weaponOrder.changeWeaponOrderType(gungamelib.getVariableValue('gg_weapon_order'))
+        
+        # Set multikill override
+        if gungamelib.getVariableValue('gg_multikill_override') > 1:
+            weaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
+        
+        # Echo to console
+        es.dbgmsg(0, '[GunGame]')
+        weaponOrder.echo()
+        es.dbgmsg(0, '[GunGame]')
+    
+    gungamelib.echo('gungame', 0, 0, 'Load_Commands')
+    
+    # Build menus
+    buildLevelMenu()
+    buildLeaderMenu()
+    
+    # Register commands
+    gungame.registerPublicCommand('weapons', displayWeaponOrderMenu)
+    gungame.registerPublicCommand('level', displayLevelMenu)
+    gungame.registerPublicCommand('leader', displayLeadersMenu)
+    gungame.registerPublicCommand('leaders', displayLeadersMenu)
+    
+    # Clear out the GunGame system
+    gungamelib.resetGunGame()
+    
+    # Set Up a custom variable for voting in dict_variables
+    dict_variables['gungame_voting_started'] = False
+    
+    # Set up a custom variable for tracking multi-rounds
+    dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
+    
+    gungamelib.echo('gungame', 0, 0, 'Load_Warmup')
+    
+    # Start warmup timer
+    if gungamelib.inMap():
+        # Check to see if the warmup round needs to be activated
+        if gungamelib.getVariableValue('gg_warmup_timer') > 0:
+            es.load('gungame/included_addons/gg_warmup_round')
+        else:
+            # Fire gg_start event
+            es.event('initialize','gg_start')
+            es.event('fire','gg_start')
+    
+    # Restart map
+    gungamelib.msg('gungame', '#all', 'Loaded')
+    es.server.cmd('mp_restartgame 2')
+    
+    # Set map prefix global
+    list_mapPrefix = str(es.ServerVar('eventscripts_currentmap')).split('_')
+    gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
+    
+    # Create a variable to prevent bomb explosion deaths from counting a suicides
+    countBombDeathAsSuicide = False
+    
+    # Load sound pack
+    gungamelib.echo('gungame', 0, 0, 'Load_SoundSystem')
+    gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
+    
+    # Load gg_console -- the console interface
+    es.load('gungame/included_addons/gg_console')
+    
+    # Fire gg_load event
+    es.event('initialize', 'gg_load')
+    es.event('fire', 'gg_load')
+    
+    # Print load completed
+    gungamelib.echo('gungame', 0, 0, 'Load_Completed')
+    es.dbgmsg(0, '[GunGame] %s' % ('=' * 80))
 
 def unload():
     global gungameWeaponOrderMenu
@@ -292,34 +269,18 @@ def unload():
             if mapPrefix == 'cs':
                 es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
     
-    # Unregister commands
-    if es.exists('saycommand', '!weapons'):
-        es.unregsaycmd('!weapons')
-        
-    if es.exists('clientcommand', '!weapons'):
-        es.unregclientcmd('!weapons')
-        
-    if es.exists('saycommand', '!leader'):
-        es.unregsaycmd('!leader')
-        
-    if es.exists('clientcommand', '!leader'):
-        es.unregclientcmd('!leader')
-        
-    if es.exists('saycommand', '!leaders'):
-        es.unregsaycmd('!leaders')
-        
-    if es.exists('clientcommand', '!leaders'):
-        es.unregclientcmd('!leaders')
-    
     # Fire gg_unload event
-    es.event('initialize','gg_unload')
-    es.event('fire','gg_unload')
+    es.event('initialize', 'gg_unload')
+    es.event('fire', 'gg_unload')
     
     # Remove the notify flag from all GunGame Console Variables
     list_gungameVariables = gungamelib.getVariableList()
     for variable in list_gungameVariables:
         es.ServerVar(variable).removeFlag('notify')
         es.server.cmd('%s 0' % variable)
+    
+    # Unregister this addon
+    gungamelib.unregisterAddon('gungame')
     
     gungamelib.clearGunGame()
 

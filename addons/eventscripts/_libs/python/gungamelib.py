@@ -2604,6 +2604,12 @@ def update():
         file.close()
         
         echo('gungame', 0, 0, 'Update_ModifiedFile', {'x': x})
+    
+    echo('gungame', 0, 0, 'Update_Restarting')
+    
+    # Reload gungame
+    es.delayed(3, 'es_xload gungame')
+    es.unload('gungame')
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

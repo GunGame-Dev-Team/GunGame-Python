@@ -25,7 +25,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.368'
+__version__ = '1.0.369'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts

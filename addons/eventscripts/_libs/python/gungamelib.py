@@ -2512,8 +2512,6 @@ def update():
     es.dbgmsg(0, '[GunGame]') 
     echo('gungame', 0, 0, 'Update_EndLogMessage')
     
-    time.sleep(999)
-    
     # Split up the page
     rawMod = page.split('<td>Modified')[1:]
     rawAdd = page.split('<td>Added')[1:]

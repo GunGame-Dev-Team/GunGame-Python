@@ -28,6 +28,7 @@ import gamethread
 import popuplib
 import langlib
 import usermsg
+from BeautifulSoup import BeautifulSoup
 from configobj import ConfigObj
 
 # ==============================================================================
@@ -62,19 +63,19 @@ list_usedRandomSounds = []
 # ==============================================================================
 class UseridError(Exception):
     pass
-    
+
 class PlayerError(Exception):
     pass
-    
+
 class TeamError(Exception):
     pass
-    
+
 class DeadError(Exception):
     pass
-    
+
 class FileError(Exception):
     pass
-    
+
 class ArgumentError(Exception):
     pass
 
@@ -1394,11 +1395,12 @@ class Winners(object):
 # ==============================================================================
 class LeaderManager(object):
     '''Manages all the leaders.'''
-    leaderLevel = 1
-    leaders = []
-    oldLeaders = []
-    
     def __init__(self):
+        # Set variables
+        self.leaderLevel = 1
+        self.leaders = []
+        self.oldLeaders = []
+        
         # Get leaders
         self.getNewLeaders()
     
@@ -1533,8 +1535,6 @@ class LeaderManager(object):
         elif self.getLeaderCount() > 1 and self.leaderLevel != 1:
             # Show message
             msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(self.getLeaderNames()), 'level': self.leaderLevel}, False)
-        
-        Saul: good point...
         '''
         
         # Set old leaders, if they have changed
@@ -1544,6 +1544,15 @@ class LeaderManager(object):
     def isLeader(self, userid):
         '''Checks if <userid> is a leader.'''
         return (userid in self.leaders)
+    
+    def __cleanupLeaders(self):
+        '''Removes any old leaders.'''
+        for x in self.leaders[:]:
+            if not clientInServer(x):
+                self.leaders.remove(x)
+        
+        if self.getLeaderCount() < 1:
+            self.getNewLeaders()
     
     def getLeaderCount(self):
         '''Returns the amount of leaders.'''
@@ -1555,11 +1564,13 @@ class LeaderManager(object):
     
     def getLeaderList(self):
         '''Returns the userids of the current leader(s).'''
+        self.__cleanupLeaders()
+        
         return self.leaders[:]
     
     def getLeaderNames(self):
         '''Returns the names of the current leader(s).'''
-        return [removeReturnChars(es.getplayername(x)) for x in self.leaders]
+        return [removeReturnChars(es.getplayername(x)) for x in self.getLeaderList()]
     
     def getLeaderLevel(self):
         '''Returns the current leader level.'''
@@ -1982,14 +1993,22 @@ def addDownloadableWinnerSound():
     
     # Is an mp3 file, use mp3lib
     if ext == 'mp3':
-        info = mp3lib.mp3info(realPath)
+        try:
+            info = mp3lib.mp3info(realPath)
+        except:
+            echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
+        
         duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
     
     # Is a wav file, use the wave module
     elif ext == 'wav':
-        w = wave.open(realPath, 'rb')
-        duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
-        w.close()
+        try:
+            w = wave.open(realPath, 'rb')
+            duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
+        except:
+            echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
+        finally:
+            w.close()
     
     # Set chattime
     es.delayed(5, 'mp_chattime %s' % duration)
@@ -2487,128 +2506,134 @@ def update():
         echo('gungame', 0, 0, 'Update_Disabled')
         return
     
-    # Get the latest revision
+    # Get variables
     latestRevision = getLatestVersion()
+    thisRevision = int(str(es.ServerVar('eventscripts_ggp')).split('.')[2])
+    remainingRevisions = latestRevision-thisRevision
     
     echo('gungame', 0, 0, 'Update_Started')
     
     # Any need to update?
-    if checkVersion(latestRevision) < 1:
+    if remainingRevisions <= 0:
         echo('gungame', 0, 0, 'Update_LatestVersion')
         return
     
-    echo('gungame', 0, 0, 'Update_Available', {'version': latestRevision})
+    # Keep updating the files until we get the the latest revision
+    for x in range(1, remainingRevisions+1):
+        y = thisRevision+x
+        
+        echo('gungame', 0, 0, 'Update_Downloading', {'version': y})
+        
+        # Open the page
+        try:
+            page = urllib2.urlopen('http://code.google.com/p/gungame-python/source/detail?r=%s' % y).read()
+        except Exception, e:
+            echo('gungame', 0, 0, 'Update_Error', {'rev': y, 'name': e.__class__.__name__, 'exc': str(e)})
+            break
+        
+        soup = BeautifulSoup(page)
+        
+        # Get the log message
+        logMessageLines = soup.find('pre', {'style': 'margin-left:1em'}).string.split('\n')
+        
+        # Print the log message
+        echo('gungame', 0, 0, 'Update_StartLogMessage')
+        es.dbgmsg(0, '[GunGame]') 
+        [es.dbgmsg(0, '[GunGame] \t' + x) for x in logMessageLines]
+        es.dbgmsg(0, '[GunGame]') 
+        echo('gungame', 0, 0, 'Update_EndLogMessage')
+        
+        # Initialize variables
+        modified = []
+        added    = []
+        removed  = []
+        
+        # Loop through the modified files
+        for x in soup.findAll('td', text='Modified'):
+            # Get the file name
+            x = str(x.findNext('a').string[7:])
+            
+            # Add to modified list
+            modified.append(x)
+        
+        # Loop through the added files
+        for x in soup.findAll('td', text='Added'):
+            # Get the file name
+            x = str(x.findNext('a').string[7:])
+            
+            # Add to modified list
+            added.append(x)
+        
+        # Loop through the deleted files
+        for x in soup.findAll('td', text='Deleted'):
+            # Get the file name
+            x = str(x.findNext('a').string[7:])
+            
+            # Add to modified list
+            removed.append(x)
+        
+        # Remove removed files
+        for x in removed:
+            y = getGameDir(x)
+            
+            # Does the file exist?
+            if not os.path.exists(y):
+                continue
+            
+            # Is a file
+            if os.path.isfile(y):
+                os.remove(y)
+                echo('gungame', 0, 0, 'Update_RemovedFile', {'x': x})
+            
+            # Is a directory
+            else:
+                os.rmdir(y)
+                echo('gungame', 0, 0, 'Update_RemovedDirectory', {'x': x})
+        
+        # Add added files
+        for x in added:
+            y = getGameDir(x)
+            
+            # Is a file
+            if '.' in y:
+                open(y, 'w')
+                echo('gungame', 0, 0, 'Update_AddedFile', {'x': x})
+            
+            # Is a directory
+            else:
+                os.mkdir(y)
+                echo('gungame', 0, 0, 'Update_AddedDirectory', {'x': x})
+        
+        # Modify modified files
+        for x in modified:
+            y = getGameDir(x)
+            
+            # Skip config files
+            if x.endswith('.cfg'):
+                echo('gungame', 0, 0, 'Update_SkippedFile', {'x': x})
+                continue
+            
+            # Get the extension
+            ext = os.path.splitext(x)[1][1:]
+            
+            # Is a Python file?
+            if ext == 'py' and os.path.isfile(y+'c'):
+                # Remove the .pyc file
+                os.remove(y+'c')
+            
+            # Get file lines from the SVN
+            newFile = urllib2.urlopen('http://gungame-python.googlecode.com/svn/trunk/%s' % x).read()
+            
+            # Write new lines to file
+            file = open(getGameDir(x), 'wb')
+            file.write(newFile)
+            file.close()
+            
+            echo('gungame', 0, 0, 'Update_ModifiedFile', {'x': x})
     
-    # Open the page
-    page = urllib2.urlopen('http://code.google.com/p/gungame-python/source/detail?r=%s' % latestRevision).read()
-    
-    # Get the log message
-    logMessageLines = page.split('<pre style="margin-left:1em">')[1].split('</pre>')[0].split('\n')
-    
-    # Print the log message
-    echo('gungame', 0, 0, 'Update_StartLogMessage')
-    es.dbgmsg(0, '[GunGame]') 
-    [es.dbgmsg(0, '[GunGame] \t' + x) for x in logMessageLines]
-    es.dbgmsg(0, '[GunGame]') 
-    echo('gungame', 0, 0, 'Update_EndLogMessage')
-    
-    # Split up the page
-    rawMod = page.split('<td>Modified')[1:]
-    rawAdd = page.split('<td>Added')[1:]
-    rawDelete = page.split('<td>Deleted')[1:]
-    
-    # Initialize variables
-    modified = []
-    added    = []
-    removed  = []
-    
-    # Loop through the modified files
-    for x in rawMod:
-        # Get the file name
-        x = x.split('<a href="browse/trunk/')[1].split('?r=')[0]
-        
-        # Add to modified list
-        modified.append(x)
-    
-    # Loop through the added files
-    for x in rawAdd:
-        # Get the file name
-        x = x.split('<a href="browse/trunk/')[1].split('?r=')[0]
-        
-        # Add to modified list
-        added.append(x)
-    
-    # Loop through the deleted files
-    for x in rawDelete:
-        # Get the file name
-        x = x.split('<a href="browse/trunk/')[1].split('?r=')[0]
-        
-        # Add to modified list
-        removed.append(x)
-    
-    # Remove removed files
-    for x in removed:
-        y = getGameDir(x)
-        
-        # Does the file exist?
-        if not os.path.exists(y):
-            continue
-        
-        # Is a file
-        if os.path.isfile(y):
-            os.remove(y)
-            echo('gungame', 0, 0, 'Update_RemovedFile', {'x': x})
-        
-        # Is a directory
-        else:
-            os.rmdir(y)
-            echo('gungame', 0, 0, 'Update_RemovedDirectory', {'x': x})
-    
-    # Add added files
-    for x in added:
-        y = getGameDir(x)
-        
-        # Is a file
-        if '.' in y:
-            open(y, 'w')
-            echo('gungame', 0, 0, 'Update_AddedFile', {'x': x})
-        
-        # Is a directory
-        else:
-            os.mkdir(y)
-            echo('gungame', 0, 0, 'Update_AddedDirectory', {'x': x})
-    
-    # Modify modified files
-    for x in modified:
-        y = getGameDir(x)
-        
-        # Skip config files
-        if x.endswith('.cfg'):
-            echo('gungame', 0, 0, 'Update_SkippedFile', {'x': x})
-            continue
-        
-        # Get the extension
-        ext = os.path.splitext(x)[1][1:]
-        
-        # Is a Python file?
-        if ext == 'py' and os.path.isfile(getGameDir(x+'c')):
-            # Remove the .pyc file
-            os.remove(getGameDir(x+'c'))
-        
-        # Get file lines from the SVN
-        newFile = urllib2.urlopen('http://gungame-python.googlecode.com/svn/trunk/%s' % x).read()
-        
-        # Write new lines to file
-        file = open(getGameDir(x), 'wb')
-        file.write(newFile)
-        file.close()
-        
-        echo('gungame', 0, 0, 'Update_ModifiedFile', {'x': x})
-    
+    # Restart server
     echo('gungame', 0, 0, 'Update_Restarting')
-    
-    # Reload gungame
-    es.server.queuecmd('quit')
+    es.delayed(1, 'quit')
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

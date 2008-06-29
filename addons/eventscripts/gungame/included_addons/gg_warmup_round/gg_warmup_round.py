@@ -171,6 +171,11 @@ def player_spawn(event_var):
 def hegrenade_detonate(event_var):
     # Get player userid and player object
     userid = event_var['userid']
+    
+    # Is the client on the server?
+    if not gungamelib.clientInServer(userid):
+        return
+    
     playerlibPlayer = playerlib.getPlayer(userid)
     
     # Give user a hegrenade, if eligable

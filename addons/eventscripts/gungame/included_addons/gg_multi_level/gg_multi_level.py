@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_multi_level
-    Version: 1.0.353
+    Version: 1.0.354
     Description: When a player makes a certain number of levels
                  in one round the player will be faster and have
                  an effect for 10 secs.
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_multi_level Addon for GunGame: Python'
-info.version  = '1.0.353'
+info.version  = '1.0.354'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_multi_level'
 info.author   = 'GunGame Development Team'
@@ -54,12 +54,13 @@ def player_death(event_var):
     player['multilevel'] = 0
 
 def round_start(event_var):
+    global list_currentMultiLevel
     # Reset the current multi level list
     list_currentMultiLevel = []
     
     # Reset the multi level counter for every player
     for userid in es.getUseridList():
-        player = gungamelib.getPlayer(userid)['multilevel'] = 0
+        gungamelib.getPlayer(userid)['multilevel'] = 0
 
 def gg_levelup(event_var):
     attacker = int(event_var['attacker'])

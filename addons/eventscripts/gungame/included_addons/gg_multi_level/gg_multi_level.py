@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_multi_level
-    Version: 1.0.354
+    Version: 1.0.355
     Description: When a player makes a certain number of levels
                  in one round the player will be faster and have
                  an effect for 10 secs.
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_multi_level Addon for GunGame: Python'
-info.version  = '1.0.354'
+info.version  = '1.0.355'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_multi_level'
 info.author   = 'GunGame Development Team'
@@ -33,6 +33,7 @@ info.author   = 'GunGame Development Team'
 #  GLOBALS
 # ==============================================================================
 list_currentMultiLevel = []
+roundCounter = 0
 
 # ==============================================================================
 #  GAME EVENTS
@@ -55,12 +56,15 @@ def player_death(event_var):
 
 def round_start(event_var):
     global list_currentMultiLevel
+    global roundCounter
     # Reset the current multi level list
     list_currentMultiLevel = []
     
     # Reset the multi level counter for every player
     for userid in es.getUseridList():
         gungamelib.getPlayer(userid)['multilevel'] = 0
+    
+    roundCounter += 1
 
 def gg_levelup(event_var):
     attacker = int(event_var['attacker'])
@@ -107,12 +111,16 @@ def gg_levelup(event_var):
     gungamePlayer['multilevel'] = 0
     
     # Stop the multi level after 10 seconds
-    gamethread.delayed(10, removeMulti, (attacker))
+    gamethread.delayed(10, removeMulti, (attacker, roundCounter))
 
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-def removeMulti(userid):
+def removeMulti(userid, roundMultiStart):
+    #Check if multikill was started in the current round
+    if roundMultiStart != roundCounter:
+        return
+    
     # Remove the player from the current multi level list
     list_currentMultiLevel.remove(userid)
     

@@ -87,7 +87,7 @@ def item_pickup(event_var):
     
     # Get player objects
     gungamePlayer = gungamelib.getPlayer(userid)
-    weapon = player.getWeapon()
+    weapon = gungamePlayer.getWeapon()
     playerlibPlayer = playerlib.getPlayer(userid)
     
     # Is warmup round?

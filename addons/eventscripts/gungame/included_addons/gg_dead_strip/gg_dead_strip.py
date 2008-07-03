@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.348
+    Version: 1.0.379
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.348'
+info.version  = '1.0.379'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -86,15 +86,15 @@ def item_pickup(event_var):
         return
     
     # Get player objects
-    player = gungamelib.getPlayer(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
     weapon = player.getWeapon()
-    player2 = playerlib.getPlayer(userid)
+    playerlibPlayer = playerlib.getPlayer(userid)
     
     # Is warmup round?
     if gungamelib.getGlobal('isWarmup') == 1:
         # Only remove if the weapon is not the warmup weapon
         if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
-            es.server.cmd('es_xremove %i' % player2.get('weaponindex', item))
+            es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
         
         return
     
@@ -111,30 +111,31 @@ def item_pickup(event_var):
             # Only remove if the item is not the nade bonus weapon
             if nadeBonus != item:
                 es.sexec(userid, 'use weapon_%s' % nadeBonus)
-                es.server.cmd('es_xremove %d' % player2.get('weaponindex', item))
+                es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
         else:
             es.sexec(userid, 'use weapon_knife')
-            es.server.cmd('es_xremove %d' % player2.get('weaponindex', item))
+            es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
         
         return
     
     # Get their current weapon
-    currentWeapon = player2.attributes['weapon']
+    currentWeapon = playerlibPlayer.attributes['weapon']
     
     # Remove the weapon they just picked up
-    es.server.cmd('es_xremove %d' % player2.get('weaponindex', item))
+    es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
     
-    # Devs: what does this code even do?!
-    #if currentWeapon != item:
-    #    return
+    # If the player did not switch to the weapon they just picked up, no need to switch them back to their previous weapon
+    if currentWeapon != item:
+        return
     
-    gamethread.delayed(0, getLastWeapon, (userid, player, item))
+    # Switch the player back to their previous weapon, wait for the next game frame
+    gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
 
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-def getLastWeapon(userid, player, item):
-    weapon = player.getWeapon()
+def getLastWeapon(userid, gungamePlayer, item):
+    weapon = gungamePlayer.getWeapon()
     
     if weapon == item:
         return

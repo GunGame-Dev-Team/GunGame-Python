@@ -124,8 +124,9 @@ def item_pickup(event_var):
     # Remove the weapon they just picked up
     es.server.cmd('es_xremove %d' % player2.get('weaponindex', item))
     
-    if currentWeapon[7:] != item:
-        return
+    # Devs: what does this code even do?!
+    #if currentWeapon != item:
+    #    return
     
     gamethread.delayed(0, getLastWeapon, (userid, player, item))
 

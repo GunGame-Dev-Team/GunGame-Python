@@ -1454,10 +1454,9 @@ class LeaderManager(object):
             # Set new leader
             if self.leaderLevel < playerObj['level']:
                 self.__setLeader(userid)
-                return
         
         # Leader tied
-        if self.leaderLevel == playerObj['level']:
+        elif self.leaderLevel == playerObj['level']:
             self.__leaderTied(userid)
         
         # New leader
@@ -1995,10 +1994,9 @@ def addDownloadableWinnerSound():
     if ext == 'mp3':
         try:
             info = mp3lib.mp3info(realPath)
+            duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
         except:
             echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
-        
-        duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
     
     # Is a wav file, use the wave module
     elif ext == 'wav':

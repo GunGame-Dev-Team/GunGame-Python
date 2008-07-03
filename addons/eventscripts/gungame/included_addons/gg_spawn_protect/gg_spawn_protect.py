@@ -14,6 +14,7 @@
 import es
 import gamethread
 import repeat
+import usermsg
 import playerlib
 from playerlib import UseridError
 
@@ -192,9 +193,12 @@ def startCountdown(userid):
     player.set('health', 999)
     player.set('color', (int(dict_variables['red']), int(dict_variables['green']), int(dict_variables['blue']), int(dict_variables['alpha'])))
     
+    # Add a green tint
+    #usermsg.fade(userid, 1, 500, (delay*1000)-500, 0, 255, 0, 125)
+    
     # See if prevent level is already turned on
     gungamePlayer = gungamelib.getPlayer(userid)
-    if not gungamePlayer['preventlevel']:
+    if not gungamePlayer['preventlevel'] and not gungamelib.getVariableValue('gg_spawn_protect_can_level_up'):
         gungamePlayer['preventlevel'] = 1
     
     # Start counter

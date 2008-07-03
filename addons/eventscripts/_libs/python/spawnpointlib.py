@@ -198,7 +198,7 @@ class SpawnPointManager(object):
         propIndex = int(es.ServerVar('eventscripts_lastgive'))
         
         # Set position and collision group
-        es.setindexprop(propIndex, 'CBaseEntity.m_CollisionGroup', 17)
+        es.setindexprop(propIndex, 'CBaseEntity.m_CollisionGroup', 2)
         es.setindexprop(propIndex, 'CBaseEntity.m_vecOrigin', '%s, %s, %s' % (self.spawnPoints[index][0],
                                                                               self.spawnPoints[index][1],
                                                                               self.spawnPoints[index][2]))

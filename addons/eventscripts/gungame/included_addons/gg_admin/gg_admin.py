@@ -79,14 +79,7 @@ def load():
     gg_admin.registerAdminCommand('admins', cmd_admins, log=False)
     
     # Get admins
-    adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
-    
-    # Format lines
-    lines = map(lambda x: x.strip(), adminFile.readlines())
-    lines = filter(lambda x: not x.startswith('//') and x, lines)
-    
-    # Close file
-    adminFile.close()
+    lines = gungamelib.getFileLines('cfg/gungame/admins.txt')
     
     # Register admins
     for line in lines:
@@ -105,13 +98,8 @@ def load():
         regAdmin(steamid, name, level)
     
     # Register commands
-    cmdFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'r')
+    lines = gungamelib.getFileLines('cfg/gungame/admin_commands.txt')
     
-    # Format lines
-    lines = map(lambda x: x.strip(), cmdFile.readlines())
-    lines = filter(lambda x: not x.startswith('//') and x, lines)
-    
-    # Register commands
     for line in lines:
         # Fix for in-line comments
         line = line.split('//')[0]
@@ -127,18 +115,8 @@ def load():
         # Register it
         regCmd(command, level)
     
-    # Close file
-    cmdFile.close()
-    
     # Get menu permissions
-    menuFile = open(gungamelib.getGameDir('cfg/gungame/admin_menus.txt'), 'r')
-    
-    # Format lines
-    lines = map(lambda x: x.strip(), menuFile.readlines())
-    lines = filter(lambda x: not x.startswith('//') and x, lines)
-    
-    # Close file
-    menuFile.close()
+    lines = gungamelib.getFileLines('cfg/gungame/admin_menus.txt')
     
     # Register admins
     for line in lines:
@@ -573,16 +551,16 @@ class Command:
         self.group = 'ggadmin%s' % level
         
         # Create the command (say)
-        es.server.queuecmd('clientcmd create say %s gungame/included_addons/gg_admin/cmdHandler %s %s' % (gungamelib.getSayCommandName(name), gungamelib.getSayCommandName(name), self.type))
-        es.server.queuecmd('gauth power create %s 128' % gungamelib.getSayCommandName(name))
+        es.server.cmd('clientcmd create say %s gungame/included_addons/gg_admin/cmdHandler %s %s' % (gungamelib.getSayCommandName(name), gungamelib.getSayCommandName(name), self.type))
+        es.server.cmd('gauth power create %s 128' % gungamelib.getSayCommandName(name))
         for groupLevel in range(level, 3):
-            es.server.queuecmd('gauth power give %s ggadmin%s' % (gungamelib.getSayCommandName(name), groupLevel))
+            es.server.cmd('gauth power give %s ggadmin%s' % (gungamelib.getSayCommandName(name), groupLevel))
         
         # Create the command (console)
-        es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (name, name, self.type))
-        es.server.queuecmd('gauth power create gg_%s 128' % name)
+        es.server.cmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (name, name, self.type))
+        es.server.cmd('gauth power create gg_%s 128' % name)
         for groupLevel in range(level, 3):
-            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (name, groupLevel))
+            es.server.cmd('gauth power give gg_%s ggadmin%s' % (name, groupLevel))
     
     def __del__(self):
         '''Unregisters the say and client commands.'''
@@ -633,24 +611,24 @@ class Command:
         group = 'ggadmin%s' % level
         
         # Erase command
-        es.server.queuecmd('clientcmd delete say %s' % gungamelib.getSayCommandName(self.name))
-        es.server.queuecmd('clientcmd delete console gg_%s' % self.name)
+        es.server.cmd('clientcmd delete say %s' % gungamelib.getSayCommandName(self.name))
+        es.server.cmd('clientcmd delete console gg_%s' % self.name)
         
         # Re-create command
-        es.server.queuecmd('clientcmd create say %s gungame/included_addons/gg_admin/cmdHandler %s %s' % (gungamelib.getSayCommandName(self.name), gungamelib.getSayCommandName(self.name), self.type))
-        es.server.queuecmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (self.name, self.name, self.type))
+        es.server.cmd('clientcmd create say %s gungame/included_addons/gg_admin/cmdHandler %s %s' % (gungamelib.getSayCommandName(self.name), gungamelib.getSayCommandName(self.name), self.type))
+        es.server.cmd('clientcmd create console gg_%s gungame/included_addons/gg_admin/cmdHandler gg_%s %s' % (self.name, self.name, self.type))
         
         # Leave groups
-        es.server.queuecmd('gauth power delete %s' % gungamelib.getSayCommandName(self.name))
-        es.server.queuecmd('gauth power delete gg_%s' % self.name)
+        es.server.cmd('gauth power delete %s' % gungamelib.getSayCommandName(self.name))
+        es.server.cmd('gauth power delete gg_%s' % self.name)
         
         # Re-create
-        es.server.queuecmd('gauth power create %s 128' % gungamelib.getSayCommandName(self.name))
-        es.server.queuecmd('gauth power create gg_%s 128' % self.name)
+        es.server.cmd('gauth power create %s 128' % gungamelib.getSayCommandName(self.name))
+        es.server.cmd('gauth power create gg_%s 128' % self.name)
         
         for groupLevel in range(level, 3):
-            es.server.queuecmd('gauth power give gg_%s ggadmin%s' % (self.name, groupLevel))
-            es.server.queuecmd('gauth power give %s ggadmin%s' % (gungamelib.getSayCommandName(self.name), groupLevel))
+            es.server.cmd('gauth power give gg_%s ggadmin%s' % (self.name, groupLevel))
+            es.server.cmd('gauth power give %s ggadmin%s' % (gungamelib.getSayCommandName(self.name), groupLevel))
         
         # Move variables to the class's
         self.group = group
@@ -716,10 +694,10 @@ class Admin:
         
         # Remove from groups
         for level in range(self.level, 3):
-            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, level))
+            es.server.cmd('gauth user leave %s ggadmin%s' % (self.name, level))
         
         # Delete
-        es.server.queuecmd('gauth user delete %s' % self.name)
+        es.server.cmd('gauth user delete %s' % self.name)
     
     def setLevel(self, level, setterUserid=None):
         '''Sets the admins level.'''
@@ -757,11 +735,11 @@ class Admin:
         
         # Remove from groups
         for groupLevel in range(level, 3):
-            es.server.queuecmd('gauth user leave %s ggadmin%s' % (self.name, groupLevel))
+            es.server.cmd('gauth user leave %s ggadmin%s' % (self.name, groupLevel))
         
         # Re-add to groups
         for groupLevel in range(level, 3):
-            es.server.queuecmd('gauth user join %s ggadmin%s' % (self.name, groupLevel))
+            es.server.cmd('gauth user join %s ggadmin%s' % (self.name, groupLevel))
         
         # Set level
         self.level = level

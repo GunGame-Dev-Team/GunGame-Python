@@ -4,7 +4,7 @@
 // Each command has a required permission level-- 0, 1 or 2. Admin level
 // definitions are set in the admins.txt file.
 //
-// Format: <Command> <Level>
+// Format: <command> <level>
 //
 // Example: teleport 2
 //            Will allow level 0, 1 and 2 admins to use gg_teleport and
@@ -57,3 +57,9 @@ vote_cancel 2
 vote_list 2
 vote_shuffle 2
 vote_start 2
+
+//----------------------------------------------------------------------------
+// gg_convert
+//----------------------------------------------------------------------------
+convert_help 3
+convert_dm3 0

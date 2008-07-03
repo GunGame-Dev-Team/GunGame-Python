@@ -10,6 +10,7 @@
 # ==============================================================================
 # Python Imports
 import os
+import sys
 
 # EventScripts Imports
 import es
@@ -25,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.373'
+__version__ = '1.0.376'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -65,11 +66,12 @@ list_stripExceptions = []
 def load():
     try:
         initialize()
-    finally:
-        #gungamelib.echo('gungame', 0, 0, 'Load_Exception')
-        #es.dbgmsg(0, '[GunGame] %s' % ('=' * 80))
-        #es.unload('gungame')
-        pass
+    except:
+        gungamelib.echo('gungame', 0, 0, 'Load_Exception')
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 80))
+        es.excepter(*sys.exc_info())
+        es.dbgmsg(0, '[GunGame] %s' % ('=' * 80))
+        es.unload('gungame')
 
 def initialize():
     global countBombDeathAsSuicide
@@ -87,12 +89,12 @@ def initialize():
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Loop through included addons
-    for includedAddon in os.listdir(gungamelib.getGameDir('/addons/eventscripts/gungame/included_addons/')):
+    for includedAddon in os.listdir(gungamelib.getGameDir('addons/eventscripts/gungame/included_addons/')):
         if includedAddon[0:3] == 'gg_':
             list_includedAddonsDir.append(includedAddon)
     
     # Loop through custom addons
-    for customAddon in os.listdir(gungamelib.getGameDir('/addons/eventscripts/gungame/custom_addons/')):
+    for customAddon in os.listdir(gungamelib.getGameDir('addons/eventscripts/gungame/custom_addons/')):
         if customAddon[0:3] == 'gg_':
             list_customAddonsDir.append(customAddon)
     

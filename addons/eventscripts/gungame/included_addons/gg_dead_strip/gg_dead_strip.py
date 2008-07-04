@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.379
+    Version: 1.0.381
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.379'
+info.version  = '1.0.381'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -102,6 +102,9 @@ def item_pickup(event_var):
     if weapon == item:
         return
     
+    # Get their current weapon
+    currentWeapon = playerlibPlayer.attributes['weapon']
+    
     if weapon == 'hegrenade':
         # Is nade bonus loaded?
         nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
@@ -109,24 +112,16 @@ def item_pickup(event_var):
         # Check to see if the grenade level bonus weapon is active
         if nadeBonus:
             # Only remove if the item is not the nade bonus weapon
-            if nadeBonus != item:
-                es.sexec(userid, 'use weapon_%s' % nadeBonus)
-                es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
-        else:
-            es.sexec(userid, 'use weapon_knife')
-            es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
-        
-        return
-    
-    # Get their current weapon
-    currentWeapon = playerlibPlayer.attributes['weapon']
+            if nadeBonus == item:
+                return
     
     # Remove the weapon they just picked up
     es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
     
     # If the player did not switch to the weapon they just picked up, no need to switch them back to their previous weapon
-    if currentWeapon != item:
-        return
+    if currentWeapon:
+        if currentWeapon[7:] != item:
+            return
     
     # Switch the player back to their previous weapon, wait for the next game frame
     gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))

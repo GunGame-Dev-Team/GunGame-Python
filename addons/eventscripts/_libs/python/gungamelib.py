@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.360
+    Version: 1.0.382
     Description:
 '''
 
@@ -45,7 +45,6 @@ dict_cfgSettings = {}
 dict_sounds = {}
 dict_addons = {}
 dict_dependencies = {}
-dict_uniqueIds = {}
 dict_winners = {}
 
 list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
@@ -92,9 +91,7 @@ class AddonError(Exception):
 #   CONVARS
 # ==============================================================================
 gungameDebugLevel = es.ServerVar('gg_debuglevel')
-gungameDebugLevel.makepublic()
-
-# ==============================================================================
+gungameDebugLevel.makepublic()# ==============================================================================
 #   PLAYER CLASS
 # ==============================================================================
 class Player(object):
@@ -107,22 +104,23 @@ class Player(object):
         # Make userid an int
         self.userid = int(userid)
         
-        if not clientInServer(self.userid):
-            if self.__validatePlayer():
-                # Get their attributes
-                self.attributes = dict_players[self.userid]
-            else:
-                # Invalid userid
-                raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
+        if not es.exists('userid', self.userid):
+            raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
         else:
-            # Check they exist
-            if not self.__validatePlayer():
-                # Create the player
-                self.__createPlayer()
-            else:
-                # Get the attributes
-                self.attributes = dict_players[self.userid]
-    
+            # Create the player
+            self.__createPlayer()
+            
+    def __createPlayer(self):
+        '''Creates the player in the players database.'''
+        self.attributes = {'level':1,
+                           'afkrounds':0,
+                           'multikill':0,
+                           'multilevel':0,
+                           'preventlevel':0,
+                           'afkmathtotal':0,
+                           'steamid':playerlib.uniqueid(str(self.userid), 1),
+                           'index':int(playerlib.getPlayer(self.userid).attributes['index'])}
+
     def __getitem__(self, item):
         # Lower-case the item
         item = str(item).lower()
@@ -146,7 +144,7 @@ class Player(object):
         # LEVEL
         if item == 'level':
             # Value check...
-            if not (value > 0 and value <= (getTotalLevels() + 1)):
+            if value < 0 and value > getTotalLevels():
                 raise ValueError('Invalid value (%s): level value must be greater than 0 and less than %s.' % (value, getTotalLevels() + 1))
             
             # Get current leader
@@ -162,83 +160,39 @@ class Player(object):
             # Levelling down
             elif value < currentLevel:
                 leaders.removeLeader(self.userid)
-            
-            return
         
         # AFK ROUNDS
-        if item == 'afkrounds':
+        elif item == 'afkrounds':
             # Value check...
-            if not (value > -1):
+            if value < 0:
                 raise ValueError('Invalid value (%s): AFK Rounds value must be a positive number.' % value)
             
             self.attributes['afkrounds'] = value
-            
-            return
         
         # MULTIKILL
-        if item == 'multikill':
-            if not (value > -1):
+        elif item == 'multikill':
+            if value < 0:
                 raise ValueError('Invalid value (%s): multikill value must be a positive number.' % value)
             
             self.attributes['multikill'] = value
-            
-            return
         
-        # TRIPLE
-        if item == 'multilevel':
-            if not (value > -1 and value < 4):
+        # MULTILEVEL
+        elif item == 'multilevel':
+            if value < 0 and value > 3:
                 raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
             
             self.attributes['multilevel'] = value
-            
-            return
         
         # PREVENT LEVEL
-        if item == 'preventlevel':
-            if not (value == 0 or value == 1):
+        elif item == 'preventlevel':
+            if value != 0 and value != 1:
                 raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
             
             self.attributes['preventlevel'] = value
-            
-            return
     
     def __int__(self):
         '''Returns the players userid.'''
         return self.userid
-    
-    def __validatePlayer(self):
-        '''Checks the player exists in the player database.'''
-        return dict_players.has_key(self.userid)
-    
-    def __createPlayer(self, connectFlag=None):
-        '''Creates the player in the players database.'''
-        names = ['level', 'afkrounds', 'multikill',
-                'multilevel', 'preventlevel', 'afkmathtotal',
-                'steamid', 'index']
-        values = [1, 0, 0, 0, 0, 0, playerlib.uniqueid(str(self.userid), 1), int(playerlib.getPlayer(self.userid).attributes['index'])]
-        
-        # Set attributes
-        self.attributes = dict(zip(names, values))
-        
-        # Get Unique ID of player
-        dict_uniqueIds[self.userid] = playerlib.uniqueid(self.userid, 1)
-        
-        # Create them in the players dictionary
-        dict_players[self.userid] = self.attributes
-    
-    def removePlayer(self):
-        '''Removes a player from the GunGame player dictionary.'''
-        if self.__validatePlayer():
-            # Check they exist on the server
-            if self.__validatePlayerConnection():
-                raise ValueError('Unable to remove the player (%s): player still in server.' % self.userid)
-            
-            # Remove the player
-            del dict_players[self.userid]
-    
-    def __validatePlayerConnection(self):
-        '''Check the player exists in the server.'''
-        return bool(es.exists('userid', self.userid))
     
     def resetPlayer(self):
         '''Reset the players attributes.'''
@@ -247,7 +201,7 @@ class Player(object):
     def resetPlayerLocation(self):
         '''Resets a players AFK math total.'''
         # Check the player exists
-        if not self.__validatePlayerConnection():
+        if not es.exists('userid', self.userid):
             return
         
         # Get the player's location
@@ -1699,7 +1653,12 @@ class Logger(object):
 # ==============================================================================
 def getPlayer(userid):
     userid = int(userid)
-    return Player(userid)
+    if not es.exists('userid', userid):
+        raise UseridError, 'Message'
+
+    if not dict_players.has_key(userid):
+        dict_players[userid] = Player(userid)
+    return dict_players[userid]
 
 def getWeaponOrder(file):
     return WeaponOrder(file)
@@ -2283,9 +2242,6 @@ def clientInServer(userid):
 def inMap():
     return (str(es.ServerVar('eventscripts_currentmap')) != '')
 
-def getMapName():
-    return str(es.ServerVar('eventscripts_currentmap'))
-
 def isSpectator(userid):
     return (es.getplayerteam(userid) <= 1)
 
@@ -2300,10 +2256,6 @@ def getESTVersion():
 
 def isDead(userid):
     return es.getplayerprop(userid, 'CBasePlayer.pl.deadflag')
-
-def getPlayerUniqueID(userid):
-    userid = int(userid)
-    return dict_uniqueIds[userid]
 
 def playerExists(userid):
     userid = int(userid)
@@ -2332,29 +2284,8 @@ def removeReturnChars(playerName):
     
     return playerName
 
-def inBounds(value, low=False, high=False):
-    return value == clamp(value, low, high)
-
-def clamp(value, low=False, high=False, floats=False):
-    # Make all parameters floats or ints
-    if floats:
-        value, low, high = float(value), float(low), float(high)
-    else:
-        value, low, high = int(value), int(low), int(high)
-    
-    # High and low boundary
-    if low != False and high != False:
-        return max(low, min(value, high))
-    
-    # Just a low boundary
-    if low != False:
-        return max(low, value)
-    
-    # Just a high boundary
-    if high != False:
-        return min(high, value)
-    
-    return value
+def clamp(val, lowVal, highVal):
+    return max(lowVal, min(val, highVal))
 
 def canShowHints():
     return (getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0)

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.360
+    Version: 1.0.382
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.378'
+__version__ = '1.0.382'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -522,7 +522,7 @@ def player_death(event_var):
         
         # Set vars
         oldLevel = gungameVictim['level']
-        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_suicide_punish'), 1)
+        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_suicide_punish'), 1, gungamelib.getTotalLevels())
         
         # Trigger level down
         gungamelib.triggerLevelDownEvent(userid, oldLevel, newLevel, userid, 'suicide')
@@ -546,7 +546,7 @@ def player_death(event_var):
         
         # Set vars
         oldLevel = gungameAttacker['level']
-        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_tk_punish'), 1)
+        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_tk_punish'), 1, gungamelib.getTotalLevels())
         
         # Trigger level down
         gungamelib.triggerLevelDownEvent(attacker, oldLevel, newLevel, userid, 'tk')
@@ -913,13 +913,11 @@ def server_cvar(event_var):
     
     # Multikill override
     elif cvarName == 'gg_multikill_override':
-        newValue = gungamelib.clamp(newValue, 0)
-        
         # Get weapon order
         weaponOrder = gungamelib.getWeaponOrder(gungamelib.getVariableValue('gg_weapon_order_file'))
         
         # Set multikill
-        if newValue == 0:
+        if newValue <= 0:
             weaponOrder.setMultiKillDefaults()
         else:
             weaponOrder.setMultiKillOverride(newValue)

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_save_level
-    Version: 1.0.340
+    Version: 1.0.382
     Description: Saves a players level when they disconnect and restores it when
                  they reconnect (will reset at the end of a game).
 '''
@@ -21,7 +21,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_save_level (for GunGame: Python)'
-info.version  = '1.0.340'
+info.version  = '1.0.382'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_save_level'
 info.author   = 'GunGame Development Team'
@@ -62,20 +62,20 @@ def gg_round_win(event_var):
 def player_activate(event_var):
     # Get player info
     userid = int(event_var['userid'])
-    uniqueid = gungamelib.getPlayerUniqueID(userid)
+    
+    # Set players level
+    gungamePlayer = gungamelib.getPlayer(userid)
+    uniqueid = gungamePlayer['steamid']
     
     # No stored level information?
     if not gLevels.has_key(uniqueid):
         return
     
-    # Set players level
-    player = gungamelib.getPlayer(userid)
-    
     # Display message
     gungamelib.msg('gg_save_level', userid, 'RestoredLevel', {'level': gLevels[uniqueid]})
     
     # Level up
-    gungamelib.triggerLevelUpEvent(userid, player['level'], gLevels[uniqueid])
+    gungamelib.triggerLevelUpEvent(userid, gungamePlayer['level'], gLevels[uniqueid])
     
     # Remove from the dictionary
     del gLevels[uniqueid]
@@ -86,11 +86,9 @@ def player_disconnect(event_var):
     
     # Try to get the player
     try:
-        player = gungamelib.getPlayer(userid)
+        gungamePlayer = gungamelib.getPlayer(userid)
     except gungamelib.UseridError:
         return
     
-    uniqueid = gungamelib.getPlayerUniqueID(userid)
-    
     # Save level
-    gLevels[uniqueid] = player['level']
+    gLevels[gungamePlayer['steamid']] = gungamePlayer['level']

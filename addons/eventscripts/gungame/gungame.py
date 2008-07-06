@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.382
+    Version: 1.0.384
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.382'
+__version__ = '1.0.384'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -249,27 +249,31 @@ def unload():
     es.server.cmd('es_xfire %d func_buyzone Enable' % userid)
     
     # Get map if
-    mapObjectives = gungamelib.getVariableValue('gg_map_obj')
-    mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
+    try:
+        mapObjectives = gungamelib.getVariableValue('gg_map_obj')
+        mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
     
-    # Re-enable objectives
-    if mapObjectives < 3:
-        # Re-enable all objectives
-        if mapObjectives == 0:
-            if mapPrefix == 'de':
-                es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
-            elif mapPrefix == 'cs':
-                es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
+        # Re-enable objectives
+        if mapObjectives < 3:
+            # Re-enable all objectives
+            if mapObjectives == 0:
+                if mapPrefix == 'de':
+                    es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
+                elif mapPrefix == 'cs':
+                    es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
         
-        # Enable bomb zone
-        elif mapObjectives == 1:
-            if mapPrefix == 'de':
-                es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
+            # Enable bomb zone
+            elif mapObjectives == 1:
+                if mapPrefix == 'de':
+                    es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
         
-        # Enable hostage objectives
-        elif mapObjectives == 2:
-            if mapPrefix == 'cs':
-                es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
+            # Enable hostage objectives
+            elif mapObjectives == 2:
+                if mapPrefix == 'cs':
+                    es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
+                
+    except:
+        pass
     
     # Fire gg_unload event
     es.event('initialize', 'gg_unload')

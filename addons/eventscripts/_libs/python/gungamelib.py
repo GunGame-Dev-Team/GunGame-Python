@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.382
+    Version: 1.0.384
     Description:
 '''
 
@@ -646,6 +646,11 @@ class Config(object):
                 line = line.replace('  ', ' ')
             
             # Get variable name and value
+            if len(line.split(' ', 1)) < 2:
+                echo('gungame', 0, 0, 'Config:MissingValue', {'name':str(line.strip('')), 'configname':str(self.name)})
+                raise ArgumentError, 'The config %s is missing a value for the following variable: %s' %(self.name, str(line.strip()))
+                continue
+                
             variableName, variableValue = line.split(' ', 1)
             
             # Don't re-add variables, but change the value instead
@@ -1657,7 +1662,7 @@ def getPlayer(userid):
         raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
 
     if not dict_players.has_key(userid):
-        uniqueID = playerlib.uniqueid(str(self.userid), 1)
+        uniqueID = playerlib.uniqueid(str(userid), 1)
         if uniqueID in dict_players:
             for player in dict_players:
                 if player['steamid'] == uniqueID:

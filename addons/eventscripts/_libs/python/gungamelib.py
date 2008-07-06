@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.384
+    Version: 1.0.386
     Description:
 '''
 
@@ -135,7 +135,8 @@ class Player(object):
     def __setitem__(self, item, value):
         # Format the item and value
         item = str(item).lower()
-        value = int(value)
+        if item != 'steamid':
+            value = int(value)
         
         # Does the attribute exist?
         if not self.attributes.has_key(item):
@@ -1658,18 +1659,30 @@ class Logger(object):
 # ==============================================================================
 def getPlayer(userid):
     userid = int(userid)
-    if not es.exists('userid', userid):
-        raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
 
     if not dict_players.has_key(userid):
+        if not clientInServer(userid):
+            raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
+        
         uniqueID = playerlib.uniqueid(str(userid), 1)
-        if uniqueID in dict_players:
-            for player in dict_players:
-                if player['steamid'] == uniqueID:
-                    dict_players[userid] = dict_players[player]
-                    return dict_players[userid]
-                
+        for player in dict_players.copy():
+            # Loop through and see if the player has played this round before
+            if uniqueID in dict_players[player]['steamid']:
+                # Create a new instance and copy over certain attributes
+                dict_players[userid] = Player(userid)
+                for key,value in dict_players[player].attributes.iteritems():
+                    if key not in ['preventlevel', 'multilevel', 'multikill', 'index']:
+                        dict_players[userid][key] = value
+                        
+                # Delete the old player instance and return the new
+                del dict_players[player]
+                return dict_players[userid]
+        
+        # The player didn't exist previously, so we will create a new instance
         dict_players[userid] = Player(userid)
+        return dict_players[userid]
+
+    # Player instance has been created with this userid --- return the instance
     return dict_players[userid]
 
 def getWeaponOrder(file):

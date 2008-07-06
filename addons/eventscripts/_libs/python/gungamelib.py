@@ -1654,9 +1654,16 @@ class Logger(object):
 def getPlayer(userid):
     userid = int(userid)
     if not es.exists('userid', userid):
-        raise UseridError, 'Message'
+        raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
 
     if not dict_players.has_key(userid):
+        uniqueID = playerlib.uniqueid(str(self.userid), 1)
+        if uniqueID in dict_players:
+            for player in dict_players:
+                if player['steamid'] == uniqueID:
+                    dict_players[userid] = dict_players[player]
+                    return dict_players[userid]
+                
         dict_players[userid] = Player(userid)
     return dict_players[userid]
 

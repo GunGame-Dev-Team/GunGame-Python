@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 1.0.350
+    Version: 1.0.390
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -28,7 +28,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.350'
+info.version  = '1.0.390'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -123,8 +123,9 @@ def player_spawn(event_var):
     
     # No-block for a second, to stop sticking inside other players
     collisionBefore = es.getplayerprop(userid, 'CBaseEntity.m_CollisionGroup')
-    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
-    gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
+    if collisionBefore != 2:
+        es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
+        gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
     
     # Do not continue random spawnpoints are disabled
     if not int(dict_addonVars['randSpawn']):
@@ -210,6 +211,10 @@ def respawnEliminated(userid, respawnRound):
     
     # Check if respawn was issued in the current round
     if dict_addonVars['currentRound'] != respawnRound:
+        return
+    
+    # Check to make sure that the userid still exists in the dictionary
+    if not dict_playersEliminated.has_key(userid):
         return
     
     # Check the player has any eliminated players

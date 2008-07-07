@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.384
+    Version: 1.0.388
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.384'
+__version__ = '1.0.388'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -1098,8 +1098,8 @@ def displayLevelMenu(userid, player=None):
         gungamelib.msg('gungame', userid, 'LevelInfo_PlayerSearchFailed', {'player': player})
         return
     
-    gungamePlayer = gungamelib.getPlayer(levelCheckUserid)
-    gungamelib.saytext2('gungame', userid, gungamePlayer['index'], 'LevelInfo_PlayerSearch', {'player': es.getplayername(levelCheckUserid), 'level': gungamePlayer['level'], 'weapon': gungamePlayer.getWeapon()}, False)
+    gungamePlayer = gungamelib.getPlayer(checkUserid)
+    gungamelib.saytext2('gungame', userid, gungamePlayer['index'], 'LevelInfo_PlayerSearch', {'player': es.getplayername(checkUserid), 'level': gungamePlayer['level'], 'weapon': gungamePlayer.getWeapon()}, False)
 
 def buildLevelMenu():
     # Delete the popup if it exists

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.386
+    Version: 1.0.388
     Description:
 '''
 
@@ -1472,7 +1472,7 @@ class LeaderManager(object):
         # 1 new leader
         if self.getLeaderCount() == 1:
             # Message about new leader
-            saytext2('gungame', '#all', getPlayer(userid)['index'], 'NewLeader', {'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', getPlayer(self.leaders[0])['index'], 'NewLeader', {'player': es.getplayername(self.leaders[0]), 'level': self.leaderLevel}, False)
             
             # Fire gg_new_leader
             es.event('initialize', 'gg_new_leader')

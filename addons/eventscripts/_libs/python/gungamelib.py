@@ -1687,11 +1687,11 @@ def getPlayer(userid):
             # Copy over the attributes we want
             for k, v in dict_players[player].attributes.iteritems():
                 # Skip the attributes that change
-                if key in ['preventlevel', 'multilevel', 'multikill', 'index']:
+                if k in ['preventlevel', 'multilevel', 'multikill', 'index']:
                     continue
                 
                 # Add the attribute
-                dict_players[userid][key] = value
+                dict_players[userid][k] = v
     
     # Player instance has been created
     return dict_players[userid]
@@ -2598,7 +2598,7 @@ def update():
     
     # Restart server
     echo('gungame', 0, 0, 'Update_Restarting')
-    es.delayed(1, 'quit')
+    es.reload('gungame')
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

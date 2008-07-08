@@ -91,7 +91,9 @@ class AddonError(Exception):
 #   CONVARS
 # ==============================================================================
 gungameDebugLevel = es.ServerVar('gg_debuglevel')
-gungameDebugLevel.makepublic()# ==============================================================================
+gungameDebugLevel.makepublic()
+
+# ==============================================================================
 #   PLAYER CLASS
 # ==============================================================================
 class Player(object):
@@ -390,6 +392,11 @@ class WeaponOrder(object):
             # Set level values
             dict_tempWeaponOrder[levelCounter] = list_splitLine
         
+        # Check there is a display name
+        if 'displayName' not in dict_tempWeaponOrderSettings:
+            echo('gungame', 0, 0, 'WeaponOrder:MissingDisplayName', {'name': self.fileName})
+            dict_tempWeaponOrderSettings['displayName'] = 'Untitled Weapon Order'
+        
         # Set the order type to default
         dict_tempWeaponOrderSettings['weaponOrder'] = '#default'
         
@@ -650,11 +657,10 @@ class Config(object):
                 line = line.replace('  ', ' ')
             
             # Get variable name and value
-            if len(line.split(' ', 1)) < 2:
-                echo('gungame', 0, 0, 'Config:MissingValue', {'name':str(line.strip('')), 'configname':str(self.name)})
-                raise ArgumentError, 'The config %s is missing a value for the following variable: %s' %(self.name, str(line.strip()))
+            if line.count(' ') < 2:
+                echo('gungame', 0, 0, 'Config:MissingValue', {'variable': line.split(' ')[0], 'name': self.name})
                 continue
-                
+            
             variableName, variableValue = line.split(' ', 1)
             
             # Don't re-add variables, but change the value instead
@@ -1662,30 +1668,32 @@ class Logger(object):
 # ==============================================================================
 def getPlayer(userid):
     userid = int(userid)
-
+    
+    if not clientInServer(userid):
+        raise UseridError('Cannot get player (%s): player not in server.' % userid)
+    
     if not dict_players.has_key(userid):
-        if not clientInServer(userid):
-            raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
+        uniqueid = playerlib.uniqueid(str(userid), 1)
         
-        uniqueID = playerlib.uniqueid(str(userid), 1)
-        for player in dict_players.copy():
-            # Loop through and see if the player has played this round before
-            if uniqueID in dict_players[player]['steamid']:
-                # Create a new instance and copy over certain attributes
-                dict_players[userid] = Player(userid)
-                for key,value in dict_players[player].attributes.iteritems():
-                    if key not in ['preventlevel', 'multilevel', 'multikill', 'index']:
-                        dict_players[userid][key] = value
-                        
-                # Delete the old player instance and return the new
-                del dict_players[player]
-                return dict_players[userid]
-        
-        # The player didn't exist previously, so we will create a new instance
-        dict_players[userid] = Player(userid)
-        return dict_players[userid]
-
-    # Player instance has been created with this userid --- return the instance
+        # Loop through all the players
+        for x, player in kv(dict_players):
+            # Steamid's don't match?
+            if player['steamid'] != uniqueid:
+                continue
+            
+            # Create a new instance
+            dict_players[userid] = Player(userid)
+            
+            # Copy over the attributes we want
+            for k, v in dict_players[player].attributes.iteritems():
+                # Skip the attributes that change
+                if key in ['preventlevel', 'multilevel', 'multikill', 'index']:
+                    continue
+                
+                # Add the attribute
+                dict_players[userid][key] = value
+    
+    # Player instance has been created
     return dict_players[userid]
 
 def getWeaponOrder(file):

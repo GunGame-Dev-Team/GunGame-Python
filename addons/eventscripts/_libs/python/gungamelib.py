@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.388
+    Version: 1.0.392
     Description:
 '''
 
@@ -313,7 +313,10 @@ class WeaponOrder(object):
     def __init__(self, fileName):
         '''Initializes the WeaponOrder class.'''
         # Set variables
-        self.filePath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
+        if '.txt' in fileName:
+            self.filePath = getGameDir('cfg/gungame/weapon_orders/%s' % fileName)
+        else:
+            self.filePath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
         self.fileName = fileName
         
         # Check to see if it has been registered before

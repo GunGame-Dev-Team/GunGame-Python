@@ -89,7 +89,7 @@ def handicapUpdate(repeatInfo):
             continue
         
         # Level them up
-        triggerLevelUpEvent(userid, gungamePlayer['level'], averageLevel)
+        gungamePlayer['level'] = averageLevel
         
         # Play sound and tell them
         gungamelib.playSound(userid, 'handicap')

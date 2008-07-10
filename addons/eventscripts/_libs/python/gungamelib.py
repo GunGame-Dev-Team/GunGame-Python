@@ -390,6 +390,11 @@ class WeaponOrder(object):
             # Set level values
             dict_tempWeaponOrder[levelCounter] = list_splitLine
         
+        # Do we have a display name?
+        if 'displayName' not in dict_tempWeaponOrderSettings:
+            echo('gungame', 0, 0, 'WeaponOrder:MissingDisplayName', {'name': self.fileName})
+            dict_tempWeaponOrderSettings['displayName'] = 'Un-named Weapon Order'
+        
         # Set the order type to default
         dict_tempWeaponOrderSettings['weaponOrder'] = '#default'
         
@@ -591,10 +596,9 @@ class WeaponOrder(object):
             # Tell the players the weapon order has changed
             self.__setWeaponOrder('#reversed')
             msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#reversed'})
-        
         # Invalid value
         else:
-            raise ValueError('Cannot change weapon order type (%s): must be: #default, #random or #reversed.' % weaponOrder)
+            raise ValueError('Cannot change weapon order type (%s): the value must be one of the following: #default, #random, #reversed.' % weaponOrder)
     
     def buildWeaponOrderMenu(self):
         menu = OrderedMenu('weapon_order')
@@ -650,11 +654,10 @@ class Config(object):
                 line = line.replace('  ', ' ')
             
             # Get variable name and value
-            if len(line.split(' ', 1)) < 2:
-                echo('gungame', 0, 0, 'Config:MissingValue', {'name':str(line.strip('')), 'configname':str(self.name)})
-                raise ArgumentError, 'The config %s is missing a value for the following variable: %s' %(self.name, str(line.strip()))
+            if line.count(' ') < 1:
+                echo('gungame', 0, 0, 'Config:MissingValue', {'variable': line.split(' ')[0], 'name': self.name})
                 continue
-                
+            
             variableName, variableValue = line.split(' ', 1)
             
             # Don't re-add variables, but change the value instead
@@ -1662,30 +1665,39 @@ class Logger(object):
 # ==============================================================================
 def getPlayer(userid):
     userid = int(userid)
-
-    if not dict_players.has_key(userid):
-        if not clientInServer(userid):
-            raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
-        
-        uniqueID = playerlib.uniqueid(str(userid), 1)
-        for player in dict_players.copy():
-            # Loop through and see if the player has played this round before
-            if uniqueID in dict_players[player]['steamid']:
-                # Create a new instance and copy over certain attributes
-                dict_players[userid] = Player(userid)
-                for key,value in dict_players[player].attributes.iteritems():
-                    if key not in ['preventlevel', 'multilevel', 'multikill', 'index']:
-                        dict_players[userid][key] = value
-                        
-                # Delete the old player instance and return the new
-                del dict_players[player]
-                return dict_players[userid]
-        
-        # The player didn't exist previously, so we will create a new instance
-        dict_players[userid] = Player(userid)
+    
+    # Client already exists, return their instance
+    if dict_players.has_key(userid):
         return dict_players[userid]
-
-    # Player instance has been created with this userid --- return the instance
+    
+    # Check the client exists
+    if not clientInServer(userid):
+        raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
+    
+    uniqueid = playerlib.uniqueid(str(userid), 1)
+    
+    for player in dict_players.copy():
+        # SteamID match?
+        if uniqueid not in dict_players[player]['steamid']:
+            continue
+        
+        # Create a new instance and copy over certain attributes
+        dict_players[userid] = Player(userid)
+        
+        # Loop through the attributes
+        for key, value in dict_players[player].attributes.iteritems():
+            if key in ['preventlevel', 'multilevel', 'multikill', 'index']:
+                continue
+            
+            # Set the attribute
+            dict_players[userid][key] = value
+        
+        # Delete the old player instance and return the new
+        del dict_players[player]
+        return dict_players[userid]
+    
+    # The player didn't exist previously, so we will create a new instance
+    dict_players[userid] = Player(userid)
     return dict_players[userid]
 
 def getWeaponOrder(file):
@@ -2436,161 +2448,6 @@ def removeCommandPrefix(command):
     
     # Return the raw command
     return command
-
-def getLatestVersion():
-    # Open the page
-    page = urllib2.urlopen('http://code.google.com/p/gungame-python/source/list').read()
-    
-    # Return the part between <td class=id><a href="detail?r= and the "
-    return int(page.split('<td class=id><a href="detail?r=')[1].split('"')[0])
-
-def checkVersion(latestRevision=False):
-    currentRevision = int(str(es.ServerVar('eventscripts_ggp')).split('.')[2])
-    
-    if not latestRevision:
-        latestRevision = getLatestVersion()
-    
-    if latestRevision > currentRevision:
-        return 1
-    elif latestRevision < currentRevision:
-        return -1
-    else:
-        return 0
-
-def update():
-    # Shouldn't update?
-    if not getVariableValue('gg_auto_update'):
-        echo('gungame', 0, 0, 'Update_Disabled')
-        return
-    
-    # Get variables
-    latestRevision = getLatestVersion()
-    thisRevision = int(str(es.ServerVar('eventscripts_ggp')).split('.')[2])
-    remainingRevisions = latestRevision-thisRevision
-    
-    echo('gungame', 0, 0, 'Update_Started')
-    
-    # Any need to update?
-    if remainingRevisions <= 0:
-        echo('gungame', 0, 0, 'Update_LatestVersion')
-        return
-    
-    # Keep updating the files until we get the the latest revision
-    for x in range(1, remainingRevisions+1):
-        y = thisRevision+x
-        
-        echo('gungame', 0, 0, 'Update_Downloading', {'version': y})
-        
-        # Open the page
-        try:
-            page = urllib2.urlopen('http://code.google.com/p/gungame-python/source/detail?r=%s' % y).read()
-        except Exception, e:
-            echo('gungame', 0, 0, 'Update_Error', {'rev': y, 'name': e.__class__.__name__, 'exc': str(e)})
-            break
-        
-        soup = BeautifulSoup(page)
-        
-        # Get the log message
-        logMessageLines = soup.find('pre', {'style': 'margin-left:1em'}).string.split('\n')
-        
-        # Print the log message
-        echo('gungame', 0, 0, 'Update_StartLogMessage')
-        es.dbgmsg(0, '[GunGame]') 
-        [es.dbgmsg(0, '[GunGame] \t' + x) for x in logMessageLines]
-        es.dbgmsg(0, '[GunGame]') 
-        echo('gungame', 0, 0, 'Update_EndLogMessage')
-        
-        # Initialize variables
-        modified = []
-        added    = []
-        removed  = []
-        
-        # Loop through the modified files
-        for x in soup.findAll('td', text='Modified'):
-            # Get the file name
-            x = str(x.findNext('a').string[7:])
-            
-            # Add to modified list
-            modified.append(x)
-        
-        # Loop through the added files
-        for x in soup.findAll('td', text='Added'):
-            # Get the file name
-            x = str(x.findNext('a').string[7:])
-            
-            # Add to modified list
-            added.append(x)
-        
-        # Loop through the deleted files
-        for x in soup.findAll('td', text='Deleted'):
-            # Get the file name
-            x = str(x.findNext('a').string[7:])
-            
-            # Add to modified list
-            removed.append(x)
-        
-        # Remove removed files
-        for x in removed:
-            y = getGameDir(x)
-            
-            # Does the file exist?
-            if not os.path.exists(y):
-                continue
-            
-            # Is a file
-            if os.path.isfile(y):
-                os.remove(y)
-                echo('gungame', 0, 0, 'Update_RemovedFile', {'x': x})
-            
-            # Is a directory
-            else:
-                os.rmdir(y)
-                echo('gungame', 0, 0, 'Update_RemovedDirectory', {'x': x})
-        
-        # Add added files
-        for x in added:
-            y = getGameDir(x)
-            
-            # Is a file
-            if '.' in y:
-                open(y, 'w')
-                echo('gungame', 0, 0, 'Update_AddedFile', {'x': x})
-            
-            # Is a directory
-            else:
-                os.mkdir(y)
-                echo('gungame', 0, 0, 'Update_AddedDirectory', {'x': x})
-        
-        # Modify modified files
-        for x in modified:
-            y = getGameDir(x)
-            
-            # Skip config files
-            if x.endswith('.cfg'):
-                echo('gungame', 0, 0, 'Update_SkippedFile', {'x': x})
-                continue
-            
-            # Get the extension
-            ext = os.path.splitext(x)[1][1:]
-            
-            # Is a Python file?
-            if ext == 'py' and os.path.isfile(y+'c'):
-                # Remove the .pyc file
-                os.remove(y+'c')
-            
-            # Get file lines from the SVN
-            newFile = urllib2.urlopen('http://gungame-python.googlecode.com/svn/trunk/%s' % x).read()
-            
-            # Write new lines to file
-            file = open(getGameDir(x), 'wb')
-            file.write(newFile)
-            file.close()
-            
-            echo('gungame', 0, 0, 'Update_ModifiedFile', {'x': x})
-    
-    # Restart server
-    echo('gungame', 0, 0, 'Update_Restarting')
-    es.delayed(1, 'quit')
 
 def kv(iterable):
     if isinstance(iterable, list) or isinstance(iterable, tuple):

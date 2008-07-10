@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.392
+    Version: 1.0.398
     Description:
 '''
 
@@ -572,8 +572,8 @@ class WeaponOrder(object):
                     # Remove
                     weapons.remove(weapon)
             
-            # Shuffle
-            random.reverse(weapons)
+            # Reverse
+            weapons.reverse()
             
             # Set weapon order
             tempWeaponOrder = dict(zip(range(1, len(weapons)+1), weapons))

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 1.0.399
+    Version: 1.0.400
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -53,18 +53,17 @@ if gungamelib.getGlobal('isIntermission'):
 else:
     warmupTimeVariable = gungamelib.getVariable('gg_warmup_timer')
 
-warmupTime = 0
-mp_freezetimeBackUp = 0
+dict_addonVars = {'warmupTime':0,
+                  'mp_freezetimeBackUp':0,
+                  'unloadDeathmatch':0,
+                  'unloadElimination':0}
 
 # ==============================================================================
 #  GAME EVENTS
 # ==============================================================================
-def load():
-    global warmupTime
-    global mp_freezetimeBackUp
-    
+def load():    
     # Set the warmupTime variable for new use
-    warmupTime = warmupTimeVariable + 1
+    dict_addonVars['warmupTime'] = warmupTimeVariable + 1
     
     # Register addon with gungamelib
     gg_warmup_round = gungamelib.registerAddon('gg_warmup_round')
@@ -75,11 +74,15 @@ def load():
     
     # Check to see if we should load deathmatch for warmup round
     if gungamelib.getVariableValue('gg_warmup_deathmatch'):
-        es.server.cmd('gg_deathmatch 1')
+        if not gungamelib.getVariableValue('gg_deathmatch'):
+            dict_addonVars['unloadDeathmatch'] = 1
+            es.server.cmd('gg_deathmatch 1')
         
     # Check to see if we should load elimination for warmup round
     if gungamelib.getVariableValue('gg_warmup_elimination'):
-        es.server.cmd('gg_elimination 1')
+        if not gungamelib.getVariableValue('gg_elimination'):
+            dict_addonVars['unloadElimination'] = 1
+            es.server.cmd('gg_elimination 1')
     
     # Cancel the delay to set PreventLevel for everyone to "0"
     gamethread.cancelDelayed('setPreventAll0')
@@ -104,23 +107,21 @@ def load():
             raise WarmUpWeaponError, warmupWeapon + ' is not a valid weapon. Setting \'gg_warmup_weapon\' to level 1\'s weapon.'
             
     # Backup "mp_freezetime" variable to reset it later
-    mp_freezetimeBackUp = int(es.ServerVar('mp_freezetime'))
+    dict_addonVars['mp_freezetimeBackUp'] = int(es.ServerVar('mp_freezetime'))
     
     # Set "mp_freezetime" to 0
     es.forcevalue('mp_freezetime', 0)
 
 def unload():
-    global mp_freezetimeBackUp
-    
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_warmup_round')
     
     # Check to see if we should load deathmatch for warmup round
-    if gungamelib.getVariableValue('gg_warmup_deathmatch'):
+    if dict_addonVars['unloadDeathmatch']:
         es.server.cmd('gg_deathmatch 0')
         
     # Check to see if we should load elimination for warmup round
-    if gungamelib.getVariableValue('gg_warmup_elimination'):
+    if dict_addonVars['unloadElimination']:
         es.server.cmd('gg_elimination 0')
     
     # Set everyone's PreventLevel to 0
@@ -134,7 +135,7 @@ def unload():
         repeat.delete('WarmupTimer')
     
     # Return "mp_freezetime" to what it was originally
-    es.forcevalue('mp_freezetime', mp_freezetimeBackUp)
+    es.forcevalue('mp_freezetime', dict_addonVars['mp_freezetimeBackUp'])
     
     # Set "isWarmup" global
     gungamelib.setGlobal('isWarmup', 0)
@@ -188,36 +189,34 @@ def startTimer():
     repeat.start('WarmupTimer', 1, warmupTimeVariable + 3)
     
     # Create timeleft global
-    gungamelib.setGlobal('warmupTimeLeft', warmupTime)
+    gungamelib.setGlobal('warmupTimeLeft', dict_addonVars['warmupTime'])
 
 # ==============================================================================
 #  COUNTDOWN CODE
 # ==============================================================================
 def countDown(repeatInfo):
-    global warmupTime
-    
     # If the remaining time is greater than 1
-    if warmupTime >= 1:
+    if dict_addonVars['warmupTime'] >= 1:
         # Send hint
-        if warmupTime > 1:
-            gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Plural', {'time': warmupTime})
+        if dict_addonVars['warmupTime'] > 1:
+            gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Plural', {'time': dict_addonVars['warmupTime']})
         else:
             gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Singular')
         
         # Set timeleft global
-        gungamelib.setGlobal('warmupTimeLeft', warmupTime)
+        gungamelib.setGlobal('warmupTimeLeft', dict_addonVars['warmupTime'])
         
         # Countdown 5 or less?
-        if warmupTime <= 5:
+        if dict_addonVars['warmupTime'] <= 5:
             gungamelib.playSound('#all', 'countDownBeep')
         
         # If warmuptime is 1, start game restart
-        if warmupTime == 2:
+        if dict_addonVars['warmupTime'] == 2:
             es.server.cmd('mp_restartgame 2')
         
         # Decrement the timeleft counter
-        warmupTime -= 1
-    elif warmupTime == 0:
+        dict_addonVars['warmupTime'] -= 1
+    elif dict_addonVars['warmupTime'] == 0:
         # Send hint
         gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Ended')
         

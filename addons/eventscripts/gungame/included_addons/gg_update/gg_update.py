@@ -1,8 +1,9 @@
 ''' (c) 2008 by the GunGame Coding Team
 
-    Title: gg_admin
-    Version: 1.0.340
-    Description: Gives admins control over GunGame and its addons.
+    Title: gg_update
+    Version: 1.0.402
+    Description: This addon automatically updates GunGame:Python from the
+                 latest SVN revision.
 '''
 
 # ==============================================================================

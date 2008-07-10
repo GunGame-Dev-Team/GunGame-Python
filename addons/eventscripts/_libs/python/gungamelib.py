@@ -91,7 +91,9 @@ class AddonError(Exception):
 #   CONVARS
 # ==============================================================================
 gungameDebugLevel = es.ServerVar('gg_debuglevel')
-gungameDebugLevel.makepublic()# ==============================================================================
+gungameDebugLevel.makepublic()
+
+# ==============================================================================
 #   PLAYER CLASS
 # ==============================================================================
 class Player(object):
@@ -126,7 +128,7 @@ class Player(object):
         item = str(item).lower()
         
         # Does the attribute exist?
-        if not self.attributes.has_key(item):
+        if item not in self.attributes:
             raise ValueError('Unable to get attribute (%s): invalid attribute.' % item)
         
         # Return attribute
@@ -139,7 +141,7 @@ class Player(object):
             value = int(value)
         
         # Does the attribute exist?
-        if not self.attributes.has_key(item):
+        if item not in self.attributes:
             raise ValueError('Unable to set attribute (%s): invalid attribute.' % item)
         
         # LEVEL
@@ -404,7 +406,7 @@ class WeaponOrder(object):
     
     def __isRegistered(self, fileName):
         '''Checks if a weapon order is already registered.'''
-        return dict_weaponOrders.has_key(fileName)
+        return fileName in dict_weaponOrders
     
     def echo(self):
         '''Echos the current weapon order to console.'''
@@ -661,7 +663,7 @@ class Config(object):
             variableName, variableValue = line.split(' ', 1)
             
             # Don't re-add variables, but change the value instead
-            if dict_variables.has_key(variableName):
+            if variableName in dict_variables:
                 dict_variables[variableName].set(variableValue)
                 echo('gungame', 0, 2, 'Config:AlreadyAdded', {'name': variableName})
                 
@@ -683,7 +685,7 @@ class Config(object):
                 continue
             
             # Set the CFG value
-            if dict_cfgSettings.has_key(self.name):
+            if self.name in dict_cfgSettings:
                 dict_cfgSettings[self.name].append(variableName)
                 continue
             
@@ -865,7 +867,7 @@ class Addon(object):
             es.addons.unregisterBlock('gungamelib', command)
     
     def callCommand(self, command, userid, arguments):
-        if not self.commands.has_key(command):
+        if command not in self.commands:
             raise AddonError('Cannot call command (%s): not registered.' % command)
         
         # Clean up the variables
@@ -915,13 +917,13 @@ class Addon(object):
             logFile.close()
     
     def hasCommand(self, command):
-        return self.commands.has_key(command) or self.publicCommands.has_key(command)
+        return command in self.commands or command in self.publicCommands
     
     def getCommandSyntax(self, command):
         if not self.hasCommand(command):
             raise AddonError('Cannot get command syntax (%s): not registered.' % command)
         
-        if self.commands.has_key(command):
+        if command in self.commands:
             return self.commands[command][1]
         else:
             return self.publicCommands[command][1]
@@ -963,20 +965,19 @@ class Addon(object):
             value = int(value)
         
         # Check if dependency already exists
-        if not dict_dependencies.has_key(dependencyName):
+        if dependencyName not in dict_dependencies:
             # Check if dependency is a valid gungame variable
-            if dict_variables.has_key(dependencyName):
-                
-                # Add dependency and original value to addon attributes
-                self.dependencies.append(dependencyName)
-                
-                # Create dependency class
-                dict_dependencies[dependencyName] = AddonDependency(dependencyName, value, self.addon)
-                
-                # Set GunGame variable to dependents value
-                setVariableValue(dependencyName, value)
-            else:
+            if dependencyName not in dict_variables:
                 raise AddonError('Cannot add dependency (%s): variable not registered.' % dependencyName)
+            
+            # Add dependency and original value to addon attributes
+            self.dependencies.append(dependencyName)
+            
+            # Create dependency class
+            dict_dependencies[dependencyName] = AddonDependency(dependencyName, value, self.addon)
+            
+            # Set GunGame variable to dependents value
+            setVariableValue(dependencyName, value)
         # Dependent is already registered
         else:
             # Add dependency and original value to addon attributes
@@ -987,7 +988,7 @@ class Addon(object):
     
     def delDependency(self, dependencyName):
         # Check if dependency exists first
-        if dict_dependencies.has_key(dependencyName):
+        if dependencyName in dict_dependencies:
             # Delete dependency
             dict_dependencies[dependencyName].delDependent(self.addon)
         else:
@@ -1325,7 +1326,7 @@ class Winners(object):
         if not getGlobal('winnersloaded'):
             loadWinnerDatabase()
         
-        if not dict_winners.has_key(self.uniqueid):
+        if self.uniqueid not in dict_winners:
             self.attributes = {'wins': 0, 'timestamp': time.time(), 'name': '<UNKNOWN>'}
             dict_winners[self.uniqueid] = self.attributes
         else:
@@ -1336,7 +1337,7 @@ class Winners(object):
         item = str(item).lower()
         
         # Does the attribute exist?
-        if not self.attributes.has_key(item):
+        if item not in self.attributes:
             raise KeyError(item)
         
         return self.attributes[item]
@@ -1346,7 +1347,7 @@ class Winners(object):
         item = str(item).lower()
         
         # Does the attribute exist?
-        if not self.attributes.has_key(item):
+        if item not in self.attributes:
             return
         
         if item == 'wins':
@@ -1667,7 +1668,7 @@ def getPlayer(userid):
     userid = int(userid)
     
     # Client already exists, return their instance
-    if dict_players.has_key(userid):
+    if userid in dict_players:
         return dict_players[userid]
     
     # Check the client exists
@@ -1873,7 +1874,7 @@ def getLevelUseridList(levelNumber):
     return levelUserids
 
 def levelExists(levelNumber):
-    return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']].has_key(levelNumber)
+    return levelNumber in dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']]
 
 def getLevelInfo(levelNumber):
     # Does the level exist?
@@ -1890,12 +1891,12 @@ def getLevelMultiKill(levelNumber):
 #   CONFIG RELATED COMMANDS
 # ==============================================================================
 def variableExists(variableName):
-    return dict_variables.has_key(variableName.lower())
+    return variableName.lower() in dict_variables
 
 def getVariable(variableName):
     variableName = variableName.lower()
     
-    if not dict_variables.has_key(variableName):
+    if variableName not in dict_variables:
         raise ValueError('Unable to get variable object (%s): not registered.' % variableName)
     
     return dict_variables[variableName]
@@ -1903,7 +1904,7 @@ def getVariable(variableName):
 def getVariableValue(variableName):
     variableName = variableName.lower()
     
-    if not dict_variables.has_key(variableName):
+    if variableName not in dict_variables:
         raise ValueError('Unable to get variable value (%s): not registered.' % variableName)
     
     variable = dict_variables[variableName]
@@ -1919,7 +1920,7 @@ def getVariableValue(variableName):
 def setVariableValue(variableName, value):
     variableName = variableName.lower()
     
-    if not dict_variables.has_key(variableName):
+    if variableName not in dict_variables:
         raise ValueError('Unable to set variable value (%s): not registered.' % variableName)
     
     # Set variable value
@@ -2011,7 +2012,7 @@ def addDownloadableWinnerSound():
     es.delayed(5, 'mp_chattime %s' % duration)
 
 def getSound(soundName):
-    if not dict_sounds.has_key(soundName):
+    if soundName not in dict_sounds:
         raise SoundError('Cannot get sound (%s): sound file not found.' % soundName)
     
     # Is a random sound
@@ -2024,7 +2025,7 @@ def getSound(soundName):
 
 def getSoundSafe(soundName):
     # Does the sound exist?
-    if not dict_sounds.has_key(soundName):
+    if soundName not in dict_sounds:
         return
     
     # Get sound object
@@ -2102,7 +2103,7 @@ def getOrderedWinners():
 def getWinnerName(uniqueid):
     global dict_winners
     
-    if dict_winners.has_key(uniqueid):
+    if uniqueid in dict_winners:
         return dict_winners[uniqueid]['name']
     else:
         return '<UNKNOWN>'
@@ -2111,7 +2112,7 @@ def getWins(uniqueid):
     global dict_winners
     uniqueid = str(uniqueid)
     
-    if dict_winners.has_key(uniqueid):
+    if uniqueid in dict_winners:
         return dict_winners[uniqueid]['wins']
     else:
         return 0
@@ -2176,20 +2177,20 @@ def pruneWinnerDatabase(days):
 #   ADDON RELATED COMMANDS
 # ==============================================================================
 def registerAddon(addonName):
-    if not dict_addons.has_key(addonName):
+    if addonName not in dict_addons:
         dict_addons[addonName] = Addon(addonName)
         return dict_addons[addonName]
     else:
         raise AddonError('Cannot register addon (%s): already registered.' % addonName)
 
 def getAddon(addonName):
-    if dict_addons.has_key(addonName):
+    if addonName in dict_addons:
         return dict_addons[addonName]
     else:
         raise AddonError('Cannot get addon object (%s): not registered.' % addonName)
 
 def unregisterAddon(addonName):
-    if dict_addons.has_key(addonName):
+    if addonName in dict_addons:
         # Unregister commands
         dict_addons[addonName].unregisterCommands()
         
@@ -2200,13 +2201,13 @@ def unregisterAddon(addonName):
 def getAddonDisplayName(addonName):
     if addonName == 'gungame':
         return 'GunGame'
-    elif dict_addons.has_key(addonName):
+    elif addonName in dict_addons:
         return dict_addons[addonName].getDisplayName()
     else:
         raise AddonError('Cannot get display name (%s): not registered.' % addonName)
 
 def addonRegistered(addonName):
-    return dict_addons.has_key(addonName)
+    return addonName in dict_addons
 
 def getRegisteredAddonlist():
     return dict_addons.keys()
@@ -2233,7 +2234,7 @@ def getGlobal(variableName):
     '''Returns a global variable (name case insensitive)'''
     variableName = variableName.lower()
     
-    if dict_globals.has_key(variableName):
+    if variableName in dict_globals:
         return dict_globals[variableName]
     else:
         return 0
@@ -2299,7 +2300,7 @@ def isDead(userid):
 
 def playerExists(userid):
     userid = int(userid)
-    return dict_players.has_key(userid)
+    return userid in dict_players
 
 def getAddonType(addonName):
     # Check addon exists

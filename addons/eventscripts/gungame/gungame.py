@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.401'
+__version__ = '1.0.402'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -929,7 +929,7 @@ def server_cvar(event_var):
     # Weapon order file
     elif cvarName == 'gg_weapon_order_file':
         # Dont set the weapon order file if its not registered
-        if not gungamelib.dict_weaponOrders.has_key(newValue):
+        if newValue not in gungamelib.dict_weaponOrders:
             gungamelib.echo('gungame', 0, 0, 'WeaponOrderNotRegistered', {'file': newValue})
             gungamelib.getVariable('gg_weapon_order_file').set('default_weapon_order.txt')
             return

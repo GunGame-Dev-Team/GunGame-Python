@@ -187,7 +187,7 @@ class SpawnPointManager(object):
         userid = es.getuserid()
         
         # Check we aren't already showing it
-        if self.propIndexes.has_key(index):
+        if index in self.propIndexes:
             return
         
         # Create prop and name it

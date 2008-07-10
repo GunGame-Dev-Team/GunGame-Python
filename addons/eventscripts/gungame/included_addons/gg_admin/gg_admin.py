@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.340
+    Version: 1.0.402
     Description: Gives admins control over GunGame and its addons.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_admin (for GunGame: Python)'
-info.version  = '1.0.340'
+info.version  = '1.0.402'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_admin'
 info.author   = 'GunGame Development Team'
@@ -147,7 +147,7 @@ def unload():
 # ==============================================================================
 def cmd_admin_add(userid, steamid, name, level):
     # Check the admin exists
-    if dict_admins.has_key(steamid):
+    if steamid in dict_admins:
         gungamelib.msg('gg_admin', userid, 'AdminExists', {'steamid': steamid})
         return
     
@@ -160,7 +160,7 @@ def cmd_admin_add(userid, steamid, name, level):
 
 def cmd_admin_remove(userid, steamid):
     # Check the admin exists
-    if not dict_admins.has_key(steamid):
+    if steamid not in dict_admins:
         gungamelib.msg('gg_admin', userid, 'InvalidAdmin', {'steamid': steamid})
         return
     
@@ -190,7 +190,7 @@ def cmd_admin_show(userid):
 
 def cmd_admin_set(userid, steamid, level):
     # Check the admin exists
-    if not dict_admins.has_key(steamid):
+    if steamid not in dict_admins:
         gungamelib.msg('gg_admin', userid, 'InvalidAdmin', {'steamid': steamid})
         return
     
@@ -211,7 +211,7 @@ def cmd_admins(userid):
         steamid = es.getplayersteamid(userid)
         
         # Do they exist in the admins dictionary?
-        if dict_admins.has_key(steamid):
+        if steamid in dict_admins:
             # Get player info
             level = dict_admins[steamid].level
             name = gungamelib.removeReturnChars(es.getplayername(userid))
@@ -449,7 +449,7 @@ def selectCommandAddonMenu(userid, choice, popupid):
     # Loop through the commands available for the admin
     for command in addonObj.commands:
         # Make sure the command is registered
-        if not dict_commands.has_key(command):
+        if command not in dict_commands:
             continue
         
         # Make sure we can run this command
@@ -510,7 +510,7 @@ def cmdHandler():
 def regAdmin(steamid, name, level):
     '''Registers an admin with group_auth and sets their permissions.'''
     # Is the admin already registered?
-    if dict_admins.has_key(steamid):
+    if steamid in dict_admins:
         return
     
     # Register the admin in dict_admins
@@ -526,7 +526,7 @@ def regCmd(command, level):
         return
     
     # Does the command exist in the commands dict?
-    if dict_commands.has_key(command):
+    if command in dict_commands:
         return
     
     # Register the command

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_welcome_msg
-    Version: 1.0.340
+    Version: 1.0.402
     Description: Shows a simple popup message to every player that connects.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_welcome_msg (for GunGame: Python)'
-info.version  = '1.0.340'
+info.version  = '1.0.402'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_welcome_msg'
 info.author   = 'GunGame Development Team'
@@ -71,7 +71,7 @@ def unload():
 def player_activate(event_var):
     userid = int(event_var['userid'])
     
-    if dict_playerQueue.has_key(userid):
+    if userid in dict_playerQueue:
         return
     
     # Add to the queue
@@ -80,8 +80,12 @@ def player_activate(event_var):
 def player_team(event_var):
     userid = int(event_var['userid'])
     
-    # Is player disconnecting or they don't have a key?
-    if event_var['disconnect'] != '0' or not dict_playerQueue.has_key(userid):
+    # Player disconnecting?
+    if event_var['disconnect'] != '0':
+        return
+    
+    # Not in the welcome message queue?
+    if userid not in dict_playerQueue:
         return
     
     # Remove from queue list

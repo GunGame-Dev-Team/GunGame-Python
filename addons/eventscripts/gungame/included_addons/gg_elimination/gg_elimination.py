@@ -149,7 +149,7 @@ def player_disconnect(event_var):
     userid = event_var['userid']
     
     # Remove diconnecting player from player dict
-    if dict_playersEliminated.has_key(userid):
+    if userid in dict_playersEliminated:
         respawnEliminated(userid, dict_addonVars['currentRound'])
         del dict_playersEliminated[userid]
 
@@ -214,7 +214,7 @@ def respawnEliminated(userid, respawnRound):
         return
     
     # Check to make sure that the userid still exists in the dictionary
-    if not dict_playersEliminated.has_key(userid):
+    if userid not in dict_playersEliminated:
         return
     
     # Check the player has any eliminated players

@@ -60,7 +60,7 @@ def player_activate(event_var):
     player = gungamelib.getPlayer(event_var['userid'])
     
     # Reconnecting?
-    if dict_savedLevels.has_key(steamid):
+    if steamid in dict_savedLevels:
         # Reset level
         player['level'] = dict_savedLevels[steamid]
         

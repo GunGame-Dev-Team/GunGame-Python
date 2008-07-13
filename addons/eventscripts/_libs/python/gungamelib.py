@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.398
+    Version: 1.0.403
     Description:
 '''
 
@@ -47,11 +47,51 @@ dict_addons = {}
 dict_dependencies = {}
 dict_winners = {}
 
-list_validWeapons = ['glock','usp','p228','deagle','fiveseven',
-                    'elite','m3','xm1014','tmp','mac10','mp5navy',
-                    'ump45','p90','galil','famas','ak47','scout',
-                    'm4a1','sg550','g3sg1','awp','sg552','aug',
-                    'm249','hegrenade','knife']
+list_validWeapons = ['glock','usp','p228','deagle','fiveseven', 'elite','m3',
+                     'xm1014','tmp','mac10','mp5navy', 'ump45','p90','galil',
+                     'famas','ak47','scout', 'm4a1','sg550','g3sg1','awp',
+                     'sg552','aug', 'm249','hegrenade','knife']
+
+list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
+                       'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
+                       'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
+                       
+list_secondaryWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven']
+
+list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
+                   'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45',
+                   'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
+                   'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
+                   'smokegrenade']
+
+dict_weaponInfo = {'deagle':        {'prop':'001', 'slot':2, 'ammo':7},
+                   'ak47':          {'prop':'002', 'slot':1, 'ammo':30},
+                   'scout':         {'prop':'002', 'slot':1, 'ammo':30},
+                   'aug':           {'prop':'002', 'slot':1, 'ammo':30},
+                   'g3sg1':         {'prop':'002', 'slot':1, 'ammo':20},
+                   'galil':         {'prop':'003', 'slot':1, 'ammo':35},
+                   'famas':         {'prop':'003', 'slot':1, 'ammo':25},
+                   'm4a1':          {'prop':'003', 'slot':1, 'ammo':30}, 
+                   'sg552':         {'prop':'003', 'slot':1, 'ammo':30},
+                   'sg550':         {'prop':'003', 'slot':1, 'ammo':30},
+                   'm249':          {'prop':'004', 'slot':1, 'ammo':100},
+                   'awp':           {'prop':'005', 'slot':1, 'ammo':10},
+                   'tmp':           {'prop':'006', 'slot':1, 'ammo':30},
+                   'mp5navy':       {'prop':'006', 'slot':1, 'ammo':30},
+                   'glock':         {'prop':'006', 'slot':2, 'ammo':20},
+                   'elite':         {'prop':'006', 'slot':2, 'ammo':30},
+                   'm3':            {'prop':'007', 'slot':1, 'ammo':8},
+                   'xm1014':        {'prop':'007', 'slot':1, 'ammo':7},
+                   'mac10':         {'prop':'008', 'slot':1, 'ammo':30},
+                   'ump45':         {'prop':'008', 'slot':1, 'ammo':25},
+                   'usp':           {'prop':'008', 'slot':2, 'ammo':12},
+                   'p228':          {'prop':'009', 'slot':2, 'ammo':13},
+                   'fiveseven':     {'prop':'010', 'slot':2, 'ammo':20},
+                   'p90':           {'prop':'010', 'slot':1, 'ammo':50},
+                   'hegrenade':     {'prop':'011', 'slot':4, 'ammo':1},
+                   'flashbang':     {'prop':'012', 'slot':4, 'ammo':2},
+                   'smokegrenade':  {'prop':'013', 'slot':4, 'ammo':1},
+                   'knife':         {'prop':None,  'slot':3, 'ammo':None}}
 
 list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
@@ -124,17 +164,35 @@ class Player(object):
                            'index':int(playerlib.getPlayer(self.userid).attributes['index'])}
 
     def __getitem__(self, item):
+        return self.get(item)
+    
+    def __setitem__(self, item, value):
+        return self.set(item, value)
+        
+    def __int__(self):
+        '''Returns the players userid.'''
+        return self.userid
+    
+    def __getattr__(self, item):
+        return self.get(item)
+    
+    '''
+    def __setattr__(self, item, value):
+        return self.set(item, value)
+    '''
+    
+    def get(self, item):
         # Lower-case the item
         item = str(item).lower()
         
         # Does the attribute exist?
         if item not in self.attributes:
             raise ValueError('Unable to get attribute (%s): invalid attribute.' % item)
-        
+            
         # Return attribute
         return self.attributes[item]
     
-    def __setitem__(self, item, value):
+    def set(self, item, value):
         # Format the item and value
         item = str(item).lower()
         if item != 'steamid':
@@ -192,10 +250,6 @@ class Player(object):
                 raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
             
             self.attributes['preventlevel'] = value
-    
-    def __int__(self):
-        '''Returns the players userid.'''
-        return self.userid
     
     def resetPlayer(self):
         '''Reset the players attributes.'''

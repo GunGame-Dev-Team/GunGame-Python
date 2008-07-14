@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.403
+    Version: 1.0.406
     Description:
 '''
 
@@ -64,35 +64,6 @@ list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
                    'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
                    'smokegrenade']
 
-dict_weaponInfo = {'deagle':        {'prop':'001', 'slot':2, 'ammo':7},
-                   'ak47':          {'prop':'002', 'slot':1, 'ammo':30},
-                   'scout':         {'prop':'002', 'slot':1, 'ammo':30},
-                   'aug':           {'prop':'002', 'slot':1, 'ammo':30},
-                   'g3sg1':         {'prop':'002', 'slot':1, 'ammo':20},
-                   'galil':         {'prop':'003', 'slot':1, 'ammo':35},
-                   'famas':         {'prop':'003', 'slot':1, 'ammo':25},
-                   'm4a1':          {'prop':'003', 'slot':1, 'ammo':30}, 
-                   'sg552':         {'prop':'003', 'slot':1, 'ammo':30},
-                   'sg550':         {'prop':'003', 'slot':1, 'ammo':30},
-                   'm249':          {'prop':'004', 'slot':1, 'ammo':100},
-                   'awp':           {'prop':'005', 'slot':1, 'ammo':10},
-                   'tmp':           {'prop':'006', 'slot':1, 'ammo':30},
-                   'mp5navy':       {'prop':'006', 'slot':1, 'ammo':30},
-                   'glock':         {'prop':'006', 'slot':2, 'ammo':20},
-                   'elite':         {'prop':'006', 'slot':2, 'ammo':30},
-                   'm3':            {'prop':'007', 'slot':1, 'ammo':8},
-                   'xm1014':        {'prop':'007', 'slot':1, 'ammo':7},
-                   'mac10':         {'prop':'008', 'slot':1, 'ammo':30},
-                   'ump45':         {'prop':'008', 'slot':1, 'ammo':25},
-                   'usp':           {'prop':'008', 'slot':2, 'ammo':12},
-                   'p228':          {'prop':'009', 'slot':2, 'ammo':13},
-                   'fiveseven':     {'prop':'010', 'slot':2, 'ammo':20},
-                   'p90':           {'prop':'010', 'slot':1, 'ammo':50},
-                   'hegrenade':     {'prop':'011', 'slot':4, 'ammo':1},
-                   'flashbang':     {'prop':'012', 'slot':4, 'ammo':2},
-                   'smokegrenade':  {'prop':'013', 'slot':4, 'ammo':1},
-                   'knife':         {'prop':None,  'slot':3, 'ammo':None}}
-
 list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
 list_usedRandomSounds = []
@@ -138,227 +109,214 @@ gungameDebugLevel.makepublic()
 # ==============================================================================
 class Player(object):
     '''Player class, holds all a players information and attributes.'''
-    
+   
+    __slots__ = ['userid', 'level', 'afkrounds', 'multikill', 'multilevel',
+                'preventlevel', 'afkmathtotal', 'steamid', 'index']
+               
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
-        
+       
         # Make userid an int
         self.userid = int(userid)
-        
+
         if not es.exists('userid', self.userid):
             raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
-        else:
-            # Create the player
-            self.__createPlayer()
-            
-    def __createPlayer(self):
-        '''Creates the player in the players database.'''
-        self.attributes = {'level':1,
-                           'afkrounds':0,
-                           'multikill':0,
-                           'multilevel':0,
-                           'preventlevel':0,
-                           'afkmathtotal':0,
-                           'steamid':playerlib.uniqueid(str(self.userid), 1),
-                           'index':int(playerlib.getPlayer(self.userid).attributes['index'])}
+           
+        self.__createPlayer()
 
     def __getitem__(self, item):
-        return self.get(item)
-    
+        # Lower-case the item
+        item = str(item).lower()
+
+        return object.__getattribute__(self, item)
+   
     def __setitem__(self, item, value):
-        return self.set(item, value)
-        
+        item = str(item).lower()
+        self.__setattr__(item, value)
+       
     def __int__(self):
         '''Returns the players userid.'''
         return self.userid
-    
+   
     def __getattr__(self, item):
-        return self.get(item)
-    
-    '''
-    def __setattr__(self, item, value):
-        return self.set(item, value)
-    '''
-    
-    def get(self, item):
-        # Lower-case the item
         item = str(item).lower()
-        
-        # Does the attribute exist?
-        if item not in self.attributes:
-            raise ValueError('Unable to get attribute (%s): invalid attribute.' % item)
-            
-        # Return attribute
-        return self.attributes[item]
-    
-    def set(self, item, value):
+        return object.__getattribute__(self, item)
+   
+   
+    def __setattr__(self, item, value):
         # Format the item and value
         item = str(item).lower()
+
         if item != 'steamid':
             value = int(value)
-        
-        # Does the attribute exist?
-        if item not in self.attributes:
-            raise ValueError('Unable to set attribute (%s): invalid attribute.' % item)
-        
+           
         # LEVEL
         if item == 'level':
             # Value check...
             if value < 0 and value > getTotalLevels():
                 raise ValueError('Invalid value (%s): level value must be greater than 0 and less than %s.' % (value, getTotalLevels() + 1))
-            
-            # Get current leader
-            currentLevel = self.attributes['level']
-            
-            # Set level
-            self.attributes['level'] = value
-            
+           
+            if hasattr(self, 'level'):
+                # Get current leader
+                currentLevel = self.level
+            else:
+                currentLevel = 1
+               
+            object.__setattr__(self, item, value)
+           
             # Levelling up...
             if value > currentLevel:
                 leaders.addLeader(self.userid)
-            
+           
             # Levelling down
             elif value < currentLevel:
                 leaders.removeLeader(self.userid)
-        
+               
+            return
+       
         # AFK ROUNDS
         elif item == 'afkrounds':
             # Value check...
             if value < 0:
                 raise ValueError('Invalid value (%s): AFK Rounds value must be a positive number.' % value)
-            
-            self.attributes['afkrounds'] = value
-        
+       
         # MULTIKILL
         elif item == 'multikill':
             if value < 0:
                 raise ValueError('Invalid value (%s): multikill value must be a positive number.' % value)
-            
-            self.attributes['multikill'] = value
-        
+       
         # MULTILEVEL
         elif item == 'multilevel':
             if value < 0 and value > 3:
                 raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
-            
-            self.attributes['multilevel'] = value
-        
+       
         # PREVENT LEVEL
         elif item == 'preventlevel':
             if value != 0 and value != 1:
                 raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
-            
-            self.attributes['preventlevel'] = value
-    
+       
+        object.__setattr__(self, item, value)
+   
+    def __createPlayer(self):
+        self.level = 1
+        self.afkrounds = 0
+        self.multikill = 0
+        self.multilevel = 0
+        self.preventlevel = 0
+        self.afkmathtotal = 0
+        self.steamid = playerlib.uniqueid(str(self.userid), 1)
+        self.index = int(playerlib.getPlayer(self.userid).attributes['index'])
+   
     def resetPlayer(self):
         '''Reset the players attributes.'''
         self.__createPlayer()
-    
+   
     def resetPlayerLocation(self):
         '''Resets a players AFK math total.'''
         # Check the player exists
         if not es.exists('userid', self.userid):
             return
-        
+       
         # Get the player's location
         x, y, z = es.getplayerlocation(self.userid)
-        
+       
         # Get the AFK math total
         afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
-        
+       
         # Update the AFK math total
-        self.attributes['afkmathtotal'] = int(afkMathTotal)
-    
+        self.afkmathtotal = int(afkMathTotal)
+   
     def playerNotAFK(self):
         '''Makes a player not AFK.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to make player active (%s): not on a team.' % self.userid)
-        
+       
         # Reset player math total
-        self.attributes['afkmathtotal'] = 0
-    
+        self.afkmathtotal = 0
+   
     def isPlayerAFK(self):
         '''Checks a player is AFK.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to check player AFK status (%s): not on a team.' % self.userid)
-        
+       
         # Get the player's location
         x, y, z = es.getplayerlocation(self.userid)
-        
+       
         # Get AFK math total
         afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
-        
-        return (int(afkMathTotal) == self.attributes['afkmathtotal'])
-    
+       
+        return (int(afkMathTotal) == self.afkmathtotal)
+   
     def teleportPlayer(self, x, y, z, eyeangle0=0, eyeangle1=0):
         '''Teleport a player.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to teleport player (%s): not on a team.' % self.userid)
-        
+       
         # Make sure the player is alive
         if isDead(self.userid):
             raise DeadError('Unable to teleport player (%s): not alive.' % self.userid)
-        
+       
         # Set position
         es.server.cmd('es_xsetpos %d %s %s %s' % (self.userid, x, y, z))
-        
+       
         # Set eye angles
         if eyeangle0 != 0 or eyeangle1 != 0:
             es.server.cmd('es_xsetang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
-        
+       
         # Reset player AFK status
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
-    
+   
     def setPlayerEyeAngles(self, eyeAngle0, eyeAngle1):
         '''Sets a players view angle.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to set player angles (%s): not on a team' % self.userid)
-        
+       
         # Make sure player is alive
         if isDead(self.userid):
             raise DeadError('Unable to set player angles (%s): not alive.' % self.userid)
-        
+       
         # Set angles
         es.server.cmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
-        
+       
         # Reset player AFK status
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
-    
+   
     def stripPlayer(self):
         '''Strips a player of all their weapons, except knife.'''
-        es.server.cmd('es_xgive %s weapon_knife' % self.userid)
-        es.server.cmd('es_xgive %s player_weaponstrip' % self.userid)
-        es.server.cmd('es_xfire %s player_weaponstrip Strip' % self.userid)
-        es.server.cmd('es_xfire %s player_weaponstrip Kill' % self.userid)
-    
+        stripFormat = 'es_xgive %s weapon_knife;' % userid
+        stripFormat += 'es_xgive %s player_weaponstrip;' % userid
+        stripFormat += 'es_xfire %s player_weaponstrip Strip;' % userid
+        stripFormat += 'es_xfire %s player_weaponstrip Kill' % userid
+        es.server.cmd(stripFormat)
+   
     def giveWeapon(self):
         '''Gives a player their current weapon.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to give player weapon (%s): not on a team' % self.userid)
-        
+       
         # Make sure player is alive
         if isDead(self.userid):
             raise DeadError('Unable to give player weapon (%s): is not alive' % self.userid)
-        
+       
         # Get active weapon
         playerWeapon = self.getWeapon()
-        
+       
         if playerWeapon != 'knife':
             es.delayed('0.001', 'es_xgive %s weapon_%s' % (self.userid, playerWeapon))
-        
+       
         if playerWeapon == 'hegrenade':
             es.delayed('0.001', 'es_xsexec %s "use weapon_hegrenade"' % self.userid)
-    
+   
     def getWeapon(self):
         '''Returns the weapon for the players level.'''
         if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
-            return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.attributes['level']][0]
+            return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.level][0]
 
 # ==============================================================================
 #   WEAPON ORDER CLASS

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.406
+    Version: 1.0.407
     Description:
 '''
 
@@ -288,10 +288,10 @@ class Player(object):
    
     def stripPlayer(self):
         '''Strips a player of all their weapons, except knife.'''
-        stripFormat = 'es_xgive %s weapon_knife;' % userid
-        stripFormat += 'es_xgive %s player_weaponstrip;' % userid
-        stripFormat += 'es_xfire %s player_weaponstrip Strip;' % userid
-        stripFormat += 'es_xfire %s player_weaponstrip Kill' % userid
+        stripFormat = 'es_xgive %s weapon_knife;' % self.userid
+        stripFormat += 'es_xgive %s player_weaponstrip;' % self.userid
+        stripFormat += 'es_xfire %s player_weaponstrip Strip;' % self.userid
+        stripFormat += 'es_xfire %s player_weaponstrip Kill' % self.userid
         es.server.cmd(stripFormat)
    
     def giveWeapon(self):

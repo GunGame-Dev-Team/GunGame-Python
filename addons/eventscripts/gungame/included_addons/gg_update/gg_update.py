@@ -49,10 +49,12 @@ def unload():
 
 
 def es_map_start(event_var):
-    if gungamelib.getVariableValue('gg_update') == 1:
-        update()
-    else:
+    # Check that we update on map start
+    if gungamelib.getVariableValue('gg_update') != 1:
         gungamelib.echo('gg_update', 0, 0, 'MapStartDisabled')
+    
+    # Commence update
+    update()
 
 # ==============================================================================
 #   HELPER FUNCTIONS
@@ -167,26 +169,41 @@ def forceUpdateToRevision(rev):
     # Loop through the modified files
     for x in soup.findAll('td', text='Modified'):
         # Get the file name
-        x = x.findNext('a').renderContents()[7:]
+        x = x.findNext('a').renderContents()
+        
+        # Skip wiki files
+        if x.startswith('/wiki/'):
+            gungamelib.echo('gg_update', 0, 0, 'SkippingWiki')
+            continue
         
         # Add to modified list
-        modified.append(x)
+        modified.append(x[7:])
     
     # Loop through the added files
     for x in soup.findAll('td', text='Added'):
         # Get the file name
-        x = x.findNext('a').renderContents()[7:]
+        x = x.findNext('a').renderContents()
+        
+        # Skip wiki files
+        if x.startswith('/wiki/'):
+            gungamelib.echo('gg_update', 0, 0, 'SkippingWiki')
+            continue
         
         # Add to modified list
-        added.append(x)
+        added.append(x[7:])
     
     # Loop through the deleted files
     for x in soup.findAll('td', text='Deleted'):
         # Get the file name
-        x = x.findNext('a').renderContents()[7:]
+        x = x.findNext('a').renderContents()
+        
+        # Skip wiki files
+        if x.startswith('/wiki/'):
+            gungamelib.echo('gg_update', 0, 0, 'SkippingWiki')
+            continue
         
         # Add to modified list
-        removed.append(x)
+        removed.append(x[7:])
     
     # Remove removed files
     for x in removed:
@@ -214,6 +231,10 @@ def forceUpdateToRevision(rev):
     # Add added files
     for x in added:
         y = gungamelib.getGameDir(x)
+        
+        # Skip adding of file / directory if it already exists
+        if os.path.exists(y):
+            continue
         
         # Is a file
         if '.' in y:

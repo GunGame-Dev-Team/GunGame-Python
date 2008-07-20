@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_reload
-    Version: 1.0.406
+    Version: 1.0.415
     Description: When a player makes a kill the ammo in their clip is
                  replenished.
 '''
@@ -11,6 +11,7 @@
 # ==============================================================================
 # EventScripts imports
 import es
+import playerlib
 
 # GunGame imports
 import gungamelib
@@ -23,7 +24,7 @@ reload(ggweaponlib)
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_reload Addon for GunGame: Python'
-info.version  = '1.0.406'
+info.version  = '1.0.415'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_reload'
 info.author   = 'GunGame Development Team'
@@ -60,6 +61,14 @@ def player_death(event_var):
     if weapon != gungamelib.getPlayer(attacker).getWeapon():
         return
     
+    # Is a hegrenade or knife kill?
+    if weapon in ('hegrenade', 'knife'):
+        return
+    
+    # Set clip
+    playerHandle = es.getplayerhandle(attacker)
     weaponInfo = ggweaponlib.getWeaponInfo(weapon)
-    if weaponInfo.slot in (1, 2):
-        es.setplayerprop(userid, weaponInfo.prop, weaponInfo.ammo)
+    for weaponIndex in es.createentitylist('weapon_' + weapon):
+        if playerHandle == es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity'):
+            es.setindexprop(weaponIndex, 'CBaseCombatWeapon.LocalWeaponData.m_iClip1', weaponInfo.ammo)
+            break

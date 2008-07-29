@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_handicap
-    Version: 1.0.402
+    Version: 1.0.417
     Description:
 '''
 
@@ -13,7 +13,7 @@ import os
 
 # EventScripts imports
 import es
-import repeat
+import testrepeat as repeat
 import playerlib
 import gamethread
 
@@ -72,7 +72,7 @@ def player_activate(event_var):
         gungamePlayer['level'] = averageLevel
         gungamelib.msg('gg_handicap', userid, 'LevelAveraged', {'level': averageLevel})
 
-def handicapUpdate(repeatInfo):
+def handicapUpdate():
     if not int(updateType):
         return
     

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 1.0.312
+    Version: 1.0.417
     Description: Adds map voting capabilities to GunGame.
 '''
 
@@ -20,7 +20,7 @@ import popuplib
 import playerlib
 import gamethread
 import usermsg
-import repeat
+import testrepeat as repeat
 
 # GunGame imports
 import gungamelib
@@ -240,7 +240,7 @@ def startVote():
     dict_addonVars['voteActive'] = 1
     gungamelib.setGlobal('voteActive', 1)
 
-def VoteCountdown(repeatInfo):
+def VoteCountdown():
     if dict_addonVars['voteTimer']:
         # Countdown 5 or less?
         if dict_addonVars['voteTimer'] <= 5:

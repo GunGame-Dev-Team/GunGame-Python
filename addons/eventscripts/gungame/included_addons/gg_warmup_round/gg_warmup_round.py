@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 1.0.400
+    Version: 1.0.417
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -16,7 +16,7 @@ import es
 import gamethread
 import usermsg
 import playerlib
-import repeat
+import testrepeat as repeat
 
 # GunGame imports
 import gungamelib
@@ -194,7 +194,7 @@ def startTimer():
 # ==============================================================================
 #  COUNTDOWN CODE
 # ==============================================================================
-def countDown(repeatInfo):
+def countDown():
     # If the remaining time is greater than 1
     if dict_addonVars['warmupTime'] >= 1:
         # Send hint

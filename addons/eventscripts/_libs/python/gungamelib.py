@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.407
+    Version: 1.0.416
     Description:
 '''
 
@@ -317,6 +317,38 @@ class Player(object):
         '''Returns the weapon for the players level.'''
         if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
             return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.level][0]
+            
+    def levelup(self, oldLevel, newLevel, victim=0, reason=''):
+        '''
+        Formerly triggerLevelUpEvent:
+            gungamePlayer.levelup(oldLevel, newLevel, victimUserid, reasonText)
+            
+        gungamePlayer should be the attacker (the player that is leveling up)
+        '''
+        es.event('initialize', 'gg_levelup')
+        es.event('setint', 'gg_levelup', 'attacker', self.userid)
+        es.event('setint', 'gg_levelup', 'leveler', self.userid)
+        es.event('setint', 'gg_levelup', 'old_level', oldLevel)
+        es.event('setint', 'gg_levelup', 'new_level', newLevel)
+        es.event('setint', 'gg_levelup', 'userid', victim)
+        es.event('setstring', 'gg_levelup', 'reason', reason)
+        es.event('fire', 'gg_levelup')
+        
+    def leveldown(self, oldLevel, newLevel, attacker=0, reason=''):
+        '''
+        Formerly triggerLevelDownEvent:
+            gungamePlayer.leveldown(oldLevel, newLevel, victimUserid, reasonText)
+            
+        gungamePlayer should be the victim (the player that is leveling down)
+        '''
+        es.event('initialize', 'gg_leveldown')
+        es.event('setint', 'gg_leveldown', 'userid', self.userid)
+        es.event('setint', 'gg_leveldown', 'leveler', self.userid)
+        es.event('setint', 'gg_leveldown', 'old_level', oldLevel)
+        es.event('setint', 'gg_leveldown', 'new_level', newLevel)
+        es.event('setint', 'gg_leveldown', 'attacker', attacker)
+        es.event('setstring', 'gg_leveldown', 'reason', reason)
+        es.event('fire', 'gg_leveldown')
 
 # ==============================================================================
 #   WEAPON ORDER CLASS
@@ -1761,7 +1793,8 @@ def centermsg(addon, filter, string, tokens={}):
 # ==============================================================================
 def triggerLevelUpEvent(userid, oldLevel, newLevel, victim=0, reason=''):
     es.event('initialize', 'gg_levelup')
-    es.event('setint', 'gg_levelup', 'attacker', userid)                               
+    es.event('setint', 'gg_levelup', 'attacker', userid)
+    es.event('setint', 'gg_levelup', 'leveler', userid)
     es.event('setint', 'gg_levelup', 'old_level', oldLevel)
     es.event('setint', 'gg_levelup', 'new_level', newLevel)
     es.event('setint', 'gg_levelup', 'userid', victim)
@@ -1771,6 +1804,7 @@ def triggerLevelUpEvent(userid, oldLevel, newLevel, victim=0, reason=''):
 def triggerLevelDownEvent(userid, oldLevel, newLevel, attacker=0, reason=''):
     es.event('initialize', 'gg_leveldown')
     es.event('setint', 'gg_leveldown', 'userid', userid)
+    es.event('setint', 'gg_leveldown', 'leveler', userid)
     es.event('setint', 'gg_leveldown', 'old_level', oldLevel)
     es.event('setint', 'gg_leveldown', 'new_level', newLevel)
     es.event('setint', 'gg_leveldown', 'attacker', attacker)

@@ -20,18 +20,20 @@
 {
 	"gg_levelup"
 	{
-        "attacker"  "short"     // The userid of the player that levelled up
-        "old_level" "byte"      // The old level of the player that levelled up
-        "new_level" "byte"      // The new level of the player that levelled up
+        "attacker"  "short"     // The userid of the player that leveled up
+        "leveler"   "short"     // The userid of the player that is leveling
         "userid"	"short"     // The userid of victim
+        "old_level" "byte"      // The old level of the player that leveled up
+        "new_level" "byte"      // The new level of the player that leveled up
         "reason"    "string"    // The reason for the level up
 	}
 	"gg_leveldown"
 	{
-        "userid"    "short"     // userid of player
-        "attacker"  "short"     // userid of the attacker
-        "old_level" "byte"      // old player level
-        "new_level" "byte"      // new player level
+        "userid"    "short"     // The userid of player that is leveling down
+        "leveler"   "short"     // The userid of the player that is leveling
+        "attacker"  "short"     // The userid of the attacker
+        "old_level" "byte"      // The old level of the player that leveled down
+        "new_level" "byte"      // The new level of the player that leveled down
         "reason"    "string"    // The reason for the level down
 	}
 	"gg_knife_steal"

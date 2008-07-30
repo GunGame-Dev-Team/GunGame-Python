@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.419
+    Version: 1.0.420
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.419'
+__version__ = '1.0.420'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -599,9 +599,6 @@ def player_death(event_var):
             # Level them up
             gungameAttacker.levelup(1, userid, 'kill')
             
-            # Reset multikill
-            gungameAttacker['multikill'] = 0
-            
             # Play the levelup sound
             gungamelib.playSound(attacker, 'levelup')
         
@@ -696,9 +693,8 @@ def gg_levelup(event_var):
     if gungamelib.getLevelWeapon(event_var['new_level']) == 'hegrenade':
         gungamelib.playSound('#all', 'nadelevel')
     
-    # Set player's new level and multikil
+    # Set player's new level
     gungamePlayer['level'] = int(event_var['new_level'])
-    gungamePlayer['multikill'] = 0
     
     # Get leader level
     leaderLevel = gungamelib.leaders.getLeaderLevel()

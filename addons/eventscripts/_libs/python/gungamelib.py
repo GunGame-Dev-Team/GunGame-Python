@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.419
+    Version: 1.0.420
     Description:
 '''
 
@@ -156,6 +156,11 @@ class Player(object):
             # Value check...
             if value < 0 and value > getTotalLevels():
                 raise ValueError('Invalid value (%s): level value must be greater than 0 and less than %s.' % (value, getTotalLevels() + 1))
+                
+            # PreventLevel check...
+            if self.preventlevel:
+                # WARNING: this is SILENT, but DEADLY. This will not notify coders that self.preventlevel is True.
+                return
            
             if hasattr(self, 'level'):
                 # Get current leader
@@ -325,31 +330,43 @@ class Player(object):
             
         gungamePlayer should be the attacker (the player that is leveling up)
         '''
-        es.event('initialize', 'gg_levelup')
-        es.event('setint', 'gg_levelup', 'attacker', self.userid)
-        es.event('setint', 'gg_levelup', 'leveler', self.userid)
-        es.event('setint', 'gg_levelup', 'old_level', self.level)
-        es.event('setint', 'gg_levelup', 'new_level', self.level + int(levelsAwarded))
-        es.event('setint', 'gg_levelup', 'userid', victim)
-        es.event('setstring', 'gg_levelup', 'reason', reason)
-        es.event('fire', 'gg_levelup')
+        if not self.preventlevel:
+            # Set multikill to 0
+            self.multikill = 0
         
+            es.event('initialize', 'gg_levelup')
+            es.event('setint', 'gg_levelup', 'attacker', self.userid)
+            es.event('setint', 'gg_levelup', 'leveler', self.userid)
+            es.event('setint', 'gg_levelup', 'old_level', self.level)
+            es.event('setint', 'gg_levelup', 'new_level', self.level + int(levelsAwarded))
+            es.event('setint', 'gg_levelup', 'userid', victim)
+            es.event('setstring', 'gg_levelup', 'reason', reason)
+            es.event('fire', 'gg_levelup')
+        else:
+            # WARNING: this is SILENT, but DEADLY. This will not notify coders that self.preventlevel is True.
+            return
+           
     def leveldown(self, levelsTaken, attacker=0, reason=''):
         '''
         Formerly gungamelib.triggerLevelDownEvent:
-            gungamePlayer.leveldown(levelsTaken, victimUserid, reasonText)
+            gungamePlayer.leveldown(levelsTaken, attackerUserid, reasonText)
             
         gungamePlayer should be the victim (the player that is leveling down)
         '''
-        es.event('initialize', 'gg_leveldown')
-        es.event('setint', 'gg_leveldown', 'userid', self.userid)
-        es.event('setint', 'gg_leveldown', 'leveler', self.userid)
-        es.event('setint', 'gg_leveldown', 'old_level', self.level)
-        es.event('setint', 'gg_leveldown', 'new_level', self.level - int(levelsTaken))
-        es.event('setint', 'gg_leveldown', 'attacker', attacker)
-        es.event('setstring', 'gg_leveldown', 'reason', reason)
-        es.event('fire', 'gg_leveldown')
-
+        if not self.preventlevel:
+            es.event('initialize', 'gg_leveldown')
+            es.event('setint', 'gg_leveldown', 'userid', self.userid)
+            es.event('setint', 'gg_leveldown', 'leveler', self.userid)
+            es.event('setint', 'gg_leveldown', 'old_level', self.level)
+            es.event('setint', 'gg_leveldown', 'new_level', self.level - int(levelsTaken))
+            es.event('setint', 'gg_leveldown', 'attacker', attacker)
+            es.event('setstring', 'gg_leveldown', 'reason', reason)
+            es.event('fire', 'gg_leveldown')
+        else:
+            # WARNING: this is SILENT, but DEADLY. This will not notify coders that self.preventlevel is True.
+            return
+            
+            
 # ==============================================================================
 #   WEAPON ORDER CLASS
 # ==============================================================================

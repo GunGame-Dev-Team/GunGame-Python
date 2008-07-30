@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.420
+    Version: 1.0.421
     Description:
 '''
 
@@ -204,11 +204,11 @@ class Player(object):
         object.__setattr__(self, item, value)
    
     def __createPlayer(self):
+        self.preventlevel = 0
         self.level = 1
         self.afkrounds = 0
         self.multikill = 0
         self.multilevel = 0
-        self.preventlevel = 0
         self.afkmathtotal = 0
         self.steamid = playerlib.uniqueid(str(self.userid), 1)
         self.index = int(playerlib.getPlayer(self.userid).attributes['index'])

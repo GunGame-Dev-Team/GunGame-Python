@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_pro
-    Version: 1.0.402
+    Version: 1.0.419
     Description: When one player knife kills another player, the attacker steals
                  a level from the victim.
 '''
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_knife_pro Addon for GunGame: Python'
-info.version  = '1.0.402'
+info.version  = '1.0.419'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_knife_pro'
 info.author   = 'GunGame Development Team'
@@ -125,13 +125,8 @@ def player_death(event_var):
     # =============
     # LEVEL CHANGES
     # =============
-    # Get level info
-    gungameVictimNewLevel = gungameVictimLevel - 1
-    gungameAttackerNewLevel = gungameAttackerLevel + 1
-    
-    # Level changes
-    gungamelib.triggerLevelDownEvent(userid, gungameVictimLevel, gungameVictimNewLevel, attacker, 'steal')
-    gungamelib.triggerLevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid, 'steal')
+    gungameVictim.leveldown(1, attacker, 'steal')
+    gungameAttacker.levelup(1, userid, 'steal')
     
     # ===========
     # PLAY SOUNDS
@@ -144,11 +139,10 @@ def player_death(event_var):
     # =====
     es.event('initialize', 'gg_knife_steal')
     es.event('setint', 'gg_knife_steal', 'attacker', attacker)
-    es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttackerNewLevel)
-    es.event('setint', 'gg_knife_steal', 'userid_level', gungameVictimNewLevel)
+    es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttacker.level)
+    es.event('setint', 'gg_knife_steal', 'userid_level', gungameVictim.level)
     es.event('setint', 'gg_knife_steal', 'userid', userid)
     es.event('fire', 'gg_knife_steal')
     
     # Announce the level stealing
-    index = playerlib.getPlayer(attacker).attributes['index']
-    gungamelib.saytext2('gg_knife_pro', '#all', index, 'StoleLevel', {'attacker': event_var['es_attackername'], 'victim': event_var['es_username']})
+    gungamelib.saytext2('gg_knife_pro', '#all', gungameAttacker.index, 'StoleLevel', {'attacker': event_var['es_attackername'], 'victim': event_var['es_username']})

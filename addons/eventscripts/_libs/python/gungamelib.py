@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.416
+    Version: 1.0.419
     Description:
 '''
 
@@ -318,34 +318,34 @@ class Player(object):
         if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
             return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.level][0]
             
-    def levelup(self, oldLevel, newLevel, victim=0, reason=''):
+    def levelup(self, levelsAwarded, victim=0, reason=''):
         '''
-        Formerly triggerLevelUpEvent:
-            gungamePlayer.levelup(oldLevel, newLevel, victimUserid, reasonText)
+        Formerly gungamelib.triggerLevelUpEvent:
+            gungamePlayer.levelup(levelsAwarded, victimUserid, reasonText)
             
         gungamePlayer should be the attacker (the player that is leveling up)
         '''
         es.event('initialize', 'gg_levelup')
         es.event('setint', 'gg_levelup', 'attacker', self.userid)
         es.event('setint', 'gg_levelup', 'leveler', self.userid)
-        es.event('setint', 'gg_levelup', 'old_level', oldLevel)
-        es.event('setint', 'gg_levelup', 'new_level', newLevel)
+        es.event('setint', 'gg_levelup', 'old_level', self.level)
+        es.event('setint', 'gg_levelup', 'new_level', self.level + int(levelsAwarded))
         es.event('setint', 'gg_levelup', 'userid', victim)
         es.event('setstring', 'gg_levelup', 'reason', reason)
         es.event('fire', 'gg_levelup')
         
-    def leveldown(self, oldLevel, newLevel, attacker=0, reason=''):
+    def leveldown(self, levelsTaken, attacker=0, reason=''):
         '''
-        Formerly triggerLevelDownEvent:
-            gungamePlayer.leveldown(oldLevel, newLevel, victimUserid, reasonText)
+        Formerly gungamelib.triggerLevelDownEvent:
+            gungamePlayer.leveldown(levelsTaken, victimUserid, reasonText)
             
         gungamePlayer should be the victim (the player that is leveling down)
         '''
         es.event('initialize', 'gg_leveldown')
         es.event('setint', 'gg_leveldown', 'userid', self.userid)
         es.event('setint', 'gg_leveldown', 'leveler', self.userid)
-        es.event('setint', 'gg_leveldown', 'old_level', oldLevel)
-        es.event('setint', 'gg_leveldown', 'new_level', newLevel)
+        es.event('setint', 'gg_leveldown', 'old_level', self.level)
+        es.event('setint', 'gg_leveldown', 'new_level', self.level - int(levelsTaken))
         es.event('setint', 'gg_leveldown', 'attacker', attacker)
         es.event('setstring', 'gg_leveldown', 'reason', reason)
         es.event('fire', 'gg_leveldown')
@@ -1530,23 +1530,6 @@ class LeaderManager(object):
             es.event('setint', 'gg_new_leader', 'userid', userid)
             es.event('fire', 'gg_new_leader')
         
-        '''XE_ManUp:
-        We can't use this message due to the fact that any message on level down will cause conflicting information being sent
-        to players. Example:
-        1. A player that is on level 11 knifes someone that is a leader on level 12.
-        2. The leader loses a level, and now it messages that those players are tied on level 11.
-        3. Another message is then sent to the players stating that the player that knifed the leader is now the new leader.
-        
-        ADDITIONAL NOTE:
-            May need to clean up the gungame.ini in the translations folder of the "NewLeaders" section (plural, not singular).
-        
-        
-        # More than one leader?
-        elif self.getLeaderCount() > 1 and self.leaderLevel != 1:
-            # Show message
-            msg('gungame', '#all', 'NewLeaders', {'players': ', '.join(self.getLeaderNames()), 'level': self.leaderLevel}, False)
-        '''
-        
         # Set old leaders, if they have changed
         if self.leaders[:] != self.oldLeaders[:]:
             self.oldLeaders = self.leaders[:]
@@ -1787,29 +1770,6 @@ def hudhint(addon, filter, string, tokens={}):
 
 def centermsg(addon, filter, string, tokens={}):
     Message(addon, filter).centermsg(string, tokens)
-
-# ==============================================================================
-#   LEVEL UP AND LEVEL DOWN TRIGGERING
-# ==============================================================================
-def triggerLevelUpEvent(userid, oldLevel, newLevel, victim=0, reason=''):
-    es.event('initialize', 'gg_levelup')
-    es.event('setint', 'gg_levelup', 'attacker', userid)
-    es.event('setint', 'gg_levelup', 'leveler', userid)
-    es.event('setint', 'gg_levelup', 'old_level', oldLevel)
-    es.event('setint', 'gg_levelup', 'new_level', newLevel)
-    es.event('setint', 'gg_levelup', 'userid', victim)
-    es.event('setstring', 'gg_levelup', 'reason', reason)
-    es.event('fire', 'gg_levelup')
-
-def triggerLevelDownEvent(userid, oldLevel, newLevel, attacker=0, reason=''):
-    es.event('initialize', 'gg_leveldown')
-    es.event('setint', 'gg_leveldown', 'userid', userid)
-    es.event('setint', 'gg_leveldown', 'leveler', userid)
-    es.event('setint', 'gg_leveldown', 'old_level', oldLevel)
-    es.event('setint', 'gg_leveldown', 'new_level', newLevel)
-    es.event('setint', 'gg_leveldown', 'attacker', attacker)
-    es.event('setstring', 'gg_leveldown', 'reason', reason)
-    es.event('fire', 'gg_leveldown')
     
 # ==============================================================================
 #   RESET GUNGAME --- WARNING: POWERFUL COMMAND

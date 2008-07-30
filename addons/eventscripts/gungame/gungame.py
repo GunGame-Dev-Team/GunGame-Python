@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.418
+    Version: 1.0.419
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.418'
+__version__ = '1.0.419'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -523,13 +523,9 @@ def player_death(event_var):
     if (attacker == 0 or attacker == userid) and countBombDeathAsSuicide:
         if gungamelib.getVariableValue('gg_suicide_punish') == 0:
             return
-        
-        # Set vars
-        oldLevel = gungameVictim['level']
-        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_suicide_punish'), 1, gungamelib.getTotalLevels())
-        
+            
         # Trigger level down
-        gungamelib.triggerLevelDownEvent(userid, oldLevel, newLevel, userid, 'suicide')
+        gungameVictim.leveldown(gungamelib.getVariableValue('gg_suicide_punish'), userid, 'suicide')
         
         gungamelib.msg('gungame', attacker, 'Suicide_LevelDown', {'newlevel': newLevel})
         
@@ -547,13 +543,9 @@ def player_death(event_var):
     if (event_var['es_userteam'] == event_var['es_attackerteam']):
         if gungamelib.getVariableValue('gg_tk_punish') == 0:
             return
-        
-        # Set vars
-        oldLevel = gungameAttacker['level']
-        newLevel = gungamelib.clamp(oldLevel - gungamelib.getVariableValue('gg_tk_punish'), 1, gungamelib.getTotalLevels())
-        
+            
         # Trigger level down
-        gungamelib.triggerLevelDownEvent(attacker, oldLevel, newLevel, userid, 'tk')
+        gungameAttacker.leveldown(gungamelib.getVariableValue('gg_tk_punish'), userid, 'tk')
         
         gungamelib.msg('gungame', attacker, 'TeamKill_LevelDown', {'newlevel': newLevel})
         
@@ -590,12 +582,8 @@ def player_death(event_var):
     # No multikill? Just level up...
     multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
     if multiKill == 1:
-        # Set level variables
-        oldLevel = gungameAttacker['level']
-        newLevel = oldLevel + 1
-        
         # Level them up
-        gungamelib.triggerLevelUpEvent(attacker, oldLevel, newLevel, userid, 'kill')
+        gungameAttacker.levelup(1, userid, 'kill')
         
         # Play the levelup sound
         gungamelib.playSound(attacker, 'levelup')
@@ -608,12 +596,8 @@ def player_death(event_var):
         
         # Finished the multikill
         if gungameAttacker['multikill'] == multiKill:
-            # Set level variables
-            oldLevel = gungameAttacker['level']
-            newLevel = oldLevel + 1
-            
             # Level them up
-            gungamelib.triggerLevelUpEvent(attacker, oldLevel, newLevel, userid, 'kill')
+            gungameAttacker.levelup(1, userid, 'kill')
             
             # Reset multikill
             gungameAttacker['multikill'] = 0
@@ -640,11 +624,9 @@ def bomb_defused(event_var):
     if int(gungamePlayer['level']) == int(gungamelib.getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
         gungamelib.msg('gungame', userid, 'CannotSkipLevel_ByDefusing', {'level': playerWeapon})
         return
-    
+        
     # Level them up
-    oldLevel = gungamePlayer['level']
-    newLevel = oldLevel + 1
-    gungamelib.triggerLevelUpEvent(userid, oldLevel, newLevel, '0', 'bomb_defused')
+    gungamePlayer.levelup(1, '0', 'bomb_defused')
 
 def bomb_exploded(event_var):
     # Set vars
@@ -656,11 +638,9 @@ def bomb_exploded(event_var):
     if int(gungamePlayer['level']) == int(gungamelib.getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
         gungamelib.msg('gungame', userid, 'CannotSkipLevel_ByPlanting', {'level': playerWeapon})
         return
-    
+        
     # Level them up
-    oldLevel = gungamePlayer['level']
-    newLevel = oldLevel + 1
-    gungamelib.triggerLevelUpEvent(userid, oldLevel, newLevel, '0', 'bomb_exploded')
+    gungamePlayer.levelup(1, '0', 'bomb_exploded')
     
 def player_team(event_var):
     # Get userid

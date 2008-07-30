@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_rookie
-    Version: 1.0.347
+    Version: 1.0.419
     Description:    This is the same as gg_knife_pro, but a few small
                     differences. When one player knife kills another player,
                     the attacker will ALWAYS level up, unless on knife level or
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = "gg_knife_pro Addon for GunGame: Python"
-info.version  = '1.0.347'
+info.version  = '1.0.419'
 info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
 info.basename = "gungame/included_addons/gg_knife_pro"
 info.author   = "GunGame Development Team"
@@ -44,7 +44,6 @@ def load():
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_knife_rookie')
-
 
 def player_death(event_var):
     # ============
@@ -105,41 +104,37 @@ def player_death(event_var):
     # =============
     # LEVEL CHANGES
     # =============
-    # Get level info
-    gungameVictimNewLevel = gungameVictimLevel - 1
-    gungameAttackerNewLevel = gungameAttackerLevel + 1
+    # Is the attacker on knife or grenade level?
+    if gungameAttacker.getWeapon() in ('knife', 'hegrenade'):
+        gungamelib.msg('gg_knife_rookie', attacker, 'CannotSkipThisLevel')
+    else:
+        # Level up
+        gungameAttacker.levelup(1, userid, 'steal')
     
+        # ===========
+        # PLAY SOUND
+        # ===========
+        gungamelib.playSound(attacker, 'levelsteal')
+        
     # Level changes
-    if gungameVictimNewLevel > 0 and gungameVictim['preventlevel'] != 1:
-        gungamelib.triggerLevelDownEvent(userid, gungameVictimLevel, gungameVictimNewLevel, attacker, 'steal')
+    if gungameVictim.level - 1 > 0 and gungameVictim['preventlevel'] != 1:
+        # Level down
+        gungameVictim.leveldown(1, attacker, 'steal')
         
         # ===========
         # PLAY SOUND
         # ===========
         gungamelib.playSound(userid, 'leveldown')
         
+        # Announce the level stealing
+        gungamelib.saytext2('gg_knife_rookie', '#all', gungameAttacker.index, 'StoleLevel', {'attacker': event_var['es_attackername'], 'victim': event_var['es_username']})
+        
         # =====
         # EVENT
         # =====
         es.event('initialize', 'gg_knife_steal')
         es.event('setint', 'gg_knife_steal', 'attacker', attacker)
-        es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttackerNewLevel)
-        es.event('setint', 'gg_knife_steal', 'userid_level', gungameVictimNewLevel)
+        es.event('setint', 'gg_knife_steal', 'attacker_level', gungameAttacker.level)
+        es.event('setint', 'gg_knife_steal', 'userid_level', gungameVictim.level)
         es.event('setint', 'gg_knife_steal', 'userid', userid)
         es.event('fire', 'gg_knife_steal')
-    
-        # Announce the level stealing
-        index = playerlib.getPlayer(attacker).attributes['index']
-        gungamelib.saytext2('gg_knife_rookie', '#all', index, 'StoleLevel', {'attacker': event_var['es_attackername'], 'victim': event_var['es_username']})
-    
-    # Is the attacker on knife or grenade level?
-    if gungameAttacker.getWeapon() in ('knife', 'hegrenade'):
-        gungamelib.msg('gg_knife_rookie', attacker, 'CannotSkipThisLevel')
-        return
-    else:
-        gungamelib.triggerLevelUpEvent(attacker, gungameAttackerLevel, gungameAttackerNewLevel, userid, 'steal')
-    
-        # ===========
-        # PLAY SOUND
-        # ===========
-        gungamelib.playSound(attacker, 'levelsteal')

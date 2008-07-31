@@ -5,10 +5,22 @@ import es
 import gamethread
 
 # ==============================================================================
-#   GLOBAL DICTIONARIES AND CONSTANTS
+#   LIBRARY INFORMATION
+# ==============================================================================
+'''
+info = es.AddonInfo() 
+info.name     = "Repeat - EventScripts python library" 
+info.version  = "oy4" 
+info.url      = "http://www.eventscripts.com/pages/Repeat/" 
+info.basename = "repeat" 
+info.author   = "SumGuy14 (Aka SoccerDude) & XE_ManUp"
+'''
+# ==============================================================================
+#   GLOBAL DICTIONARIES AND STATUS CONSTANTS
 # ==============================================================================
 dict_repeatInfo = {}
 
+STATUS_NOEXIST = 0
 STATUS_STOPPED = 1
 STATUS_RUNNING = 2
 STATUS_STARTED = 3
@@ -86,7 +98,7 @@ class Repeat:
                 return None
         
 # ==============================================================================
-#   DIRECT REPEAT COMMANDS
+#   DIRECT REPEAT METHODS
 # ==============================================================================
 def create(repeatName, command, commandArgs=(), kw=None):
     '''
@@ -120,7 +132,7 @@ def start(repeatName, interval, limit):
     '''
     Starts the repeatable command and repeats for "limit" times
     every "interval" seconds. If "limit" is 0, the repeat will
-    continue to loop inifinately, or until stopped.
+    continue to loop indefinately, or until stopped.
     '''
     # Convert to string
     repeatName = str(repeatName)
@@ -224,7 +236,7 @@ def status(repeatName):
     if (repeatName in dict_repeatInfo):
         return dict_repeatInfo[repeatName]['status']
     else:
-        raise RepeatError('Cannot retrieve repeat status: \"%s\" does not exist.' %repeatName)
+        return STATUS_NOEXIST
 
 def find(repeatName):
     # Convert to string
@@ -244,7 +256,7 @@ def fire(repeatName):
     # Make sure the repeat exists
     if (repeatName in dict_repeatInfo):
         if dict_repeatInfo[repeatName]['count'] < dict_repeatInfo[repeatName]['limit'] or dict_repeatInfo[repeatName]['limit'] == 0: # make sure the amount of times fired is under its limit
-            #cache list information for readability and slight speed improvements
+            # Cache list information for readability and slight speed improvements
             interval = dict_repeatInfo[repeatName]['interval']
             command = dict_repeatInfo[repeatName]['command']
             dict_repeatInfo[repeatName]['count'] += 1
@@ -252,7 +264,6 @@ def fire(repeatName):
             dict_repeatInfo[repeatName]['timeleft'] = dict_repeatInfo[repeatName]['remaining'] * dict_repeatInfo[repeatName]['interval']
             
             if callable(command):
-                #gamethread.delayedname(interval, repeatName, command, *dict_repeatInfo[repeatName]['args'], **dict_repeatInfo[repeatName]['keyword'])
                 gamethread.delayedname(interval, repeatName, command, dict_repeatInfo[repeatName]['args'], dict_repeatInfo[repeatName]['keyword'])
             else:
                 gamethread.delayedname(interval, repeatName, es.server.queuecmd, command)

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.425
+    Version: 1.0.426
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.425'
+__version__ = '1.0.426'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -527,7 +527,7 @@ def player_death(event_var):
         # Trigger level down
         gungameVictim.leveldown(gungamelib.getVariableValue('gg_suicide_punish'), userid, 'suicide')
         
-        gungamelib.msg('gungame', attacker, 'Suicide_LevelDown', {'newlevel': newLevel})
+        gungamelib.msg('gungame', attacker, 'Suicide_LevelDown', {'newlevel':gungameVictim.level})
         
         # Play the leveldown sound
         gungamelib.playSound(userid, 'leveldown')
@@ -547,7 +547,7 @@ def player_death(event_var):
         # Trigger level down
         gungameAttacker.leveldown(gungamelib.getVariableValue('gg_tk_punish'), userid, 'tk')
         
-        gungamelib.msg('gungame', attacker, 'TeamKill_LevelDown', {'newlevel': newLevel})
+        gungamelib.msg('gungame', attacker, 'TeamKill_LevelDown', {'newlevel':gungameAttacker.level})
         
         # Play the leveldown sound
         gungamelib.playSound(attacker, 'leveldown')

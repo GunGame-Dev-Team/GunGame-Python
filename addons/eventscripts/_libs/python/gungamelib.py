@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.423
+    Version: 1.0.426
     Description:
 '''
 
@@ -378,9 +378,10 @@ class WeaponOrder(object):
         # Set variables
         if '.txt' in fileName:
             self.filePath = getGameDir('cfg/gungame/weapon_orders/%s' % fileName)
+            self.fileName = fileName.replace('.txt', '')
         else:
             self.filePath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
-        self.fileName = fileName
+            self.fileName = fileName
         
         # Check to see if it has been registered before
         if not self.__isRegistered(fileName):

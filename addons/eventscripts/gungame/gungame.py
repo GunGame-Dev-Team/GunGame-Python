@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.424
+    Version: 1.0.425
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.424'
+__version__ = '1.0.425'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -591,25 +591,24 @@ def player_death(event_var):
         return
     
     # Using multikill
-    if weapon != 'knife' and weapon != 'hegrenade':
-        gungameAttacker['multikill'] += 1
+    gungameAttacker['multikill'] += 1
         
-        # Finished the multikill
-        if gungameAttacker['multikill'] == multiKill:
-            # Level them up
-            gungameAttacker.levelup(1, userid, 'kill')
+    # Finished the multikill
+    if gungameAttacker['multikill'] == multiKill:
+        # Level them up
+        gungameAttacker.levelup(1, userid, 'kill')
             
-            # Play the levelup sound
-            gungamelib.playSound(attacker, 'levelup')
+        # Play the levelup sound
+        gungamelib.playSound(attacker, 'levelup')
         
-        # Increment their current multikill value
-        else:
-            # Message the attacker
-            multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
-            gungamelib.hudhint('gungame', attacker, 'MultikillNotification', {'kills': gungameAttacker['multikill'], 'total': multiKill})
+    # Increment their current multikill value
+    else:
+        # Message the attacker
+        multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
+        gungamelib.hudhint('gungame', attacker, 'MultikillNotification', {'kills': gungameAttacker['multikill'], 'total': multiKill})
             
-            # Play the multikill sound
-            gungamelib.playSound(attacker, 'multikill')
+        # Play the multikill sound
+        gungamelib.playSound(attacker, 'multikill')
 
 def bomb_defused(event_var):
     # Set vars

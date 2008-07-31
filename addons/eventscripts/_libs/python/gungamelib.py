@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.421
+    Version: 1.0.423
     Description:
 '''
 
@@ -1729,13 +1729,10 @@ def getPlayer(userid):
         # Create a new instance and copy over certain attributes
         dict_players[userid] = Player(userid)
         
-        # Loop through the attributes
-        for key, value in dict_players[player].attributes.iteritems():
-            if key in ['preventlevel', 'multilevel', 'multikill', 'index']:
-                continue
-            
+        # Set the "multikill" and "level" attributes to their old values
+        for attribute in ['multikill', 'level']:
             # Set the attribute
-            dict_players[userid][key] = value
+            dict_players[userid][attribute] = dict_players[player][attribute]
         
         # Delete the old player instance and return the new
         del dict_players[player]

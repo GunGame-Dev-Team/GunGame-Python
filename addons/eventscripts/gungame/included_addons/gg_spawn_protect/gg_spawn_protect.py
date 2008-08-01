@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_spawn_protection
-    Version: 1.0.417
+    Version: 1.0.427
     Description: This will make players invincible and marked with color when
                  ever a player spawns. Protected players cannot level up during
                  spawn protection.
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_spawn_protection (for GunGame:Python)'
-info.version  = '1.0.402'
+info.version  = '1.0.427'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_spawn_protect'
 info.author   = 'GunGame Development Team'
@@ -89,7 +89,7 @@ def weapon_fire(event_var):
         return
     
     # Finish countdown for player if they are protected
-    if repeat.status('CombatCounter%s' % event_var['userid']):
+    if repeat.status('gungameCombatCounter%s' % event_var['userid']):
         finishCountdown(int(event_var['userid']))
 
 def player_spawn(event_var):
@@ -112,8 +112,8 @@ def player_disconnect(event_var):
     userid = int(event_var['userid'])
     
     # Is the player invincible?
-    if repeat.status('CombatCounter%s' % userid):
-        repeat.delete('CombatCounter%s' % userid)
+    if repeat.status('gungameCombatCounter%s' % userid):
+        repeat.delete('gungameCombatCounter%s' % userid)
     
     # Remove from counters
     if userid in playerCounters:
@@ -124,8 +124,8 @@ def player_death(event_var):
     userid = int(event_var['userid'])
     
     # Is the player invincible?
-    if repeat.status('CombatCounter%s' % userid):
-        repeat.delete('CombatCounter%s' % userid)
+    if repeat.status('gungameCombatCounter%s' % userid):
+        repeat.delete('gungameCombatCounter%s' % userid)
 
 # ==============================================================================
 #  COUNTDOWN CODE
@@ -135,7 +135,7 @@ def combatCountdown(userid):
     try:
         player = playerlib.getPlayer(userid)
     except UseridError:
-        repeat.delete('CombatCounter%s' % userid)
+        repeat.delete('gungameCombatCounter%s' % userid)
         return
     
     # Keep them invincible
@@ -165,7 +165,7 @@ def finishCountdown(userid):
     gungamePlayer = gungamelib.getPlayer(userid)
 
     # Remove them from the counters
-    repeat.delete('CombatCounter%s' % userid)
+    repeat.delete('gungameCombatCounter%s' % userid)
     del playerCounters[userid]
 
     # Set color and health and preventLevel
@@ -202,5 +202,5 @@ def startCountdown(userid):
         gungamePlayer['preventlevel'] = 1
     
     # Start counter
-    repeat.create('CombatCounter%s' % userid, combatCountdown, (userid))
-    repeat.start('CombatCounter%s' % userid, 1, delay + 2)
+    repeat.create('gungameCombatCounter%s' % userid, combatCountdown, (userid))
+    repeat.start('gungameCombatCounter%s' % userid, 1, delay + 2)

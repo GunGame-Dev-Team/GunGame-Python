@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.390
+    Version: 1.0.427
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -25,7 +25,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.390'
+info.version  = '1.0.427'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -61,14 +61,14 @@ def load():
     
     # Create repeats for all players on the server
     for userid in es.getUseridList():
-        respawnPlayer = repeat.find('respawnPlayer%s' % userid)
+        respawnPlayer = repeat.find('gungameRespawnPlayer%s' % userid)
         
         if not respawnPlayer:
-            repeat.create('respawnPlayer%s' % userid, respawnCountDown, (userid))
+            repeat.create('gungameRespawnPlayer%s' % userid, respawnCountDown, (userid))
     
     # Respawn all dead players
     for userid in playerlib.getUseridList('#dead'):
-        repeat.start('respawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
+        repeat.start('gungameRespawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
 
     mp_freezetimeBackUp = int(es.ServerVar('mp_freezetime'))
     mp_roundtimeBackUp = int(es.ServerVar('mp_roundtime'))
@@ -90,10 +90,10 @@ def unload():
     
     # Delete all player respawns
     for userid in es.getUseridList():
-        respawnPlayer = repeat.find('respawnPlayer%s' % userid)
+        respawnPlayer = repeat.find('gungameRespawnPlayer%s' % userid)
         
         if respawnPlayer:
-            repeat.delete('respawnPlayer%s' % userid)
+            repeat.delete('gungameRespawnPlayer%s' % userid)
 
 def es_map_start(event_var):
     global spawnPoints
@@ -112,14 +112,14 @@ def player_team(event_var):
     userid = event_var['userid']
     
     # If the player does not have a respawn repeat, create one
-    respawnPlayer = repeat.find('respawnPlayer%s' % userid)
+    respawnPlayer = repeat.find('gungameRespawnPlayer%s' % userid)
     if not respawnPlayer:
-        repeat.create('respawnPlayer%s' % userid, respawnCountDown, (userid))
+        repeat.create('gungameRespawnPlayer%s' % userid, respawnCountDown, (userid))
     
     # Don't allow spectators or players that are unassigned to respawn
     if int(event_var['team']) < 2:
-        if repeat.status('respawnPlayer%s' % userid) != 1:
-            repeat.stop('respawnPlayer%s' % userid)
+        if repeat.status('gungameRespawnPlayer%s' % userid) != 1:
+            repeat.stop('gungameRespawnPlayer%s' % userid)
             
             if gungamelib.canShowHints():
                 gungamelib.hudhint('gg_deathmatch', userid, 'RespawnCountdown_CancelTeam')
@@ -127,7 +127,7 @@ def player_team(event_var):
         return
     
     # Respawn the player
-    repeat.start('respawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
+    repeat.start('gungameRespawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
 
 def player_spawn(event_var):
     global spawnPoints
@@ -166,15 +166,15 @@ def player_death(event_var):
     
     # Respawn the player if the round hasn't ended
     if gungamelib.getGlobal('respawn_allowed'):
-        repeat.start('respawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
+        repeat.start('gungameRespawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
 
 def player_disconnect(event_var):
     # Get userid
     userid = event_var['userid']
     
     # Delete the player-specific repeat
-    if repeat.find('respawnPlayer%s' % userid):
-        repeat.delete('respawnPlayer%s' % userid)
+    if repeat.find('gungameRespawnPlayer%s' % userid):
+        repeat.delete('gungameRespawnPlayer%s' % userid)
 
 def round_start(event_var):
     # Allow respawn
@@ -186,7 +186,7 @@ def round_end(event_var):
 
 def respawnCountDown(userid):
     # Make sure that the repeat exists
-    respawnRepeat = repeat.find('respawnPlayer%s' %userid)
+    respawnRepeat = repeat.find('gungameRespawnPlayer%s' %userid)
     if not respawnRepeat:
         return
     

@@ -131,9 +131,9 @@ def unload():
     gamethread.cancelDelayed('gungameWarmUpRound')
     
     # Check to see if repeat is still going
-    if repeat.find('WarmupTimer'):
-        if repeat.status('WarmupTimer'):
-            repeat.delete('WarmupTimer')
+    if repeat.find('gungameWarmupTimer'):
+        if repeat.status('gungameWarmupTimer'):
+            repeat.delete('gungameWarmupTimer')
     
     # Return "mp_freezetime" to what it was originally
     es.forcevalue('mp_freezetime', dict_addonVars['mp_freezetimeBackUp'])
@@ -186,8 +186,8 @@ def hegrenade_detonate(event_var):
 
 def startTimer():
     # Create a repeat
-    repeat.create('WarmupTimer', countDown)
-    repeat.start('WarmupTimer', 1, warmupTimeVariable + 3)
+    repeat.create('gungameWarmupTimer', countDown)
+    repeat.start('gungameWarmupTimer', 1, warmupTimeVariable + 3)
     
     # Create timeleft global
     gungamelib.setGlobal('warmupTimeLeft', dict_addonVars['warmupTime'])
@@ -225,7 +225,7 @@ def countDown():
         gungamelib.playSound('#all', 'countDownBeep')
         
         # Stop the timer
-        repeat.delete('WarmupTimer')
+        repeat.delete('gungameWarmupTimer')
         
         gungamelib.setGlobal('isWarmup', 0)
         

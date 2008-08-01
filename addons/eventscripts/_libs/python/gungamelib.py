@@ -1,8 +1,8 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.426
-    Description:
+    Version: 1.0.427
+    Description: GunGame Library
 '''
 
 # ==============================================================================
@@ -169,6 +169,9 @@ class Player(object):
                 currentLevel = 1
                
             object.__setattr__(self, item, value)
+            
+            # Set multikill to 0
+            self.multikill = 0
            
             # Levelling up...
             if value > currentLevel:
@@ -331,9 +334,6 @@ class Player(object):
         gungamePlayer should be the attacker (the player that is leveling up)
         '''
         if not self.preventlevel:
-            # Set multikill to 0
-            self.multikill = 0
-        
             es.event('initialize', 'gg_levelup')
             es.event('setint', 'gg_levelup', 'attacker', self.userid)
             es.event('setint', 'gg_levelup', 'leveler', self.userid)

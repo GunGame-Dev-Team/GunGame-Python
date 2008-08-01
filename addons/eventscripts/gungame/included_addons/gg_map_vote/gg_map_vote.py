@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 1.0.424
+    Version: 1.0.427
     Description: Adds map voting capabilities to GunGame.
 '''
 
@@ -31,7 +31,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_map_vote (for GunGame: Python)'
-info.version  = '1.0.424'
+info.version  = '1.0.427'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_map_vote'
 info.author   = 'GunGame Development Team'
@@ -110,8 +110,8 @@ def unload():
         popuplib.delete('voteMenu')
         
     # Delete repeat
-    if repeat.status('voteCounter'):
-        repeat.delete('voteCounter')
+    if repeat.status('gungameVoteCounter'):
+        repeat.delete('gungameVoteCounter')
 
 
 def es_map_start(event_var):
@@ -129,8 +129,8 @@ def es_map_start(event_var):
         popuplib.delete('voteMenu')
     
     # Delete repeat
-    if repeat.status('voteCounter'):
-        repeat.delete('voteCounter')
+    if repeat.status('gungameVoteCounter'):
+        repeat.delete('gungameVoteCounter')
     
     # Get vote ready
     initiateVote()
@@ -141,7 +141,7 @@ def gg_vote(event_var):
 
 def gg_win(event_var):
     if dict_addonVars['voteActive']:
-        repeat.delete('voteCounter')
+        repeat.delete('gungameVoteCounter')
         voteResults()
     
     winningMap = dict_playerChoice['winningMap']
@@ -229,8 +229,8 @@ def startVote():
     
     # Start the countdown
     dict_addonVars['voteTimer'] = int(dict_variables['voteTime'])
-    repeat.create('voteCounter', VoteCountdown)
-    repeat.start('voteCounter', 1, 0)
+    repeat.create('gungameVoteCounter', VoteCountdown)
+    repeat.start('gungameVoteCounter', 1, 0)
     
     # Bot vote code
     if int(es.ServerVar('gg_vote_bots_vote')):
@@ -266,7 +266,7 @@ def VoteCountdown():
         gungamelib.playSound('#all', 'countDownBeep')
         
         # Delete the repeat
-        repeat.delete('voteCounter')
+        repeat.delete('gungameVoteCounter')
         
         # Get results
         voteResults()
@@ -345,7 +345,7 @@ def cancelVote(userid):
     
     # Set variables
     dict_addonVars['voteActive'] = 0
-    repeat.delete('voteCounter')
+    repeat.delete('gungameVoteCounter')
     
     # Unsend popups
     popuplib.unsendname('voteMenu', es.getUseridList())

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.429
+    Version: 1.0.430
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.429'
+__version__ = '1.0.430'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -177,15 +177,8 @@ def initialize():
     
     gungamelib.echo('gungame', 0, 0, 'Load_Commands')
     
-    # Build menus
-    buildLevelMenu()
-    buildLeaderMenu()
-    
     # Register commands
-    gungame.registerPublicCommand('weapons', displayWeaponOrderMenu)
-    gungame.registerPublicCommand('level', displayLevelMenu)
-    gungame.registerPublicCommand('leader', displayLeadersMenu)
-    gungame.registerPublicCommand('leaders', displayLeadersMenu)
+    gungame.registerPublicCommand('weapons', gungamelib.sendWeaponOrderMenu)
     
     # Clear out the GunGame system
     gungamelib.resetGunGame()
@@ -225,6 +218,9 @@ def initialize():
     
     # Load gg_console -- the console interface
     es.load('gungame/included_addons/gg_console')
+    
+    #Load gg_menus - creates and sends ingame menus (!top, !leader, !score, !ranks, etc)
+    es.load('gungame/included_addons/gg_info_menus')
     
     # Fire gg_load event
     es.event('initialize', 'gg_load')
@@ -637,7 +633,7 @@ def bomb_exploded(event_var):
         
     # Level them up
     gungamePlayer.levelup(1, '0', 'bomb_exploded')
-    
+
 def player_team(event_var):
     # Get userid
     userid = int(event_var['userid'])
@@ -698,10 +694,6 @@ def gg_levelup(event_var):
     # Get leader level
     leaderLevel = gungamelib.leaders.getLeaderLevel()
     
-    # Make new leader menu
-    if leaderLevel == int(event_var['new_level']):
-        rebuildLeaderMenu()
-    
     # Show level info HUDHint
     if gungamelib.canShowHints():
         levelInfoHint(attacker)
@@ -729,15 +721,6 @@ def gg_leveldown(event_var):
     
     # Set the player's level
     gungamePlayer['level'] = int(event_var['new_level'])
-
-def gg_new_leader(event_var):
-    rebuildLeaderMenu()
-
-def gg_tied_leader(event_var):
-    rebuildLeaderMenu()
-
-def gg_leader_lostlevel(event_var):
-    rebuildLeaderMenu()
 
 def gg_vote(event_var):
     dict_variables['gungame_voting_started'] = True
@@ -1061,142 +1044,3 @@ def sendLevelInfoHint(userid, text):
 # ==============================================================================
 def displayWeaponOrderMenu(userid):
     gungamelib.sendWeaponOrderMenu(userid)
-
-def displayLevelMenu(userid, player=None):
-    if not player:
-        popuplib.send('gungameLevelMenu', userid)
-        return
-    
-    checkUserid = es.getuserid(player)
-    
-    if not checkUserid:
-        gungamelib.msg('gungame', userid, 'LevelInfo_PlayerSearchFailed', {'player': player})
-        return
-    
-    gungamePlayer = gungamelib.getPlayer(checkUserid)
-    gungamelib.saytext2('gungame', userid, gungamePlayer['index'], 'LevelInfo_PlayerSearch', {'player': es.getplayername(checkUserid), 'level': gungamePlayer['level'], 'weapon': gungamePlayer.getWeapon()}, False)
-
-def buildLevelMenu():
-    # Delete the popup if it exists
-    if popuplib.exists('gungameLevelMenu'):
-        popuplib.unsendname('gungameLevelMenu', playerlib.getUseridList('#human'))
-        popuplib.delete('gungameLevelMenu')
-    
-    # Let's create the "gungameLevelMenu" popup
-    gungameLevelMenu = popuplib.create('gungameLevelMenu')
-    if gungamelib.getVariableValue('gg_multikill_override') == 0:
-        gungameLevelMenu.addline('->1. LEVEL') # Line #1
-        gungameLevelMenu.addline('   * You are on level <level number>') # Line #2
-        gungameLevelMenu.addline('   * You need a <weapon name> kill to advance') # Line #3
-        gungameLevelMenu.addline('   * There currently is no leader') # Line #4
-    else:
-        gungameLevelMenu.addline('->1. LEVEL') # Line #1
-        gungameLevelMenu.addline('   * You are on level <level number> (<weapon name>)') # Line #2
-        gungameLevelMenu.addline('   * You have made #/# of your required kills') # Line #3
-        gungameLevelMenu.addline('   * There currently is no leader') # Line #4
-    if gungamelib.getVariableValue('gg_save_winners') > 0:
-        gungameLevelMenu.addline('->2. WINS') # Line #5
-        gungameLevelMenu.addline('   * You have won <player win count> time(s)') # Line #6
-        gungameLevelMenu.addline('->3. LEADER(s)') # Line #7
-        gungameLevelMenu.addline('   * Leader Level: There are no leaders') # Line #8
-        gungameLevelMenu.addline('->   9. View Leaders Menu') # Line #9
-    else:
-        gungameLevelMenu.addline('->2. LEADER(s)') # Line #5
-        gungameLevelMenu.addline('   * Leader Level: There are no leaders') # Line #6
-        gungameLevelMenu.addline('->   9. View Leaders Menu') # Line #7
-    gungameLevelMenu.submenu(9, 'gungameLeadersMenu')
-    gungameLevelMenu.prepuser = prepGunGameLevelMenu
-    gungameLevelMenu.timeout('send', 5)
-    gungameLevelMenu.timeout('view', 5)
-
-def prepGunGameLevelMenu(userid, popupid):
-    gungameLevelMenu = popuplib.find('gungameLevelMenu')
-    gungamePlayer = gungamelib.getPlayer(userid)
-    
-    if gungamelib.getVariableValue('gg_multikill_override') == 0:
-        gungameLevelMenu.modline(2, '   * You are on level %d' %gungamePlayer['level']) # Line #2
-        gungameLevelMenu.modline(3, '   * You need a %s kills to advance' %gungamePlayer.getWeapon()) # Line #3
-    else:
-        gungameLevelMenu.modline(2, '   * You are on level %d (%s)' %(gungamePlayer['level'], gungamePlayer.getWeapon())) # Line #2
-        gungameLevelMenu.modline(3, '   * You have made %d/%d of your required kills' %(gungamePlayer['multikill'], gungamelib.getVariableValue('gg_multikill_override'))) # Line #3
-    
-    leaderLevel = gungamelib.leaders.getLeaderLevel()
-    playerLevel = gungamePlayer['level']
-    
-    if leaderLevel > 1:
-        # See if the player is a leader:
-        if playerLevel == leaderLevel:
-            # See if there is more than 1 leader
-            if gungamelib.leaders.getLeaderCount() > 1:
-                # This player is tied with other leaders
-                gungameLevelMenu.modline(4, '   * You are currently tied for the leader position') # Line #4
-            else:
-                # This player is the only leader
-                gungameLevelMenu.modline(4, '   * You are currently the leader') # Line #4
-        # This player is not a leader
-        else:
-            levelsBehindLeader = leaderLevel - playerLevel
-            if levelsBehindLeader == 1:
-                gungameLevelMenu.modline(4, '   * You are 1 level behind the leader') # Line #4
-            else:
-                gungameLevelMenu.modline(4, '   * You are %d levels behind the leader' %levelsBehindLeader) # Line #4
-    else:
-        # There are no leaders
-        gungameLevelMenu.modline(4, '   * There currently is no leader') # Line #4
-    if gungamelib.getVariableValue('gg_save_winners') > 0:
-        gungameLevelMenu.modline(6, '   * You have won %d time(s)' %gungamelib.getWins(gungamePlayer['steamid'])) # Line #6
-        if leaderLevel > 1:
-            gungameLevelMenu.modline(8, '   * Leader Level: %d (%s)' %(leaderLevel, gungamelib.getLevelWeapon(leaderLevel))) # Line #8
-        else:
-            gungameLevelMenu.modline(8, '   * Leader Level: There are no leaders') # Line #8
-    else:
-        if leaderLevel > 1:
-            gungameLevelMenu.modline(6, '   * Leader Level: %d (%s)' %(leaderLevel, gungamelib.getLevelWeapon(leaderLevel))) # Line #6
-        else:
-            gungameLevelMenu.modline(6, '   * Leader Level: There are no leaders') # Line #6
-
-def displayLeadersMenu(userid):
-    popuplib.send('gungameLeadersMenu', userid)
-
-def buildLeaderMenu():
-    # Check if the popup exists
-    if popuplib.exists('gungameLeadersMenu'):
-        # Unsend and delete is
-        popuplib.unsendname('gungameLeadersMenu', playerlib.getUseridList('#human'))
-        popuplib.delete('gungameLeadersMenu')
-    
-    # Create the menu
-    gungameLeadersMenu = popuplib.create('gungameLeadersMenu')
-    gungameLeadersMenu.addline('->1. Current Leaders:')
-    gungameLeadersMenu.addline('--------------------------')
-    gungameLeadersMenu.addline('   * There currently is no leader')
-    gungameLeadersMenu.addline('--------------------------')
-    gungameLeadersMenu.addline('0. Exit')
-    gungameLeadersMenu.timeout('send', 5)
-    gungameLeadersMenu.timeout('view', 5)
-
-def rebuildLeaderMenu():
-    # Un-send and delete the menu
-    if popuplib.exists('gungameLeadersMenu'):
-        popuplib.unsendname('gungameLeadersMenu', playerlib.getUseridList('#human'))
-        popuplib.delete('gungameLeadersMenu')
-    
-    # Get leader info
-    leaderLevel = gungamelib.leaders.getLeaderLevel()
-    leaderNames = gungamelib.leaders.getLeaderNames()
-    
-    # Let's create the "gungameLeadersMenu" popup
-    gungameLeadersMenu = popuplib.create('gungameLeadersMenu')
-    gungameLeadersMenu.addline('->1. Current Leaders:')
-    gungameLeadersMenu.addline('    Level %d (%s)' % (leaderLevel, gungamelib.getLevelWeapon(leaderLevel)))
-    gungameLeadersMenu.addline('--------------------------')
-    
-    # Add leaders
-    for name in leaderNames:
-        gungameLeadersMenu.addline('   * %s' % name)
-    
-    # Finish off the menu
-    gungameLeadersMenu.addline('--------------------------')
-    gungameLeadersMenu.addline('0. Exit')
-    gungameLeadersMenu.timeout('send', 5)
-    gungameLeadersMenu.timeout('view', 5)

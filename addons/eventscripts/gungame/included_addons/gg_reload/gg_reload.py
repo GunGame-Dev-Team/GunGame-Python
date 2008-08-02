@@ -68,7 +68,7 @@ def player_death(event_var):
     # Set clip
     playerHandle = es.getplayerhandle(attacker)
     weaponInfo = ggweaponlib.getWeaponInfo(weapon)
-    for weaponIndex in es.createentitylist('weapon_' + weapon):
+    for weaponIndex in es.createentitylist('weapon_' + weapon).keys():
         if playerHandle == es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity'):
             es.setindexprop(weaponIndex, 'CBaseCombatWeapon.LocalWeaponData.m_iClip1', weaponInfo.ammo)
             break

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.427
+    Version: 1.0.430
     Description: GunGame Library
 '''
 
@@ -665,9 +665,9 @@ class WeaponOrder(object):
             raise ValueError('Cannot change weapon order type (%s): the value must be one of the following: #default, #random, #reversed.' % weaponOrder)
     
     def buildWeaponOrderMenu(self):
-        menu = OrderedMenu('weapon_order')
+        menu = OrderedMenu('weapon_order', [], 10, prepWeaponOrderMenu)
         menu.setTitle('GunGame: Weapon Order')
-        [menu.addItem('%s [%s]' % (x[0], x[1])) for x in dict_weaponOrders[self.fileName].values()]
+        [menu.addItem('[%s] %s' % (x[1], x[0])) for x in dict_weaponOrders[self.fileName].values()]
 
 # ==============================================================================
 #   CONFIG CLASS
@@ -1600,13 +1600,14 @@ class OrderedMenu(object):
      * EasyList does:   1-10, 1-10, 1-10 on each page.
      * OrderedMenu does: 1-10, 11-20, 21-30'''
     
-    def __init__(self, menu, items=[], options=10):
+    def __init__(self, menu, items=[], options=10, prepUser=None):
         '''Initialize the class.'''
         # Set variables
         self.title = 'Untitled List'
         self.menu = menu
         self.items = []
         self.options = options
+        self.prepUser = prepUser
         
         # Add items
         [self.addItem(x) for x in items]
@@ -1692,6 +1693,10 @@ class OrderedMenu(object):
             menu.displaymode = 'sticky'
             menu.select(10, lambda *args: True)
             
+            # Prepuser?
+            if self.prepUser:
+                menu.prepuser = self.prepUser
+            
             # Increment the page count
             pageCount += 1
     
@@ -1718,7 +1723,7 @@ def getPlayer(userid):
     
     # Check the client exists
     if not clientInServer(userid):
-        raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
+        raise UseridError('Cannot get player (%s): not on the server.' % userid)
     
     uniqueid = playerlib.uniqueid(str(userid), 1)
     
@@ -1855,7 +1860,20 @@ def getLevelWeapon(levelNumber):
     return getLevelInfo(levelNumber)[0]
 
 def sendWeaponOrderMenu(userid):
-    sendOrderedMenu('weapon_order', userid)
+    level = getPlayer(userid).level
+    page = int((level - 1) / 10) + 1
+    sendOrderedMenu('weapon_order', userid, page)
+
+def prepWeaponOrderMenu(userid, popupid):
+    level = getPlayer(userid).level
+    page = int((level - 1) / 10) + 1
+    if popupid != 'OrderedMenu_weapon_order:%s' % page:
+        return
+    
+    lineNumber = level - (page * 10) + 12 if page > 1 else level + 2
+    menu = popuplib.find(popupid)
+    menu.modline(lineNumber, '->%i. [%i] %s' % (level, getLevelMultiKill(level), getLevelWeapon(level)))
+    gamethread.delayed(0, menu.modline, (lineNumber, '%i. [%i] %s' % (level, getLevelMultiKill(level), getLevelWeapon(level))))
 
 # ==============================================================================
 #   LEVEL RELATED COMMANDS
@@ -2095,8 +2113,8 @@ def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
 def getOrderedMenuName(name):
     return 'OrderedMenu_%s:1' % name
 
-def sendOrderedMenu(name, users):
-    popuplib.send(getOrderedMenuName(name), users)
+def sendOrderedMenu(name, users, page=1):
+    popuplib.send('OrderedMenu_%s:%i' % (name, page), users)
 
 # ==============================================================================
 #   WINNER RELATED COMMANDS

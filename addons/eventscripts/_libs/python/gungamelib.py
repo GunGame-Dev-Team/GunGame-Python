@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.430
+    Version: 1.0.431
     Description: GunGame Library
 '''
 
@@ -354,11 +354,15 @@ class Player(object):
         gungamePlayer should be the victim (the player that is leveling down)
         '''
         if not self.preventlevel:
+            if int(self.level - int(levelsTaken)) < 1:
+                newLevel = 1
+            else:
+                newLevel = self.level - int(levelsTaken)
             es.event('initialize', 'gg_leveldown')
             es.event('setint', 'gg_leveldown', 'userid', self.userid)
             es.event('setint', 'gg_leveldown', 'leveler', self.userid)
             es.event('setint', 'gg_leveldown', 'old_level', self.level)
-            es.event('setint', 'gg_leveldown', 'new_level', self.level - int(levelsTaken))
+            es.event('setint', 'gg_leveldown', 'new_level', newLevel)
             es.event('setint', 'gg_leveldown', 'attacker', attacker)
             es.event('setstring', 'gg_leveldown', 'reason', reason)
             es.event('fire', 'gg_leveldown')

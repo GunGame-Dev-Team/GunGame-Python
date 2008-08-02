@@ -1,7 +1,7 @@
 // 
-//=========== (C) Copyright 2008 GunGame 4 All rights reserved. ===========
+//=========== (C) Copyright 2008 GunGame 5 All rights reserved. ===========
 //
-// Events triggered by GunGame mod version 1.0.313
+// Events triggered by GunGame mod version 1.0.431
 //
 // No spaces in event names, max length 32
 // All strings are case sensitive
@@ -66,24 +66,17 @@
     }
     "gg_win"
     {
-        "userid"    "short"     // userid of player
-        "steamid"   "string"    // steamid of player -- ALREADY PROVIDED, LEAVE OUT?
-        "team"      "byte"      // player team 2= Terrorists, 3= CT -- ALREADY PROVIDED, LEAVE OUT?
-        "name"      "string"    // player name -- ALREADY PROVIDED, LEAVE OUT?
-        "loser"     "short"     // userid of player that gave up the win
-    }        
-    "gg_round_win"
-    {
-        "userid"    "short"     // userid of player
-        "steamid"   "string"    // steamid of player -- ALREADY PROVIDED, LEAVE OUT?
-        "team"	    "byte"      // player team 2= Terrorists, 3= CT -- ALREADY PROVIDED, LEAVE OUT?
-        "name"      "string"    // player name -- ALREADY PROVIDED, LEAVE OUT?
-        "loser"     "short"     // userid of player that gave up the win
+        
+        "attacker"  "short"     // The userid of the player that won
+        "winner"    "short"     // The userid of the player that won
+        "userid"    "short"     // The userid of the victim that "gave up" the win
+        "loser"     "short"     // The userid of the victim that "gave up" the win
+        "round"     "bool"      // 1 if the winner of the round, 0 if the winner of the map
     }
     "gg_map_end"
     {
         // Fires at the end of a map when there is no winner
-    }    
+    }
     "gg_variable_changed"
     {
         "cvarname"  "string"    // The name of the cvar that was changed

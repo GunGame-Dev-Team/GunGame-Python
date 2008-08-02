@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.430
+    Version: 1.0.431
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.430'
+__version__ = '1.0.431'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -653,22 +653,22 @@ def gg_levelup(event_var):
     if int(event_var['old_level']) == gungamelib.getTotalLevels() and int(event_var['new_level']) > gungamelib.getTotalLevels():
         # Multi-round game
         if dict_variables['roundsRemaining'] > 1:
-            es.event('initialize', 'gg_round_win')
-            es.event('setint', 'gg_round_win', 'userid', event_var['attacker'])
-            es.event('setint', 'gg_round_win', 'loser', event_var['userid'])
-            es.event('setstring', 'gg_round_win', 'steamid', event_var['es_attackersteamid'])
-            es.event('setint', 'gg_round_win', 'team', event_var['es_attackerteam'])
-            es.event('setstring', 'gg_round_win', 'name', event_var['es_attackername'])
-            es.event('fire', 'gg_round_win')
+            es.event('initialize', 'gg_win')
+            es.event('setint', 'gg_win', 'attacker', event_var['attacker'])
+            es.event('setint', 'gg_win', 'winner', event_var['attacker'])
+            es.event('setint', 'gg_win', 'userid', event_var['userid'])
+            es.event('setint', 'gg_win', 'loser', event_var['userid'])
+            es.event('setint', 'gg_win', 'round', '1')
+            es.event('fire', 'gg_win')
         
         # Normal win
         else:
             es.event('initialize', 'gg_win')
-            es.event('setint', 'gg_win', 'userid', event_var['attacker'])
+            es.event('setint', 'gg_win', 'attacker', event_var['attacker'])
+            es.event('setint', 'gg_win', 'winner', event_var['attacker'])
+            es.event('setint', 'gg_win', 'userid', event_var['userid'])
             es.event('setint', 'gg_win', 'loser', event_var['userid'])
-            es.event('setstring', 'gg_win', 'steamid', event_var['es_attackersteamid'])
-            es.event('setint', 'gg_win', 'team', event_var['es_attackerteam'])
-            es.event('setstring', 'gg_win', 'name', event_var['es_attackername'])
+            es.event('setint', 'gg_win', 'round', '0')
             es.event('fire', 'gg_win')
         
         return
@@ -729,6 +729,7 @@ def gg_vote(event_var):
         es.server.queuecmd(gungamelib.getVariableValue('gg_map_vote_command'))
 
 def gg_round_win(event_var):
+    '''
     global countBombDeathAsSuicide
     
     userid = int(event_var['userid'])
@@ -738,37 +739,27 @@ def gg_round_win(event_var):
 
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
+    '''
     
-    # Calculate rounds remaining
-    dict_variables['roundsRemaining'] -= 1
-    
-    # End the GunGame Round
-    es.server.cmd('mp_restartgame 2')
-    
-    # Check to see if the warmup round needs to be activated
-    if gungamelib.getVariableValue('gg_round_intermission') > 0:
-        gungamelib.setGlobal('isIntermission', 1)
-        es.load('gungame/included_addons/gg_warmup_round')
-    
+    '''
     # Reset all the players
     for userid in es.getUseridList():
         gungamelib.getPlayer(userid).resetPlayer()
+    '''
     
-    # Tell the world
-    gungamelib.msg('gungame', '#all', 'PlayerWonRound', {'player': playerName})
+    '''
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
     
-    # Play the winner sound
-    gungamelib.playSound('#all', 'roundwinner')
+    
     
     # Remove all old players
     gungamelib.clearOldPlayers()
-
+    '''
 def gg_win(event_var):
     global countBombDeathAsSuicide
     
     # Get player info
-    userid = int(event_var['userid'])
+    userid = int(event_var['winner'])
     index = playerlib.getPlayer(userid).get('index')
     playerName = es.getplayername(userid)
     
@@ -778,10 +769,45 @@ def gg_win(event_var):
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
-    # End game
-    es.server.cmd('es_xgive %d game_end' % userid)
-    es.server.cmd('es_xfire %d game_end EndGame' % userid)
     
+    if event_var['round'] == '0':
+        # ====================================================
+        # MAP WIN
+        # ====================================================
+        # End game
+        es.server.cmd('es_xgive %d game_end' % userid)
+        es.server.cmd('es_xfire %d game_end EndGame' % userid)
+        
+        # Tell the world
+        gungamelib.msg('gungame', '#all', 'PlayerWon', {'player': playerName})
+        
+        # Play the winner sound
+        gungamelib.playSound('#all', 'winner')
+        
+    else:
+        # ====================================================
+        # ROUND WIN
+        # ====================================================
+        # Calculate rounds remaining
+        dict_variables['roundsRemaining'] -= 1
+    
+        # End the GunGame Round
+        es.server.cmd('mp_restartgame 2')
+    
+        # Check to see if the warmup round needs to be activated
+        if gungamelib.getVariableValue('gg_round_intermission') > 0:
+            gungamelib.setGlobal('isIntermission', 1)
+            es.load('gungame/included_addons/gg_warmup_round')
+            
+        # Tell the world
+        gungamelib.msg('gungame', '#all', 'PlayerWonRound', {'player': playerName})
+        
+        # Play the winner sound
+        gungamelib.playSound('#all', 'roundwinner')
+    
+    # ====================================================
+    # ALL WINS
+    # ====================================================
     # Enable alltalk
     es.server.cmd('sv_alltalk 1')
     
@@ -789,12 +815,8 @@ def gg_win(event_var):
     for userid in es.getUseridList():
         gungamelib.getPlayer(userid).resetPlayer()
     
-    # Tell the world
-    gungamelib.msg('gungame', '#all', 'PlayerWon', {'player': playerName})
+    # Tell the world (center message)
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
-    
-    # Play the winner sound
-    gungamelib.playSound('#all', 'winner')
     
     # Remove all old players from the dict_players
     gungamelib.clearOldPlayers()

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_info_menus
-    Version: 1.0.433
+    Version: 1.0.434
     Description: GG Stats controls all stat related commands (level, score, top,
                  rank, etc).
 '''
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_info_menus Addon for GunGame: Python'
-info.version  = '1.0.433'
+info.version  = '1.0.434'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_info_menus'
 info.author   = 'GunGame Development Team'
@@ -296,6 +296,8 @@ def buildTopMenu():
         
         # Add menu item
         menu.addItem('%s: %s win%s' % (name, wins, plural))
+    
+    menu.buildMenu()
 
 def prepTopMenu(userid, popupid):
     steamid = gungamelib.getPlayer(userid).steamid
@@ -351,6 +353,8 @@ def buildScoreMenu():
         for playerid in gungamelib.getLevelUseridList(levelCounter):
             menu.addItem('[%i] %s' % (levelCounter, es.getplayername(playerid)))
             levelRankUseridList.append(playerid)
+    
+    menu.buildMenu()
 
 def prepScoreMenu(userid, popupid):
     rank = levelRankUseridList.index(userid) + 1

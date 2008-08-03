@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.433
+    Version: 1.0.434
     Description: GunGame Library
 '''
 
@@ -670,6 +670,7 @@ class WeaponOrder(object):
         menu = OrderedMenu('weapon_order', [], 10, prepWeaponOrderMenu)
         menu.setTitle('GunGame: Weapon Order')
         [menu.addItem('[%s] %s' % (x[1], x[0])) for x in dict_weaponOrders[self.fileName].values()]
+        menu.buildMenu()
 
 # ==============================================================================
 #   CONFIG CLASS
@@ -1607,21 +1608,17 @@ class OrderedMenu(object):
         # Set variables
         self.title = 'Untitled List'
         self.menu = menu
-        self.items = []
+        self.items = items
         self.options = options
         self.prepUser = prepUser
-        
-        # Add items
-        [self.addItem(x) for x in items]
     
     def setTitle(self, title):
         self.title = title
     
     def addItem(self, item):
         self.items.append(item)
-        self.rebuildMenu()
     
-    def rebuildMenu(self):
+    def buildMenu(self):
         # Set variables
         totalPageCount = math.ceil(float(len(self.items) / float(self.options)))
         pageCount = 1

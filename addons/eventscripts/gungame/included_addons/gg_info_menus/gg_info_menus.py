@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_info_menus
-    Version: 1.0.431
+    Version: 1.0.433
     Description: GG Stats controls all stat related commands (level, score, top,
                  rank, etc).
 '''
@@ -13,6 +13,7 @@
 import es
 import popuplib
 import playerlib
+import gamethread
 
 # GunGame imports
 import gungamelib
@@ -23,12 +24,13 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_info_menus Addon for GunGame: Python'
-info.version  = '1.0.431'
+info.version  = '1.0.433'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_info_menus'
 info.author   = 'GunGame Development Team'
 
 orderedWinners = []
+levelRankUseridList = []
 
 def load():
     # Register addon
@@ -54,6 +56,7 @@ def load():
     buildLevelMenu()
     buildLeaderMenu()
     buildTopMenu()
+    buildScoreMenu()
     
     # Register commands
     gg_info_menus.registerPublicCommand('level', displayLevelMenu)
@@ -63,6 +66,7 @@ def load():
     gg_info_menus.registerPublicCommand('top10', displayTopMenu)
     gg_info_menus.registerPublicCommand('winners', displayTopMenu)
     gg_info_menus.registerPublicCommand('rank', displayRankMenu)
+    gg_info_menus.registerPublicCommand('score', displayScoreMenu)
 
 def unload():
     # Unregister this addon with GunGame
@@ -108,7 +112,21 @@ def gg_levelup(event_var):
     # Make new leader menu
     if leaderLevel == int(event_var['new_level']):
         rebuildLeaderMenu()
+    '''
+    # Rebuild the score menu
+    buildScoreMenu()
+    
+    menu = popuplib.find('OrderedMenu_score_menu:1')
+    if not menu:
+        return
+    
+    for userid in es.getUseridList():
+        menu.update(userid)
 
+def gg_leveldown(event_var):
+    # Rebuild the score menu
+    buildScoreMenu()
+'''
 def gg_new_leader(event_var):
     rebuildLeaderMenu()
 
@@ -152,7 +170,7 @@ def buildLevelMenu():
         gungameLevelMenu.addline('   * You are on level <level number> (<weapon name>)') # Line #2
         gungameLevelMenu.addline('   * You have made #/# of your required kills') # Line #3
         gungameLevelMenu.addline('   * There currently is no leader') # Line #4
-    if gungamelib.getVariableValue('gg_stats') > 0:
+    if gungamelib.getVariableValue('gg_stats'):
         gungameLevelMenu.addline('->2. WINS') # Line #5
         gungameLevelMenu.addline('   * You have won <player win count> time(s)') # Line #6
         gungameLevelMenu.addline('->3. LEADER(s)') # Line #7
@@ -201,7 +219,7 @@ def prepGunGameLevelMenu(userid, popupid):
     else:
         # There are no leaders
         gungameLevelMenu.modline(4, '   * There currently is no leader') # Line #4
-    if gungamelib.getVariableValue('gg_stats') > 0:
+    if gungamelib.getVariableValue('gg_stats'):
         gungameLevelMenu.modline(6, '   * You have won %d time(s)' %gungamelib.getWins(gungamePlayer['steamid'])) # Line #6
         if leaderLevel > 1:
             gungameLevelMenu.modline(8, '   * Leader Level: %d (%s)' %(leaderLevel, gungamelib.getLevelWeapon(leaderLevel))) # Line #8
@@ -260,7 +278,8 @@ def rebuildLeaderMenu():
     gungameLeadersMenu.timeout('view', 5)
 
 def displayTopMenu(userid):
-    gungamelib.sendOrderedMenu('top_menu', userid)
+    if gungamelib.getVariableValue('gg_stats'):
+        gungamelib.sendOrderedMenu('top_menu', userid)
 
 def buildTopMenu():
     global orderedWinners
@@ -295,10 +314,12 @@ def prepTopMenu(userid, popupid):
     
     menu = popuplib.find(popupid)
     menu.modline(lineNumber, '->%i. %s: %s win%s' % (rank, name, wins, plural))
-    es.delayed(0, menu.modline, (lineNumber, '%i. %s: %s win%s' % (rank, name, wins, plural)))
-
+    gamethread.delayed(0, menu.modline, (lineNumber, '%i. %s: %s win%s' % (rank, name, wins, plural)))
 
 def displayRankMenu(userid):
+    if not gungamelib.getVariableValue('gg_stats'):
+        return
+    
     steamid = gungamelib.getPlayer(userid).steamid
     if steamid in orderedWinners:
         rank = orderedWinners.index(steamid) + 1
@@ -306,6 +327,44 @@ def displayRankMenu(userid):
         gungamelib.sendOrderedMenu('top_menu', userid, page)
     else:
         gungamelib.sendOrderedMenu('top_menu', userid)
+
+def displayScoreMenu(userid):
+    buildScoreMenu()
+    
+    if userid in levelRankUseridList:
+        rank = levelRankUseridList.index(userid) + 1
+        page = int((rank - 1) / 10) + 1
+        gungamelib.sendOrderedMenu('score_menu', userid, page)
+    else:
+        gungamelib.sendOrderedMenu('score_menu', userid)
+    
+def buildScoreMenu():
+    global levelRankUseridList
+    levelRankUseridList = []
+
+    menu = gungamelib.OrderedMenu('score_menu', [], 10, prepScoreMenu)
+    menu.setTitle('GunGame: Player Score')
+    
+    levelCounter = gungamelib.getTotalLevels() + 1
+    while levelCounter > 0:
+        levelCounter -= 1
+        for playerid in gungamelib.getLevelUseridList(levelCounter):
+            menu.addItem('[%i] %s' % (levelCounter, es.getplayername(playerid)))
+            levelRankUseridList.append(playerid)
+
+def prepScoreMenu(userid, popupid):
+    rank = levelRankUseridList.index(userid) + 1
+    page = int((rank - 1) / 10) + 1
+    if popupid != 'OrderedMenu_score_menu:%s' % page:
+        return
+    
+    lineNumber = rank - (page * 10) + 12 if page > 1 else rank + 2
+    level = gungamelib.getPlayer(userid).level
+    name = es.getplayername(userid)
+    
+    menu = popuplib.find(popupid)
+    menu.modline(lineNumber, '->%i. [%i] %s' % (rank, level, name))
+    gamethread.delayed(0, menu.modline, (lineNumber, '%i. [%i] %s' % (rank, level, name)))
 
 def addWin(userid):
     # Get steamid

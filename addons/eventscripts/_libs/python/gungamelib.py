@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.432
+    Version: 1.0.433
     Description: GunGame Library
 '''
 
@@ -1703,7 +1703,7 @@ class OrderedMenu(object):
             pageCount += 1
     
     def send(self, users):
-        popuplib.send(getOrderedMenuName(self.menu), users)
+        popuplib.send('OrderedMenu_%s:1' % (self.menu), users)
 
 # ==============================================================================
 #   LOGGER CLASS
@@ -1942,8 +1942,10 @@ def getLevelUseridList(levelNumber):
     levelUserids = []
     
     for userid in dict_players:
+        if not clientInServer(userid):
+            continue
+            
         level = dict_players[userid]['level']
-        
         if level == levelNumber:
             levelUserids.append(userid)
     
@@ -2174,8 +2176,6 @@ def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
 # ==============================================================================
 #   MENU COMMANDS
 # ==============================================================================
-def getOrderedMenuName(name):
-    return 'OrderedMenu_%s:1' % name
 
 def sendOrderedMenu(name, users, page=1):
     popuplib.send('OrderedMenu_%s:%i' % (name, page), users)

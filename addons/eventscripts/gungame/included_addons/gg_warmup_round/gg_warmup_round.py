@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 1.0.421
+    Version: 1.0.432
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round Addon for GunGame: Python'
-info.version  = '1.0.421'
+info.version  = '1.0.432'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -41,13 +41,6 @@ class WarmUpWeaponError(Exception):
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
-list_allWeapons = ['knife', 'glock', 'usp', 'p228', 'deagle',
-                   'elite', 'fiveseven', 'awp', 'scout', 'aug',
-                   'mac10', 'tmp', 'mp5navy', 'ump45', 'p90',
-                   'galil', 'famas', 'ak47', 'sg552', 'sg550',
-                   'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1',
-                   'hegrenade', 'flashbang', 'smokegrenade']
-
 if gungamelib.getGlobal('isIntermission'):
     warmupTimeVariable = gungamelib.getVariable('gg_round_intermission')
 else:
@@ -99,7 +92,7 @@ def load():
     # Make sure there is supposed to be a warmup weapon
     if str(warmupWeapon) != '0':
         # Make sure the warmup weapon is a valid weapon choice
-        if warmupWeapon not in list_allWeapons:
+        if warmupWeapon not in gungamelib.getWeaponList('all'):
             # Nope, the admin typoed it. Let's set it to 0 so that we don't have to worry about this later
             gungamelib.setVariableValue('gg_warmup_weapon', 0)
             

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_elite
-    Version: 1.0.402
+    Version: 1.0.432
     Description: After a player levels up, they only get a knife until the next
                  round.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_knife_elite (for GunGame: Python)'
-info.version  = '1.0.402'
+info.version  = '1.0.432'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_knife_elite'
 info.author   = 'GunGame Development Team'
@@ -30,13 +30,6 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
-list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite',
-                   'fiveseven', 'awp', 'scout', 'aug', 'mac10',
-                   'tmp', 'mp5navy', 'ump45', 'p90', 'galil',
-                   'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
-                   'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade',
-                   'flashbang', 'smokegrenade']
-
 dict_elite = {}
 
 # ==============================================================================
@@ -76,7 +69,7 @@ def item_pickup(event_var):
         return
     
     # Not a valid item?
-    if item not in list_allWeapons:
+    if item not in gungamelib.getWeaponList('all'):
         return
     
     # Remove item

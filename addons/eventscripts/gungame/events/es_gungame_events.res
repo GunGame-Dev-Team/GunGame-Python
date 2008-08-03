@@ -1,7 +1,7 @@
 // 
 //=========== (C) Copyright 2008 GunGame 5 All rights reserved. ===========
 //
-// Events triggered by GunGame mod version 1.0.431
+// Events triggered by GunGame mod version 1.0.432
 //
 // No spaces in event names, max length 32
 // All strings are case sensitive
@@ -66,7 +66,6 @@
     }
     "gg_win"
     {
-        
         "attacker"  "short"     // The userid of the player that won
         "winner"    "short"     // The userid of the player that won
         "userid"    "short"     // The userid of the victim that "gave up" the win

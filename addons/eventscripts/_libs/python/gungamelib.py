@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.431
+    Version: 1.0.432
     Description: GunGame Library
 '''
 
@@ -47,22 +47,20 @@ dict_addons = {}
 dict_dependencies = {}
 dict_winners = {}
 
-list_validWeapons = ['glock','usp','p228','deagle','fiveseven', 'elite','m3',
-                     'xm1014','tmp','mac10','mp5navy', 'ump45','p90','galil',
-                     'famas','ak47','scout', 'm4a1','sg550','g3sg1','awp',
-                     'sg552','aug', 'm249','hegrenade','knife']
-
-list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
-                       'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
-                       'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
-                       
-list_secondaryWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven']
-
-list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
-                   'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45',
-                   'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
-                   'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
-                   'smokegrenade']
+dict_weaponLists = {'primary':['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
+                               'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
+                               'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1'],
+                    'secondary':['glock', 'usp', 'p228', 'deagle', 'elite',
+                                 'fiveseven'],
+                    'all':['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
+                           'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45',
+                           'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
+                           'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
+                           'smokegrenade'],
+                    'valid':['glock','usp','p228','deagle','fiveseven', 'elite','m3',
+                             'xm1014','tmp','mac10','mp5navy', 'ump45','p90','galil',
+                             'famas','ak47','scout', 'm4a1','sg550','g3sg1','awp',
+                             'sg552','aug', 'm249','hegrenade','knife']}
 
 list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
@@ -433,7 +431,7 @@ class WeaponOrder(object):
             
             # Check the weapon name
             weaponName = str(list_splitLine[0])
-            if weaponName not in list_validWeapons:
+            if weaponName not in getWeaponList('valid'):
                 echo('gungame', 0, 0, 'WeaponOrder:InvalidWeapon', {'weapon': weaponName})
                 continue
             
@@ -1849,19 +1847,42 @@ def clearOldPlayers():
 #   WEAPON RELATED COMMANDS
 # ==============================================================================
 def getCurrentWeaponOrderFile():
+    '''
+    Retrieves the current weapon order file.
+    '''
     return dict_weaponOrderSettings['currentWeaponOrderFile']
 
 def getWeaponOrderList():
+    '''
+    Retrieves and returns the weapon order in order as a list.
+    '''
     currentWeaponOrder = dict_weaponOrderSettings['currentWeaponOrderFile']
     return [dict_weaponOrders[currentWeaponOrder][level][0] for level in dict_weaponOrders[currentWeaponOrder]]
 
 def getLevelWeapon(levelNumber):
+    '''
+    Retrieves and returns the weapon for the specified level.
+    '''
     levelNumber = int(levelNumber)
     
     if not levelExists(levelNumber):
         raise ValueError('Unable to retrieve weapon information: level \'%d\' does not exist' % levelNumber)
     
     return getLevelInfo(levelNumber)[0]
+    
+def getWeaponList(flag):
+    '''
+    Retrieves a list of weapons based on the following flags:
+        * primary   (all primary weapons)
+        * secondary (all secondary weapons)
+        * all       (all weapons, minus knife)
+        * valid     (all weapons, including knife)
+    Note: weapon_c4 is not included in any of the above lists.
+    '''
+    if flag in dict_weaponLists.keys():
+        return dict_weaponLists[flag]
+    else:
+        raise ArgumentError('Invalid flag (%s) for getWeaponList: \'primary\', \'secondary\', \'all\', \'valid\'' %flag)
 
 def sendWeaponOrderMenu(userid):
     level = getPlayer(userid).level
@@ -1883,15 +1904,24 @@ def prepWeaponOrderMenu(userid, popupid):
 #   LEVEL RELATED COMMANDS
 # ==============================================================================
 def getTotalLevels():
+    '''
+    Returns the total number of levels in the weapon order.
+    '''
     return len(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']])
 
 def setPreventLevelAll(state):
+    '''
+    Sets the "preventlevel" attribute for all players to the specified value.
+    '''
     state = clamp(state, 0, 1)
     
     for userid in dict_players:
         dict_players[userid]['preventlevel'] = state
 
 def getAverageLevel():
+    '''
+    Returns the average level of all of the players active on the server.
+    '''
     averageLevel = 0
     averageDivider = 0
     
@@ -1905,6 +1935,9 @@ def getAverageLevel():
         return 0
 
 def getLevelUseridList(levelNumber):
+    '''
+    Returns a list of userids that are on the specified level.
+    '''
     levelNumber = int(levelNumber)
     levelUserids = []
     
@@ -1917,9 +1950,19 @@ def getLevelUseridList(levelNumber):
     return levelUserids
 
 def levelExists(levelNumber):
+    '''
+    Returns True if the specified level exists, False if not.
+    
+    Do we REALLY need this?
+    '''
     return levelNumber in dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']]
 
 def getLevelInfo(levelNumber):
+    '''
+    Returns the weapon and multikill value.
+    
+    Do we REALLY need this?
+    '''
     # Does the level exist?
     if not levelExists(levelNumber):
         raise ValueError('Cannot get level info (%s): level does not exist!' % levelNumber)
@@ -1927,6 +1970,9 @@ def getLevelInfo(levelNumber):
     return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber]
 
 def getLevelMultiKill(levelNumber):
+    '''
+    Returns the multikill value for the specified level.
+    '''
     if levelExists(levelNumber):
         return getLevelInfo(levelNumber)[1]
 
@@ -1945,6 +1991,11 @@ def getVariable(variableName):
     return dict_variables[variableName]
 
 def getVariableValue(variableName):
+    '''
+    Returns the specified variable's value:
+        * Returns the value as stored by GunGame, not the console.
+        * Returns as an int() or str().
+    '''
     variableName = variableName.lower()
     
     if variableName not in dict_variables:
@@ -1961,6 +2012,12 @@ def getVariableValue(variableName):
         return str(variable)
 
 def setVariableValue(variableName, value):
+    '''
+    Sets the specified variable to the specified value.
+        * Updates the value internally in GunGame.
+        * Fires the server_cvar event.
+        * Automatically sets as an int() or str().
+    '''
     variableName = variableName.lower()
     
     if variableName not in dict_variables:
@@ -1973,6 +2030,9 @@ def setVariableValue(variableName, value):
     es.server.cmd('%s %s' % (variableName, value))
 
 def getVariableList():
+    '''
+    Returns a list of variables that GunGame tracks.
+    '''
     return dict_variables.keys()
     
 # ==============================================================================

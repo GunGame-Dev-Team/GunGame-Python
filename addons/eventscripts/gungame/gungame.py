@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.431
+    Version: 1.0.432
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.431'
+__version__ = '1.0.432'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -47,15 +47,6 @@ reload(gungamelib)
 #   GLOBALS
 # ==============================================================================
 dict_variables = {}
-list_primaryWeapons = ['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
-                       'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
-                       'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1']
-list_secondaryWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven']
-list_allWeapons = ['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
-                   'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45',
-                   'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
-                   'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
-                   'smokegrenade']
 list_includedAddonsDir = []
 list_customAddonsDir = []
 list_stripExceptions = []
@@ -334,7 +325,6 @@ def es_map_start(event_var):
 
 def round_start(event_var):
     global list_stripExceptions
-    global list_allWeapons
     global countBombDeathAsSuicide
     
     # Set a global for round_active
@@ -348,7 +338,7 @@ def round_start(event_var):
     es.server.cmd('es_xfire %d func_buyzone Disable' % userid)
     
     # Remove weapons
-    for weapon in list_allWeapons:
+    for weapon in gungamelib.getWeaponList('all'):
         # Make sure that the admin doesn't want the weapon left on the map
         if weapon not in list_stripExceptions:
             # Remove the weapon from the map

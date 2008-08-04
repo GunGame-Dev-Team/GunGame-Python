@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.435
+    Version: 1.0.436
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.435'
+__version__ = '1.0.436'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -122,10 +122,6 @@ def initialize():
         return
     '''
     
-    # Update
-    #gungamelib.echo('gungame', 0, 0, 'Load_Update')
-    #gungamelib.update()
-    
     # Get strip exceptions
     if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:
         list_stripExceptions = gungamelib.getVariableValue('gg_map_strip_exceptions').split(',')
@@ -150,12 +146,8 @@ def initialize():
         if file != gungamelib.getVariableValue('gg_weapon_order_file'):
             continue
         
-        # Set this as the weapon order
-        weaponOrder.setWeaponOrderFile()
-        
-        # Set order type
-        if gungamelib.getVariableValue('gg_weapon_order') != '#default':
-            weaponOrder.changeWeaponOrderType(gungamelib.getVariableValue('gg_weapon_order'))
+        # Set this as the weapon order and set the weapon order type
+        weaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order'))
         
         # Set multikill override
         if gungamelib.getVariableValue('gg_multikill_override') > 1:
@@ -299,8 +291,7 @@ def es_map_start(event_var):
     
     if gungamelib.getVariableValue('gg_weapon_order') == '#random':
         # Re-randomize the weapon order
-        myWeaponOrder = gungamelib.getWeaponOrder(gungamelib.getCurrentWeaponOrderFile())
-        myWeaponOrder.changeWeaponOrderType('#random')
+        myWeaponOrder = gungamelib.getWeaponOrder(gungamelib.getVariableValue('gg_weapon_order_file')).setWeaponOrderFile('#random')
     
     # Update
     #es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
@@ -840,7 +831,7 @@ def server_cvar(event_var):
     
     # GG_NADE_BONUS
     elif cvarName == 'gg_nade_bonus':
-        if newValue != 0 and newValue != 'knife' and newValue in gungamelib.getWeaponList(all):
+        if newValue != 0 and newValue != 'knife' and newValue in gungamelib.getWeaponList('all'):
             es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
         elif newValue == 0 and 'gg_nade_bonus' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_nade_bonus')
@@ -897,20 +888,19 @@ def server_cvar(event_var):
             weaponOrder.setMultiKillOverride(newValue)
     
     # Weapon order file
+    
     elif cvarName == 'gg_weapon_order_file':
-        # Dont set the weapon order file if its not registered
-        if newValue not in gungamelib.dict_weaponOrders:
-            gungamelib.echo('gungame', 0, 0, 'WeaponOrderNotRegistered', {'file': newValue})
-            gungamelib.getVariable('gg_weapon_order_file').set('default_weapon_order.txt')
-            return
-        
-        # Parse the new file
-        myWeaponOrder = gungamelib.getWeaponOrder(newValue)
-        myWeaponOrder.setWeaponOrderFile()
-        
         # Set multikill override
         if gungamelib.getVariableValue('gg_multikill_override') != 0:
             myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
+            
+        # Parse the new file
+        myWeaponOrder = gungamelib.getWeaponOrder(newValue)
+        myWeaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order'))
+    
+    # Weapon order type
+    elif cvarName == 'gg_weapon_order':
+        gungamelib.getWeaponOrder(gungamelib.getVariableValue('gg_weapon_order_file')).setWeaponOrderFile(newValue)
     
     # Fire event
     es.event('initialize', 'gg_variable_changed')

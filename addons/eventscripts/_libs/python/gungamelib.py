@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.434
+    Version: 1.0.436
     Description: GunGame Library
 '''
 
@@ -37,7 +37,7 @@ from configobj import ConfigObj
 dict_weaponOrders = {}
 dict_weaponOrderSettings = {}
 dict_weaponOrderSettings['currentWeaponOrderFile'] = None
-
+dict_weaponOrderInstances = {}
 dict_players = {}
 dict_variables = {}
 dict_globals = {}
@@ -321,8 +321,7 @@ class Player(object):
    
     def getWeapon(self):
         '''Returns the weapon for the players level.'''
-        if dict_weaponOrderSettings['currentWeaponOrderFile'] != None:
-            return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][self.level][0]
+        return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[self.level][0]
             
     def levelup(self, levelsAwarded, victim=0, reason=''):
         '''
@@ -374,34 +373,33 @@ class Player(object):
 # ==============================================================================
 class WeaponOrder(object):
     '''Parses weapon order files.'''
+    dict_weaponOrders = {}
     
     def __init__(self, fileName):
         '''Initializes the WeaponOrder class.'''
         # Set variables
         if '.txt' in fileName:
-            self.filePath = getGameDir('cfg/gungame/weapon_orders/%s' % fileName)
-            self.fileName = fileName.replace('.txt', '')
+            self.filepath = getGameDir('cfg/gungame/weapon_orders/%s' % fileName)
+            self.filename = fileName.replace('.txt', '')
         else:
-            self.filePath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
-            self.fileName = fileName
+            self.filepath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
+            self.filename = fileName
+            
+        self.displayname = None
+        self.ordertype = None
+        self.order = {}
         
-        # Check to see if it has been registered before
-        if not self.__isRegistered(fileName):
-            self.__parse()
-        else:
-            echo('gungame', 0, 1, 'WeaponOrder:AlreadyRegistered', {'file': fileName})
-    
-    def __parse(self):
+        self.__parse()
+        
+    def __parse(self, override=False):
         '''Parses the weapon file.'''
         # Try to open the file
         try:
-            weaponOrderFile = open(self.filePath, 'r')
+            weaponOrderFile = open(self.filepath, 'r')
         except IOError, e:
             raise FileError('Cannot parse weapon order file (%s): IOError: %s' % e)
         
         # Variable preparation
-        dict_tempWeaponOrder = {}
-        dict_tempWeaponOrderSettings = {}
         levelCounter = 0
         
         # Clean and format the lines
@@ -419,7 +417,7 @@ class WeaponOrder(object):
             
             if line.startswith('=>'):
                 # Set display name
-                dict_tempWeaponOrderSettings['displayName'] = line[2:].strip()
+                self.displayname = line[2:].strip()
                 
                 continue
             
@@ -453,31 +451,24 @@ class WeaponOrder(object):
                 levelCounter += 1
                 list_splitLine.append(1)
             
-            # Set level values
-            dict_tempWeaponOrder[levelCounter] = list_splitLine
+            if override:
+                # Find level values
+                for level in self.order:
+                    if weaponName in self.order[level]:
+                        self.order[level] = list_splitLine
+            else:
+                # Set level values
+                self.order[levelCounter] = list_splitLine
         
         # Do we have a display name?
-        if 'displayName' not in dict_tempWeaponOrderSettings:
-            echo('gungame', 0, 0, 'WeaponOrder:MissingDisplayName', {'name': self.fileName})
-            dict_tempWeaponOrderSettings['displayName'] = 'Un-named Weapon Order'
-        
-        # Set the order type to default
-        dict_tempWeaponOrderSettings['weaponOrder'] = '#default'
-        
-        # Copy the temporary dictionaries over
-        dict_weaponOrderSettings[self.fileName] = dict_tempWeaponOrderSettings.copy()
-        dict_weaponOrders[self.fileName] = dict_tempWeaponOrder.copy()
-    
-    def __isRegistered(self, fileName):
-        '''Checks if a weapon order is already registered.'''
-        return fileName in dict_weaponOrders
+        if not self.displayname:
+            echo('gungame', 0, 0, 'WeaponOrder:MissingDisplayName', {'name': self.filename})
+            self.displayname = 'No display name set for this weapon order.'
     
     def echo(self):
         '''Echos the current weapon order to console.'''
-        weaponOrder = dict_weaponOrders[self.fileName]
-        
-        echo('gungame', 0, 0, 'WeaponOrder:Echo:FileName', {'file': self.fileName})
-        echo('gungame', 0, 0, 'WeaponOrder:Echo:DisplayName', {'name': dict_weaponOrderSettings[self.fileName]['displayName']})
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:FileName', {'file': self.filename})
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:DisplayName', {'name': self.displayname})
         echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': getVariableValue('gg_weapon_order')})
         es.dbgmsg(0, '[GunGame] ')
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
@@ -485,10 +476,10 @@ class WeaponOrder(object):
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
         
         # Loop through each level
-        for level in dict_weaponOrders[self.fileName]:
+        for level in self.order:
             # Set variables
-            weaponName = dict_weaponOrders[self.fileName][level][0]
-            multiKillValue = dict_weaponOrders[self.fileName][level][1]
+            weaponName = self.order[level][0]
+            multiKillValue = self.order[level][1]
             
             # Print to console
             es.dbgmsg(0, '[GunGame] |  %2s   |     %d     | %13s |' % (level, multiKillValue, weaponName))
@@ -499,18 +490,12 @@ class WeaponOrder(object):
         '''Sets the multikill override.'''
         value = int(value)
         
-        # Create a temporary weapon order dictionary
-        dict_tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
-        
         # Loop through the weapon order dictionary
-        for level in dict_tempWeaponOrder:
+        for level in self.order:
             # Set multikill if its not a knife or a hegrenade
-            if dict_tempWeaponOrder[level][0] != 'knife' and dict_tempWeaponOrder[level][0] != 'hegrenade':
-                dict_tempWeaponOrder[level][1] = value
-        
-        # Copy the temporary weapon order back
-        dict_weaponOrders[self.fileName] = dict_tempWeaponOrder.copy()
-        
+            if self.order[level][0] != 'knife' and self.order[level][0] != 'hegrenade':
+                self.order[level][1] = value
+                
         # Rebuild weapon order menu
         self.buildWeaponOrderMenu()
         
@@ -521,51 +506,48 @@ class WeaponOrder(object):
     def setMultiKillDefaults(self):
         '''Sets the multikill values back to their default values.'''
         # Re-parse the file
-        self.__parse()
+        self.__parse(override=True)
         
         # Tell players the multikill values have been reset
         msg('gungame', '#all', 'WeaponOrder:MultikillReset')
         es.server.cmd('mp_restartgame 2')
     
-    def setWeaponOrderFile(self):
-        '''Sets the current weapon order file to this.'''
-        # Check its not the current one
-        if dict_weaponOrderSettings['currentWeaponOrderFile'] == self.fileName:
-            return
-        
-        # Set the current weapon order file
-        dict_weaponOrderSettings['currentWeaponOrderFile'] = self.fileName
-        
-        # Rebuild the weapon order menu
-        self.buildWeaponOrderMenu()
-        
+    def setWeaponOrderFile(self, type):
+        '''
+        Sets the current weapon order file to this.
+        '''
+        '''
+        if getVariableValue('gg_weapon_order_file') != self.fileName:
+            # Set the current weapon order file
+            setVariableValue('gg_weapon_order_file', self.filename)
+        '''
         # Tell players the weapon order file has changed
-        msg('gungame', '#all', 'WeaponOrder:FileChanged', {'to': self.fileName})
-        es.server.cmd('mp_restartgame 2')
+        msg('gungame', '#all', 'WeaponOrder:FileChanged', {'to': self.filename})
+        
+        # Set the weapon order type
+        self.__setWeaponOrderType(type)
     
     def getWeaponOrderType(self):
         '''Returns the weapon order type.'''
-        return dict_weaponOrderSettings[self.fileName]['weaponOrder']
-    
-    def __setWeaponOrder(self, value):
-        '''Sets the weapon order type.'''
-        # Set the weapon order type
-        dict_weaponOrderSettings[self.fileName]['weaponOrder'] = str(value)
+        return self.ordertype    
+
+    def __setWeaponOrderType(self, type):
+        '''
+        Changes the weapon order type.
+        '''
+        type = str(type).lower()
         
-        # Restart game
-        es.server.cmd('mp_restartgame 2')
-    
-    def changeWeaponOrderType(self, weaponOrder):
-        '''Changes the weapon order type.'''
-        weaponOrder = str(weaponOrder.lower())
+        if type not in ['#default', '#reversed', '#random']:
+            raise ArgumentError('Unable to set weapon order type: %s is not a valid argument.' %type)
         
-        # Shuffled
-        if weaponOrder == '#random':
-            # Get temporary weapon order
-            tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
+        # If the type is the same, do nothing
+        if self.ordertype == type:
+            return
             
+        # Shuffled
+        if type == '#random':
             # Get weapons
-            weapons = tempWeaponOrder.values()
+            weapons = self.order.values()
             
             # Setup variables
             knifeData = None
@@ -591,37 +573,24 @@ class WeaponOrder(object):
             random.shuffle(weapons)
             
             # Set weapon order
-            tempWeaponOrder = dict(zip(range(1, len(weapons)+1), weapons))
+            self.order = dict(zip(range(1, len(weapons)+1), weapons))
             
             # Re-add knife and grenade to the end
             if nadeData != None:
-                tempWeaponOrder[len(tempWeaponOrder)+1] = nadeData
+                self.order[len(self.order)+1] = nadeData
             
             if knifeData != None:
-                tempWeaponOrder[len(tempWeaponOrder)+1] = knifeData
-            
-            # Set the weapon orders back
-            dict_weaponOrders[self.fileName] = tempWeaponOrder.copy()
-            
-            # Tell the players the weapon order has changed
-            self.__setWeaponOrder('#random')
-            msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#random'})
+                self.order[len(self.order)+1] = knifeData
         
         # Default
-        elif weaponOrder == '#default':
+        elif type == '#default':
             # Re-parse the file
-            self.__parse(self.fileName, filePath)
-            
-            # Tell the players the weapon order has changed
-            msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#default'})
+            self.__parse()
         
         # Reversed
-        elif weaponOrder == '#reversed':
-            # Get temporary weapon order
-            tempWeaponOrder = dict_weaponOrders[self.fileName].copy()
-            
+        elif type == '#reversed':
             # Get weapons
-            weapons = tempWeaponOrder.values()
+            weapons = self.order.values()
             
             # Setup variables
             knifeData = None
@@ -647,29 +616,30 @@ class WeaponOrder(object):
             weapons.reverse()
             
             # Set weapon order
-            tempWeaponOrder = dict(zip(range(1, len(weapons)+1), weapons))
+            self.order = dict(zip(range(1, len(weapons)+1), weapons))
             
             # Re-add knife and grenade to the end
             if nadeData != None:
-                tempWeaponOrder[len(tempWeaponOrder)+1] = nadeData
+                self.order[len(self.order)+1] = nadeData
             
             if knifeData != None:
-                tempWeaponOrder[len(tempWeaponOrder)+1] = knifeData
+                self.order[len(self.order)+1] = knifeData
             
-            # Set the weapon orders back
-            dict_weaponOrders[self.fileName] = tempWeaponOrder.copy()
-            
-            # Tell the players the weapon order has changed
-            self.__setWeaponOrder('#reversed')
-            msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': '#reversed'})
-        # Invalid value
-        else:
-            raise ValueError('Cannot change weapon order type (%s): the value must be one of the following: #default, #random, #reversed.' % weaponOrder)
+        # Set the new order type
+        self.ordertype = type
+        
+        # Tell the players the weapon order has changed
+        msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': self.ordertype})
+        
+        # Rebuild the menu
+        self.buildWeaponOrderMenu()
+        
+        es.server.cmd('mp_restartgame 2')
     
     def buildWeaponOrderMenu(self):
         menu = OrderedMenu('weapon_order', [], 10, prepWeaponOrderMenu)
         menu.setTitle('GunGame: Weapon Order')
-        [menu.addItem('[%s] %s' % (x[1], x[0])) for x in dict_weaponOrders[self.fileName].values()]
+        [menu.addItem('[%s] %s' % (x[1], x[0])) for x in self.order.values()]
         menu.buildMenu()
 
 # ==============================================================================
@@ -1747,9 +1717,6 @@ def getPlayer(userid):
     dict_players[userid] = Player(userid)
     return dict_players[userid]
 
-def getWeaponOrder(file):
-    return WeaponOrder(file)
-
 def getConfig(configName):
     return Config(configName)
 
@@ -1815,14 +1782,15 @@ def clearGunGame():
     
     # Clear the dict_players
     dict_players.clear()
-    
+    '''
     # Clear the dict_weaponOrders
     dict_weaponOrders.clear()
     
     # Clear the dict_weaponOrderSettings
     dict_weaponOrderSettings.clear()
     dict_weaponOrderSettings['currentWeaponOrderFile'] = None
-    
+    '''
+    dict_weaponOrderInstances.clear()
     # Reset the leader information
     leaders = LeaderManager()
     leaders.getNewLeaders()
@@ -1843,29 +1811,27 @@ def clearOldPlayers():
 # ==============================================================================
 #   WEAPON RELATED COMMANDS
 # ==============================================================================
+'''
+!!!DEPRECATED!!!
 def getCurrentWeaponOrderFile():
-    '''
+    """
     Retrieves the current weapon order file.
-    '''
-    return dict_weaponOrderSettings['currentWeaponOrderFile']
+    """
+    return getWeaponOrder(str(es.ServerVar('gg_weapon_order_file'))).
+'''
 
 def getWeaponOrderList():
     '''
     Retrieves and returns the weapon order in order as a list.
     '''
-    currentWeaponOrder = dict_weaponOrderSettings['currentWeaponOrderFile']
-    return [dict_weaponOrders[currentWeaponOrder][level][0] for level in dict_weaponOrders[currentWeaponOrder]]
+    weaponOrder = getWeaponOrder(getVariableValue('gg_weapon_order_file'))
+    return [weaponOrder.order[level][0] for level in weaponOrder.order]
 
 def getLevelWeapon(levelNumber):
     '''
     Retrieves and returns the weapon for the specified level.
     '''
-    levelNumber = int(levelNumber)
-    
-    if not levelExists(levelNumber):
-        raise ValueError('Unable to retrieve weapon information: level \'%d\' does not exist' % levelNumber)
-    
-    return getLevelInfo(levelNumber)[0]
+    return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[int(levelNumber)][0]
     
 def getWeaponList(flag):
     '''
@@ -1894,8 +1860,18 @@ def prepWeaponOrderMenu(userid, popupid):
     
     lineNumber = level - (page * 10) + 12 if page > 1 else level + 2
     menu = popuplib.find(popupid)
+    
     menu.modline(lineNumber, '->%i. [%i] %s' % (level, getLevelMultiKill(level), getLevelWeapon(level)))
     gamethread.delayed(0, menu.modline, (lineNumber, '%i. [%i] %s' % (level, getLevelMultiKill(level), getLevelWeapon(level))))
+    
+def getWeaponOrder(file):
+    if '.txt' in file:
+        file.replace('.txt', '')
+        
+    if file not in dict_weaponOrderInstances:
+        dict_weaponOrderInstances[file] = WeaponOrder(file)
+        
+    return dict_weaponOrderInstances[file]
 
 # ==============================================================================
 #   LEVEL RELATED COMMANDS
@@ -1904,7 +1880,7 @@ def getTotalLevels():
     '''
     Returns the total number of levels in the weapon order.
     '''
-    return len(dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']])
+    return len(getWeaponOrder(getVariableValue('gg_weapon_order_file')).order)
 
 def setPreventLevelAll(state):
     '''
@@ -1939,10 +1915,8 @@ def getLevelUseridList(levelNumber):
     levelUserids = []
     
     for userid in dict_players:
-        if not clientInServer(userid):
-            continue
-            
         level = dict_players[userid]['level']
+        
         if level == levelNumber:
             levelUserids.append(userid)
     
@@ -1954,7 +1928,7 @@ def levelExists(levelNumber):
     
     Do we REALLY need this?
     '''
-    return levelNumber in dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']]
+    return levelNumber in getWeaponOrder(getVariableValue('gg_weapon_order_file')).order
 
 def getLevelInfo(levelNumber):
     '''
@@ -1966,14 +1940,13 @@ def getLevelInfo(levelNumber):
     if not levelExists(levelNumber):
         raise ValueError('Cannot get level info (%s): level does not exist!' % levelNumber)
     
-    return dict_weaponOrders[dict_weaponOrderSettings['currentWeaponOrderFile']][levelNumber]
+    return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[levelNumber]
 
 def getLevelMultiKill(levelNumber):
     '''
     Returns the multikill value for the specified level.
     '''
-    if levelExists(levelNumber):
-        return getLevelInfo(levelNumber)[1]
+    return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[levelNumber][1]
 
 # ==============================================================================
 #   CONFIG RELATED COMMANDS
@@ -2173,6 +2146,8 @@ def emitSound(emitter, soundName, volume=1.0, attenuation=1.0):
 # ==============================================================================
 #   MENU COMMANDS
 # ==============================================================================
+def getOrderedMenuName(name):
+    return 'OrderedMenu_%s:1' % name
 
 def sendOrderedMenu(name, users, page=1):
     popuplib.send('OrderedMenu_%s:%i' % (name, page), users)

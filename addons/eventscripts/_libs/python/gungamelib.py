@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.436
+    Version: 1.0.437
     Description: GunGame Library
 '''
 
@@ -321,7 +321,7 @@ class Player(object):
    
     def getWeapon(self):
         '''Returns the weapon for the players level.'''
-        return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[self.level][0]
+        return getCurrentWeaponOrder().order[self.level][0]
             
     def levelup(self, levelsAwarded, victim=0, reason=''):
         '''
@@ -469,7 +469,7 @@ class WeaponOrder(object):
         '''Echos the current weapon order to console.'''
         echo('gungame', 0, 0, 'WeaponOrder:Echo:FileName', {'file': self.filename})
         echo('gungame', 0, 0, 'WeaponOrder:Echo:DisplayName', {'name': self.displayname})
-        echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': getVariableValue('gg_weapon_order')})
+        echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': getVariableValue('gg_weapon_order_type')})
         es.dbgmsg(0, '[GunGame] ')
         es.dbgmsg(0, '[GunGame] +-------+-----------+---------------+')
         echo('gungame', 0, 0, 'WeaponOrder:Echo:TableColumns')
@@ -1725,6 +1725,18 @@ def getSoundPack(soundPackName):
 
 def getWinner(uniqueid):
     return Winners(uniqueid)
+    
+def getWeaponOrder(file):
+    if '.txt' in file:
+        file.replace('.txt', '')
+        
+    if file not in dict_weaponOrderInstances:
+        dict_weaponOrderInstances[file] = WeaponOrder(file)
+        
+    return dict_weaponOrderInstances[file]
+
+def getCurrentWeaponOrder():
+    return dict_weaponOrderInstances[getVariableValue('gg_weapon_order_file')]
 
 # ==============================================================================
 #   MESSAGE FUNCTIONS
@@ -1811,27 +1823,18 @@ def clearOldPlayers():
 # ==============================================================================
 #   WEAPON RELATED COMMANDS
 # ==============================================================================
-'''
-!!!DEPRECATED!!!
-def getCurrentWeaponOrderFile():
-    """
-    Retrieves the current weapon order file.
-    """
-    return getWeaponOrder(str(es.ServerVar('gg_weapon_order_file'))).
-'''
-
 def getWeaponOrderList():
     '''
     Retrieves and returns the weapon order in order as a list.
     '''
-    weaponOrder = getWeaponOrder(getVariableValue('gg_weapon_order_file'))
+    weaponOrder = getCurrentWeaponOrder()
     return [weaponOrder.order[level][0] for level in weaponOrder.order]
 
 def getLevelWeapon(levelNumber):
     '''
     Retrieves and returns the weapon for the specified level.
     '''
-    return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[int(levelNumber)][0]
+    return getCurrentWeaponOrder().order[int(levelNumber)][0]
     
 def getWeaponList(flag):
     '''
@@ -1864,15 +1867,6 @@ def prepWeaponOrderMenu(userid, popupid):
     menu.modline(lineNumber, '->%i. [%i] %s' % (level, getLevelMultiKill(level), getLevelWeapon(level)))
     gamethread.delayed(0, menu.modline, (lineNumber, '%i. [%i] %s' % (level, getLevelMultiKill(level), getLevelWeapon(level))))
     
-def getWeaponOrder(file):
-    if '.txt' in file:
-        file.replace('.txt', '')
-        
-    if file not in dict_weaponOrderInstances:
-        dict_weaponOrderInstances[file] = WeaponOrder(file)
-        
-    return dict_weaponOrderInstances[file]
-
 # ==============================================================================
 #   LEVEL RELATED COMMANDS
 # ==============================================================================
@@ -1880,7 +1874,7 @@ def getTotalLevels():
     '''
     Returns the total number of levels in the weapon order.
     '''
-    return len(getWeaponOrder(getVariableValue('gg_weapon_order_file')).order)
+    return len(getCurrentWeaponOrder().order)
 
 def setPreventLevelAll(state):
     '''
@@ -1928,7 +1922,7 @@ def levelExists(levelNumber):
     
     Do we REALLY need this?
     '''
-    return levelNumber in getWeaponOrder(getVariableValue('gg_weapon_order_file')).order
+    return levelNumber in getCurrentWeaponOrder().order
 
 def getLevelInfo(levelNumber):
     '''
@@ -1940,13 +1934,13 @@ def getLevelInfo(levelNumber):
     if not levelExists(levelNumber):
         raise ValueError('Cannot get level info (%s): level does not exist!' % levelNumber)
     
-    return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[levelNumber]
+    return getCurrentWeaponOrder().order[levelNumber]
 
 def getLevelMultiKill(levelNumber):
     '''
     Returns the multikill value for the specified level.
     '''
-    return getWeaponOrder(getVariableValue('gg_weapon_order_file')).order[levelNumber][1]
+    return getCurrentWeaponOrder().order[levelNumber][1]
 
 # ==============================================================================
 #   CONFIG RELATED COMMANDS

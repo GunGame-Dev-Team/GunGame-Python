@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.436
+    Version: 1.0.437
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.436'
+__version__ = '1.0.437'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -147,7 +147,7 @@ def initialize():
             continue
         
         # Set this as the weapon order and set the weapon order type
-        weaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order'))
+        weaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_type'))
         
         # Set multikill override
         if gungamelib.getVariableValue('gg_multikill_override') > 1:
@@ -289,9 +289,9 @@ def es_map_start(event_var):
     # Reset the "rounds remaining" variable for multi-rounds
     dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
     
-    if gungamelib.getVariableValue('gg_weapon_order') == '#random':
+    if gungamelib.getVariableValue('gg_weapon_order_type') == '#random':
         # Re-randomize the weapon order
-        myWeaponOrder = gungamelib.getWeaponOrder(gungamelib.getVariableValue('gg_weapon_order_file')).setWeaponOrderFile('#random')
+        myWeaponOrder = gungamelib.getCurrentWeaponOrder().setWeaponOrderFile('#random')
     
     # Update
     #es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
@@ -879,7 +879,7 @@ def server_cvar(event_var):
     # Multikill override
     elif cvarName == 'gg_multikill_override':
         # Get weapon order
-        weaponOrder = gungamelib.getWeaponOrder(gungamelib.getVariableValue('gg_weapon_order_file'))
+        weaponOrder = gungamelib.getCurrentWeaponOrder()
         
         # Set multikill
         if newValue <= 0:
@@ -896,11 +896,11 @@ def server_cvar(event_var):
             
         # Parse the new file
         myWeaponOrder = gungamelib.getWeaponOrder(newValue)
-        myWeaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order'))
+        myWeaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_type'))
     
     # Weapon order type
-    elif cvarName == 'gg_weapon_order':
-        gungamelib.getWeaponOrder(gungamelib.getVariableValue('gg_weapon_order_file')).setWeaponOrderFile(newValue)
+    elif cvarName == 'gg_weapon_order_type':
+        gungamelib.getCurrentWeaponOrder().setWeaponOrderFile(newValue)
     
     # Fire event
     es.event('initialize', 'gg_variable_changed')

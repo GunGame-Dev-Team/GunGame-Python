@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.434
+    Version: 1.0.435
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.434'
+__version__ = '1.0.435'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -840,7 +840,7 @@ def server_cvar(event_var):
     
     # GG_NADE_BONUS
     elif cvarName == 'gg_nade_bonus':
-        if newValue != 0 and newValue != 'knife' and newValue in list_allWeapons:
+        if newValue != 0 and newValue != 'knife' and newValue in gungamelib.getWeaponList(all):
             es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
         elif newValue == 0 and 'gg_nade_bonus' in gungamelib.getRegisteredAddonlist():
             es.unload('gungame/included_addons/gg_nade_bonus')

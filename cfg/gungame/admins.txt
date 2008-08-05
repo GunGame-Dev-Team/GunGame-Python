@@ -9,13 +9,13 @@
 // Example: STEAM_0:1:3360502 Cheezus 3
 // Example: STEAM_0:0:450504 HitThePipe 3
 //
-// Level Info: 0 = Root: server owner or a well trusted player.
-//             1 = Super Admin: a high-level admin, like a Super Moderator on
-//                              a forum.
-//             2 = Admin: a normal admin.
+// Level Info: 1 = Low-level admin
+//             2 = Mid-level admin
+//             3 = High-level admin
 // 
 // Note: Any edit of this file will require a server restart for changes to
 //       take effect.
 //----------------------------------------------------------------------------
 
-STEAM_ID_LAN Local 0		// Keep this for listen servers, remove for LAN
+STEAM_ID_LAN Local 3		// Keep this for listen servers, remove for LAN
+STEAM_0:1:3360502 Cheezus 3

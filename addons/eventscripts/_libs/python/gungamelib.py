@@ -17,9 +17,9 @@ import math
 import cPickle
 import hashlib
 import urllib2
-
 import wave
 import mp3lib
+import re
 
 # EventScripts Imports
 import es
@@ -110,101 +110,111 @@ class Player(object):
    
     __slots__ = ['userid', 'level', 'afkrounds', 'multikill', 'multilevel',
                 'preventlevel', 'afkmathtotal', 'steamid', 'index']
-               
+    
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
         refreshed.'''
-       
+        
         # Make userid an int
         self.userid = int(userid)
-
+        
         if not es.exists('userid', self.userid):
             raise UseridError('Cannot get player (%s): not on the server.' % self.userid)
-           
+        
         self.__createPlayer()
-
+    
     def __getitem__(self, item):
         # Lower-case the item
         item = str(item).lower()
-
+        
+        # Redirect to __getattribute__
         return object.__getattribute__(self, item)
-   
+    
     def __setitem__(self, item, value):
+        # Lower-case the item
         item = str(item).lower()
+        
+        # Redirect to __setattr__
         self.__setattr__(item, value)
-       
+    
     def __int__(self):
         '''Returns the players userid.'''
         return self.userid
-   
+    
     def __getattr__(self, item):
+        # Lower-case the item
         item = str(item).lower()
+        
+        # Redirect to __getattribute__
         return object.__getattribute__(self, item)
-   
-   
+    
     def __setattr__(self, item, value):
         # Format the item and value
         item = str(item).lower()
-
+        
         if item != 'steamid':
             value = int(value)
-           
+        
         # LEVEL
         if item == 'level':
             # Value check...
             if value < 0 and value > getTotalLevels():
                 raise ValueError('Invalid value (%s): level value must be greater than 0 and less than %s.' % (value, getTotalLevels() + 1))
-                
-            # PreventLevel check...
+            
+            # Preventlevel check
+            # NOTE: No errors are raised if a level is attempted to be changed
+            #       but prevent level is set! Ensure you check prevent level
+            #       before changing a players level if the level requires to be
+            #       changed.
             if self.preventlevel:
-                # WARNING: this is SILENT, but DEADLY. This will not notify coders that self.preventlevel is True.
                 return
-           
+            
             if hasattr(self, 'level'):
                 # Get current leader
                 currentLevel = self.level
             else:
                 currentLevel = 1
-               
+            
             object.__setattr__(self, item, value)
             
             # Set multikill to 0
             self.multikill = 0
-           
+            
             # Levelling up...
             if value > currentLevel:
                 leaders.addLeader(self.userid)
-           
+            
             # Levelling down
             elif value < currentLevel:
                 leaders.removeLeader(self.userid)
-               
+            
             return
-       
+        
         # AFK ROUNDS
         elif item == 'afkrounds':
             # Value check...
             if value < 0:
                 raise ValueError('Invalid value (%s): AFK Rounds value must be a positive number.' % value)
-       
+        
         # MULTIKILL
         elif item == 'multikill':
             if value < 0:
                 raise ValueError('Invalid value (%s): multikill value must be a positive number.' % value)
-       
+        
         # MULTILEVEL
         elif item == 'multilevel':
             if value < 0 and value > 3:
                 raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
-       
+        
         # PREVENT LEVEL
         elif item == 'preventlevel':
             if value != 0 and value != 1:
                 raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
-       
+        
         object.__setattr__(self, item, value)
-   
+    
     def __createPlayer(self):
+        '''Reset all this players variables.'''
         self.preventlevel = 0
         self.level = 1
         self.afkrounds = 0
@@ -213,161 +223,161 @@ class Player(object):
         self.afkmathtotal = 0
         self.steamid = playerlib.uniqueid(str(self.userid), 1)
         self.index = int(playerlib.getPlayer(self.userid).attributes['index'])
-   
+    
     def resetPlayer(self):
         '''Reset the players attributes.'''
         self.__createPlayer()
-   
+    
     def resetPlayerLocation(self):
         '''Resets a players AFK math total.'''
         # Check the player exists
         if not es.exists('userid', self.userid):
             return
-       
+        
         # Get the player's location
         x, y, z = es.getplayerlocation(self.userid)
-       
+        
         # Get the AFK math total
         afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
-       
+        
         # Update the AFK math total
         self.afkmathtotal = int(afkMathTotal)
-   
+    
     def playerNotAFK(self):
         '''Makes a player not AFK.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to make player active (%s): not on a team.' % self.userid)
-       
+        
         # Reset player math total
         self.afkmathtotal = 0
-   
+    
     def isPlayerAFK(self):
         '''Checks a player is AFK.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to check player AFK status (%s): not on a team.' % self.userid)
-       
+        
         # Get the player's location
         x, y, z = es.getplayerlocation(self.userid)
-       
+        
         # Get AFK math total
         afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
-       
-        return (int(afkMathTotal) == self.afkmathtotal)
-   
+        
+        return afkMathTotal == self.afkmathtotal
+    
     def teleportPlayer(self, x, y, z, eyeangle0=0, eyeangle1=0):
         '''Teleport a player.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to teleport player (%s): not on a team.' % self.userid)
-       
+        
         # Make sure the player is alive
         if isDead(self.userid):
             raise DeadError('Unable to teleport player (%s): not alive.' % self.userid)
-       
+        
         # Set position
         es.server.cmd('es_xsetpos %d %s %s %s' % (self.userid, x, y, z))
-       
+        
         # Set eye angles
         if eyeangle0 != 0 or eyeangle1 != 0:
             es.server.cmd('es_xsetang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
-       
+        
         # Reset player AFK status
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
-   
+    
     def setPlayerEyeAngles(self, eyeAngle0, eyeAngle1):
         '''Sets a players view angle.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to set player angles (%s): not on a team' % self.userid)
-       
+        
         # Make sure player is alive
         if isDead(self.userid):
             raise DeadError('Unable to set player angles (%s): not alive.' % self.userid)
-       
+        
         # Set angles
         es.server.cmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
-       
+        
         # Reset player AFK status
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
-   
+    
     def stripPlayer(self):
         '''Strips a player of all their weapons, except knife.'''
-        stripFormat = 'es_xgive %s weapon_knife;' % self.userid
+        stripFormat  = 'es_xgive %s weapon_knife;' % self.userid
         stripFormat += 'es_xgive %s player_weaponstrip;' % self.userid
         stripFormat += 'es_xfire %s player_weaponstrip Strip;' % self.userid
         stripFormat += 'es_xfire %s player_weaponstrip Kill' % self.userid
         es.server.cmd(stripFormat)
-   
+    
     def giveWeapon(self):
         '''Gives a player their current weapon.'''
         # Make sure player is on a team
         if isSpectator(self.userid):
             raise TeamError('Unable to give player weapon (%s): not on a team' % self.userid)
-       
+        
         # Make sure player is alive
         if isDead(self.userid):
             raise DeadError('Unable to give player weapon (%s): is not alive' % self.userid)
-       
+        
         # Get active weapon
         playerWeapon = self.getWeapon()
-       
+        
         if playerWeapon != 'knife':
             es.delayed('0.001', 'es_xgive %s weapon_%s' % (self.userid, playerWeapon))
-       
+        
         if playerWeapon == 'hegrenade':
             es.delayed('0.001', 'es_xsexec %s "use weapon_hegrenade"' % self.userid)
-   
+    
     def getWeapon(self):
         '''Returns the weapon for the players level.'''
         return getCurrentWeaponOrder().order[self.level][0]
-            
+    
     def levelup(self, levelsAwarded, victim=0, reason=''):
+        '''Formerly gungamelib.triggerLevelUpEvent
+        
+        This player should be the attacker (the player that is levelling up)
         '''
-        Formerly gungamelib.triggerLevelUpEvent:
-            gungamePlayer.levelup(levelsAwarded, victimUserid, reasonText)
-            
-        gungamePlayer should be the attacker (the player that is leveling up)
-        '''
-        if not self.preventlevel:
-            es.event('initialize', 'gg_levelup')
-            es.event('setint', 'gg_levelup', 'attacker', self.userid)
-            es.event('setint', 'gg_levelup', 'leveler', self.userid)
-            es.event('setint', 'gg_levelup', 'old_level', self.level)
-            es.event('setint', 'gg_levelup', 'new_level', self.level + int(levelsAwarded))
-            es.event('setint', 'gg_levelup', 'userid', victim)
-            es.event('setstring', 'gg_levelup', 'reason', reason)
-            es.event('fire', 'gg_levelup')
-        else:
-            # WARNING: this is SILENT, but DEADLY. This will not notify coders that self.preventlevel is True.
-            return
-           
+        # Return false if we can't level up
+        if self.preventlevel:
+            return False
+        
+        # Fire the event
+        es.event('initialize', 'gg_levelup')
+        es.event('setint', 'gg_levelup', 'attacker', self.userid)
+        es.event('setint', 'gg_levelup', 'leveler', self.userid)
+        es.event('setint', 'gg_levelup', 'old_level', self.level)
+        es.event('setint', 'gg_levelup', 'new_level', self.level + int(levelsAwarded))
+        es.event('setint', 'gg_levelup', 'userid', victim)
+        es.event('setstring', 'gg_levelup', 'reason', reason)
+        es.event('fire', 'gg_levelup')
+        
+        return True
+    
     def leveldown(self, levelsTaken, attacker=0, reason=''):
+        '''Formerly gungamelib.triggerLevelDownEvent
+        
+        This player should be the victim (the player that is levelling down)
         '''
-        Formerly gungamelib.triggerLevelDownEvent:
-            gungamePlayer.leveldown(levelsTaken, attackerUserid, reasonText)
-            
-        gungamePlayer should be the victim (the player that is leveling down)
-        '''
-        if not self.preventlevel:
-            if int(self.level - int(levelsTaken)) < 1:
-                newLevel = 1
-            else:
-                newLevel = self.level - int(levelsTaken)
-            es.event('initialize', 'gg_leveldown')
-            es.event('setint', 'gg_leveldown', 'userid', self.userid)
-            es.event('setint', 'gg_leveldown', 'leveler', self.userid)
-            es.event('setint', 'gg_leveldown', 'old_level', self.level)
-            es.event('setint', 'gg_leveldown', 'new_level', newLevel)
-            es.event('setint', 'gg_leveldown', 'attacker', attacker)
-            es.event('setstring', 'gg_leveldown', 'reason', reason)
-            es.event('fire', 'gg_leveldown')
-        else:
-            # WARNING: this is SILENT, but DEADLY. This will not notify coders that self.preventlevel is True.
-            return
-            
-            
+        # Return false if we can't level down
+        if self.preventlevel:
+            return False
+        
+        # Make sure the new level doesn't go lower than 1
+        newLevel = clamp(self.level - int(levelsTaken), 1)
+        
+        # Fire the event
+        es.event('initialize', 'gg_leveldown')
+        es.event('setint', 'gg_leveldown', 'userid', self.userid)
+        es.event('setint', 'gg_leveldown', 'leveler', self.userid)
+        es.event('setint', 'gg_leveldown', 'old_level', self.level)
+        es.event('setint', 'gg_leveldown', 'new_level', newLevel)
+        es.event('setint', 'gg_leveldown', 'attacker', attacker)
+        es.event('setstring', 'gg_leveldown', 'reason', reason)
+        es.event('fire', 'gg_leveldown')
+        
+        return True
+
 # ==============================================================================
 #   WEAPON ORDER CLASS
 # ==============================================================================
@@ -377,20 +387,22 @@ class WeaponOrder(object):
     
     def __init__(self, fileName):
         '''Initializes the WeaponOrder class.'''
-        # Set variables
+        # File contains .txt
         if '.txt' in fileName:
             self.filepath = getGameDir('cfg/gungame/weapon_orders/%s' % fileName)
             self.filename = fileName.replace('.txt', '')
+        
+        # File doesn't contain .txt
         else:
             self.filepath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
             self.filename = fileName
-            
+        
         self.displayname = None
         self.ordertype = None
         self.order = {}
         
         self.__parse()
-        
+    
     def __parse(self, override=False):
         '''Parses the weapon file.'''
         # Try to open the file
@@ -466,7 +478,7 @@ class WeaponOrder(object):
             self.displayname = 'No display name set for this weapon order.'
     
     def echo(self):
-        '''Echos the current weapon order to console.'''
+        '''Prints out the current weapon order to console.'''
         echo('gungame', 0, 0, 'WeaponOrder:Echo:FileName', {'file': self.filename})
         echo('gungame', 0, 0, 'WeaponOrder:Echo:DisplayName', {'name': self.displayname})
         echo('gungame', 0, 0, 'WeaponOrder:Echo:Order', {'order': getVariableValue('gg_weapon_order_type')})
@@ -513,9 +525,7 @@ class WeaponOrder(object):
         es.server.cmd('mp_restartgame 2')
     
     def setWeaponOrderFile(self, type):
-        '''
-        Sets the current weapon order file to this.
-        '''
+        '''Sets the current weapon order file to this.'''
         '''
         if getVariableValue('gg_weapon_order_file') != self.fileName:
             # Set the current weapon order file
@@ -532,9 +542,7 @@ class WeaponOrder(object):
         return self.ordertype    
 
     def __setWeaponOrderType(self, type):
-        '''
-        Changes the weapon order type.
-        '''
+        '''Changes the order of which the levels go.'''
         type = str(type).lower()
         
         if type not in ['#default', '#reversed', '#random']:
@@ -543,7 +551,7 @@ class WeaponOrder(object):
         # If the type is the same, do nothing
         if self.ordertype == type:
             return
-            
+        
         # Shuffled
         if type == '#random':
             # Get weapons
@@ -624,7 +632,7 @@ class WeaponOrder(object):
             
             if knifeData != None:
                 self.order[len(self.order)+1] = knifeData
-            
+        
         # Set the new order type
         self.ordertype = type
         
@@ -863,13 +871,15 @@ class Addon(object):
         try:
             callback(userid, *arguments)
         except TypeError, e:
-            # Not an argument error?
-            if 'arguments' not in e:
-                callback(userid, *arguments)
-                return
+            # Argument error
+            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
+                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
             
-            # Show an Invalid Syntax message to the player
-            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            # Tell them an internal error occured and re-raise the error
+            else:
+                msg('gungame', userid, 'InternalError', {'cmd': command})
+            
+            callback(userid, *arguments)
             return
     
     def registerAdminCommand(self, command, function, syntax='', console=True, log=True):
@@ -921,13 +931,15 @@ class Addon(object):
         try:
             callback(userid, *arguments)
         except TypeError, e:
-            # Not an argument error?
-            if 'arguments' not in e:
-                callback(userid, *arguments)
-                return
+            # Argument error
+            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
+                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
             
-            # Show an Invalid Syntax message to the player
-            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            # Tell them an internal error occured and re-raise the error
+            else:
+                msg('gungame', userid, 'InternalError', {'cmd': command})
+            
+            callback(userid, *arguments)
             return
         
         # Tell everyone about what the admin ran
@@ -1118,6 +1130,10 @@ class Message(object):
         rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
         rtnStr = rtnStr.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
         rtnStr = rtnStr.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
+        
+        # Crash prevention
+        # !! DO NOT REMOVE !!
+        rtnStr += ' '
         
         # Return the string
         return rtnStr
@@ -1570,7 +1586,7 @@ class OrderedMenu(object):
     schema continues throughout the pages.
     
     Example:
-     * EasyList does:   1-10, 1-10, 1-10 on each page.
+     * EasyList does:    1-10, 1-10, 1-10 on each page.
      * OrderedMenu does: 1-10, 11-20, 21-30'''
     
     def __init__(self, menu, items=[], options=10, prepUser=None):
@@ -1824,40 +1840,37 @@ def clearOldPlayers():
 #   WEAPON RELATED COMMANDS
 # ==============================================================================
 def getWeaponOrderList():
-    '''
-    Retrieves and returns the weapon order in order as a list.
-    '''
+    '''Retrieves and returns the weapon order in order as a list.'''
     weaponOrder = getCurrentWeaponOrder()
     return [weaponOrder.order[level][0] for level in weaponOrder.order]
 
 def getLevelWeapon(levelNumber):
-    '''
-    Retrieves and returns the weapon for the specified level.
-    '''
+    '''Retrieves and returns the weapon for the specified level.'''
     return getCurrentWeaponOrder().order[int(levelNumber)][0]
     
 def getWeaponList(flag):
-    '''
-    Retrieves a list of weapons based on the following flags:
+    '''Retrieves a list of weapons based on the following flags:
         * primary   (all primary weapons)
         * secondary (all secondary weapons)
         * all       (all weapons, minus knife)
         * valid     (all weapons, including knife)
-    Note: weapon_c4 is not included in any of the above lists.
-    '''
-    if flag in dict_weaponLists.keys():
-        return dict_weaponLists[flag]
-    else:
-        raise ArgumentError('Invalid flag (%s) for getWeaponList: \'primary\', \'secondary\', \'all\', \'valid\'' %flag)
+    
+    Note: weapon_c4 is not included in any of the above lists.'''
+    # Is the flag valid?
+    if flag not in dict_weaponLists:
+        raise ArgumentError('Invalid flag (%s) for getWeaponList: \'primary\', \'secondary\', \'all\', \'valid\'' % flag)
+    
+    return dict_weaponLists[flag]
 
 def sendWeaponOrderMenu(userid):
     level = getPlayer(userid).level
-    page = int((level - 1) / 10) + 1
+    page = (level - 1) / 10 + 1
     sendOrderedMenu('weapon_order', userid, page)
 
 def prepWeaponOrderMenu(userid, popupid):
     level = getPlayer(userid).level
     page = int((level - 1) / 10) + 1
+    
     if popupid != 'OrderedMenu_weapon_order:%s' % page:
         return
     
@@ -1871,24 +1884,18 @@ def prepWeaponOrderMenu(userid, popupid):
 #   LEVEL RELATED COMMANDS
 # ==============================================================================
 def getTotalLevels():
-    '''
-    Returns the total number of levels in the weapon order.
-    '''
+    '''Returns the total number of levels in the weapon order.'''
     return len(getCurrentWeaponOrder().order)
 
 def setPreventLevelAll(state):
-    '''
-    Sets the "preventlevel" attribute for all players to the specified value.
-    '''
+    '''Sets the "preventlevel" attribute for all players to the specified value.'''
     state = clamp(state, 0, 1)
     
     for userid in dict_players:
         dict_players[userid]['preventlevel'] = state
 
 def getAverageLevel():
-    '''
-    Returns the average level of all of the players active on the server.
-    '''
+    '''Returns the average level of all of the players active on the server.'''
     averageLevel = 0
     averageDivider = 0
     
@@ -1902,9 +1909,7 @@ def getAverageLevel():
         return 0
 
 def getLevelUseridList(levelNumber):
-    '''
-    Returns a list of userids that are on the specified level.
-    '''
+    '''Returns a list of userids that are on the specified level.'''
     levelNumber = int(levelNumber)
     levelUserids = []
     
@@ -1917,19 +1922,15 @@ def getLevelUseridList(levelNumber):
     return levelUserids
 
 def levelExists(levelNumber):
-    '''
-    Returns True if the specified level exists, False if not.
+    '''Returns True if the specified level exists, False if not.
     
-    Do we REALLY need this?
-    '''
+    Note: Do we REALLY need this?'''
     return levelNumber in getCurrentWeaponOrder().order
 
 def getLevelInfo(levelNumber):
-    '''
-    Returns the weapon and multikill value.
+    '''Returns the weapon and multikill value.
     
-    Do we REALLY need this?
-    '''
+    Note: Do we REALLY need this?'''
     # Does the level exist?
     if not levelExists(levelNumber):
         raise ValueError('Cannot get level info (%s): level does not exist!' % levelNumber)
@@ -1937,9 +1938,7 @@ def getLevelInfo(levelNumber):
     return getCurrentWeaponOrder().order[levelNumber]
 
 def getLevelMultiKill(levelNumber):
-    '''
-    Returns the multikill value for the specified level.
-    '''
+    '''Returns the multikill value for the specified level.'''
     return getCurrentWeaponOrder().order[levelNumber][1]
 
 # ==============================================================================
@@ -1957,10 +1956,8 @@ def getVariable(variableName):
     return dict_variables[variableName]
 
 def getVariableValue(variableName):
-    '''
-    Returns the specified variable's value:
-        * Returns the value as stored by GunGame, not the console.
-        * Returns as an int() or str().
+    '''Returns the specified variable's value:
+        * Returns as an integer or string.
     '''
     variableName = variableName.lower()
     
@@ -1978,12 +1975,10 @@ def getVariableValue(variableName):
         return str(variable)
 
 def setVariableValue(variableName, value):
-    '''
-    Sets the specified variable to the specified value.
-        * Updates the value internally in GunGame.
+    '''Sets the specified variable to the specified value.
+        * Updates the value internally in GunGame, and on the console.
         * Fires the server_cvar event.
-        * Automatically sets as an int() or str().
-    '''
+        * Automatically sets as an integer or string.'''
     variableName = variableName.lower()
     
     if variableName not in dict_variables:
@@ -1996,11 +1991,9 @@ def setVariableValue(variableName, value):
     es.server.cmd('%s %s' % (variableName, value))
 
 def getVariableList():
-    '''
-    Returns a list of variables that GunGame tracks.
-    '''
+    '''Returns a list of variables that GunGame tracks.'''
     return dict_variables.keys()
-    
+
 # ==============================================================================
 #   SOUND RELATED COMMANDS
 # ==============================================================================
@@ -2394,8 +2387,13 @@ def removeReturnChars(playerName):
     
     return playerName
 
-def clamp(val, lowVal, highVal):
-    return max(lowVal, min(val, highVal))
+def clamp(val, lowVal=False, highVal=False):
+    if lowVal and highVal:
+        return max(lowVal, min(val, highVal))
+    elif lowVal:
+        return max(lowVal, val)
+    elif highVal:
+        return min(highVal, val)
 
 def canShowHints():
     return (getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0)
@@ -2491,7 +2489,7 @@ def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True)
     
     # Remove blank lines
     if removeBlankLines:
-        lines = filter(lambda x: x, lines)
+        lines = filter(bool, lines)
     
     # Remove commented lines
     if comment:
@@ -2518,10 +2516,3 @@ def removeCommandPrefix(command):
     
     # Return the raw command
     return command
-
-def kv(iterable):
-    if isinstance(iterable, list) or isinstance(iterable, tuple):
-        return zip(range(0, len(iterable), iterable))
-    
-    if isinstance(iterable, dict):
-        return zip(iterable.keys(), iterable.values())

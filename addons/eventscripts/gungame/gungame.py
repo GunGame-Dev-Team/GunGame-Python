@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.437'
+__version__ = '1.0.438'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -202,7 +202,7 @@ def initialize():
     # Load gg_console -- the console interface
     es.load('gungame/included_addons/gg_console')
     
-    #Load gg_menus - creates and sends ingame menus (!top, !leader, !score, !ranks, etc)
+    # Load gg_info_menus -- creates and sends ingame menus (!top, !leader, !score, !ranks, etc)
     es.load('gungame/included_addons/gg_info_menus')
     
     # Fire gg_load event
@@ -888,12 +888,11 @@ def server_cvar(event_var):
             weaponOrder.setMultiKillOverride(newValue)
     
     # Weapon order file
-    
     elif cvarName == 'gg_weapon_order_file':
         # Set multikill override
         if gungamelib.getVariableValue('gg_multikill_override') != 0:
             myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))
-            
+        
         # Parse the new file
         myWeaponOrder = gungamelib.getWeaponOrder(newValue)
         myWeaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_type'))

@@ -14,11 +14,9 @@
 //            Will allow level 0 and 1 admins to use gg_setlevel and
 //            !ggsetlevel.
 // 
-// Level Info: 0 = Root: this level should be used for really high-level
-//                       commands that should only be used by the server owner.
-//             1 = Super Admin: can run high-level commands such as
-//                              "admin_add".
-//             2 = Admin: can run simple command such as "dm_add", etc.
+// Level Info: 1 = Low-level admin
+//             2 = Mid-level admin
+//             3 = High-level admin
 // 
 // Note: Any edit of this file will require a server restart for changes to
 //       take effect.
@@ -28,16 +26,16 @@
 // gungame
 //----------------------------------------------------------------------------
 teleport 2
-setlevel 1
+setlevel 3
 
 //----------------------------------------------------------------------------
 // gg_admin
 //----------------------------------------------------------------------------
 admin 2
-admin_add 0
-admin_remove 0
+admin_add 3
+admin_remove 3
 admin_show 2
-admin_set 0
+admin_set 3
 admins 2
 
 //----------------------------------------------------------------------------
@@ -45,21 +43,21 @@ admins 2
 //----------------------------------------------------------------------------
 spawn_add 2
 spawn_remove 2
-spawn_remove_all 0
+spawn_remove_all 3
 spawn_show 2
 spawn_print 2
-spawn_convert 0
+spawn_convert 3
 
 //----------------------------------------------------------------------------
 // gg_map_vote
 //----------------------------------------------------------------------------
-vote_cancel 2
-vote_list 2
-vote_shuffle 2
-vote_start 2
+vote_cancel 1
+vote_list 1
+vote_shuffle 1
+vote_start 1
 
 //----------------------------------------------------------------------------
 // gg_convert
 //----------------------------------------------------------------------------
-convert_help 3
-convert_dm3 0
+convert_help 1
+convert_dm3 3

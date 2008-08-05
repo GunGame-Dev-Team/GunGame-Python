@@ -52,6 +52,7 @@ def es_map_start(event_var):
     # Check that we update on map start
     if gungamelib.getVariableValue('gg_update') != 1:
         gungamelib.echo('gg_update', 0, 0, 'MapStartDisabled')
+        return
     
     # Commence update
     update()

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_spawn_protection
-    Version: 1.0.439
+    Version: 1.0.440
     Description: This will make players invincible and marked with color when
                  ever a player spawns. Protected players cannot level up during
                  spawn protection.
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_spawn_protection (for GunGame:Python)'
-info.version  = '1.0.439'
+info.version  = '1.0.440'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_spawn_protect'
 info.author   = 'GunGame Development Team'
@@ -32,7 +32,6 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
-playerColor = None
 noisyBefore = 0
 
 # ==============================================================================
@@ -40,22 +39,15 @@ noisyBefore = 0
 # ==============================================================================
 def load():
     global noisyBefore
-    global playerColor
     
     # Register with GunGame
     gg_spawn_protect = gungamelib.registerAddon('gg_spawn_protect')
     gg_spawn_protect.setDisplayName('GG Spawn Protection')
     
-    #
+    # Set eventscripts_noisy to 1, and back up the original value
     if gungamelib.getVariable('gg_spawn_protect_cancelonfire'):
         noisyBefore = int(es.ServerVar('eventscripts_noisy'))
         es.ServerVar('eventscripts_noisy').set(1)
-        
-    # Retrieve player color settings
-    playerColor = (gungamelib.getVariable('gg_spawn_protect_red'),
-                   gungamelib.getVariable('gg_spawn_protect_green'),
-                   gungamelib.getVariable('gg_spawn_protect_blue'),
-                   gungamelib.getVariable('gg_spawn_protect_alpha'))
     
 def unload():
     # Set noisy back
@@ -66,7 +58,6 @@ def unload():
 
 def server_cvar(event_var):
     global noisyBefore
-    global playerColor
     
     cvarname = event_var['cvarname']
     
@@ -80,15 +71,6 @@ def server_cvar(event_var):
         else:
             # Set noisy back
             es.ServerVar('eventscripts_noisy').set(noisyBefore)
-            
-    elif cvarname in ['gg_spawn_protect_red', 'gg_spawn_protect_green',
-                      'gg_spawn_protect_blue', 'gg_spawn_protect_alpha']:
-                      
-        # Set the color tuple
-        playerColor = (gungamelib.getVariable('gg_spawn_protect_red'),
-                       gungamelib.getVariable('gg_spawn_protect_green'),
-                       gungamelib.getVariable('gg_spawn_protect_blue'),
-                       gungamelib.getVariable('gg_spawn_protect_alpha'))
 
 def weapon_fire(event_var):
     if not gungamelib.getVariable('gg_spawn_protect_cancelonfire'):
@@ -125,8 +107,10 @@ def startProtect(userid):
     playerlibPlayer.set('health', 999)
     
     # Set color
-    red, green, blue, alpha = playerColor
-    playerlibPlayer.set('color', (red, green, blue, alpha))
+    playerlibPlayer.set('color', (gungamelib.getVariable('gg_spawn_protect_red'),
+                                  gungamelib.getVariable('gg_spawn_protect_green'),
+                                  gungamelib.getVariable('gg_spawn_protect_blue'),
+                                  gungamelib.getVariable('gg_spawn_protect_alpha')))
     
     # Remove hitboxes
     es.setplayerprop(userid, 'CBaseAnimating.m_nHitboxSet', 2)
@@ -153,4 +137,5 @@ def endProtect(userid):
     es.setplayerprop(userid, 'CBaseAnimating.m_nHitboxSet', 0)
     
     # PreventLevel
-    gungamePlayer.preventlevel = 0
+    if not gungamelib.getVariableValue('gg_spawn_protect_can_level_up'):
+        gungamePlayer.preventlevel = 0

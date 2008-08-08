@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.443
+    Version: 1.0.444
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.443'
+__version__ = '1.0.444'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -468,7 +468,7 @@ def player_spawn(event_var):
                 
                 # Make sure the player doesn't already have a defuser
                 if not playerlibPlayer.get('defuser'):
-                    es.server.cmd('es_xgive %d item_defuser' % userid)
+                    es.delayed(0, 'es_xgive %d item_defuser' % userid)
 
 def player_jump(event_var):
     userid = int(event_var['userid'])

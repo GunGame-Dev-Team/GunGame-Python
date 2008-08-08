@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 1.0.432
+    Version: 1.0.442
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round Addon for GunGame: Python'
-info.version  = '1.0.432'
+info.version  = '1.0.442'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -81,7 +81,7 @@ def load():
     gamethread.cancelDelayed('setPreventAll0')
     
     # Set PreventAll to "1" for everyone
-    gungamelib.setPreventLevelAll(1)
+    gungamelib.setPreventLevelAll(1, 'gg_warmup_round')
     
     # Retrieve the warmup weapon
     warmupWeapon = gungamelib.getVariableValue('gg_warmup_weapon')
@@ -106,9 +106,6 @@ def load():
     es.forcevalue('mp_freezetime', 0)
 
 def unload():
-    # Unregister this addon with gungamelib
-    gungamelib.unregisterAddon('gg_warmup_round')
-    
     # Check to see if we should load deathmatch for warmup round
     if dict_addonVars['unloadDeathmatch']:
         es.server.cmd('gg_deathmatch 0')
@@ -118,7 +115,7 @@ def unload():
         es.server.cmd('gg_elimination 0')
     
     # Set everyone's PreventLevel to 0
-    gamethread.delayed(3, gungamelib.setPreventLevelAll, (0))
+    gamethread.delayed(3, gungamelib.setPreventLevelAll, (0, 'gg_warmup_round'))
     
     # Cancel the "gungameWarmUpRound" delay
     gamethread.cancelDelayed('gungameWarmUpRound')
@@ -134,13 +131,20 @@ def unload():
     # Set "isWarmup" global
     gungamelib.setGlobal('isWarmup', 0)
     gungamelib.setGlobal('isIntermission', 0)
+    '''We will leave preventlevel active, as we will be setting it to 0 with a 3 second delay
+    NOTE: It is not customary or advisable to use the "removePreventLevel=False" argument in
+          scripts unless you will be using a delay to gungamelib.setPreventLevelAll(0). This
+          is the ONLY reason we provide the "removePreventLevel" argument with the
+          "unregisterAddon" command.
+    '''
+    # Unregister this addon with gungamelib
+    gungamelib.unregisterAddon('gg_warmup_round', removePreventLevel=False)
 
 def player_activate(event_var):
     userid = int(event_var['userid'])
     
     # Set the PreventLevel to "1" for late joiners
-    gungamePlayer = gungamelib.getPlayer(userid)
-    gungamePlayer['preventlevel'] = 1
+    gungamelib.getPlayer(userid).setPreventLevel(1, 'gg_warmup_round')
 
 def player_spawn(event_var):
     userid = int(event_var['userid'])

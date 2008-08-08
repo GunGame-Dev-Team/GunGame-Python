@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.437
+    Version: 1.0.442
     Description: GunGame Library
 '''
 
@@ -28,15 +28,11 @@ import gamethread
 import popuplib
 import langlib
 import usermsg
-from BeautifulSoup import BeautifulSoup
 from configobj import ConfigObj
 
 # ==============================================================================
 #   GLOBALS
 # ==============================================================================
-dict_weaponOrders = {}
-dict_weaponOrderSettings = {}
-dict_weaponOrderSettings['currentWeaponOrderFile'] = None
 dict_weaponOrderInstances = {}
 dict_players = {}
 dict_variables = {}
@@ -131,9 +127,6 @@ class Player(object):
         return object.__getattribute__(self, item)
     
     def __setitem__(self, item, value):
-        # Lower-case the item
-        item = str(item).lower()
-        
         # Redirect to __setattr__
         self.__setattr__(item, value)
     
@@ -152,7 +145,7 @@ class Player(object):
         # Format the item and value
         item = str(item).lower()
         
-        if item != 'steamid':
+        if item != 'steamid' and item != 'preventlevel':
             value = int(value)
         
         # LEVEL
@@ -166,7 +159,7 @@ class Player(object):
             #       but prevent level is set! Ensure you check prevent level
             #       before changing a players level if the level requires to be
             #       changed.
-            if self.preventlevel:
+            if len(self.preventlevel):
                 return
             
             if hasattr(self, 'level'):
@@ -205,17 +198,13 @@ class Player(object):
         elif item == 'multilevel':
             if value < 0 and value > 3:
                 raise ValueError('Invalid value (%s): triple level value must be between 0 and 3.' % value)
-        
-        # PREVENT LEVEL
-        elif item == 'preventlevel':
-            if value != 0 and value != 1:
-                raise ValueError('Invalid value (%s): prevent level must be 1 or 0.' % value)
-        
+                
         object.__setattr__(self, item, value)
     
     def __createPlayer(self):
         '''Reset all this players variables.'''
-        self.preventlevel = 0
+        
+        self.preventlevel = []
         self.level = 1
         self.afkrounds = 0
         self.multikill = 0
@@ -226,6 +215,7 @@ class Player(object):
     
     def resetPlayer(self):
         '''Reset the players attributes.'''
+        
         self.__createPlayer()
     
     def resetPlayerLocation(self):
@@ -339,7 +329,7 @@ class Player(object):
         This player should be the attacker (the player that is levelling up)
         '''
         # Return false if we can't level up
-        if self.preventlevel:
+        if len(self.preventlevel):
             return False
         
         # Fire the event
@@ -360,7 +350,7 @@ class Player(object):
         This player should be the victim (the player that is levelling down)
         '''
         # Return false if we can't level down
-        if self.preventlevel:
+        if len(self.preventlevel):
             return False
         
         # Make sure the new level doesn't go lower than 1
@@ -377,13 +367,66 @@ class Player(object):
         es.event('fire', 'gg_leveldown')
         
         return True
-
+        
+    def setPreventLevel(self, value, addon, debug=False):
+        '''
+        Controls the setting of the "preventlevel" attribute. This must be used instead
+        of "myObject.preventlevel = #". This method prevents one addon from setting the
+        preventlevel attribute to 0, while other addons still have it set to 1.
+        '''
+        
+        value = int(value)
+        
+        # The value must be BOOL
+        if value != 0 and value != 1:
+            raise ArgumentError('Unable to set PreventLevel value (%s): must be 0 or 1.' %value)
+                
+        # See if the value is 0
+        if not value:
+            # If the addon is in the preventlevel list, remove it
+            if addon in self.preventlevel:
+                self.preventlevel.remove(addon)
+                
+            # Debug?
+            if debug:
+                if len(self.preventlevel):
+                    # Display a list of addons still using preventlevel
+                    for addonName in self.preventlevel:
+                        es.dbgmsg(0, 'PreventLevel is still set by addons: %s' %addonName)    
+        else:
+            # Require the addon to be registered to set the value to 1
+            if addon not in getRegisteredAddonlist():
+                raise ArgumentError('Unable to set PreventLevel value (%s): addon (%s) must be registered to set the PreventLevel value to 1.' %(value, addon))
+                
+            if addon not in self.preventlevel:
+                self.preventlevel.append(addon)
+            
+    
+    def getPreventLevel(self):
+        '''Returns the number of addons that have preventlevel set to 1.'''
+        
+        return len(self.preventlevel)
+        
+    def getAddonPreventLevel(self, addon):
+        '''
+        Retrieves the value of the preventlevel attribute for this particular addon.
+        '''
+        # Require the addon to be registered
+        if addon not in dict_addons:
+            raise AddonError('Unable to retrieve PreventLevel value for (%s): addon (%s) must be registered with GunGame.' %addon)
+            
+        # No information in the preventlevel dictionary
+        if addon not in self.preventlevel:
+            return 0
+            
+        return 1
+        
+        
 # ==============================================================================
 #   WEAPON ORDER CLASS
 # ==============================================================================
 class WeaponOrder(object):
     '''Parses weapon order files.'''
-    dict_weaponOrders = {}
     
     def __init__(self, fileName):
         '''Initializes the WeaponOrder class.'''
@@ -525,8 +568,8 @@ class WeaponOrder(object):
         es.server.cmd('mp_restartgame 2')
     
     def setWeaponOrderFile(self, type):
-        '''Sets the current weapon order file to this.'''
-        '''
+        '''Sets the current weapon order file to this
+        
         if getVariableValue('gg_weapon_order_file') != self.fileName:
             # Set the current weapon order file
             setVariableValue('gg_weapon_order_file', self.filename)
@@ -1810,15 +1853,10 @@ def clearGunGame():
     
     # Clear the dict_players
     dict_players.clear()
-    '''
-    # Clear the dict_weaponOrders
-    dict_weaponOrders.clear()
     
-    # Clear the dict_weaponOrderSettings
-    dict_weaponOrderSettings.clear()
-    dict_weaponOrderSettings['currentWeaponOrderFile'] = None
-    '''
+    # Clear the weapon order instances
     dict_weaponOrderInstances.clear()
+    
     # Reset the leader information
     leaders = LeaderManager()
     leaders.getNewLeaders()
@@ -1887,12 +1925,12 @@ def getTotalLevels():
     '''Returns the total number of levels in the weapon order.'''
     return len(getCurrentWeaponOrder().order)
 
-def setPreventLevelAll(state):
+def setPreventLevelAll(state, addon):
     '''Sets the "preventlevel" attribute for all players to the specified value.'''
     state = clamp(state, 0, 1)
     
     for userid in dict_players:
-        dict_players[userid]['preventlevel'] = state
+        getPlayer(userid).setPreventLevel(state, addon)
 
 def getAverageLevel():
     '''Returns the average level of all of the players active on the server.'''
@@ -2251,12 +2289,26 @@ def getAddon(addonName):
     else:
         raise AddonError('Cannot get addon object (%s): not registered.' % addonName)
 
-def unregisterAddon(addonName):
+def unregisterAddon(addonName, removePreventLevel=True):
     if addonName in dict_addons:
         # Unregister commands
         dict_addons[addonName].unregisterCommands()
         
         del dict_addons[addonName]
+        
+        # Remove preventlevel?
+        if not removePreventLevel:
+            return
+            
+        # Loop through all userids and remove this addon from their preventlevel list
+        for userid in es.getUseridList():
+            # Get the player object
+            gungamePlayer = getPlayer(userid)
+            
+            # See if the addon is in the player's preventlevel list
+            if addonName in gungamePlayer.preventlevel:
+                # Remove the addon from the player's preventlevel list
+                gungamePlayer.setPreventLevel(0, addonName)
     else:
         raise AddonError('Cannot unregister addon (%s): not registered.' % addonName)
 

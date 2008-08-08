@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.444
+    Version: 1.0.445
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.444'
+__version__ = '1.0.445'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -188,10 +188,6 @@ def initialize():
     gungamelib.msg('gungame', '#all', 'Loaded')
     es.server.cmd('mp_restartgame 2')
     
-    # Set map prefix global
-    list_mapPrefix = str(es.ServerVar('eventscripts_currentmap')).split('_')
-    gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
-    
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
@@ -230,25 +226,24 @@ def unload():
     # Get map if
     try:
         mapObjectives = gungamelib.getVariableValue('gg_map_obj')
-        mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
     
         # Re-enable objectives
         if mapObjectives < 3:
             # Re-enable all objectives
             if mapObjectives == 0:
-                if mapPrefix == 'de':
+                if len(es.createentitylist('func_bomb_target')):
                     es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
-                elif mapPrefix == 'cs':
+                elif len(es.createentitylist('func_hostage_rescue')):
                     es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
         
             # Enable bomb zone
             elif mapObjectives == 1:
-                if mapPrefix == 'de':
+                if len(es.createentitylist('func_bomb_target')):
                     es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
         
             # Enable hostage objectives
             elif mapObjectives == 2:
-                if mapPrefix == 'cs':
+                if len(es.createentitylist('func_hostage_rescue')):
                     es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
                 
     except:
@@ -276,12 +271,6 @@ def es_map_start(event_var):
     
     # Execute GunGame's autoexec.cfg
     es.delayed('1', 'exec gungame/gg_server.cfg')
-    
-    # Split the map name into a list separated by "_"
-    list_mapPrefix = event_var['mapname'].split('_')
-    
-    # Insert the new map prefix into the GunGame Variables
-    gungamelib.setGlobal('gungame_currentmap_prefix', list_mapPrefix[0])
     
     # Reset the "gungame_voting_started" variable
     dict_variables['gungame_voting_started'] = False
@@ -342,29 +331,28 @@ def round_start(event_var):
 
     # Get map info
     mapObjectives = gungamelib.getVariableValue('gg_map_obj')
-    mapPrefix = gungamelib.getGlobal('gungame_currentmap_prefix')
     
     # If both the BOMB and HOSTAGE objectives are enabled, we don't do anything else
     if mapObjectives < 3:
         # Remove all objectives
         if mapObjectives == 0:
-            if mapPrefix == 'de':
+            if len(es.createentitylist('func_bomb_target')):
                 es.server.cmd('es_xfire %d func_bomb_target Disable' %userid)
                 es.server.cmd('es_xfire %d weapon_c4 Kill' %userid)
             
-            elif mapPrefix == 'cs':
+            elif len(es.createentitylist('func_hostage_rescue')):
                 es.server.cmd('es_xfire %d func_hostage_rescue Disable' %userid)
                 es.server.cmd('es_xfire %d hostage_entity Kill' %userid)
         
         # Remove bomb objectives
         elif mapObjectives == 1:
-            if mapPrefix == 'de':
+            if len(es.createentitylist('func_bomb_target')):
                 es.server.cmd('es_xfire %d func_bomb_target Disable' %userid)
                 es.server.cmd('es_xfire %d weapon_c4 Kill' % userid)
         
         # Remove hostage objectives
         elif mapObjectives == 2:
-            if mapPrefix == 'cs':
+            if len(es.createentitylist('func_hostage_rescue')):
                 es.server.cmd('es_xfire %d func_hostage_rescue Disable' %userid)
                 es.server.cmd('es_xfire %d hostage_entity Kill' % userid)
     
@@ -462,13 +450,13 @@ def player_spawn(event_var):
         if int(event_var['es_userteam']) == 3:
             
             # Are we in a de_ map and want to give defuser?
-            if gungamelib.getGlobal('gungame_currentmap_prefix') == 'de' and gungamelib.getVariableValue('gg_player_defuser') > 0:
+            if len(es.createentitylist('func_bomb_target')) and gungamelib.getVariableValue('gg_player_defuser') > 0:
                 # Get player object
                 playerlibPlayer = playerlib.getPlayer(userid)
                 
                 # Make sure the player doesn't already have a defuser
                 if not playerlibPlayer.get('defuser'):
-                    es.delayed(0, 'es_xgive %d item_defuser' % userid)
+                    es.server.queuecmd('es_xgive %d item_defuser' % userid)
 
 def player_jump(event_var):
     userid = int(event_var['userid'])

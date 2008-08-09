@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.432
+    Version: 1.0.446
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.432'
+info.version  = '1.0.446'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -116,6 +116,13 @@ def item_pickup(event_var):
         if currentWeapon[7:] != item:
             return
     
+    '''
+    Stuff RideGuy is farting around with:
+    lastWeapon = es.getplayerprop(userid, 'CCSPlayer.baseclass.localdata.m_hLastWeapon')
+    activeWeapon = es.getplayerprop(userid, 'CCSPlayer.baseclass.baseclass.m_hActiveWeapon')
+    myWeapons0 = es.getplayerprop(userid, 'CCSPlayer.baseclass.baseclass.bcc_localdata.m_hMyWeapons.000')
+    '''
+    
     # Switch the player back to their previous weapon, wait for the next game frame
     gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
 
@@ -128,24 +135,7 @@ def getLastWeapon(userid, gungamePlayer, item):
     if weapon == item:
         return
     
-    myWeapons = {1: 'knife',
-                 2: weapon,
-                 3: weapon,
-                 4: 'hegrenade',
-                 5: 'smokegrenade',
-                 6: 'flashbang'}
-    
-    # Get their last weapon index
-    lastWeapon = es.getplayerprop(userid, 'CBasePlayer.localdata.m_hLastWeapon')
-    
-    # Loop through all the current held weapons
-    for slot in myWeapons:
-        slotWeapon = es.getplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_hMyWeapons.%.3i' % slot)
-        
-        # Do the indexes not match?
-        if lastWeapon != slotWeapon:
-            es.sexec(userid, 'use weapon_%s' % myWeapons[slot])
-            break
+    es.sexec(userid, 'use weapon_%s' % weapon)
 
 def filterDrop(userid, args):
     # If command not drop, continue

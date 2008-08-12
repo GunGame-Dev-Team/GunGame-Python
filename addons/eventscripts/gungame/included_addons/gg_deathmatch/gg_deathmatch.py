@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.429
+    Version: 1.0.448
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -14,6 +14,7 @@ import gamethread
 import playerlib
 import popuplib
 import spawnpointlib
+reload(spawnpointlib)
 import testrepeat as repeat
 
 # GunGame Imports
@@ -25,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.429'
+info.version  = '1.0.448'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -144,14 +145,6 @@ def player_spawn(event_var):
     if collisionBefore != 2:
         es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
         gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
-    
-    # Do not continue if we have no spawn points
-    if not spawnPoints.hasPoints():
-        return
-    
-    # Teleport the player
-    s = spawnPoints.getRandomPoint()
-    gungamelib.getPlayer(userid).teleportPlayer(s[0], s[1], s[2], 0, s[4])
 
 def player_death(event_var):
     # Get the userid

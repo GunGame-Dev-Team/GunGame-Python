@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 1.0.390
+    Version: 1.0.448
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -15,6 +15,7 @@
 import es
 import gamethread
 import spawnpointlib
+reload(spawnpointlib)
 
 # Python imports
 import time
@@ -28,7 +29,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.390'
+info.version  = '1.0.448'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -68,7 +69,13 @@ def load():
     for userid in es.getUseridList():
         dict_playersEliminated[str(userid)] = []
     
+    # If randSpawn is off, do not create the spawnpoints
+    print int(dict_addonVars['randSpawn'])
+    if not int(dict_addonVars['randSpawn']):
+        return
+    
     if gungamelib.inMap():
+        print 'do it'
         spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
 
 def unload():
@@ -84,6 +91,10 @@ def es_map_start(event_var):
     dict_addonVars['roundActive'] = 0
     dict_addonVars['currentRound'] = 0
     
+    # If randSpawn is off, do not create the spawnpoints
+    if not int(dict_addonVars['randSpawn']):
+        return
+        
     # Reset spawnpoint manager
     spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
 
@@ -126,18 +137,6 @@ def player_spawn(event_var):
     if collisionBefore != 2:
         es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
         gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
-    
-    # Do not continue random spawnpoints are disabled
-    if not int(dict_addonVars['randSpawn']):
-        return
-    
-    # Do not continue if we have no spawn points
-    if not spawnPoints.hasPoints():
-        return
-    
-    # Teleport the player
-    s = spawnPoints.getRandomPoint()
-    gungamelib.getPlayer(userid).teleportPlayer(s[0], s[1], s[2], 0, s[4])
 
 def player_activate(event_var):
     userid = event_var['userid']

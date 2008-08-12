@@ -1,8 +1,16 @@
-#!/usr/bin/env python
+''' (c) 2008 by the GunGame Coding Team
+
+    Title: spawnpointlib
+    Version: 1.0.448
+    Description: GunGame Spawnpoint Library
+'''
 
 import os
 import random
 import es
+import vecmath
+import gamethread
+import gungamelib
 
 model = 'player/ct_gign.mdl'
 
@@ -61,6 +69,48 @@ class SpawnPointManager(object):
         
         # Set up variables
         self.spawnPoints = [x.split(' ', 6) for x in fileLines]
+        
+        if not self.hasPoints():
+            return
+        
+        gamethread.delayed(0, self.setupSpawnMaker, ())
+        
+    def setupSpawnMaker(self):
+        for tSpawn in es.createentitylist('info_player_terrorist').keys():
+            es.server.cmd('es_xremove %i' % tSpawn)
+        for ctSpawn in es.createentitylist('info_player_counterterrorist').keys():
+            es.server.cmd('es_xremove %i' % ctSpawn)
+        
+        userid = es.getuserid()
+        fakeBot = 0
+        if not userid:
+            userid = es.createbot('spawnmaker')
+            fakeBot = 1
+        
+        # es.server.cmd('es_xfire %i info_player_terrorist Kill; es_xfire %i info_player_counterterrorist Kill' % (userid, userid))
+        
+        randomPoints = self.spawnPoints[:]
+        random.shuffle(randomPoints)
+        
+        teamSpawn = 'info_player_terrorist'
+        while randomPoints:
+            sp = randomPoints.pop(0)
+            currentPoint = vecmath.vector(sp[0], sp[1], sp[2])
+            for cp in randomPoints:
+                comparePoint = vecmath.vector(cp[0], cp[1], cp[2])
+                distance = vecmath.distance(currentPoint, comparePoint)
+                if distance < 100:
+                    continue
+                    
+            textFormat = 'es_xsetpos %i %s %s %s;' % (userid, sp[0], sp[1], sp[2])
+            textFormat += 'es_xsetang %d 0 %s;' % (userid, sp[4])
+            textFormat += 'es_xgive %i %s' % (userid, teamSpawn)
+            es.server.cmd(textFormat)
+            teamSpawn = 'info_player_terrorist' if teamSpawn != 'info_player_terrorist' else 'info_player_counterterrorist'
+        
+        
+        if fakeBot:
+            es.delayed(0, 'kickid %i' % userid)
     
     def createNewSpawnFile(self):
         '''Used to create a new spawnpoint file.'''
@@ -184,7 +234,7 @@ class SpawnPointManager(object):
     
     def __showProp(self, index):
         '''PRIVATE FUNCTION: Shows a model at a specific spawnpoint index.'''
-        userid = es.getuserid()
+        self.userid = es.getuserid()
         
         # Check we aren't already showing it
         if index in self.propIndexes:

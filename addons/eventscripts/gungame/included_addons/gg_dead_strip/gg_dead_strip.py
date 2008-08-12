@@ -15,6 +15,7 @@ import gamethread
 
 # GunGame imports
 import gungamelib
+import ggweaponlib
 
 # ==============================================================================
 #  ADDON REGISTRATION
@@ -116,13 +117,6 @@ def item_pickup(event_var):
         if currentWeapon[7:] != item:
             return
     
-    '''
-    Stuff RideGuy is farting around with:
-    lastWeapon = es.getplayerprop(userid, 'CCSPlayer.baseclass.localdata.m_hLastWeapon')
-    activeWeapon = es.getplayerprop(userid, 'CCSPlayer.baseclass.baseclass.m_hActiveWeapon')
-    myWeapons0 = es.getplayerprop(userid, 'CCSPlayer.baseclass.baseclass.bcc_localdata.m_hMyWeapons.000')
-    '''
-    
     # Switch the player back to their previous weapon, wait for the next game frame
     gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
 
@@ -132,10 +126,18 @@ def item_pickup(event_var):
 def getLastWeapon(userid, gungamePlayer, item):
     weapon = gungamePlayer.getWeapon()
     
-    if weapon == item:
+    if weapon != item:
+        es.sexec(userid, 'use weapon_%s' % weapon)
+        es.setplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_flNextAttack', 0)
         return
     
-    es.sexec(userid, 'use weapon_%s' % weapon)
+    # Set clip
+    weaponInfo = ggweaponlib.getWeaponInfo(weapon)
+    playerHandle = es.getplayerhandle(userid)
+    for weaponIndex in es.createentitylist('weapon_' + weapon).keys():
+        if playerHandle == es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity'):
+            es.setindexprop(weaponIndex, 'CBaseCombatWeapon.LocalWeaponData.m_iClip1', weaponInfo.ammo)
+            break
 
 def filterDrop(userid, args):
     # If command not drop, continue

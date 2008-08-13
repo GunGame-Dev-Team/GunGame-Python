@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.449
+    Version: 1.0.450
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.449'
+__version__ = '1.0.450'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -302,6 +302,9 @@ def es_map_start(event_var):
     
     # Make sounds downloadbale
     gungamelib.addDownloadableSounds()
+    
+    # Equip the players
+    equipPlayer()
 
 def round_start(event_var):
     global list_stripExceptions
@@ -321,7 +324,7 @@ def round_start(event_var):
     for weapon in gungamelib.getWeaponList('all'):
         # Make sure that the admin doesn't want the weapon left on the map
         if weapon in list_stripExceptions:
-            return
+            continue
             
         # Remove the weapon from the map
         es.server.cmd('es_xfire %d weapon_%s kill' % (userid, weapon))
@@ -381,9 +384,6 @@ def round_end(event_var):
     
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
-    
-    # Equip player
-    equipPlayer()
     
     # Was a ROUND_DRAW or GAME_COMMENCING?
     if int(event_var['reason']) == 10 or int(event_var['reason']) == 16:

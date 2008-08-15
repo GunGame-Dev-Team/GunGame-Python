@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 1.0.448
+    Version: 1.0.452
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -29,7 +29,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.448'
+info.version  = '1.0.452'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -134,7 +134,7 @@ def player_spawn(event_var):
     
     # No-block for a second, to stop sticking inside other players
     collisionBefore = es.getplayerprop(userid, 'CBaseEntity.m_CollisionGroup')
-    if collisionBefore != 2:
+    if gungamelib.getVariable('gg_spawn_protect'):
         es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
         gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
 

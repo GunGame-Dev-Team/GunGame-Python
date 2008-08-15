@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.442
+    Version: 1.0.452
     Description: GunGame Library
 '''
 
@@ -1724,6 +1724,36 @@ class OrderedMenu(object):
             # Prepuser?
             if self.prepUser:
                 menu.prepuser = self.prepUser
+            
+            # Increment the page count
+            pageCount += 1
+    
+    def rebuildMenu(self):
+        #set variables
+        totalPageCount = math.ceil(float(len(self.items) / float(self.options)))
+        pageCount = 1
+        itemCount = 0
+        itemPageCount = 0
+        
+        while pageCount <= totalPageCount:
+            # Create menu variables
+            menuName = 'OrderedMenu_%s:%s' % (self.menu, pageCount)
+            itemPageCount = 2
+            
+            # Delete the menu, then create it
+            menu = popuplib.find(menuName)
+            if not menu:
+                return
+            
+            # Add items for this page
+            while self.options > itemPageCount - 2:
+                if itemCount == len(self.items):
+                    break
+                
+                itemCount += 1
+                itemPageCount += 1
+                
+                menu.modline(itemPageCount, '%d. %s' % (itemCount, self.items[itemCount-1]))
             
             # Increment the page count
             pageCount += 1

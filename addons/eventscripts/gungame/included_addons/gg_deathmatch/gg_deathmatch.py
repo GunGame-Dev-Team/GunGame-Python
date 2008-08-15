@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.448
+    Version: 1.0.452
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.448'
+info.version  = '1.0.452'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -142,7 +142,7 @@ def player_spawn(event_var):
     
     # No-block for a second, to stop sticking inside other players
     collisionBefore = es.getplayerprop(userid, 'CBaseEntity.m_CollisionGroup')
-    if collisionBefore != 2:
+    if gungamelib.getVariable('gg_spawn_protect'):
         es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
         gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', collisionBefore))
 

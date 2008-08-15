@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 1.0.427
+    Version: 1.0.451
     Description: Adds map voting capabilities to GunGame.
 '''
 
@@ -31,7 +31,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_map_vote (for GunGame: Python)'
-info.version  = '1.0.427'
+info.version  = '1.0.451'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_map_vote'
 info.author   = 'GunGame Development Team'
@@ -141,7 +141,8 @@ def gg_vote(event_var):
 
 def gg_win(event_var):
     if dict_addonVars['voteActive']:
-        repeat.delete('gungameVoteCounter')
+        if repeat.status('gungameVoteCounter'):
+            repeat.delete('gungameVoteCounter')
         voteResults()
     
     winningMap = dict_playerChoice['winningMap']
@@ -266,7 +267,8 @@ def VoteCountdown():
         gungamelib.playSound('#all', 'countDownBeep')
         
         # Delete the repeat
-        repeat.delete('gungameVoteCounter')
+        if repeat.status('gungameVoteCounter'):
+            repeat.delete('gungameVoteCounter')
         
         # Get results
         voteResults()
@@ -345,7 +347,8 @@ def cancelVote(userid):
     
     # Set variables
     dict_addonVars['voteActive'] = 0
-    repeat.delete('gungameVoteCounter')
+    if repeat.status('gungameVoteCounter'):
+        repeat.delete('gungameVoteCounter')
     
     # Unsend popups
     popuplib.unsendname('voteMenu', es.getUseridList())

@@ -18,4 +18,3 @@
 //----------------------------------------------------------------------------
 
 STEAM_ID_LAN Local 3		// Keep this for listen servers, remove for LAN
-STEAM_0:1:3360502 Cheezus 3

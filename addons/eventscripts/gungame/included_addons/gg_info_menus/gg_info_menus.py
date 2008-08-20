@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_info_menus
-    Version: 1.0.453
+    Version: 1.0.454
     Description: GG Stats controls all stat related commands (level, score, top,
                  rank, etc).
 '''
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_info_menus Addon for GunGame: Python'
-info.version  = '1.0.453'
+info.version  = '1.0.454'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_info_menus'
 info.author   = 'GunGame Development Team'
@@ -348,15 +348,19 @@ def buildScoreMenu():
     menu = gungamelib.OrderedMenu('score_menu', [], 10, prepScoreMenu)
     menu.setTitle('GunGame: Player Score')
     
-    levelCounter = gungamelib.getTotalLevels() + 1
-    while levelCounter > 0:
-        levelCounter -= 1
-        for playerid in gungamelib.getLevelUseridList(levelCounter):
-            menu.addItem('[%i] %s' % (levelCounter, es.getplayername(playerid)))
-            levelRankUseridList.append(playerid)
-    
-    for emptySlot in range(0, es.getmaxplayercount() - len(levelRankUseridList)):
-        menu.addItem(' ')
+    if len(es.getUseridList()):
+        levelCounter = gungamelib.getTotalLevels() + 1
+        while levelCounter > 0:
+            levelCounter -= 1
+            for playerid in gungamelib.getLevelUseridList(levelCounter):
+                menu.addItem('[%i] %s' % (levelCounter, es.getplayername(playerid)))
+                levelRankUseridList.append(playerid)
+                
+        for emptySlot in range(0, es.getmaxplayercount() - len(levelRankUseridList)):
+            menu.addItem(' ')
+            
+    else:
+        menu.addItem('No Players.')
     
     menu.buildMenu()
     
@@ -364,7 +368,7 @@ def rebuildScoreMenu():
     global levelRankUseridList
     levelRankUseridList = []
 
-    menu = gungamelib.OrderedMenu('score_menu', [], 10)
+    menu = gungamelib.OrderedMenu('score_menu', [], 10, prepScoreMenu)
     
     levelCounter = gungamelib.getTotalLevels() + 1
     while levelCounter > 0:

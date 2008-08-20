@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.452
+    Version: 1.0.455
     Description: GunGame Library
 '''
 
@@ -592,7 +592,7 @@ class WeaponOrder(object):
             raise ArgumentError('Unable to set weapon order type: %s is not a valid argument.' %type)
         
         # If the type is the same, do nothing
-        if self.ordertype == type:
+        if self.ordertype == type and type != '#random':
             return
         
         # Shuffled

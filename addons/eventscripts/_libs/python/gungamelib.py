@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.455
+    Version: 1.0.456
     Description: GunGame Library
 '''
 
@@ -2124,7 +2124,8 @@ def addDownloadableWinnerSound():
     if ext == 'mp3':
         try:
             info = mp3lib.mp3info(realPath)
-            duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
+            if getVariableValue('gg_dynamic_chattime'):
+                duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
         except:
             echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
     
@@ -2132,7 +2133,8 @@ def addDownloadableWinnerSound():
     elif ext == 'wav':
         try:
             w = wave.open(realPath, 'rb')
-            duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
+            if getVariableValue('gg_dynamic_chattime'):
+                duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
         except:
             echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
         finally:

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.456
+    Version: 1.0.457
     Description: GunGame Library
 '''
 
@@ -2321,26 +2321,13 @@ def getAddon(addonName):
     else:
         raise AddonError('Cannot get addon object (%s): not registered.' % addonName)
 
-def unregisterAddon(addonName, removePreventLevel=True):
+def unregisterAddon(addonName):
     if addonName in dict_addons:
         # Unregister commands
         dict_addons[addonName].unregisterCommands()
         
         del dict_addons[addonName]
         
-        # Remove preventlevel?
-        if not removePreventLevel:
-            return
-            
-        # Loop through all userids and remove this addon from their preventlevel list
-        for userid in es.getUseridList():
-            # Get the player object
-            gungamePlayer = getPlayer(userid)
-            
-            # See if the addon is in the player's preventlevel list
-            if addonName in gungamePlayer.preventlevel:
-                # Remove the addon from the player's preventlevel list
-                gungamePlayer.setPreventLevel(0, addonName)
     else:
         raise AddonError('Cannot unregister addon (%s): not registered.' % addonName)
 

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.458
+    Version: 1.0.459
     Description: GunGame Library
 '''
 
@@ -61,6 +61,7 @@ dict_weaponLists = {'primary':['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
 list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
 list_usedRandomSounds = []
+currentWeaponOrder = None
 
 # ==============================================================================
 #   ERROR CLASSES
@@ -572,6 +573,9 @@ class WeaponOrder(object):
             # Set the current weapon order file
             setVariableValue('gg_weapon_order_file', self.filename)
         '''
+        global currentWeaponOrder
+        currentWeaponOrder = self.filename
+        
         # Tell players the weapon order file has changed
         msg('gungame', '#all', 'WeaponOrder:FileChanged', {'to': self.filename})
         
@@ -1823,7 +1827,7 @@ def getWeaponOrder(file):
     return dict_weaponOrderInstances[file]
 
 def getCurrentWeaponOrder():
-    return dict_weaponOrderInstances[getVariableValue('gg_weapon_order_file')]
+    return dict_weaponOrderInstances[currentWeaponOrder]
 
 # ==============================================================================
 #   MESSAGE FUNCTIONS

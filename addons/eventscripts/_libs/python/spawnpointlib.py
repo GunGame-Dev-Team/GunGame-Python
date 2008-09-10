@@ -73,48 +73,69 @@ class SpawnPointManager(object):
         if not self.hasPoints():
             return
         
-        gamethread.delayed(0, self.setupSpawnMaker, ())
+        gamethread.delayed(0, self.__createSpawnPoints, ())
+    
+    def __createSpawnPoints(self):
+        '''PRIVATE: Creates info_player_[counter]terrorist entities randomly at
+        spawnpoint locations.'''
+        # Remove all existing spawnpoints
+        for x in es.createentitylist('info_player_terrorist'):
+            es.server.cmd('es_xremove %i' % x)
+        for x in es.createentitylist('info_player_counterterrorist'):
+            es.server.cmd('es_xremove %i' % x)
         
-    def setupSpawnMaker(self):
-        for tSpawn in es.createentitylist('info_player_terrorist').keys():
-            es.server.cmd('es_xremove %i' % tSpawn)
-        for ctSpawn in es.createentitylist('info_player_counterterrorist').keys():
-            es.server.cmd('es_xremove %i' % ctSpawn)
-        
+        # Get a userid
         userid = es.getuserid()
-        fakeBot = 0
-        if not userid:
-            userid = es.createbot('spawnmaker')
-            fakeBot = 1
+        fakeBot = bool(userid)
+        if fakeBot:
+            userid = es.createbot('Spawnpoint Maker')
         
-        # es.server.cmd('es_xfire %i info_player_terrorist Kill; es_xfire %i info_player_counterterrorist Kill' % (userid, userid))
-        
+        # Shuffle up the spawnpoints
         randomPoints = self.spawnPoints[:]
         random.shuffle(randomPoints)
         
-        teamSpawn = 'info_player_terrorist'
-        while randomPoints:
-            sp = randomPoints.pop(0)
-            currentPoint = vecmath.vector(sp[0], sp[1], sp[2])
-            for cp in randomPoints:
-                comparePoint = vecmath.vector(cp[0], cp[1], cp[2])
-                distance = vecmath.distance(currentPoint, comparePoint)
-                if distance < 100:
+        # Initialise variables
+        invalid = set()
+        team = True
+        
+        # Loop through the spawn points
+        for x in randomPoints:
+            # Skip invalid spawnpoints
+            if str(x) in invalid:
+                print '[spawnpointlib] The spawnpoint at %s,%s,%s is within 100 units of another spawnpoint at %s,%s,%s' % (x[0], x[1], x[2], y[0], y[1], y[2])
+                continue
+            
+            # Initialise variables
+            currentPoint = vecmath.vector(*x[:3])
+            
+            # Distance check
+            for y in self.spawnPoints:
+                # Don't check ourselves
+                if x == y:
                     continue
-                    
-            textFormat = 'es_xsetpos %i %s %s %s;' % (userid, sp[0], sp[1], sp[2])
-            textFormat += 'es_xsetang %d 0 %s;' % (userid, sp[4])
-            textFormat += 'es_xgive %i %s' % (userid, teamSpawn)
-            es.server.cmd(textFormat)
-            teamSpawn = 'info_player_terrorist' if teamSpawn != 'info_player_terrorist' else 'info_player_counterterrorist'
+                
+                # Distance is 100 units or less, add it to the invalid spawnpoint list
+                if vecmath.distance(currentPoint, y[:3]) < 100:
+                    invalid.add(str(y))
+            
+            # Create the spawnpoint and get the index
+            es.server.cmd('es_xgive %s %s' % (userid, 'info_player_counterterrorist' if team else 'info_player_terrorist'))
+            index = int(es.ServerVar('eventscripts_lastgive'))
+            
+            # Set the spawnpoint position and rotation
+            es.setindexprop(index, 'CBaseEntity.m_vecOrigin', currentPoint.getstr())
+            es.setindexprop(index, 'CBaseEntity.m_angRotation', '0,%s,0' %  x[4])
+            
+            # Swap the team around
+            team = not team
         
-        
+        # Kick the bot
         if fakeBot:
-            es.delayed(0, 'kickid %i' % userid)
+            es.delayed(0, 'kickid %s' % userid)
     
     def createNewSpawnFile(self):
         '''Used to create a new spawnpoint file.'''
-        spawnPointFile = open(self.spawnFile, 'w').close()
+        open(self.spawnFile, 'w').close()
     
     def add(self, posX, posY, posZ, eyeYaw):
         '''Adds a spawnpoint to the current spawnpoint file.'''
@@ -197,7 +218,9 @@ class SpawnPointManager(object):
         self.show(0)
     
     def getRandomPoint(self):
-        '''Gets a random spawnpoint.'''
+        '''Gets a random spawnpoint.
+        
+        UNDO: Is this needed anymore with the new spawnpoint system?'''
         if self.randomPoints:
             return self.randomPoints.pop()
         
@@ -233,7 +256,7 @@ class SpawnPointManager(object):
             self.__hideAllProps()
     
     def __showProp(self, index):
-        '''PRIVATE FUNCTION: Shows a model at a specific spawnpoint index.'''
+        '''PRIVATE: Shows a model at a specific spawnpoint index.'''
         self.userid = es.getuserid()
         
         # Check we aren't already showing it
@@ -264,7 +287,7 @@ class SpawnPointManager(object):
         self.propIndexes[index] = propIndex
     
     def __hideAllProps(self):
-        '''PRIVATE FUNCTION: Hides all active spawnpoint props.'''
+        '''PRIVATE: Hides all active spawnpoint props.'''
         # Get list of props
         entityIndexes = es.createentitylist('prop_dynamic').keys()
         
@@ -277,7 +300,7 @@ class SpawnPointManager(object):
         self.propIndexes.clear()
     
     def __resetProps(self):
-        '''PRIVATE FUNCTION: Resets all active spawnpoint props'''
+        '''PRIVATE: Resets all active spawnpoint props'''
         # Remove all props
         self.__hideAllProps()
         

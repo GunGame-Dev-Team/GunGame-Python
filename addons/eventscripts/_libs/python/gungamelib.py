@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.459
+    Version: 1.0.464
     Description: GunGame Library
 '''
 
@@ -294,12 +294,21 @@ class Player(object):
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
     
     def stripPlayer(self):
-        '''Strips a player of all their weapons, except knife.'''
-        stripFormat  = 'es_xgive %s weapon_knife;' % self.userid
-        stripFormat += 'es_xgive %s player_weaponstrip;' % self.userid
-        stripFormat += 'es_xfire %s player_weaponstrip Strip;' % self.userid
-        stripFormat += 'es_xfire %s player_weaponstrip Kill' % self.userid
-        es.server.cmd(stripFormat)
+        playerHandle = es.getplayerhandle(self.userid)
+        weaponIndex = self.getWeaponIndex(playerHandle, 'primary')
+        if weaponIndex:
+            es.server.cmd('es_xremove %i' % weaponIndex)
+        
+        weaponIndex = self.getWeaponIndex(playerHandle, 'secondary')
+        if weaponIndex:
+            es.server.cmd('es_xremove %i' % weaponIndex)
+    
+    def getWeaponIndex(self, playerHandle, flag):
+        for weapon in getWeaponList(flag):
+            for weaponIndex in es.createentitylist('weapon_%s' % weapon).keys():
+                if playerHandle == es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity'):
+                    return weaponIndex
+        return None
     
     def giveWeapon(self):
         '''Gives a player their current weapon.'''
@@ -315,8 +324,7 @@ class Player(object):
         playerWeapon = self.getWeapon()
         
         if playerWeapon != 'knife':
-            es.delayed('0.001', 'es_xgive %s weapon_%s' % (self.userid, playerWeapon))
-            es.delayed('0.002', 'es_xsexec %s "use weapon_%s"' %(self.userid, playerWeapon))
+            es.delayed(0, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
     
     def getWeapon(self):
         '''Returns the weapon for the players level.'''

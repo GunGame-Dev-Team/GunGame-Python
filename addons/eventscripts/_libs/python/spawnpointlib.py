@@ -1,14 +1,13 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: spawnpointlib
-    Version: 1.0.464
+    Version: 1.0.466
     Description: GunGame Spawnpoint Library
 '''
 
 import os
 import random
 import es
-import vecmath
 import gamethread
 import gungamelib
 
@@ -73,9 +72,10 @@ class SpawnPointManager(object):
         if not self.hasPoints():
             return
         
-        gamethread.delayed(0, self.__setupSpawnMaker, ())
+        gamethread.delayed(0, self.__createSpawnPoints, ())
         
-    def __setupSpawnMaker(self):
+    def __createSpawnPoints(self):
+        #Remove the old spawnpoints
         for tSpawn in es.createentitylist('info_player_terrorist').keys():
             es.server.cmd('es_xremove %i' % tSpawn)
         for ctSpawn in es.createentitylist('info_player_counterterrorist').keys():
@@ -93,33 +93,16 @@ class SpawnPointManager(object):
         randomPoints = self.spawnPoints[:]
         random.shuffle(randomPoints)
         
-        # Team toggle - CT if true, T if false
-        team = True
-        
-        while randomPoints:
-            # Get the next spawnpoint (sp)
-            sp = randomPoints.pop(0)
-            currentPoint = vecmath.vector(sp[0], sp[1], sp[2])
-            
-            # Check the distance agaist the remaining spawn points (cp)
-            for cp in randomPoints:
-                comparePoint = vecmath.vector(cp[0], cp[1], cp[2])
-                distance = vecmath.distance(currentPoint, comparePoint)
+        # Create the new spawnpoints (sp)
+        for sp in randomPoints:
+            for teamSpawn in ['info_player_terrorist', 'info_player_counterterrorist']:
+                # Create the spawnpoint and get the index
+                es.server.cmd('es_xgive %s %s' % (userid, teamSpawn))
+                index = int(es.ServerVar('eventscripts_lastgive'))
                 
-                if distance < 100:
-                    print '[spawnpointlib] The spawnpoint at %s,%s,%s is within 100 units of another spawnpoint at %s,%s,%s' % (sp[0], sp[1], sp[2], cp[0], cp[1], cp[2])
-                    continue
-                    
-            # Create the spawnpoint and get the index
-            es.server.cmd('es_xgive %s %s' % (userid, 'info_player_counterterrorist' if team else 'info_player_terrorist'))
-            index = int(es.ServerVar('eventscripts_lastgive'))
-            
-            # Set the spawnpoint position and rotation
-            es.setindexprop(index, 'CBaseEntity.m_vecOrigin', currentPoint.getstr())
-            es.setindexprop(index, 'CBaseEntity.m_angRotation', '0,%s,0' %  sp[4])
-            
-            # Swap the team around
-            team = not team
+                # Set the spawnpoint position and rotation
+                es.setindexprop(index, 'CBaseEntity.m_vecOrigin', '%s,%s,%s' % (sp[0], sp[1], sp[2]))
+                es.setindexprop(index, 'CBaseEntity.m_angRotation', '0,%s,0' %  sp[4])
         
         #kick the bot
         if fakeBot:

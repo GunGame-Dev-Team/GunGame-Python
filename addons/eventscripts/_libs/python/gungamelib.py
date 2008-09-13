@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.464
+    Version: 1.0.465
     Description: GunGame Library
 '''
 
@@ -324,7 +324,7 @@ class Player(object):
         playerWeapon = self.getWeapon()
         
         if playerWeapon != 'knife':
-            es.delayed(0, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
+            es.delayed(0.01, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
     
     def getWeapon(self):
         '''Returns the weapon for the players level.'''

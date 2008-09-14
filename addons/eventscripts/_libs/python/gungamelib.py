@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.465
+    Version: 1.0.467
     Description: GunGame Library
 '''
 
@@ -324,7 +324,7 @@ class Player(object):
         playerWeapon = self.getWeapon()
         
         if playerWeapon != 'knife':
-            es.delayed(0.01, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
+            es.delayed(0, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
     
     def getWeapon(self):
         '''Returns the weapon for the players level.'''
@@ -339,12 +339,16 @@ class Player(object):
         if len(self.preventlevel):
             return False
         
+        # Set old level and the new level
+        oldLevel = self.level
+        self.level += int(levelsAwarded)
+        
         # Fire the event
         es.event('initialize', 'gg_levelup')
         es.event('setint', 'gg_levelup', 'attacker', self.userid)
         es.event('setint', 'gg_levelup', 'leveler', self.userid)
-        es.event('setint', 'gg_levelup', 'old_level', self.level)
-        es.event('setint', 'gg_levelup', 'new_level', self.level + int(levelsAwarded))
+        es.event('setint', 'gg_levelup', 'old_level', oldLevel)
+        es.event('setint', 'gg_levelup', 'new_level', self.level)
         es.event('setint', 'gg_levelup', 'userid', victim)
         es.event('setstring', 'gg_levelup', 'reason', reason)
         es.event('fire', 'gg_levelup')
@@ -360,15 +364,16 @@ class Player(object):
         if len(self.preventlevel):
             return False
         
-        # Make sure the new level doesn't go lower than 1
-        newLevel = clamp(self.level - int(levelsTaken), 1)
+        # Set old level and the new level
+        oldLevel = self.level
+        self.level = clamp(self.level - int(levelsTaken), 1)
         
         # Fire the event
         es.event('initialize', 'gg_leveldown')
         es.event('setint', 'gg_leveldown', 'userid', self.userid)
         es.event('setint', 'gg_leveldown', 'leveler', self.userid)
-        es.event('setint', 'gg_leveldown', 'old_level', self.level)
-        es.event('setint', 'gg_leveldown', 'new_level', newLevel)
+        es.event('setint', 'gg_leveldown', 'old_level', oldLevel)
+        es.event('setint', 'gg_leveldown', 'new_level', self.level)
         es.event('setint', 'gg_leveldown', 'attacker', attacker)
         es.event('setstring', 'gg_leveldown', 'reason', reason)
         es.event('fire', 'gg_leveldown')

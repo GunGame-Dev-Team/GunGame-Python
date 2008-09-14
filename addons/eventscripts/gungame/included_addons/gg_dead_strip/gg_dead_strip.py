@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.446
+    Version: 1.0.467
     Description: Removes dead player's weapons.
 '''
 
@@ -15,7 +15,6 @@ import gamethread
 
 # GunGame imports
 import gungamelib
-import ggweaponlib
 
 # ==============================================================================
 #  ADDON REGISTRATION
@@ -23,7 +22,7 @@ import ggweaponlib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.446'
+info.version  = '1.0.467'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -126,18 +125,19 @@ def item_pickup(event_var):
 def getLastWeapon(userid, gungamePlayer, item):
     weapon = gungamePlayer.getWeapon()
     
-    if weapon != item:
-        es.sexec(userid, 'use weapon_%s' % weapon)
-        es.setplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_flNextAttack', 0)
+    if weapon == item:
         return
     
-    # Set clip
-    weaponInfo = ggweaponlib.getWeaponInfo(weapon)
-    playerHandle = es.getplayerhandle(userid)
-    for weaponIndex in es.createentitylist('weapon_' + weapon).keys():
-        if playerHandle == es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity'):
-            es.setindexprop(weaponIndex, 'CBaseCombatWeapon.LocalWeaponData.m_iClip1', weaponInfo.ammo)
-            break
+    # Get their last weapon index
+    lastWeapon = es.getplayerprop(userid, 'CBasePlayer.localdata.m_hLastWeapon')
+    
+    # Loop through all the current held weapons
+    if lastWeapon == es.getplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_hMyWeapons.000'):
+        es.sexec(userid, 'use weapon_knife')
+    else:
+        es.sexec(userid, 'use weapon_%s' % weapon)
+    
+    es.setplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_flNextAttack', 0)
 
 def filterDrop(userid, args):
     # If command not drop, continue

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.466
+    Version: 1.0.467
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.466'
+__version__ = '1.0.467'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -633,10 +633,12 @@ def player_team(event_var):
         gungamelib.playSound(userid, 'welcome')
 
 def gg_levelup(event_var):
+    newLevel = int(event_var['new_level'])
+    
     # ============
     # WINNER CHECK
     # ============
-    if int(event_var['old_level']) == gungamelib.getTotalLevels() and int(event_var['new_level']) > gungamelib.getTotalLevels():
+    if int(event_var['old_level']) == gungamelib.getTotalLevels() and newLevel > gungamelib.getTotalLevels():
         # Multi-round game
         if dict_variables['roundsRemaining'] > 1:
             es.event('initialize', 'gg_win')
@@ -667,15 +669,12 @@ def gg_levelup(event_var):
     gungamePlayer = gungamelib.getPlayer(attacker)
     
     # Player on knife level?
-    if gungamelib.getLevelWeapon(event_var['new_level']) == 'knife':
+    if gungamelib.getLevelWeapon(newLevel) == 'knife':
         gungamelib.playSound('#all', 'knifelevel')
     
     # Player on nade level?
-    if gungamelib.getLevelWeapon(event_var['new_level']) == 'hegrenade':
+    if gungamelib.getLevelWeapon(newLevel) == 'hegrenade':
         gungamelib.playSound('#all', 'nadelevel')
-    
-    # Set player's new level
-    gungamePlayer['level'] = int(event_var['new_level'])
     
     # Get leader level
     leaderLevel = gungamelib.leaders.getLeaderLevel()
@@ -700,13 +699,6 @@ def gg_levelup(event_var):
         if dict_variables['roundsRemaining'] < 2:
             es.event('initialize', 'gg_vote')
             es.event('fire', 'gg_vote')
-
-def gg_leveldown(event_var):
-    userid = int(event_var['userid'])
-    gungamePlayer = gungamelib.getPlayer(userid)
-    
-    # Set the player's level
-    gungamePlayer['level'] = int(event_var['new_level'])
 
 def gg_vote(event_var):
     dict_variables['gungame_voting_started'] = True

@@ -20,6 +20,8 @@ import urllib2
 import wave
 import mp3lib
 import re
+import inspect
+import sys
 
 # EventScripts Imports
 import es
@@ -43,20 +45,27 @@ dict_addons = {}
 dict_dependencies = {}
 dict_winners = {}
 
-dict_weaponLists = {'primary':['awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy',
-                               'ump45', 'p90', 'galil', 'famas', 'ak47', 'sg552',
-                               'sg550', 'g3sg1', 'm249', 'm3', 'xm1014', 'm4a1'],
-                    'secondary':['glock', 'usp', 'p228', 'deagle', 'elite',
-                                 'fiveseven'],
-                    'all':['glock', 'usp', 'p228', 'deagle', 'elite', 'fiveseven',
-                           'awp', 'scout', 'aug', 'mac10', 'tmp', 'mp5navy', 'ump45',
-                           'p90', 'galil', 'famas', 'ak47', 'sg552', 'sg550', 'g3sg1',
-                           'm249', 'm3', 'xm1014', 'm4a1', 'hegrenade', 'flashbang',
-                           'smokegrenade'],
-                    'valid':['glock','usp','p228','deagle','fiveseven', 'elite','m3',
-                             'xm1014','tmp','mac10','mp5navy', 'ump45','p90','galil',
-                             'famas','ak47','scout', 'm4a1','sg550','g3sg1','awp',
-                             'sg552','aug', 'm249','hegrenade','knife']}
+dict_weaponLists = {}
+
+# Primary weapons
+dict_weaponLists['primary'] =  ['awp', 'scout', 'aug', 'mac10', 'tmp',
+                                'mp5navy', 'ump45', 'p90', 'galil', 'famas',
+                                'ak47', 'sg552', 'sg550', 'g3sg1', 'm249',
+                                'm3', 'xm1014', 'm4a1']
+
+# Secondary weapons
+dict_weaponLists['secondary'] =  ['glock', 'usp', 'p228', 'deagle', 'elite',
+                                  'fiveseven']
+
+# All weapon
+dict_weaponLists['all'] =  dict_weaponLists['primary'] + \
+                           dict_weaponLists['secondary'] + \
+                           ['hegrenade', 'flashbang', 'smokegrenade']
+
+# Valid weapon lists
+dict_weaponLists['valid'] =  dict_weaponLists['primary'] + \
+                             dict_weaponLists['secondary'] + \
+                             ['hegrenade', 'knife']
 
 list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
@@ -272,7 +281,7 @@ class Player(object):
         
         # Set eye angles
         if eyeangle0 != 0 or eyeangle1 != 0:
-            es.server.cmd('es_xsetang %d %s %s' %(self.userid, eyeangle0, eyeangle1))
+            es.server.cmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
         
         # Reset player AFK status
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
@@ -294,7 +303,11 @@ class Player(object):
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
     
     def stripPlayer(self):
+        '''Strips the player of his primary and secondary weapon.'''
+        # Get player handle
         playerHandle = es.getplayerhandle(self.userid)
+        
+        # Strip primary weapon
         weaponIndex = self.getWeaponIndex(playerHandle, 'primary')
         if weaponIndex:
             es.server.cmd('es_xremove %i' % weaponIndex)
@@ -305,10 +318,10 @@ class Player(object):
     
     def getWeaponIndex(self, playerHandle, flag):
         for weapon in getWeaponList(flag):
-            for weaponIndex in es.createentitylist('weapon_%s' % weapon).keys():
-                if playerHandle == es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity'):
+            for weaponIndex in es.createentitylist('weapon_%s' % weapon):
+                # Check the owner against the handle
+                if es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity') == playerHandle:
                     return weaponIndex
-        return None
     
     def giveWeapon(self):
         '''Gives a player their current weapon.'''
@@ -379,61 +392,54 @@ class Player(object):
         es.event('fire', 'gg_leveldown')
         
         return True
-        
+    
     def setPreventLevel(self, value, addon, debug=False):
-        '''
-        Controls the setting of the "preventlevel" attribute. This must be used instead
-        of "myObject.preventlevel = #". This method prevents one addon from setting the
-        preventlevel attribute to 0, while other addons still have it set to 1.
-        '''
+        '''Controls the setting of the "preventlevel" attribute.
+        
+        @remarks This must be used instead of setting the \c preventlevel attribute. This method prevents one addon from setting the preventlevel attribute to 0, while other addons still have it set to 1.'''
         
         value = int(value)
         
         # The value must be BOOL
         if value != 0 and value != 1:
-            raise ArgumentError('Unable to set PreventLevel value (%s): must be 0 or 1.' %value)
-                
+            raise ValueError('Unable to set PreventLevel value (%s): must be 0 or 1.' % value)
+        
         # See if the value is 0
         if not value:
             # If the addon is in the preventlevel list, remove it
             if addon in self.preventlevel:
                 self.preventlevel.remove(addon)
-                
+            
             # Debug?
-            if debug:
-                if len(self.preventlevel):
-                    # Display a list of addons still using preventlevel
-                    for addonName in self.preventlevel:
-                        es.dbgmsg(0, 'PreventLevel is still set by addons: %s' %addonName)    
+            if debug and self.getPreventLevel():
+                # Display a list of addons still using preventlevel
+                for addonName in self.preventlevel:
+                    es.dbgmsg(0, 'PreventLevel is still set by addons: %s' % addonName)    
         else:
             # Require the addon to be registered to set the value to 1
-            if addon not in getRegisteredAddonlist():
-                raise ArgumentError('Unable to set PreventLevel value (%s): addon (%s) must be registered to set the PreventLevel value to 1.' %(value, addon))
-                
+            if addon not in getRegisteredAddonList():
+                raise ValueError('Unable to set PreventLevel value (%s): addon (%s) must be registered to set the PreventLevel value to 1.' % (value, addon))
+            
             if addon not in self.preventlevel:
                 self.preventlevel.append(addon)
-            
     
     def getPreventLevel(self):
         '''Returns the number of addons that have preventlevel set to 1.'''
-        
         return len(self.preventlevel)
         
     def getAddonPreventLevel(self, addon):
-        '''
-        Retrieves the value of the preventlevel attribute for this particular addon.
-        '''
+        '''Retrieves the value of the preventlevel attribute for this particular addon.'''
         # Require the addon to be registered
         if addon not in dict_addons:
             raise AddonError('Unable to retrieve PreventLevel value for (%s): addon (%s) must be registered with GunGame.' %addon)
-            
+        
         # No information in the preventlevel dictionary
         if addon not in self.preventlevel:
             return 0
-            
+        
         return 1
-        
-        
+
+
 # ==============================================================================
 #   WEAPON ORDER CLASS
 # ==============================================================================
@@ -442,20 +448,19 @@ class WeaponOrder(object):
     
     def __init__(self, fileName):
         '''Initializes the WeaponOrder class.'''
-        # File contains .txt
-        if '.txt' in fileName:
-            self.filepath = getGameDir('cfg/gungame/weapon_orders/%s' % fileName)
-            self.filename = fileName.replace('.txt', '')
+        # Remove the extension from the file
+        fileName = os.path.splitext(fileName)[0]
         
-        # File doesn't contain .txt
-        else:
-            self.filepath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
-            self.filename = fileName
+        # Set the filepath and name
+        self.filepath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
+        self.filename = fileName
         
+        # Initialise other variables
         self.displayname = None
         self.ordertype = None
         self.order = {}
         
+        # Parse the file
         self.__parse()
     
     def __parse(self, override=False):
@@ -464,7 +469,7 @@ class WeaponOrder(object):
         try:
             weaponOrderFile = open(self.filepath, 'r')
         except IOError, e:
-            raise FileError('Cannot parse weapon order file (%s): IOError: %s' % e)
+            raise FileError('Cannot parse weapon order file (%s): IOError: %s' % (self.filename, e))
         
         # Variable preparation
         levelCounter = 0
@@ -562,7 +567,7 @@ class WeaponOrder(object):
             # Set multikill if its not a knife or a hegrenade
             if self.order[level][0] != 'knife' and self.order[level][0] != 'hegrenade':
                 self.order[level][1] = value
-                
+        
         # Rebuild weapon order menu
         self.buildWeaponOrderMenu()
         
@@ -580,14 +585,13 @@ class WeaponOrder(object):
         es.server.cmd('mp_restartgame 2')
     
     def setWeaponOrderFile(self, type):
-        '''Sets the current weapon order file to this
-        
-        if getVariableValue('gg_weapon_order_file') != self.fileName:
-            # Set the current weapon order file
+        '''Sets the current weapon order file to this.'''
+        # Set the current weapon order file
+        # UNDO: getCurrentWeaponOrder() would not work without this if the
+        #       variable gg_weapon_order_file was changed, then this function
+        #       was called.
+        if getVariableValue('gg_weapon_order_file') != self.filename:
             setVariableValue('gg_weapon_order_file', self.filename)
-        '''
-        global currentWeaponOrder
-        currentWeaponOrder = self.filename
         
         # Tell players the weapon order file has changed
         msg('gungame', '#all', 'WeaponOrder:FileChanged', {'to': self.filename})
@@ -604,7 +608,7 @@ class WeaponOrder(object):
         type = str(type).lower()
         
         if type not in ['#default', '#reversed', '#random']:
-            raise ArgumentError('Unable to set weapon order type: %s is not a valid argument.' %type)
+            raise ValueError('Unable to set weapon order type: %s is not a valid argument.' %type)
         
         # If the type is the same, do nothing
         if self.ordertype == type and type != '#random':
@@ -869,7 +873,8 @@ class Addon(object):
         # Set up default attributes for this addon
         self.displayName = 'Untitled Addon'
         self.commands = {}
-        self.logger = Logger(addonName)
+        self.log = Logger(addonName, 'Addon Log', addon=addonName)
+        self.log.add('Registeration complete.')
         self.publicCommands = {}
         self.dependencies = []
         self.menu = None
@@ -882,8 +887,10 @@ class Addon(object):
         for dependency in self.dependencies:
             # Remove dependency
             dict_dependencies[dependency].delDependent(self.addon)
+            self.log.add('Dependency removed: %s' % dependency, True)
             echo('gungame', 0, 2, 'Addon:DependencyRemoved', {'name': self.addon, 'dependency': dependency})
         
+        self.log.add('Unregistration complete.')
         echo('gungame', 0, 0, 'Addon:Unregistered', {'name': self.addon})
     
     def validateAddon(self):
@@ -902,19 +909,26 @@ class Addon(object):
         if not callable(function):
             raise TypeError('Cannot register command (%s): callback is not callable.' % command)
         
+        # Don't register command if its already registered
+        if es.exists('command', 'gg_%s' % command):
+            return
+        
+        # Add to command list
         self.publicCommands[command] = function, syntax
         
         # Register block
         es.addons.registerBlock('gungamelib', command, self.__publicCommandCallback)
         
-        # Register command if its not already registered
-        if not es.exists('command', 'gg_%s' % command):
-            es.regclientcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
-            es.regsaycmd(getSayCommandName(command), 'gungamelib/%s' % command)
-            
-            # Register console command
-            if console:
-                es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+        # Register the command
+        es.regclientcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+        es.regsaycmd(getSayCommandName(command), 'gungamelib/%s' % command)
+        
+        # Register console command
+        if console:
+            es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+        
+        # Log it!
+        self.log.add('Created public command (%s) console=%s' % (command, console))
     
     def __publicCommandCallback(self):
         # Get variables
@@ -925,20 +939,19 @@ class Addon(object):
         # Get command info
         callback, syntax = self.publicCommands[command]
         
+        # Check if they have supplied the right amount of arguments
+        if not inFunctionArgumentRange(callback, len(arguments)+1):
+            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            return
+        
         # Try and call the command
         try:
             callback(userid, *arguments)
-        except TypeError, e:
-            # Argument error
-            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
-                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
-            
-            # Tell them an internal error occured and re-raise the error
-            else:
-                msg('gungame', userid, 'InternalError', {'cmd': command})
-            
-            callback(userid, *arguments)
-            return
+        except:
+            # There was an error, tell the user and tell the console
+            msg('gungame', userid, 'InternalError', {'cmd': command})
+            echo('gungame', 0, 0, 'CommandError', {'cmd': command})
+            es.excepter(sys.exc_info())
     
     def registerAdminCommand(self, command, function, syntax='', console=True, log=True):
         if not callable(function):
@@ -955,6 +968,9 @@ class Addon(object):
             # Register command if its not already registered
             if not es.exists('command', 'gg_%s' % command):
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+        
+        # Log it!
+        self.log.add('Created admin command (%s) console=%s, log=%s' % (command, console, log))
     
     def __adminCommandCallback(self):
         # Call command
@@ -985,20 +1001,19 @@ class Addon(object):
         # Get command info
         callback, syntax, console, log = self.commands[command]
         
+        # Check if they have supplied the right amount of arguments
+        if not inFunctionArgumentRange(callback, len(arguments)+1):
+            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            return
+        
         # Try and call the command
         try:
             callback(userid, *arguments)
-        except TypeError, e:
-            # Argument error
-            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
-                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
-            
-            # Tell them an internal error occured and re-raise the error
-            else:
-                msg('gungame', userid, 'InternalError', {'cmd': command})
-            
-            callback(userid, *arguments)
-            return
+        except:
+            # There was an error, tell the user and the console
+            msg('gungame', userid, 'InternalError', {'cmd': command})
+            echo('gungame', 0, 0, 'CommandError', {'cmd': command})
+            es.excepter(sys.exc_info())
         
         # Tell everyone about what the admin ran
         if log:
@@ -1045,7 +1060,7 @@ class Addon(object):
         self.menu.setdescription('%s\n * %s' % (self.menu.c_beginsep, description))
     
     def hasMenu(self):
-        return (self.menu != None)
+        return self.menu != None
     
     def sendMenu(self, userid):
         if not self.hasMenu():
@@ -1426,7 +1441,7 @@ class EasyInput(object):
 #  WINNERS CLASS
 # ==============================================================================
 class Winners(object):
-    ''' Class used for tracking and storing Winners'''
+    '''Class used for tracking and storing Winners'''
     
     def __init__(self, uniqueid):
         self.uniqueid = str(uniqueid)
@@ -1781,12 +1796,71 @@ class OrderedMenu(object):
         popuplib.send('OrderedMenu_%s:1' % (self.menu), users)
 
 # ==============================================================================
-#   LOGGER CLASS
+#  LOGGER CLASS
 # ==============================================================================
 class Logger(object):
-    '''Coming soon.'''
+    '''!Stub class, implemented later.'''
     
-    def __init__(self, *args): pass
+    def __init__(self, name, fullName, **kw): pass
+    def add(self, data, debug=False): pass
+    def seperator(self, char='='): pass
+    def write(self, data): pass
+    
+""" TODO: Complete this class and get add() function with inspect.stack().
+class Logger(object):
+    '''Logger object. Creates a file in addons/gungame/logs/, and has some
+    functions to easily '''
+    
+    def __init__(self, name, fullName, **kw):
+        '''Open the file.'''
+        try:
+            self.file = open(getGameDir('addons/eventscripts/gungame/logs/%s.txt' % name), 'a')
+        except IOError, e:
+            raise IOError('Cannot create log file: %s' % e)
+        
+        # TODO:  implement size check
+        
+        # TODO:  implement header
+        
+        # Declare variables
+        self.name = name
+        self.fullName = fullName
+        self.data = kw
+        
+        self.__header()
+    
+    def __header(self):
+        '''Prints a header with a few bits and bobs on.'''
+        # Write "log-opened" header
+        self.seperator()
+        self.write('Log opened (%s)' % self.fullName)
+        self.seperator()
+        
+        if not self.data:
+            return
+        
+        for k,v in self.data.iteritems():
+            self.write(' > %s = %s' % (k,v))
+        
+        self.seperator()
+    
+    def add(self, data, debug=False):
+        '''Add a line to the file, with caller information.'''
+        # Get the caller info
+        #_, module, line, func, __, ___ = inspect.stack()[1]
+        #_, module, line, func, __, ___ = None, 'NOT IMPLEMENTED', 0, 'notImplemented', None, None
+        
+        #self.write('%s.%s [line:%s]:%s%s' % (module, func, line, '  [DEBUG]  ' if debug else '  ', data))
+        self.write(data)
+    
+    def seperator(self, char='='):
+        '''Draw a seperator.'''
+        self.write(char*80)
+    
+    def write(self, data):
+        '''Write data to the file.'''
+        self.file.write('%s %s\r\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), data))
+"""
 
 # ==============================================================================
 #  CLASS WRAPPERS
@@ -1835,16 +1909,22 @@ def getWinner(uniqueid):
     return Winners(uniqueid)
     
 def getWeaponOrder(file):
-    if '.txt' in file:
-        file.replace('.txt', '')
-        
+    if file.endswith('.txt'):
+        file = file[:-4]
+    
     if file not in dict_weaponOrderInstances:
         dict_weaponOrderInstances[file] = WeaponOrder(file)
-        
+    
     return dict_weaponOrderInstances[file]
 
 def getCurrentWeaponOrder():
-    return dict_weaponOrderInstances[currentWeaponOrder]
+    file = getVariableValue('gg_weapon_order_file')
+    
+    # Remove .txt ending
+    if file.endswith('.txt'):
+        file = file[:-4]
+    
+    return dict_weaponOrderInstances[file]
 
 # ==============================================================================
 #   MESSAGE FUNCTIONS
@@ -2129,6 +2209,10 @@ def addDownloadableWinnerSound():
     list_usedRandomSounds.append(random.choice(sounds))
     es.stringtable('downloadables', 'sound/%s' % list_usedRandomSounds[-1])
     
+    # Don't handle chattime
+    if not getVariableValue('gg_dynamic_chattime'):
+        return
+    
     # Get path data
     realPath = getGameDir('sound/%s' % list_usedRandomSounds[-1])
     
@@ -2143,8 +2227,7 @@ def addDownloadableWinnerSound():
     if ext == 'mp3':
         try:
             info = mp3lib.mp3info(realPath)
-            if getVariableValue('gg_dynamic_chattime'):
-                duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
+            duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
         except:
             echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
     
@@ -2152,8 +2235,7 @@ def addDownloadableWinnerSound():
     elif ext == 'wav':
         try:
             w = wave.open(realPath, 'rb')
-            if getVariableValue('gg_dynamic_chattime'):
-                duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
+            duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
         except:
             echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
         finally:
@@ -2335,46 +2417,93 @@ def registerAddon(addonName):
         raise AddonError('Cannot register addon (%s): already registered.' % addonName)
 
 def getAddon(addonName):
-    if addonName in dict_addons:
-        return dict_addons[addonName]
-    else:
-        raise AddonError('Cannot get addon object (%s): not registered.' % addonName)
+    '''!Get an addon instance.
+    
+    @exception ValueError is raised if the addon is not registered. See addonRegistered'''
+    # Check the addon is registered
+    if not addonRegistered(addonName):
+        raise ValueError('Cannot get addon instance (%s): not already registered.' % addonName)
+    
+    return dict_addons[addonName]
 
 def unregisterAddon(addonName):
-    if addonName in dict_addons:
-        # Unregister commands
-        dict_addons[addonName].unregisterCommands()
-        
-        del dict_addons[addonName]
-        
-    else:
-        raise AddonError('Cannot unregister addon (%s): not registered.' % addonName)
+    '''!Unregisters an addon.
+    
+    @param addonName Name of the addon to unregister.'''
+    # Check if the addon is registered
+    if not addonRegistered(addonName):
+        return
+    
+    # Unregister addon
+    dict_addons[addonName].unregisterCommands()
+    del dict_addons[addonName]
 
 def getAddonDisplayName(addonName):
+    '''!Gets the display name of an addon.
+    
+    @exception ValueError is raised if \p addonName is not registered.
+    
+    @remarks Use addonRegistered before using this function to prevent raise errors.
+    
+    @return The display name of \p addonName.
+    '''
+    # Is GunGame?
     if addonName == 'gungame':
         return 'GunGame'
-    elif addonName in dict_addons:
-        return dict_addons[addonName].getDisplayName()
-    else:
-        raise AddonError('Cannot get display name (%s): not registered.' % addonName)
+    
+    # Check if the addon is registered
+    if not addonRegistered(addonName):
+        raise ValueError('Cannot get display name (%s): not registered.' % addonName)
+    
+    return dict_addons[addonName].getDisplayName()
 
 def addonRegistered(addonName):
+    '''!Checks to see if an addon is registered.
+    
+    @param addonName Name of the addon to check.
+    
+    @retval True The addon is registered.
+    @retval False The addon is not registered.
+    
+    @remarks Use this before trying getAddon'''
     return addonName in dict_addons
 
-def getRegisteredAddonlist():
+def getRegisteredAddonList():
+    '''!@return A list of registered addons.'''
     return dict_addons.keys()
 
 def getDependencyList():
+    '''!@return A list of current dependencies.'''
     return dict_dependencies.keys()
 
+def dependencyExists(dependencyName):
+    '''!Checks to see if a dependency exists.
+    
+    @param dependencyName The name of the dependency to check.
+    
+    @retval True The dependency exists.
+    @retval False The dependency does not exist.'''
+    return dependencyName in dict_dependencies
+
 def getDependencyValue(dependencyName):
+    '''!Gets the value of a dependency.
+    
+    @exception KeyError is raised if the dependency does not exist.
+    
+    @param dependencyName Name of the dependency to get the value of.
+    
+    @remarks Use dependencyExists before using this function to prevent raise errors.
+    
+    @return Value of the dependency.'''
     return dict_dependencies[dependencyName].dependencyValue
 
 # ==============================================================================
 #   GLOBALS RELATED COMMANDS
 # ==============================================================================
 def setGlobal(variableName, variableValue):
-    '''Set a global variable (name case insensitive)'''
+    '''!Sets the value of a global variable.
+    
+    @remark \p variableName is \b not case sensitive.'''
     variableName = variableName.lower()
     
     if isNumeric(variableValue):
@@ -2383,7 +2512,12 @@ def setGlobal(variableName, variableValue):
     dict_globals[variableName] = variableValue
 
 def getGlobal(variableName):
-    '''Returns a global variable (name case insensitive)'''
+    '''!Returns the value of a global variable.
+    
+    @return The value of the variable
+    @retval 0 The variable does not exist
+    
+    @remark \p variableName is \b not case sensitive.'''
     variableName = variableName.lower()
     
     if variableName in dict_globals:
@@ -2395,6 +2529,12 @@ def getGlobal(variableName):
 #  HELPER FUNCTIONS
 # ==============================================================================
 def isNumeric(value):
+    '''!Checks to see if \p value can be converted to an integer.
+    
+    @param value Value to check
+    
+    @retval True \p value can be converted.
+    @retval False \p value cannot be converted.'''
     try:
         int(value)
         return True
@@ -2402,9 +2542,17 @@ def isNumeric(value):
         return False
 
 def getCfgDir(dir):
+    '''!@return An absolute path to the gungame config directory plus \p dir.'''
     return getGameDir('cfg/gungame/%s' % dir)
 
 def getGameDir(dir):
+    '''!Gets an absolute path to a game directory.
+    
+    @remark Implicitly replaces \\ with / (linux support)
+    
+    @param dir Directory to append to the game directory.
+    
+    @return An absolute path to the game directory plus \p dir.'''
     # Get game dir
     gamePath = str(es.ServerVar('eventscripts_gamedir'))
     
@@ -2416,6 +2564,16 @@ def getGameDir(dir):
     return '%s/%s' % (gamePath, dir)
 
 def getAddonDir(addonName, dir):
+    '''!Gets an absolute path to an addon directory.
+    
+    @exception ValueError is raised if \p addonName points to an invalid addon.
+    
+    @remark Implicitly replaces \\ with / (linux support)
+    
+    @param addonName Name of the addon to get the directory of
+    @param dir Additional directory to append to the result
+    
+    @return addons/eventscripts/gungame/[included/custom]_addons/\p addonName/\p dir'''
     # Check addon exists
     if not addonExists(addonName):
         raise ValueError('Cannot get addon directory (%s): doesn\'t exist.' % addonName)
@@ -2430,65 +2588,124 @@ def getAddonDir(addonName, dir):
     return '%s/%s/%s' % (addonPath, 'custom_addons' if getAddonType(addonName) else 'included_addons', dir)
 
 def clientInServer(userid):
+    '''!Checks to see whether \p userid is in the server.
+    
+    @param userid Player to check.
+    
+    @retval True The client is on the server.
+    @retval False The client is not on the server.'''
     return (es.getplayername(userid) != 0) or es.exists('userid', userid)
 
 def inMap():
+    '''!Checks to see if the server is currently in a map.
+    
+    @retval True The server is in a map.
+    @retval False The server is not in a map.'''
     return (str(es.ServerVar('eventscripts_currentmap')) != '')
 
 def isSpectator(userid):
-    return (es.getplayerteam(userid) <= 1)
+    '''!Checks to see if \p userid is a spectator.
+    
+    @retval True The player is a spectator, currently connecting or not on the server.
+    @retval False The player is on an active team.'''
+    return es.getplayerteam(userid) <= 1
 
 def hasEST():
+    '''!Checks to see if ESTools is installed on the server.
+    
+    @retval True This server has EST installed.
+    @retval False This server does not have EST installed.'''
     return str(es.ServerVar('est_version')) != '0'
     
 def getESTVersion():
+    '''!Gets the current version of ESTools.
+    
+    @return The value of \b est_version.
+    
+    @retval 0.0 If EST is not on the server. See hasEST().'''
     if hasEST():
         return float(es.ServerVar('est_version'))
     else:
         return 0.000
 
 def isDead(userid):
+    '''!Checks to see if \p userid is dead.
+    
+    @retval 1 The player is dead.
+    @retval 0 The player is alive.'''
     return es.getplayerprop(userid, 'CBasePlayer.pl.deadflag')
 
 def playerExists(userid):
+    '''!Checks to see if \p userid is in \c dict_players.
+    
+    @retval True The player has a \c Player instance.
+    @return False The player has no \c Player instance.'''
     userid = int(userid)
     return userid in dict_players
 
 def getAddonType(addonName):
+    '''!Gets the type of an addon.
+    
+    @param addonName The name of the addon to get the type of.
+    
+    @retval 0 /p addonName is an included addon.
+    @retval 1 /p addonName is a custom addon.'''
     # Check addon exists
     if not addonExists(addonName):
         raise ValueError('Cannot get addon type (%s): doesn\'t exist.' % addonName)
     
     # Get addon type
-    if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)):
-        return 0
-    else:
-        return 1
+    return int(os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)))
 
 def addonExists(addonName):
-    return (os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName)))
+    '''!Checks to see if an addon exists.
+    
+    @param addonName The name of the addon to check exists.
+    
+    @return True or False depending on whether the addon exists.'''
+    return os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName))
 
 def formatArgs():
-    return [es.getargv(x) for x in range(1, es.getargc())]
+    '''!@return A list of arguments that was supplied to the last console command.'''
+    return map(es.getargv, xrange(1, es.getargc()))
 
-def removeReturnChars(playerName):
-    playerName = playerName.strip('\n')
-    playerName = playerName.strip('\r')
+def removeReturnChars(value):
+    '''!Removes return characters (\\r and \\n) from \p value.
     
-    return playerName
+    @param value The string to clean.
+    
+    @return \p value with \\r and \\n removed from its contents.'''
+    return str(value).strip('\r\n')
 
 def clamp(val, lowVal=False, highVal=False):
+    '''!Clamps a value between its low and high boundaries.
+    
+    If \p val is less than \p lowVal, \p lowVal will be returned.
+    If \p val is greater than \p highVal, \p highVal will be returned.
+    
+    @param val The value to clamp between \p lowVal> and \p highVal
+    @param lowVal The lowest value \p val may be. Set this to False to not have a lower boundary.
+    @param highVal The highest value \p val may be. Set this to False to not have a lower boundary.
+    
+    @return A clamped value.'''
     if lowVal and highVal:
         return max(lowVal, min(val, highVal))
-    elif lowVal:
+    elif lowVal is not False:
         return max(lowVal, val)
-    elif highVal:
+    elif highVal is not False:
         return min(highVal, val)
+    
+    return val
 
 def canShowHints():
-    return (getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0)
+    '''!Checks to see if the HUDHint space is being used by a counter.
+    
+    @retval True If the HUDHint space is clear.
+    @retval False If the HUDHint space is being used by a counter.'''
+    return getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0
 
 def fileHashCheck():
+    '''!@deprecated May be used when we go public.'''
     # Open file and get lines
     file = open(getGameDir('addons/eventscripts/gungame/data/hashlist.txt'), 'r')
     lines = [x.strip() for x in file.readlines()]
@@ -2517,6 +2734,7 @@ def fileHashCheck():
     return True, 0, 0
 
 def generateHashes():
+    '''!@deprecated May be used when we go public.'''
     baseDir = getGameDir('addons/eventscripts/gungame')
     
     # Open file for writing
@@ -2568,6 +2786,19 @@ def generateHashes():
     file.close()
 
 def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True):
+    '''!Processes a file, removing blank lines, commented lines and strips lines, too.
+    
+    @exception IOError will be raised if the file location is invalid.
+    @exception OSError will be raised in certain invalid file location occasions.
+    
+    @see http://docs.python.org/lib/module-exceptions.html
+    
+    @param location The location of the file to process.
+    @param removeBlankLines [bool] Whether to remove blank lines or not.
+    @param comment Lines starting with this string will be removed (making this value empty doesn't remove commented lines)
+    @param stripLines [bool] Whether to strip lines or not.
+    
+    @return The processed lines.'''
     # Open file and get lines
     file = open(getGameDir(location), 'r')
     lines = file.readlines()
@@ -2588,9 +2819,19 @@ def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True)
     return lines
 
 def getSayCommandName(command):
+    '''!Prefixes \p command with the say command prefix.
+    
+    @param command The name of the command to be prefixed
+    
+    @return \p command prefixed with the value of \b gg_say_prefix.'''
     return '%s%s' % (getVariableValue('gg_say_prefix'), command)
 
 def removeCommandPrefix(command):
+    '''!Removes the command prefixes (gg_ or the say command prefix) from \p command
+    
+    @param command The command to be cleaned
+    
+    @return The command name without prefixes.'''
     command = command.lower()
     
     # Get say prefix
@@ -2606,3 +2847,54 @@ def removeCommandPrefix(command):
     
     # Return the raw command
     return command
+
+def getMinimumFuncArgs(function):
+    '''!Gets the amount of required arguments for a function.
+    
+    @exception TypeError function must be a: static or class method, lambda or a normal function; builtins are not supported.
+    
+    @param function Function to get minimum arguments for.
+    
+    @return Minimum amount of arguments this function can be bassed.'''
+    if not hasattr(function, 'func_code'):
+        raise TypeError('This function only supports: static methods, class methods and functions (NOT BUILTINS!). Ensure you have passed a function.')
+    
+    return len(inspect.getargspec(function)[0]) - int(hasattr(function, 'im_func'))
+
+def getMaximumFuncArgs(function):
+    '''!Gets the maximum amount of arguments this function can be passed.
+    
+    @param function Function to get maximum arguments for.
+    
+    @return Maximum amount of arguments this function can be passed.'''
+    if not hasattr(function, 'func_code'):
+        raise TypeError('This function only supports: static methods, class methods and functions (NOT BUILTINS!). Ensure you have passed a function.')
+    
+    # Initialise variables
+    modifier = 0
+    names, varargs, _, defaults = inspect.getargspec(function)
+    
+    if varargs:
+        return 9999
+    
+    # Does this function have any defaults?
+    if defaults:
+        modifier += len(defaults)
+    
+    # Is this a class method?
+    if hasattr(function, 'im_func'):
+        modifier -= 1
+    
+    return len(names) + modifier
+
+def inFunctionArgumentRange(function, arguments):
+    '''!Checks to see whether \p arguments is within the allowed arguments of the function.
+    
+    @param function Function to check against.
+    @param arguments Amount of arguments to check is in range.
+    
+    @return bool'''
+    return getMinimumFuncArgs(function) <= arguments <= getMaximumFuncArgs(function)
+
+def serverCmd(*args):
+    es.server.cmd(args.join(';'))

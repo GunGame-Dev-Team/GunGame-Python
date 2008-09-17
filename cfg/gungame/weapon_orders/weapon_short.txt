@@ -42,8 +42,6 @@
 // 
 // OTHER:
 // hegrenade        knife
-//
-// Note: this weapon order file must be defined in gg_weapon_orders.ini.
 //----------------------------------------------------------------------------
 
 => Short weapon order

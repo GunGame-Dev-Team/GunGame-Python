@@ -25,6 +25,20 @@ info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
 
+"""
+
+# ==============================================================================
+#   GLOBALS
+# ==============================================================================
+commands = {
+    'levelup':
+        {
+            'type': playerFunc,
+            'syntax': '<userid> <levels to award>',
+            'attribute': 'levelup',
+        },
+}
+
 # ==============================================================================
 #   GAME EVENTS
 # ==============================================================================
@@ -34,12 +48,49 @@ def load():
     gg_console.setDisplayName('GG Console Interface')
     
     # Command registration
-    gg_console.registerAdminCommand('setlevel', cmd_setlevel, '<userid> <level>')
-    gg_console.registerAdminCommand('teleport', cmd_teleport, '<userid> <x> <y> <z>')
+    gg_console.registerAdminCommand('gg', cmd_gg, '<command> <...>')
 
 # ==============================================================================
 #   CONSOLE COMMANDS
 # ==============================================================================
+def cmd_gg(userid, name, *args):
+    # Check the command exists
+    if name not in commands:
+        #TODO: Show invalid command error
+        return
+    
+    # Get command info
+    info = commands[name]
+    
+    # Show the syntax
+    if len(args) == 0:
+        gungamelib.msg('gungame', 0, 0, 'InvalidSyntax', {'cmd': name, 'syntax': info['syntax']})
+        return
+    
+    # Pass over to the type
+    info['type'](userid, name, info, args)
+
+def playerFunc(userid, name, info, args):
+    # Get the target userid
+    target = args[0]
+    
+    # Check the client is in the server
+    if not gungamelib.clientInServer(target):
+        gungamelib.msg('gungame', 0, 0, 'InvalidUserid', {'userid': target})
+        return
+    
+    player = gungamelib.getPlayer(target)
+    
+    # Get the function
+    func = getattr(player, info['attribute'], None)
+    
+    # Did we successfully get it?
+    if func == None:
+        gungamelib.msg('gungame', 0, 0, 'InternalError', {'cmd': name})
+        return
+    
+    # Try and call the function
+    
 def cmd_setlevel(userid, target, level):
     # Make sure the client is in the server
     if not gungamelib.clientInServer(target):
@@ -61,3 +112,4 @@ def cmd_teleport(userid, target, x, y, z):
     
     player = gungamelib.getPlayer(target)
     player.teleportPlayer(x, y, z)
+"""

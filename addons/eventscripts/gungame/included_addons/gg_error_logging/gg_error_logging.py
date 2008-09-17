@@ -42,7 +42,7 @@ errorFile = None
 # ==============================================================================
 #   ERROR TRACKING CLASS
 # ==============================================================================
-class ErrorTracking:
+class ErrorTracking(object):
     '''Tracks the count and line number of the errors that are logged.'''
     errorIndex = None
     errorCount = 1

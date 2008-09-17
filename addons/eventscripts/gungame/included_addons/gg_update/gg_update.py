@@ -34,6 +34,11 @@ info.basename = 'gungame/included_addons/gg_update'
 info.author   = 'GunGame Development Team'
 
 # ==============================================================================
+#   GLOBALS
+# ==============================================================================
+bool_updating = False
+
+# ==============================================================================
 #   GAME EVENTS
 # ==============================================================================
 def load():
@@ -81,6 +86,16 @@ def checkVersion(latestRevision=False):
         return 0
 
 def update():
+    global bool_updating
+    
+    # Make sure we still aren't updating (happens sometime)
+    if bool_updating:
+        gungamelib.echo('gg_update', 0, 0, 'UpdateInProgress')
+        return
+    
+    # Update started
+    bool_updating = True
+    
     # Get variables
     latestRevision = getLatestVersion()
     thisRevision = int(str(es.ServerVar('eventscripts_ggp')).split('.')[2])
@@ -127,8 +142,10 @@ def update():
     
     # Restart GunGame
     if updateRan:
-        gungamelib.echo('gg_update', 0, 0, 'Restarting')
-        es.delayed(1, 'es_reload gungame')
+        gungamelib.echo('gg_update', 0, 0, 'Restart')
+    
+    # Finished updating
+    bool_updating = False
 
 def forceUpdateToRevision(rev):
     gungamelib.echo('gg_update', 0, 0, 'Downloading', {'rev': rev})

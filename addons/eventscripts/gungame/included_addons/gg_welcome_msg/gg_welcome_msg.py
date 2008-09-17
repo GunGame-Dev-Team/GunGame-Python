@@ -107,7 +107,7 @@ def buildMenu():
     global list_addonsToShow
     
     # Get addon list
-    registeredAddons = gungamelib.getRegisteredAddonlist()
+    registeredAddons = gungamelib.getRegisteredAddonList()
     
     # Get addon names to show
     list_addonNames = [x.strip() for x in list_addonsToShow]

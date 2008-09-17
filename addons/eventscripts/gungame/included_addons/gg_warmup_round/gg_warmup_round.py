@@ -206,9 +206,17 @@ def countDown():
         if warmupCountDown['remaining'] <= 5:
             gungamelib.playSound('#all', 'countDownBeep')
         
+        # mp_restartgame and trigger round_end
+        if warmupCountDown['remaining'] == 1:
+            es.server.cmd('mp_restartgame 1')
+    
+    # No time left
     elif warmupCountDown['remaining'] == 0:
         # Send hint
         gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Ended')
+        
+        # Trigger round_end
+        es.addons.triggerEvent('round_end')
         
         # Play beep
         gungamelib.playSound('#all', 'countDownBeep')
@@ -216,11 +224,12 @@ def countDown():
         # Stop the timer
         repeat.delete('gungameWarmupTimer')
         
+        # Is not warmup
         gungamelib.setGlobal('isWarmup', 0)
         
         # Unload "gungame/included_addons/gg_warmup_round"
         es.unload('gungame/included_addons/gg_warmup_round')
         
         # Fire gg_start event
-        es.event('initialize','gg_start')
-        es.event('fire','gg_start')
+        es.event('initialize', 'gg_start')
+        es.event('fire', 'gg_start')

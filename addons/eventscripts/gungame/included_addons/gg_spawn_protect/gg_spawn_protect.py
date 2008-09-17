@@ -75,11 +75,11 @@ def server_cvar(event_var):
         else:
             # Set noisy back
             es.ServerVar('eventscripts_noisy').set(noisyBefore)
-            
+
 def weapon_fire(event_var):
     if not gungamelib.getVariableValue('gg_spawn_protect_cancelonfire'):
         return
-        
+    
     userid = int(event_var['userid'])
     
     if userid in list_protected:
@@ -103,7 +103,8 @@ def player_spawn(event_var):
     
     if userid in list_protected:
         return
-        
+    
+    # Start protecting the player
     startProtect(userid)
     
 def player_death(event_var):
@@ -141,11 +142,15 @@ def startProtect(userid):
     # Set PreventLevel if needed
     if not gungamelib.getVariableValue('gg_spawn_protect_can_level_up'):
         gungamePlayer.setPreventLevel(1, 'gg_spawn_protect')
-        
-    # Start the delay to cancel spawn protection
-    gamethread.delayedname(gungamelib.getVariableValue('gg_spawn_protect'), 'ggSpawnProtect%s' %userid, endProtect, (userid))
     
+    # Start the delay to cancel spawn protection
+    gamethread.delayedname(gungamelib.getVariableValue('gg_spawn_protect'), 'ggSpawnProtect%s' % userid, endProtect, (userid))
+
 def endProtect(userid):
+    # Check the client hasn't left during the protection period
+    if not gungamelib.playerExists(userid):
+        return
+    
     # Retrieve player objects
     gungamePlayer = gungamelib.getPlayer(userid)
     playerlibPlayer = playerlib.getPlayer(userid)

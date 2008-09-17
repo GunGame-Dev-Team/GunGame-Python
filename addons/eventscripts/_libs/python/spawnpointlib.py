@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: spawnpointlib
-    Version: 1.0.466
+    Version: 1.0.464
     Description: GunGame Spawnpoint Library
 '''
 
@@ -72,45 +72,43 @@ class SpawnPointManager(object):
         if not self.hasPoints():
             return
         
-        gamethread.delayed(0, self.__createSpawnPoints, ())
-        
-    def __createSpawnPoints(self):
-        #Remove the old spawnpoints
-        for tSpawn in es.createentitylist('info_player_terrorist').keys():
+        gamethread.delayed(0, self.__setupSpawnEntities, ())
+    
+    def __setupSpawnEntities(self):
+        '''Creates info_player_[counter]terrorist entities at spawnpoint
+        locations and uses inbuilt random spawn selection.'''
+        # Remove spawnpoints
+        for tSpawn in es.createentitylist('info_player_terrorist'):
             es.server.cmd('es_xremove %i' % tSpawn)
-        for ctSpawn in es.createentitylist('info_player_counterterrorist').keys():
+        for ctSpawn in es.createentitylist('info_player_counterterrorist'):
             es.server.cmd('es_xremove %i' % ctSpawn)
         
+        # Get a userid
         userid = es.getuserid()
-        fakeBot = 0
+        fakeBot = not bool(userid)
         
         # If no players on the server create a bot
-        if not userid:
+        if fakeBot:
             userid = es.createbot('spawnmaker')
-            fakeBot = 1
         
-        # Copy and shuffle the spawnpoints
-        randomPoints = self.spawnPoints[:]
-        random.shuffle(randomPoints)
-        
-        # Create the new spawnpoints (sp)
-        for sp in randomPoints:
-            for teamSpawn in ['info_player_terrorist', 'info_player_counterterrorist']:
+        # Loop through the spawnpoints
+        for spawn in self.spawnPoints:
+            for team in ('info_player_terrorist', 'info_player_counterterrorist'):
                 # Create the spawnpoint and get the index
-                es.server.cmd('es_xgive %s %s' % (userid, teamSpawn))
+                es.server.cmd('es_xgive %s %s' % (userid, team))
                 index = int(es.ServerVar('eventscripts_lastgive'))
                 
                 # Set the spawnpoint position and rotation
-                es.setindexprop(index, 'CBaseEntity.m_vecOrigin', '%s,%s,%s' % (sp[0], sp[1], sp[2]))
-                es.setindexprop(index, 'CBaseEntity.m_angRotation', '0,%s,0' %  sp[4])
+                es.setindexprop(index, 'CBaseEntity.m_vecOrigin', '%s,%s,%s' % (spawn[0], spawn[1], spawn[2]))
+                es.setindexprop(index, 'CBaseEntity.m_angRotation', '0,%s,0' % spawn[4])
         
-        #kick the bot
+        # Kick the bot
         if fakeBot:
-            es.delayed(0, 'kickid %i' % userid)
+            es.delayed(0, 'kickid %s' % userid)
     
     def createNewSpawnFile(self):
         '''Used to create a new spawnpoint file.'''
-        spawnPointFile = open(self.spawnFile, 'w').close()
+        open(self.spawnFile, 'w').close()
     
     def add(self, posX, posY, posZ, eyeYaw):
         '''Adds a spawnpoint to the current spawnpoint file.'''
@@ -229,7 +227,7 @@ class SpawnPointManager(object):
             self.__hideAllProps()
     
     def __showProp(self, index):
-        '''PRIVATE FUNCTION: Shows a model at a specific spawnpoint index.'''
+        '''PRIVATE: Shows a model at a specific spawnpoint index.'''
         self.userid = es.getuserid()
         
         # Check we aren't already showing it
@@ -260,7 +258,7 @@ class SpawnPointManager(object):
         self.propIndexes[index] = propIndex
     
     def __hideAllProps(self):
-        '''PRIVATE FUNCTION: Hides all active spawnpoint props.'''
+        '''PRIVATE: Hides all active spawnpoint props.'''
         # Get list of props
         entityIndexes = es.createentitylist('prop_dynamic').keys()
         
@@ -273,7 +271,7 @@ class SpawnPointManager(object):
         self.propIndexes.clear()
     
     def __resetProps(self):
-        '''PRIVATE FUNCTION: Resets all active spawnpoint props'''
+        '''PRIVATE: Resets all active spawnpoint props'''
         # Remove all props
         self.__hideAllProps()
         

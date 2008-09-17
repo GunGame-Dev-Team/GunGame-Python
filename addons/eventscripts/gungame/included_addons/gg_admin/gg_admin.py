@@ -115,6 +115,10 @@ def load():
         
         # Register them
         dict_menus[name] = int(level)
+    
+    # Touch the admin log
+    # Reference: http://forums.mattie.info/cs/forums/viewtopic.php?p=233366#233366
+    open(gungamelib.getGameDir('addons/eventscripts/gungame/logs/adminlog.txt'), 'a').close()
 
 def unload():
     # Unregister commands
@@ -366,7 +370,7 @@ def buildAddonMenu():
     menu_addon_menu.setdescription('%s\n * Open addon-specific menus' % menu_addon_menu.c_beginsep)
     
     # Loop through the addons
-    for addon in gungamelib.getRegisteredAddonlist():
+    for addon in gungamelib.getRegisteredAddonList():
         # Get the addon object and display name
         addonObj = gungamelib.getAddon(addon)
         addonName = gungamelib.getAddonDisplayName(addon)
@@ -405,7 +409,7 @@ def buildCommandAddonMenu(userid):
     menu_command.setdescription('%s\n * Select an addon' % menu_command.c_beginsep)
     
     # Loop through the addons with commands
-    for addonName in gungamelib.getRegisteredAddonlist():
+    for addonName in gungamelib.getRegisteredAddonList():
         addonObj = gungamelib.getAddon(addonName)
         
         # Make sure this addon has commands
@@ -462,7 +466,7 @@ def selectCommandMenu(userid, choice, popupid):
 #   HELPER FUNCTIONS
 # ==============================================================================
 def getCommandSyntax(command):
-    for addonName in gungamelib.getRegisteredAddonlist():
+    for addonName in gungamelib.getRegisteredAddonList():
         # Get the addon object
         addonObj = gungamelib.getAddon(addonName)
         
@@ -473,7 +477,7 @@ def getCommandSyntax(command):
     return ''
 
 def callCommand(userid, command, args):
-    for addonName in gungamelib.getRegisteredAddonlist():
+    for addonName in gungamelib.getRegisteredAddonList():
         # Get the addon object
         addonObj = gungamelib.getAddon(addonName)
         

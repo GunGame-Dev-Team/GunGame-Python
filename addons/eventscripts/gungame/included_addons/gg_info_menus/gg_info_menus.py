@@ -46,7 +46,8 @@ def load():
         steamid = gungamelib.getPlayer(userid).steamid
         
         # Is a bot?
-        if 'BOT' in steamid: continue
+        if 'BOT' in steamid:
+            continue
         
         # Update timestamp
         if gungamelib.getWins(steamid):
@@ -84,7 +85,8 @@ def player_activate(event_var):
     steamid = gungamelib.getPlayer(event_var['userid']).steamid
     
     # Is a bot?
-    if 'BOT' in steamid: return
+    if 'BOT' in steamid:
+        return
     
     # Update their timestamp
     if gungamelib.getWins(steamid):
@@ -98,12 +100,13 @@ def player_disconnect(event_var):
     # Do not continue if the player does not exist
     if not gungamelib.playerExists(userid):
         return
-        
+    
     # Get steamid
     steamid = gungamelib.getPlayer(event_var['userid']).steamid
     
     # Is a bot?
-    if 'BOT' in steamid: return
+    if 'BOT' in steamid:
+        return
     
     # Update their timestamp
     if gungamelib.getWins(steamid):
@@ -173,16 +176,18 @@ def buildLevelMenu():
         gungameLevelMenu.addline('   * You are on level <level number> (<weapon name>)') # Line #2
         gungameLevelMenu.addline('   * You have made #/# of your required kills') # Line #3
         gungameLevelMenu.addline('   * There currently is no leader') # Line #4
+    
+    # Stats information
     if gungamelib.getVariableValue('gg_stats'):
         gungameLevelMenu.addline('->2. WINS') # Line #5
         gungameLevelMenu.addline('   * You have won <player win count> time(s)') # Line #6
         gungameLevelMenu.addline('->3. LEADER(s)') # Line #7
-        gungameLevelMenu.addline('   * Leader Level: There are no leaders') # Line #8
-        gungameLevelMenu.addline('->   9. View Leaders Menu') # Line #9
     else:
         gungameLevelMenu.addline('->2. LEADER(s)') # Line #5
-        gungameLevelMenu.addline('   * Leader Level: There are no leaders') # Line #6
-        gungameLevelMenu.addline('->   9. View Leaders Menu') # Line #7
+    
+    gungameLevelMenu.addline('   * Leader Level: There are no leaders') # Line #6
+    gungameLevelMenu.addline('->   9. View Leaders Menu') # Line #7
+    
     gungameLevelMenu.submenu(9, 'gungameLeadersMenu')
     gungameLevelMenu.prepuser = prepGunGameLevelMenu
     gungameLevelMenu.timeout('send', 5)
@@ -194,7 +199,7 @@ def prepGunGameLevelMenu(userid, popupid):
     
     if gungamelib.getVariableValue('gg_multikill_override') == 0:
         gungameLevelMenu.modline(2, '   * You are on level %d' %gungamePlayer['level']) # Line #2
-        gungameLevelMenu.modline(3, '   * You need a %s kills to advance' %gungamePlayer.getWeapon()) # Line #3
+        gungameLevelMenu.modline(3, '   * You need a %s kill to advance' %gungamePlayer.getWeapon()) # Line #3
     else:
         gungameLevelMenu.modline(2, '   * You are on level %d (%s)' %(gungamePlayer['level'], gungamePlayer.getWeapon())) # Line #2
         gungameLevelMenu.modline(3, '   * You have made %d/%d of your required kills' %(gungamePlayer['multikill'], gungamelib.getVariableValue('gg_multikill_override'))) # Line #3
@@ -309,6 +314,7 @@ def prepTopMenu(userid, popupid):
     
     rank = orderedWinners.index(steamid) + 1
     page = int((rank - 1) / 10) + 1
+    
     if popupid != 'OrderedMenu_top_menu:%s' % page:
         return
     
@@ -350,15 +356,16 @@ def buildScoreMenu():
     
     if len(es.getUseridList()):
         levelCounter = gungamelib.getTotalLevels() + 1
+        
         while levelCounter > 0:
             levelCounter -= 1
             for playerid in gungamelib.getLevelUseridList(levelCounter):
                 menu.addItem('[%i] %s' % (levelCounter, es.getplayername(playerid)))
                 levelRankUseridList.append(playerid)
-                
+        
         for emptySlot in range(0, es.getmaxplayercount() - len(levelRankUseridList)):
             menu.addItem(' ')
-            
+        
     else:
         menu.addItem('No Players.')
     
@@ -393,6 +400,7 @@ def rebuildScoreMenu():
 def prepScoreMenu(userid, popupid):
     rank = levelRankUseridList.index(userid) + 1
     page = int((rank - 1) / 10) + 1
+    
     if popupid != 'OrderedMenu_score_menu:%s' % page:
         return
     
@@ -409,7 +417,8 @@ def addWin(userid):
     steamid = gungamelib.getPlayer(userid).steamid
     
     # Is a bot?
-    if 'BOT' in steamid: return
+    if 'BOT' in steamid:
+        return
     
     # Add win to database
     gungamelib.addWin(steamid)

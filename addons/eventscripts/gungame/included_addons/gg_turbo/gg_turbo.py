@@ -72,16 +72,16 @@ def giveNewWeapon(userid):
     
     # Only delay if we are on linux
     if os.name == 'posix':
-        gamethread.delayed(0.01, delayedGiveNewWeapon, (userid))
+        gamethread.delayed(0, delayedGiveNewWeapon, (userid))
     else:
         gungamePlayer.giveWeapon()
-        
+
 def delayedGiveNewWeapon(userid):
     if gungamelib.isDead(userid):
         return
-        
+    
     if gungamelib.isSpectator(userid):
         return
-        
+    
     gungamePlayer = gungamelib.getPlayer(userid)
     gungamePlayer.giveWeapon()

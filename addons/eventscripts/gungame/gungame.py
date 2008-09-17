@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.468
+    Version: 1.0.469
     Description: The main addon, handles leaders and events.
 '''
 
@@ -11,6 +11,7 @@
 # Python Imports
 import os
 import sys
+import random
 
 # EventScripts Imports
 import es
@@ -18,7 +19,6 @@ import gamethread
 import playerlib
 import usermsg
 import popuplib
-import random
 import keyvalues
 import services
 from configobj import ConfigObj
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.468'
+__version__ = '1.0.469'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -82,12 +82,12 @@ def initialize():
     
     # Loop through included addons
     for includedAddon in os.listdir(gungamelib.getGameDir('addons/eventscripts/gungame/included_addons/')):
-        if includedAddon[0:3] == 'gg_':
+        if includedAddon[:3] == 'gg_':
             list_includedAddonsDir.append(includedAddon)
     
     # Loop through custom addons
     for customAddon in os.listdir(gungamelib.getGameDir('addons/eventscripts/gungame/custom_addons/')):
-        if customAddon[0:3] == 'gg_':
+        if customAddon[:3] == 'gg_':
             list_customAddonsDir.append(customAddon)
     
     # Load configs
@@ -131,26 +131,18 @@ def initialize():
     
     # Get weapon order file
     baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
-    global list_files
-    list_files = os.listdir(baseDir)
+    files = files = filter(lambda x: os.path.splitext(x)[1] == '.txt', os.listdir(baseDir))
     
-    # Are we using a random file?
-    weaponOrderFile = gungamelib.getVariableValue('gg_weapon_order_file').strip('.txt')
-    if gungamelib.getVariableValue('gg_weapon_order_file') == '#random':
-        weaponOrderFile = random.choice(list_files).strip('.txt')
-    
-    for x in list_files:
+    # Loop through the weapon order files
+    for x in files:
+        # Get file and extension
         file, ext = os.path.splitext(x)
-        ext = ext[1:]
         
-        if ext != 'txt':
-            continue
-
         # Parse the file
         weaponOrder = gungamelib.getWeaponOrder(file)
         
-        # Is not the one we want?
-        if file != weaponOrderFile:
+        # Check if it is the weapon order file we want
+        if gungamelib.getVariableValue('gg_weapon_order_file') not in (file, x):
             continue
         
         # Set this as the weapon order and set the weapon order type
@@ -220,12 +212,12 @@ def unload():
     global gungameWeaponOrderMenu
     
     # Unload all enabled addons
-    for addonName in gungamelib.getRegisteredAddonlist():
+    for addonName in gungamelib.getRegisteredAddonList():
         if addonName in list_includedAddonsDir:
             es.unload('gungame/included_addons/%s' % addonName)
         elif addonName in list_customAddonsDir:
             es.unload('gungame/custom_addons/%s' % addonName)
-        
+    
     # Enable Buyzones
     userid = es.getuserid()
     es.server.cmd('es_xfire %d func_buyzone Enable' % userid)
@@ -233,7 +225,7 @@ def unload():
     # Get map if
     try:
         mapObjectives = gungamelib.getVariableValue('gg_map_obj')
-    
+        
         # Re-enable objectives
         if mapObjectives < 3:
             # Re-enable all objectives
@@ -242,17 +234,16 @@ def unload():
                     es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
                 elif len(es.createentitylist('func_hostage_rescue')):
                     es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
-        
-            # Enable bomb zone
+            
+            # Enable bomb zone 
             elif mapObjectives == 1:
                 if len(es.createentitylist('func_bomb_target')):
                     es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
-        
+            
             # Enable hostage objectives
             elif mapObjectives == 2:
                 if len(es.createentitylist('func_hostage_rescue')):
                     es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
-                
     except:
         pass
     
@@ -285,28 +276,39 @@ def es_map_start(event_var):
     # Reset the "rounds remaining" variable for multi-rounds
     dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
     
-    if gungamelib.getVariableValue('gg_weapon_order_file') == '#random':
-        randfile = random.choice(list_files).strip('.txt')
-        weaponOrder = gungamelib.getWeaponOrder(randfile)
-        while gungamelib.getCurrentWeaponOrder().filename == randfile:
-          weaponOrder = gungamelib.getWeaponOrder(random.choice(list_files).strip('.txt'))
-        weaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_type'))
+    # Is a random weapon order file
+    if gungamelib.getVariableValue('gg_weapon_order_random') != '0':
+        # Get weapon order file
+        baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
+        files = filter(lambda x: os.path.splitext(x)[1] == '.txt', os.listdir(baseDir))
         
-        if gungamelib.getVariableValue('gg_multikill_override') > 1:
-            weaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))        
+        # Get random file
+        currentFile = gungamelib.getCurrentWeaponOrder().filename
+        newFile = random.choice(files)
         
-        weaponOrder.echo()
+        # Make sure we only loop 50 times as there may only be one weapon order
+        for x in xrange(0, 50):
+            # See if they match
+            if newFile != currentFile:
+                break
+            
+            # Get a new file
+            newFile = random.choice(files)
+        
+        # Set the new file
+        gungamelib.setVariableValue('gg_weapon_order_file', newFile)
     
-    elif gungamelib.getVariableValue('gg_weapon_order_type') == '#random':
-        # Re-randomize the weapon order
+    # Re-randomise the weapon order if the order type is #random
+    if gungamelib.getVariableValue('gg_weapon_order_type') == '#random':
         myWeaponOrder = gungamelib.getCurrentWeaponOrder().setWeaponOrderFile('#random')
     
-    # Update
-    #es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-    #es.dbgmsg(0, '[GunGame]     * Update check')
-    #es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
-    #gungamelib.update()
-    #es.dbgmsg(0, '[GunGame] %s' % ('=' * 50))
+    if gungamelib.getVariableValue('gg_weapon_order_random') != '0':
+        # Show the new weapon order
+        es.dbgmsg(0, '[GunGame]')
+        gungamelib.echo('gungame', 0, 0, 'WeaponOrder:NewRandomWeaponOrder')
+        es.dbgmsg(0, '[GunGame]')
+        gungamelib.getCurrentWeaponOrder().echo()
+        es.dbgmsg(0, '[GunGame]')
     
     # Check to see if the warmup round needs to be activated
     if gungamelib.getVariableValue('gg_warmup_timer') > 0:
@@ -560,7 +562,7 @@ def player_death(event_var):
             afkPunishCheck(userid)
         
         return
-        
+    
     # No multikill? Just level up...
     multiKill = gungamelib.getLevelMultiKill(gungameAttacker['level'])
     if multiKill == 1:
@@ -602,7 +604,7 @@ def bomb_defused(event_var):
     if int(gungamePlayer['level']) == int(gungamelib.getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
         gungamelib.msg('gungame', userid, 'CannotSkipLevel_ByDefusing', {'level': playerWeapon})
         return
-        
+    
     # Level them up
     gungamePlayer.levelup(1, '0', 'bomb_defused')
 
@@ -616,7 +618,7 @@ def bomb_exploded(event_var):
     if int(gungamePlayer['level']) == int(gungamelib.getTotalLevels()) or playerWeapon == 'knife' or playerWeapon == 'hegrenade':
         gungamelib.msg('gungame', userid, 'CannotSkipLevel_ByPlanting', {'level': playerWeapon})
         return
-        
+    
     # Level them up
     gungamePlayer.levelup(1, '0', 'bomb_exploded')
 
@@ -633,6 +635,7 @@ def player_team(event_var):
         gungamelib.playSound(userid, 'welcome')
 
 def gg_levelup(event_var):
+    # Cache new level for later use
     newLevel = int(event_var['new_level'])
     
     # ============
@@ -821,44 +824,44 @@ def server_cvar(event_var):
     
     # GG_MAPVOTE
     if cvarName == 'gg_map_vote':
-        if newValue == 1 and 'gg_map_vote' not in gungamelib.getRegisteredAddonlist():
+        if newValue == 1 and 'gg_map_vote' not in gungamelib.getRegisteredAddonList():
             es.server.queuecmd('es_load gungame/included_addons/gg_map_vote')
-        elif newValue != 1 and 'gg_map_vote' in gungamelib.getRegisteredAddonlist():
+        elif newValue != 1 and 'gg_map_vote' in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/gg_map_vote')
     
     # GG_NADE_BONUS
     elif cvarName == 'gg_nade_bonus':
         if newValue != 0 and newValue != 'knife' and newValue in gungamelib.getWeaponList('all'):
             es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
-        elif newValue == 0 and 'gg_nade_bonus' in gungamelib.getRegisteredAddonlist():
+        elif newValue == 0 and 'gg_nade_bonus' in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/gg_nade_bonus')
     
     # GG_MULTI_LEVEL
     elif cvarName == 'gg_multi_level':
-        if newValue > 0 and 'gg_multi_level' not in gungamelib.getRegisteredAddonlist():
+        if newValue > 0 and 'gg_multi_level' not in gungamelib.getRegisteredAddonList():
             es.server.queuecmd('es_load gungame/included_addons/gg_multi_level')
-        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
+        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/gg_multi_level')
     
     # GG_SPAWN_PROTECTION
     elif cvarName == 'gg_spawn_protect':
-        if newValue > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonlist():
+        if newValue > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonList():
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
-        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonlist():
+        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/gg_spawn_protect')
     
     # GG_RETRY_PUNISH
     elif cvarName == 'gg_retry_punish':
-        if newValue > 0 and 'gg_retry_punish' not in gungamelib.getRegisteredAddonlist():
+        if newValue > 0 and 'gg_retry_punish' not in gungamelib.getRegisteredAddonList():
             es.server.queuecmd('es_load gungame/included_addons/gg_retry_punish')
-        elif newValue == 0 and 'gg_retry_punish' in gungamelib.getRegisteredAddonlist():
+        elif newValue == 0 and 'gg_retry_punish' in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/gg_retry_punish')
     
     # GG_FRIENDLYFIRE
     elif cvarName == 'gg_friendlyfire':
-        if newValue > 0 and 'gg_friendlyfire' not in gungamelib.getRegisteredAddonlist():
+        if newValue > 0 and 'gg_friendlyfire' not in gungamelib.getRegisteredAddonList():
             es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
-        elif newValue == 0 and 'gg_friendlyfire' in gungamelib.getRegisteredAddonlist():
+        elif newValue == 0 and 'gg_friendlyfire' in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/gg_friendlyfire')
     
     # GG Multi Round
@@ -870,7 +873,7 @@ def server_cvar(event_var):
     elif cvarName in list_includedAddonsDir:
         if newValue == 1:
             es.server.queuecmd('es_load gungame/included_addons/%s' % cvarName)
-        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonlist():
+        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/%s' % cvarName)
     
     # Multikill override
@@ -886,17 +889,14 @@ def server_cvar(event_var):
     
     # Weapon order file
     elif cvarName == 'gg_weapon_order_file':
-        if newValue != '#random':
-            # Parse the new file
-            myWeaponOrder = gungamelib.getWeaponOrder(newValue)
-            myWeaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_type'))
-        else:
-            randfile = random.choice(list_files).strip('.txt')
-            while gungamelib.getCurrentWeaponOrder().filename == randfile:
-                  randfile = random.choice(list_files).strip('.txt')
-            weaponOrder = gungamelib.getWeaponOrder(randfile)
-            weaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_type'))
-            
+        # Remove .txt from the file
+        if newValue.endswith('.txt'):
+            newValue = newValue[:-4]
+        
+        # Parse the new file
+        myWeaponOrder = gungamelib.getWeaponOrder(newValue)
+        myWeaponOrder.setWeaponOrderFile(gungamelib.getVariableValue('gg_weapon_order_type'))
+        
         # Set multikill override
         if gungamelib.getVariableValue('gg_multikill_override') != 0:
             myWeaponOrder.setMultiKillOverride(gungamelib.getVariableValue('gg_multikill_override'))

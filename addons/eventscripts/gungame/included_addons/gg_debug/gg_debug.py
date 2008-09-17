@@ -43,7 +43,7 @@ def unload():
 def printDebugInfo(userid):
     logPath = gungamelib.getGameDir('addons/eventscripts/gungame/logs/debug%s.txt' % time.time())
     
-    registeredAddons = gungamelib.getRegisteredAddonlist()
+    registeredAddons = gungamelib.getRegisteredAddonList()
     weaponOrder = dict(gungamelib.getCurrentWeaponOrder().order)
     
     debugfile = open(logPath, 'w')

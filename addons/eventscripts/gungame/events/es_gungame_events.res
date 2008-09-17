@@ -43,17 +43,25 @@
         "userid"            "short" // The userid of victim
         "userid_level"      "byte"  // The new level of the victim
 	}
+    "gg_multi_level"
+    {
+        "userid"    "short" // The userid of the leader that lost a level
+        "leveler"   "short" // The userid of the player that is leveling
+    }
     "gg_new_leader"
     {
         "userid"    "short" // The userid of the player that became the new leader
+        "leveler"   "short" // The userid of the player that is leveling
     }
     "gg_tied_leader"
     {
         "userid"    "short" // The userid of the player that tied the leader(s)
+        "leveler"   "short" // The userid of the player that is leveling
     }
     "gg_leader_lostlevel"
     {
         "userid"    "short" // The userid of the leader that lost a level
+        "leveler"   "short" // The userid of the player that is leveling
     }
     "gg_start"
     {

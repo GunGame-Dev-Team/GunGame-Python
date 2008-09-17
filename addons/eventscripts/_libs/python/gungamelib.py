@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.467
+    Version: 1.0.468
     Description: GunGame Library
 '''
 
@@ -1498,6 +1498,7 @@ class LeaderManager(object):
         # Fire gg_tied_leader
         es.event('initialize', 'gg_tied_leader')
         es.event('setint', 'gg_tied_leader', 'userid', userid)
+        es.event('setint', 'gg_tied_leader', 'leveler', userid)
         es.event('fire', 'gg_tied_leader')
     
     def __setLeader(self, userid):
@@ -1515,6 +1516,7 @@ class LeaderManager(object):
         # Fire gg_new_leader
         es.event('initialize', 'gg_new_leader')
         es.event('setint', 'gg_new_leader', 'userid', userid)
+        es.event('setint', 'gg_new_leader', 'leveler', userid)
         es.event('fire', 'gg_new_leader')
     
     def addLeader(self, userid):
@@ -1554,6 +1556,7 @@ class LeaderManager(object):
         # Fire gg_leader_lostlevel
         es.event('initialize', 'gg_leader_lostlevel')
         es.event('setint', 'gg_leader_lostlevel', 'userid', userid)
+        es.event('setint', 'gg_leader_lostlevel', 'leveler', userid)
         es.event('fire', 'gg_leader_lostlevel')
         
         # Need new leaders?
@@ -1593,6 +1596,7 @@ class LeaderManager(object):
             # Fire gg_new_leader
             es.event('initialize', 'gg_new_leader')
             es.event('setint', 'gg_new_leader', 'userid', userid)
+            es.event('setint', 'gg_new_leader', 'leveler', userid)
             es.event('fire', 'gg_new_leader')
         
         # Set old leaders, if they have changed

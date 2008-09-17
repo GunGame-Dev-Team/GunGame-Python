@@ -12,6 +12,5 @@
 
 gg_levelup
 gg_leveldown
-gg_levelsteal
+gg_knife_steal
 gg_win
-gg_triplelevel

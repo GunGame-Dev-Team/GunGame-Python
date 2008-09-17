@@ -112,6 +112,12 @@ def gg_levelup(event_var):
     
     # Stop the multi level after 10 seconds
     gamethread.delayed(10, removeMulti, (attacker, roundCounter))
+    
+    # Fire gg_multi_level
+    es.event('initialize', 'gg_multi_level')
+    es.event('setint', 'gg_multi_level', 'userid', attacker)
+    es.event('setint', 'gg_multi_level', 'leveler', attacker)
+    es.event('fire', 'gg_multi_level')
 
 # ==============================================================================
 #  HELPER FUNCTIONS

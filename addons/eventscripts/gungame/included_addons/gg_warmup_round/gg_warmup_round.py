@@ -20,6 +20,7 @@ import testrepeat as repeat
 
 # GunGame imports
 import gungamelib
+from gungame import gungame
 
 # ==============================================================================
 #  ADDON REGISTRATION
@@ -130,9 +131,9 @@ def unload():
     gungamelib.setGlobal('isIntermission', 0)
     
     # End the round
-    es.flags('remove', 'cheat', 'endround')
-    es.delayed(0,'endround')
-    es.delayed(0, 'es_xflags add cheat endround')
+    #es.flags('remove', 'cheat', 'endround')
+    #es.delayed(0,'endround')
+    #es.delayed(0, 'es_xflags add cheat endround')
     
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_warmup_round')
@@ -209,14 +210,12 @@ def countDown():
         # mp_restartgame and trigger round_end
         if warmupCountDown['remaining'] == 1:
             es.server.cmd('mp_restartgame 1')
+            gungame.round_end(es.event_var)
     
     # No time left
     elif warmupCountDown['remaining'] == 0:
         # Send hint
         gungamelib.hudhint('gg_warmup_round', '#all', 'Timer_Ended')
-        
-        # Trigger round_end
-        es.addons.triggerEvent('round_end')
         
         # Play beep
         gungamelib.playSound('#all', 'countDownBeep')

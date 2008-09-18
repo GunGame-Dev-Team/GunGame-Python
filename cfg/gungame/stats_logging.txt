@@ -14,3 +14,4 @@ gg_levelup
 gg_leveldown
 gg_knife_steal
 gg_win
+gg_multi_level

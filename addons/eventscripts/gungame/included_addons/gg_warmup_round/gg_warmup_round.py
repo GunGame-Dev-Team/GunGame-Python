@@ -210,7 +210,7 @@ def countDown():
         # mp_restartgame and trigger round_end
         if warmupCountDown['remaining'] == 1:
             es.server.cmd('mp_restartgame 1')
-            gungame.round_end(es.event_var)
+            gungame.round_end({'reason': 1})
     
     # No time left
     elif warmupCountDown['remaining'] == 0:

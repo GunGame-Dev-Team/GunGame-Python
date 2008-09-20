@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_stats_logging
-    Version: 1.0.471
+    Version: 1.0.472
     Description: This addon publishes events for use by third-party statistic
                  applications.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_stats_logging (for GunGame: Python)'
-info.version  = '1.0.471'
+info.version  = '1.0.472'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_stats_logging'
 info.author   = 'GunGame Development Team'
@@ -45,18 +45,7 @@ def load():
     gg_stats.setDisplayName('GG Stats Logging')
     
     # Get file
-    try:
-        fileObj = open(gungamelib.getGameDir('cfg/gungame/stats_logging.txt'), 'r')
-    except IOError, e:
-        raise IOError('Could not open stats logging.txt for parsing: IOError: %s' % e)
-    
-    # Get lines and close
-    lines = [x.strip() for x in fileObj.readlines()]
-    lines = filter(lambda x: x[:2] != '//' and x, lines)
-    fileObj.close()
-    
-    # Register events
-    for line in lines:
+    for line in gungamelib.getFileLines('cfg/gungame/stats_logging.txt'):
         es.addons.registerForEvent(this, line, logEvent)
         events.append(line)
 

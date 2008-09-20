@@ -277,7 +277,7 @@ def es_map_start(event_var):
     dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
     
     # Is a random weapon order file
-    if gungamelib.getVariableValue('gg_weapon_order_random') != '0':
+    if gungamelib.getVariableValue('gg_weapon_order_random') != 0:
         # Get weapon order file
         baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
         files = filter(lambda x: os.path.splitext(x)[1] == '.txt', os.listdir(baseDir))
@@ -302,7 +302,7 @@ def es_map_start(event_var):
     if gungamelib.getVariableValue('gg_weapon_order_type') == '#random':
         myWeaponOrder = gungamelib.getCurrentWeaponOrder().setWeaponOrderFile('#random')
     
-    if gungamelib.getVariableValue('gg_weapon_order_random') != '0':
+    if gungamelib.getVariableValue('gg_weapon_order_random') != 0:
         # Show the new weapon order
         es.dbgmsg(0, '[GunGame]')
         gungamelib.echo('gungame', 0, 0, 'WeaponOrder:NewRandomWeaponOrder')
@@ -414,22 +414,18 @@ def round_end(event_var):
     if gungamelib.getVariableValue('gg_afk_rounds') == 0:
         return
     
-    # Create a list of userids of human players that were alive at the end of the round
-    list_playerlist = playerlib.getUseridList('#alive,#human')
-    
     # Now, we will loop through the userid list and run the AFK Punishment Checks on them
-    for userid in list_playerlist:
+    for userid in playerlib.getUseridList('#alive,#human'):
         gungamePlayer = gungamelib.getPlayer(userid)
         
         # Check to see if the player was AFK
         if gungamePlayer.isPlayerAFK():
-            # See if the player needs to be punished for being AFK
-            afkPunishCheck(int(userid))
+            afkPunishCheck(userid)
 
 def player_activate(event_var):
     # Setup the player
     gungamelib.getPlayer(event_var['userid'])
-    
+
 def player_disconnect(event_var):
     userid = int(event_var['userid'])
     
@@ -736,6 +732,7 @@ def gg_round_win(event_var):
     # Remove all old players
     gungamelib.clearOldPlayers()
     '''
+
 def gg_win(event_var):
     global countBombDeathAsSuicide
     

@@ -233,13 +233,8 @@ def forceUpdateToRevision(rev):
         
         # Is a directory
         if os.path.isdir(y):
-            # Remove all the files in the directory
-            for f in os.listdir(y):
-                os.remove(os.path.join(y, f))
-                gungamelib.echo('gg_update', 0, 0, 'RemovedFile', {'x': '%s/%s' % (x, f)})
-            
-            os.rmdir(y)
-            gungamelib.echo('gg_update', 0, 0, 'RemovedDirectory', {'x': x})
+            # Remove all the files and folders in the directory
+            removeFolder(x, y)
         
         # Is a file
         else:
@@ -295,3 +290,25 @@ def forceUpdateToRevision(rev):
     dataFile = open(gungamelib.getGameDir('addons/eventscripts/gungame/data/updatedata.txt'), 'w')
     dataFile.write(str(rev))
     dataFile.close()
+
+def removeFolder(x, dir):
+    # Iterate through the folder
+    for f in os.listdir(dir):
+        # Is a directory
+        if os.path.isdir(os.path.join(dir, f)):
+            # Remove all the files in the directory
+            removeFolder(x, os.path.join(dir, f))
+            
+            # Show we removed the directory
+            gungamelib.echo('gg_update', 0, 0, 'RemovedDirectory', {'x': '%s/%s' % (x, f)})
+        
+        # Is a file
+        else:
+            os.remove(os.path.join(dir, f))
+            gungamelib.echo('gg_update', 0, 0, 'RemovedFile', {'x': '%s/%s' % (x, f)})
+    
+    # Remove the folder now it is empty
+    os.rmdir(dir)
+    
+    # Show we removed the directory
+    gungamelib.echo('gg_update', 0, 0, 'RemovedDirectory', {'x': x})

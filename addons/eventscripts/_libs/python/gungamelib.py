@@ -251,6 +251,7 @@ class Player(object):
         
         # Reset player math total
         self.afkmathtotal = 0
+        self.afkrounds = 0
     
     def isPlayerAFK(self):
         '''Checks a player is AFK.'''
@@ -265,6 +266,44 @@ class Player(object):
         afkMathTotal = int(int(x) + int(y) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[0]')) + int(es.getplayerprop(self.userid, 'CCSPlayer.m_angEyeAngles[1]')))
         
         return afkMathTotal == self.afkmathtotal
+    
+    def afkPunish(self):
+        '''Punishes a player if they have been AFK for too long.
+        
+        TODO: Use this instead of afkPunishCheck in gungame.py'''
+        # Check if we are AFK.
+        if not self.isPlayerAFK():
+            return
+        
+        afkMaxAllowed = gungamelib.getVariableValue('gg_afk_rounds')
+        
+        # Is AFK punishment enabled?
+        if afkMaxAllowed <= 0:
+            return
+        
+        # Increment the afk round attribute
+        gungamePlayer['afkrounds'] += 1
+        
+        # Have been AFK for too long
+        if gungamePlayer['afkrounds'] < afkMaxAllowed:
+            return
+        
+        # Kick the player
+        if gungamelib.getVariableValue('gg_afk_action') == 1:
+            es.server.cmd('kickid %s "You were AFK for too long."' % self.userid)
+        
+        # Show menu
+        elif gungamelib.getVariableValue('gg_afk_action') == 2:
+            # Send them to spectator
+            es.server.cmd('es_xfire %d !self SetTeam 1' % self.userid)
+            
+            # Send a popup saying they were switched
+            menu = popuplib.create('gungame_afk')
+            menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator'))
+            menu.send(userid)
+        
+        # Reset the AFK status
+        self.playerNotAFK()
     
     def teleportPlayer(self, x, y, z, eyeangle0=0, eyeangle1=0):
         '''Teleport a player.'''
@@ -2789,7 +2828,7 @@ def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True)
     
     @see http://docs.python.org/lib/module-exceptions.html
     
-    @param location The location of the file to process.
+    @param location The location of the file relative to the cstrike root directory.
     @param removeBlankLines [bool] Whether to remove blank lines or not.
     @param comment Lines starting with this string will be removed (making this value empty doesn't remove commented lines)
     @param stripLines [bool] Whether to strip lines or not.
@@ -2894,3 +2933,6 @@ def inFunctionArgumentRange(function, arguments):
 
 def serverCmd(*args):
     es.server.cmd(args.join(';'))
+
+def getPlayerList(filter):
+    return map(getPlayer, playerlib.getUseridList(filter))

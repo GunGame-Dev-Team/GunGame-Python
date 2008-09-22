@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.464
+    Version: 1.0.473
     Description: GunGame Library
 '''
 
@@ -71,6 +71,7 @@ list_criticalConfigs = ('gg_en_config.cfg', 'gg_default_addons.cfg')
 list_configs = []
 list_usedRandomSounds = []
 currentWeaponOrder = None
+osType = os.name
 
 # ==============================================================================
 #   ERROR CLASSES
@@ -343,17 +344,22 @@ class Player(object):
     
     def stripPlayer(self):
         '''Strips the player of his primary and secondary weapon.'''
+        if getOS() == 'posix':
+            stripFormat  = 'es_xgive %s weapon_knife;' % self.userid
+            stripFormat += 'es_xgive %s player_weaponstrip;' % self.userid
+            stripFormat += 'es_xfire %s player_weaponstrip Strip;' % self.userid
+            stripFormat += 'es_xfire %s player_weaponstrip Kill' % self.userid
+            es.server.cmd(stripFormat)
+            return
+        
         # Get player handle
         playerHandle = es.getplayerhandle(self.userid)
         
         # Strip primary weapon
-        weaponIndex = self.getWeaponIndex(playerHandle, 'primary')
-        if weaponIndex:
-            es.server.cmd('es_xremove %i' % weaponIndex)
-        
-        weaponIndex = self.getWeaponIndex(playerHandle, 'secondary')
-        if weaponIndex:
-            es.server.cmd('es_xremove %i' % weaponIndex)
+        for weaponType in ('primary', 'secondary'):
+            weaponIndex = self.getWeaponIndex(playerHandle, weaponType)
+            if weaponIndex:
+                es.server.cmd('es_xremove %i' % weaponIndex)
     
     def getWeaponIndex(self, playerHandle, flag):
         for weapon in getWeaponList(flag):
@@ -1217,7 +1223,7 @@ class Message(object):
         # Set other variables
         self.addonName = addonName
         self.strings = None
-
+    
     def __loadStrings(self):
         '''Loads the Strings instance into the class.'''
         # Does the language file exist?
@@ -2936,3 +2942,6 @@ def serverCmd(*args):
 
 def getPlayerList(filter):
     return map(getPlayer, playerlib.getUseridList(filter))
+
+def getOS():
+    return osType

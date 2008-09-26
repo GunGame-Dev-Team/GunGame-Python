@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 1.0.402
+    Version: 1.0.474
     Description: Provides a console interface which allows convertions from
                  GunGame 3 and 4 are available for usage in GunGame:Python.
 '''
@@ -32,7 +32,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame: Python)'
-info.version  = '1.0.402'
+info.version  = '1.0.474'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -43,6 +43,7 @@ info.author   = 'GunGame Development Team'
 def load():
     gg_convert = gungamelib.registerAddon('gg_convert')
     gg_convert.setDisplayName('GG Converter')
+    gg_convert.loadTranslationFile()
     
     for name in gConverts:
         gg_convert.registerAdminCommand('convert_' + name, gConverts[name])

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.402
+    Version: 1.0.474
     Description: Gives admins control over GunGame and its addons.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_admin (for GunGame: Python)'
-info.version  = '1.0.402'
+info.version  = '1.0.474'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_admin'
 info.author   = 'GunGame Development Team'
@@ -49,6 +49,7 @@ def load():
     # Register
     gg_admin = gungamelib.registerAddon('gg_admin')
     gg_admin.setDisplayName('GG Admin')
+    gg_admin.loadTranslationFile()
     
     # Command registration
     gg_admin.registerAdminCommand('admin', sendAdminMenu, log=False, console=False)

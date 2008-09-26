@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.473
+    Version: 1.0.474
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.473'
+info.version  = '1.0.474'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -47,6 +47,7 @@ def load():
     # Register addon with gungamelib
     gg_deathmatch = gungamelib.registerAddon('gg_deathmatch')
     gg_deathmatch.setDisplayName('GG Deathmatch')
+    gg_deathmatch.loadTranslationFile()
 
     # Add dependencies
     gg_deathmatch.addDependency('gg_turbo', 1)

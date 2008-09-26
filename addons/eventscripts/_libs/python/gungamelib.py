@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.473
+    Version: 1.0.474
     Description: GunGame Library
 '''
 
@@ -43,6 +43,7 @@ dict_cfgSettings = {}
 dict_sounds = {}
 dict_addons = {}
 dict_dependencies = {}
+dict_addonLang = {}
 dict_winners = {}
 
 dict_weaponLists = {}
@@ -116,7 +117,7 @@ class Player(object):
     '''Player class, holds all a players information and attributes.'''
    
     __slots__ = ['userid', 'level', 'afkrounds', 'multikill', 'multilevel',
-                'preventlevel', 'afkmathtotal', 'steamid', 'index']
+                'preventlevel', 'afkmathtotal', 'steamid', 'index', 'language']
     
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
@@ -156,7 +157,7 @@ class Player(object):
         # Format the item and value
         item = str(item).lower()
         
-        if item != 'steamid' and item != 'preventlevel':
+        if item not in ('steamid', 'preventlevel', 'language'):
             value = int(value)
         
         # LEVEL
@@ -222,7 +223,9 @@ class Player(object):
         self.multilevel = 0
         self.afkmathtotal = 0
         self.steamid = playerlib.uniqueid(str(self.userid), 1)
-        self.index = int(playerlib.getPlayer(self.userid).attributes['index'])
+        playerlibPlayer = playerlib.getPlayer(self.userid)
+        self.index = int(playerlibPlayer.attributes['index'])
+        self.language = playerlibPlayer.get('lang')
     
     def resetPlayer(self):
         '''Reset the players attributes.'''
@@ -1124,6 +1127,11 @@ class Addon(object):
     def getDisplayName(self):
         return self.displayName
     
+    '''Language options:'''
+    def loadTranslationFile(self):
+        # Set up Translation Files
+        loadTranslations(self.addon)
+    
     '''Dependency options:'''
     def addDependency(self, dependencyName, value):
         if isNumeric(value):
@@ -1211,18 +1219,20 @@ class Message(object):
     '''Message class is used to broadcast linguistic messages around the server,
     with the use of translation files.'''
     
-    def __init__(self, addonName, filter):
+    def __init__(self, addonName):
         '''Initializes the class.'''
+        self.addonName = addonName
+        self.strings = None
+        
+        self.__loadStrings()
+        
+    def __formatFilter(self, filter):
         # Format filter
         filter = str(filter)
         if filter.isdigit():
             self.filter = int(filter)
         else:
             self.filter = filter
-        
-        # Set other variables
-        self.addonName = addonName
-        self.strings = None
     
     def __loadStrings(self):
         '''Loads the Strings instance into the class.'''
@@ -1240,7 +1250,7 @@ class Message(object):
         '''Retrieves and formats the string.'''
         # Try to get string
         try:
-            rtnStr = self.strings(string, tokens, player.get('lang'))
+            rtnStr = self.strings(string, tokens, player.language)
         except (KeyError, AttributeError):
             rtnStr = self.strings(string, tokens)
         
@@ -1256,9 +1266,12 @@ class Message(object):
         # Return the string
         return rtnStr
     
-    def msg(self, string, tokens, showPrefix = False):
-        # Load the strings
-        self.__loadStrings()
+    def lang(self, string, tokens={}):
+        return self.__formatString(string, tokens)
+        
+    def msg(self, filter, string, tokens, showPrefix = False):
+        #Setup filter
+        self.__formatFilter(filter)
         
         # Format the message
         if showPrefix:
@@ -1269,7 +1282,7 @@ class Message(object):
         # Loop through the players in the filter
         if isinstance(self.filter, int):
             # Get player object
-            player = playerlib.getPlayer(self.filter)
+            player = getPlayer(self.filter)
             
             # Send message
             es.tell(self.filter, '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
@@ -1282,18 +1295,18 @@ class Message(object):
             players = playerlib.getUseridList(self.filter)
             
             for userid in players:
-                player = playerlib.getPlayer(userid)
+                player = getPlayer(userid)
                 
                 es.tell(int(player), '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
     
-    def hudhint(self, string, tokens):
-        # Load the strings
-        self.__loadStrings()
+    def hudhint(self, filter, string, tokens):
+        #Setup filter
+        self.__formatFilter(filter)
         
         # Loop through the players in the filter
         if isinstance(self.filter, int):
             # Get player object
-            player = playerlib.getPlayer(self.filter)
+            player = getPlayer(self.filter)
             
             # Send message
             usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
@@ -1302,14 +1315,14 @@ class Message(object):
             players = playerlib.getUseridList(self.filter)
             
             for userid in players:
-                player = playerlib.getPlayer(userid)
+                player = getPlayer(userid)
                 
                 # Send message
                 usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
     
-    def saytext2(self, index, string, tokens, showPrefix = False):
-        # Load the strings
-        self.__loadStrings()
+    def saytext2(self, filter, index, string, tokens, showPrefix = False):
+        #Setup filter
+        self.__formatFilter(filter)
         
         # Format the message
         if showPrefix:
@@ -1320,7 +1333,7 @@ class Message(object):
         # Loop through the players in the filter
         if isinstance(self.filter, int):
             # Get player object
-            player = playerlib.getPlayer(self.filter)
+            player = getPlayer(self.filter)
             
             # Send message
             usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
@@ -1336,14 +1349,14 @@ class Message(object):
                 # Send message
                 usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
     
-    def centermsg(self, string, tokens):
-        # Load the strings
-        self.__loadStrings()
+    def centermsg(self, filter, string, tokens):
+        #Setup filter
+        self.__formatFilter(filter)
         
         # Loop through the players in the filter
         if isinstance(self.filter, int):
             # Get player object
-            player = playerlib.getPlayer(self.filter)
+            player = getPlayer(self.filter)
             
             # Send message
             usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
@@ -1352,14 +1365,14 @@ class Message(object):
             players = playerlib.getUseridList(self.filter)
             
             for userid in players:
-                player = playerlib.getPlayer(userid)
+                player = getPlayer(userid)
                 
                 # Send message
                 usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
     
-    def echo(self, level, string, tokens, showPrefix = False):
-        # Load the strings
-        self.__loadStrings()
+    def echo(self, filter, level, string, tokens, showPrefix = False):
+        #Setup filter
+        self.__formatFilter(filter)
         
         # Is the debug level high enough?
         if int(gungameDebugLevel) < level:
@@ -1374,7 +1387,7 @@ class Message(object):
         # Loop through the players in the filter
         if type(self.filter) == int and self.filter != 0:
             # Get player object
-            player = playerlib.getPlayer(self.filter)
+            player = getPlayer(self.filter)
             
             # Get clean string
             cleanStr = self.__cleanString(self.__formatString(string, tokens, player))
@@ -1392,7 +1405,7 @@ class Message(object):
             players = playerlib.getUseridList(self.filter)
             
             for userid in players:
-                player = playerlib.getPlayer(userid)
+                player = getPlayer(userid)
                 
                 # Get clean string
                 cleanStr = self.__cleanString(self.__formatString(string, tokens, player))
@@ -1970,33 +1983,36 @@ def getCurrentWeaponOrder():
 # ==============================================================================
 #   MESSAGE FUNCTIONS
 # ==============================================================================
-def lang(addon, string, tokens={}):
+def loadTranslations(addon):
     # Check the translations exist
     if not os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % addon)):
         raise IOError('Cannot load strings (%s): no string file exists.' % addon)
     
-    return langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % addon))(string, tokens)
+    dict_addonLang[addon] = Message(addon)
+
+def lang(addon, string, tokens={}):
+    return dict_addonLang[addon].lang(string, tokens)
 
 def msg(addon, filter, string, tokens={}, showPrefix=True):
     if filter == 0:
         echo(addon, 0, 0, string, tokens, showPrefix)
     else:
-        Message(addon, filter).msg(string, tokens, showPrefix)
+        dict_addonLang[addon].msg(filter, string, tokens, showPrefix)
     
 def echo(addon, filter, level, string, tokens={}, showPrefix=True):
-    Message(addon, filter).echo(level, string, tokens, showPrefix)
+    dict_addonLang[addon].echo(filter, level, string, tokens, showPrefix)
 
 def saytext2(addon, filter, index, string, tokens={}, showPrefix=True):
     if filter == 0:
-        echo(addon, 0, 0, string, tokens, showPrefix)
+        echo(addon, 0, 0, string, tokens, filter, showPrefix)
     else:
-        Message(addon, filter).saytext2(index, string, tokens, showPrefix)
+        dict_addonLang[addon].saytext2(filter, index, string, tokens, showPrefix)
 
 def hudhint(addon, filter, string, tokens={}):
-    Message(addon, filter).hudhint(string, tokens)
+    dict_addonLang[addon].hudhint(filter, string, tokens)
 
 def centermsg(addon, filter, string, tokens={}):
-    Message(addon, filter).centermsg(string, tokens)
+    dict_addonLang[addon].centermsg(filter, string, tokens)
     
 # ==============================================================================
 #   RESET GUNGAME --- WARNING: POWERFUL COMMAND

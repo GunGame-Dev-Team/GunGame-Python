@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.474
+    Version: 1.0.475
     Description: GunGame Library
 '''
 
@@ -73,6 +73,8 @@ list_configs = []
 list_usedRandomSounds = []
 currentWeaponOrder = None
 osType = os.name
+gamePath = str(es.ServerVar('eventscripts_gamedir'))
+gamePath = gamePath.replace('\\', '/')
 
 # ==============================================================================
 #   ERROR CLASSES
@@ -921,8 +923,6 @@ class Addon(object):
         # Set up default attributes for this addon
         self.displayName = 'Untitled Addon'
         self.commands = {}
-        self.log = Logger(addonName, 'Addon Log', addon=addonName)
-        self.log.add('Registeration complete.')
         self.publicCommands = {}
         self.dependencies = []
         self.menu = None
@@ -935,10 +935,8 @@ class Addon(object):
         for dependency in self.dependencies:
             # Remove dependency
             dict_dependencies[dependency].delDependent(self.addon)
-            self.log.add('Dependency removed: %s' % dependency, True)
             echo('gungame', 0, 2, 'Addon:DependencyRemoved', {'name': self.addon, 'dependency': dependency})
         
-        self.log.add('Unregistration complete.')
         echo('gungame', 0, 0, 'Addon:Unregistered', {'name': self.addon})
     
     def validateAddon(self):
@@ -957,26 +955,19 @@ class Addon(object):
         if not callable(function):
             raise TypeError('Cannot register command (%s): callback is not callable.' % command)
         
-        # Don't register command if its already registered
-        if es.exists('command', 'gg_%s' % command):
-            return
-        
-        # Add to command list
         self.publicCommands[command] = function, syntax
         
         # Register block
         es.addons.registerBlock('gungamelib', command, self.__publicCommandCallback)
         
-        # Register the command
-        es.regclientcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
-        es.regsaycmd(getSayCommandName(command), 'gungamelib/%s' % command)
-        
-        # Register console command
-        if console:
-            es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
-        
-        # Log it!
-        self.log.add('Created public command (%s) console=%s' % (command, console))
+        # Register command if its not already registered
+        if not es.exists('command', 'gg_%s' % command):
+            es.regclientcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
+            es.regsaycmd(getSayCommandName(command), 'gungamelib/%s' % command)
+            
+            # Register console command
+            if console:
+                es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
     
     def __publicCommandCallback(self):
         # Get variables
@@ -987,19 +978,20 @@ class Addon(object):
         # Get command info
         callback, syntax = self.publicCommands[command]
         
-        # Check if they have supplied the right amount of arguments
-        if not inFunctionArgumentRange(callback, len(arguments)+1):
-            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
-            return
-        
         # Try and call the command
         try:
             callback(userid, *arguments)
-        except:
-            # There was an error, tell the user and tell the console
-            msg('gungame', userid, 'InternalError', {'cmd': command})
-            echo('gungame', 0, 0, 'CommandError', {'cmd': command})
-            es.excepter(sys.exc_info())
+        except TypeError, e:
+            # Argument error
+            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
+                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            
+            # Tell them an internal error occured and re-raise the error
+            else:
+                msg('gungame', userid, 'InternalError', {'cmd': command})
+            
+            callback(userid, *arguments)
+            return
     
     def registerAdminCommand(self, command, function, syntax='', console=True, log=True):
         if not callable(function):
@@ -1016,9 +1008,6 @@ class Addon(object):
             # Register command if its not already registered
             if not es.exists('command', 'gg_%s' % command):
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
-        
-        # Log it!
-        self.log.add('Created admin command (%s) console=%s, log=%s' % (command, console, log))
     
     def __adminCommandCallback(self):
         # Call command
@@ -1049,19 +1038,20 @@ class Addon(object):
         # Get command info
         callback, syntax, console, log = self.commands[command]
         
-        # Check if they have supplied the right amount of arguments
-        if not inFunctionArgumentRange(callback, len(arguments)+1):
-            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
-            return
-        
         # Try and call the command
         try:
             callback(userid, *arguments)
-        except:
-            # There was an error, tell the user and the console
-            msg('gungame', userid, 'InternalError', {'cmd': command})
-            echo('gungame', 0, 0, 'CommandError', {'cmd': command})
-            es.excepter(sys.exc_info())
+        except TypeError, e:
+            # Argument error
+            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
+                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            
+            # Tell them an internal error occured and re-raise the error
+            else:
+                msg('gungame', userid, 'InternalError', {'cmd': command})
+            
+            callback(userid, *arguments)
+            return
         
         # Tell everyone about what the admin ran
         if log:
@@ -1108,7 +1098,7 @@ class Addon(object):
         self.menu.setdescription('%s\n * %s' % (self.menu.c_beginsep, description))
     
     def hasMenu(self):
-        return self.menu != None
+        return (self.menu != None)
     
     def sendMenu(self, userid):
         if not self.hasMenu():
@@ -2610,11 +2600,7 @@ def getGameDir(dir):
     @param dir Directory to append to the game directory.
     
     @return An absolute path to the game directory plus \p dir.'''
-    # Get game dir
-    gamePath = str(es.ServerVar('eventscripts_gamedir'))
-    
     # Linux path seperators
-    gamePath = gamePath.replace('\\', '/')
     dir = dir.replace('\\', '/')
     
     # Return

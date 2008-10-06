@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.476
+    Version: 1.0.477
     Description: GunGame Library
 '''
 
@@ -1559,9 +1559,9 @@ class LeaderManager(object):
         # Tied leader messaging
         leaderCount = len(self.leaders)
         if leaderCount == 2:
-            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Singular', {'player': 'wally', 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Singular', {'player': getPlayer(userid).name, 'level': self.leaderLevel}, False)
         else:
-            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Plural', {'count': leaderCount, 'player': 'walley', 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Plural', {'count': leaderCount, 'player': getPlayer(userid).name, 'level': self.leaderLevel}, False)
         
         # Fire gg_tied_leader
         es.event('initialize', 'gg_tied_leader')

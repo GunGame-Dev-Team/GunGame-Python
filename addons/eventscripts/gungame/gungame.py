@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.475
+    Version: 1.0.476
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.475'
+__version__ = '1.0.476'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -444,6 +444,9 @@ def player_disconnect(event_var):
     if gungamelib.leaders.isLeader(userid):
         gungamelib.leaders.removeLeader(userid)
 
+def player_changename(event_var):
+    gungamelib.getPlayer(event_var['userid']).name = event_var['newname']
+
 def player_spawn(event_var):
     userid = int(event_var['userid'])
     gungamePlayer = gungamelib.getPlayer(userid)
@@ -455,7 +458,7 @@ def player_spawn(event_var):
         return
     
     # Reset AFK status
-    if not es.isbot(userid):
+    if not gungamePlayer.isbot:
         gamethread.delayed(0.6, gungamePlayer.resetPlayerLocation, ())
 
     # Check to see if the WarmUp Round is Active
@@ -483,7 +486,7 @@ def player_jump(event_var):
     gungamePlayer = gungamelib.getPlayer(userid)
     
     # Set to not be AFK
-    if not es.isbot(userid):
+    if not gungamePlayer.isbot:
         gungamePlayer.playerNotAFK()
 
 def player_death(event_var):
@@ -557,7 +560,7 @@ def player_death(event_var):
         gungamelib.hudhint('gungame', attacker, 'PlayerAFK', {'player': event_var['es_username']})
         
         # Check AFK punishment
-        if not es.isbot(userid) and gungamelib.getVariableValue('gg_afk_rounds') > 0:
+        if not gungameVictim.isbot and gungamelib.getVariableValue('gg_afk_rounds') > 0:
             afkPunishCheck(userid)
         
         return
@@ -575,7 +578,7 @@ def player_death(event_var):
     
     # Using multikill
     gungameAttacker['multikill'] += 1
-        
+    
     # Finished the multikill
     if gungameAttacker['multikill'] >= multiKill:
         # Level them up
@@ -629,8 +632,12 @@ def player_team(event_var):
     if int(event_var['disconnect']) == 1:
         return
     
+    # Set the players new team in gungamelib
+    team = int(event_var['team'])
+    gungamelib.getPlayer(userid).team = team
+    
     # Play welcome sound
-    if int(event_var['oldteam']) < 2 and int(event_var['team']) > 1:
+    if int(event_var['oldteam']) < 2 and team > 1:
         gungamelib.playSound(userid, 'welcome')
 
 def gg_levelup(event_var):
@@ -741,8 +748,8 @@ def gg_win(event_var):
     
     # Get player info
     userid = int(event_var['winner'])
-    index = playerlib.getPlayer(userid).get('index')
-    playerName = es.getplayername(userid)
+    index = gungamelib.getPlayer(userid).index
+    playerName = gungamelib.getPlayer(userid).name
     
     # Game is over
     gungamelib.setGlobal('gameOver', 1)

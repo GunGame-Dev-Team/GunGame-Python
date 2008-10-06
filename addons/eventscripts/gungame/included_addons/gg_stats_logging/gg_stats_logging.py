@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_stats_logging
-    Version: 1.0.472
+    Version: 1.0.476
     Description: This addon publishes events for use by third-party statistic
                  applications.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_stats_logging (for GunGame: Python)'
-info.version  = '1.0.472'
+info.version  = '1.0.476'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_stats_logging'
 info.author   = 'GunGame Development Team'
@@ -77,9 +77,10 @@ def logEvent(event_var):
         return
     
     # Get player data
-    playerName = es.getplayername(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
+    playerName = gungamePlayer.name
     steamid = es.getplayersteamid(userid)
-    teamName = getTeamName(es.getplayerteam(userid))
+    teamName = getTeamName(gungamePlayer.team)
     
     # Log it
     es.server.queuecmd('es_xlogq "%s<%s><%s><%s>" triggered "%s"' % (playerName, userid, steamid, teamName, event))

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.475
+    Version: 1.0.476
     Description: GunGame Library
 '''
 
@@ -118,8 +118,9 @@ gungameDebugLevel.makepublic()
 class Player(object):
     '''Player class, holds all a players information and attributes.'''
    
-    __slots__ = ['userid', 'level', 'afkrounds', 'multikill', 'multilevel',
-                'preventlevel', 'afkmathtotal', 'steamid', 'index', 'language']
+    __slots__ = ['userid', 'name', 'team', 'level', 'afkrounds', 'multikill',
+                 'multilevel', 'preventlevel', 'afkmathtotal', 'steamid',
+                 'index', 'language', 'isbot']
     
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
@@ -159,7 +160,7 @@ class Player(object):
         # Format the item and value
         item = str(item).lower()
         
-        if item not in ('steamid', 'preventlevel', 'language'):
+        if item not in ('name', 'steamid', 'preventlevel', 'language'):
             value = int(value)
         
         # LEVEL
@@ -218,6 +219,8 @@ class Player(object):
     def __createPlayer(self):
         '''Reset all this players variables.'''
         
+        self.name = es.getplayername(self.userid)
+        self.team = es.getplayerteam(self.userid)
         self.preventlevel = []
         self.level = 1
         self.afkrounds = 0
@@ -228,6 +231,7 @@ class Player(object):
         playerlibPlayer = playerlib.getPlayer(self.userid)
         self.index = int(playerlibPlayer.attributes['index'])
         self.language = playerlibPlayer.get('lang')
+        self.isbot = es.isbot(self.userid)
     
     def resetPlayer(self):
         '''Reset the players attributes.'''
@@ -1031,8 +1035,9 @@ class Addon(object):
         arguments = list(arguments)
         
         # Get details of the admin who called the command
-        adminIndex = getPlayer(userid)['index'] if userid else -1
-        name = es.getplayername(userid) if userid else 'CONSOLE'
+        gungamePlayer = getPlayer(userid)
+        adminIndex = gungamePlayer.index if userid else -1
+        name = gungamePlayer.name if userid else 'CONSOLE'
         steamid = es.getplayersteamid(userid) if userid else 'CONSOLE'
         
         # Get command info
@@ -1554,9 +1559,9 @@ class LeaderManager(object):
         # Tied leader messaging
         leaderCount = len(self.leaders)
         if leaderCount == 2:
-            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Singular', {'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Singular', {'player': 'wally', 'level': self.leaderLevel}, False)
         else:
-            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Plural', {'count': leaderCount, 'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Plural', {'count': leaderCount, 'player': 'walley', 'level': self.leaderLevel}, False)
         
         # Fire gg_tied_leader
         es.event('initialize', 'gg_tied_leader')
@@ -1573,7 +1578,7 @@ class LeaderManager(object):
         self.leaderLevel = getPlayer(userid)['level']
         
         # Message about new leader
-        saytext2('gungame', '#all', getPlayer(userid)['index'], 'NewLeader', {'player': es.getplayername(userid), 'level': self.leaderLevel}, False)
+        saytext2('gungame', '#all', getPlayer(userid)['index'], 'NewLeader', {'player': 'walley', 'level': self.leaderLevel}, False)
         
         # Fire gg_new_leader
         es.event('initialize', 'gg_new_leader')
@@ -1651,7 +1656,7 @@ class LeaderManager(object):
         # 1 new leader
         if self.getLeaderCount() == 1:
             # Message about new leader
-            saytext2('gungame', '#all', getPlayer(self.leaders[0])['index'], 'NewLeader', {'player': es.getplayername(self.leaders[0]), 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', getPlayer(self.leaders[0])['index'], 'NewLeader', {'player': getPlayer(self.leaders[0])['name'], 'level': self.leaderLevel}, False)
             
             # Fire gg_new_leader
             es.event('initialize', 'gg_new_leader')
@@ -1691,7 +1696,7 @@ class LeaderManager(object):
     
     def getLeaderNames(self):
         '''Returns the names of the current leader(s).'''
-        return [removeReturnChars(es.getplayername(x)) for x in self.getLeaderList()]
+        return [removeReturnChars(getPlayer(x)['name']) for x in self.getLeaderList()]
     
     def getLeaderLevel(self):
         '''Returns the current leader level.'''
@@ -2637,7 +2642,7 @@ def clientInServer(userid):
     
     @retval True The client is on the server.
     @retval False The client is not on the server.'''
-    return (es.getplayername(userid) != 0) or es.exists('userid', userid)
+    return es.exists('userid', userid)
 
 def inMap():
     '''!Checks to see if the server is currently in a map.
@@ -2651,7 +2656,7 @@ def isSpectator(userid):
     
     @retval True The player is a spectator, currently connecting or not on the server.
     @retval False The player is on an active team.'''
-    return es.getplayerteam(userid) <= 1
+    return getPlayer(userid).team <= 1
 
 def hasEST():
     '''!Checks to see if ESTools is installed on the server.

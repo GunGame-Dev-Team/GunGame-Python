@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_info_menus
-    Version: 1.0.454
+    Version: 1.0.476
     Description: GG Stats controls all stat related commands (level, score, top,
                  rank, etc).
 '''
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_info_menus Addon for GunGame: Python'
-info.version  = '1.0.454'
+info.version  = '1.0.476'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_info_menus'
 info.author   = 'GunGame Development Team'
@@ -84,6 +84,9 @@ def player_activate(event_var):
     # Get steamid
     steamid = gungamelib.getPlayer(event_var['userid']).steamid
     
+    # Rebuild the score menu
+    rebuildScoreMenu()
+    
     # Is a bot?
     if 'BOT' in steamid:
         return
@@ -91,11 +94,12 @@ def player_activate(event_var):
     # Update their timestamp
     if gungamelib.getWins(steamid):
         gungamelib.updateTimeStamp(steamid)
-    
-    rebuildScoreMenu()
 
 def player_disconnect(event_var):
     userid = int(event_var['userid'])
+    
+    # Rebuild the score menu
+    rebuildScoreMenu()
     
     # Do not continue if the player does not exist
     if not gungamelib.playerExists(userid):
@@ -111,8 +115,6 @@ def player_disconnect(event_var):
     # Update their timestamp
     if gungamelib.getWins(steamid):
         gungamelib.updateTimeStamp(steamid)
-    
-    rebuildScoreMenu()
 
 def gg_win(event_var):
     addWin(event_var['winner'])
@@ -155,7 +157,7 @@ def displayLevelMenu(userid, player=None):
     
     gungamePlayer = gungamelib.getPlayer(checkUserid)
     gungamelib.saytext2('gungame', userid, gungamePlayer['index'], 'LevelInfo_PlayerSearch',
-                        {'player': es.getplayername(checkUserid), 'level': gungamePlayer['level'],
+                        {'player': gungamePlayer['name'], 'level': gungamePlayer['level'],
                         'weapon': gungamePlayer.getWeapon()}, False)
 
 def buildLevelMenu():
@@ -360,7 +362,7 @@ def buildScoreMenu():
         while levelCounter > 0:
             levelCounter -= 1
             for playerid in gungamelib.getLevelUseridList(levelCounter):
-                menu.addItem('[%i] %s' % (levelCounter, es.getplayername(playerid)))
+                menu.addItem('[%i] %s' % (levelCounter, gungamelib.getPlayer(playerid)['name']))
                 levelRankUseridList.append(playerid)
         
         for emptySlot in range(0, es.getmaxplayercount() - len(levelRankUseridList)):
@@ -381,7 +383,7 @@ def rebuildScoreMenu():
     while levelCounter > 0:
         levelCounter -= 1
         for playerid in gungamelib.getLevelUseridList(levelCounter):
-            playerName = es.getplayername(playerid)
+            playerName = gungamelib.getPlayer(playerid)['name']
             if not playerName:
                 continue
                 
@@ -405,8 +407,9 @@ def prepScoreMenu(userid, popupid):
         return
     
     lineNumber = rank - (page * 10) + 12 if page > 1 else rank + 2
-    level = gungamelib.getPlayer(userid).level
-    name = es.getplayername(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
+    level = gungamePlayer['level']
+    name = gungamePlayer['name']
     
     menu = popuplib.find(popupid)
     menu.modline(lineNumber, '->%i. [%i] %s' % (rank, level, name))

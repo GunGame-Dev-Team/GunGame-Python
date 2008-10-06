@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 1.0.474
+    Version: 1.0.476
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -29,7 +29,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.474'
+info.version  = '1.0.476'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -210,7 +210,7 @@ def respawnPlayer(userid, respawnRound):
     index = gungamelib.getPlayer(userid)['index']
     
     # Tell everyone that they are respawning
-    gungamelib.saytext2('gg_elimination', '#all', index, 'RespawningPlayer', {'player': es.getplayername(userid)})
+    gungamelib.saytext2('gg_elimination', '#all', index, 'RespawningPlayer', {'player': gungamelib.getPlayer(userid).name})
     
     # Respawn player
     es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], userid))
@@ -246,7 +246,7 @@ def respawnEliminated(userid, respawnRound):
         es.server.cmd('%s %s' % (dict_addonVars['respawnCmd'], playerid))
         
         # Add to message format
-        players.append('\3%s\1' % es.getplayername(playerid))
+        players.append('\3%s\1' % gungamelib.getPlayer(playerid).name)
         
         # Get index
         if not index:

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.477
+    Version: 1.0.478
     Description: GunGame Library
 '''
 
@@ -1558,10 +1558,11 @@ class LeaderManager(object):
         
         # Tied leader messaging
         leaderCount = len(self.leaders)
+        gungamePlayer = getPlayer(userid)
         if leaderCount == 2:
-            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Singular', {'player': getPlayer(userid).name, 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', gungamePlayer.index, 'TiedLeader_Singular', {'player': gungamePlayer.name, 'level': self.leaderLevel}, False)
         else:
-            saytext2('gungame', '#all', getPlayer(userid)['index'], 'TiedLeader_Plural', {'count': leaderCount, 'player': getPlayer(userid).name, 'level': self.leaderLevel}, False)
+            saytext2('gungame', '#all', gungamePlayer.index, 'TiedLeader_Plural', {'count': leaderCount, 'player': gungamePlayer.name, 'level': self.leaderLevel}, False)
         
         # Fire gg_tied_leader
         es.event('initialize', 'gg_tied_leader')
@@ -1578,7 +1579,8 @@ class LeaderManager(object):
         self.leaderLevel = getPlayer(userid)['level']
         
         # Message about new leader
-        saytext2('gungame', '#all', getPlayer(userid)['index'], 'NewLeader', {'player': 'walley', 'level': self.leaderLevel}, False)
+        gungamePlayer = getPlayer(userid)
+        saytext2('gungame', '#all', gungamePlayer.index, 'NewLeader', {'player': gungamePlayer.name, 'level': self.leaderLevel}, False)
         
         # Fire gg_new_leader
         es.event('initialize', 'gg_new_leader')

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.478
+    Version: 1.0.479
     Description: GunGame Library
 '''
 
@@ -15,13 +15,8 @@ import os
 import time
 import math
 import cPickle
-import hashlib
-import urllib2
 import wave
 import mp3lib
-import re
-import inspect
-import sys
 
 # EventScripts Imports
 import es
@@ -408,14 +403,15 @@ class Player(object):
         
         # Set old level and the new level
         oldLevel = self.level
-        self.level += int(levelsAwarded)
+        newLevel = self.level + int(levelsAwarded)
+        self.level = clamp(newLevel, 1, getTotalLevels())
         
         # Fire the event
         es.event('initialize', 'gg_levelup')
         es.event('setint', 'gg_levelup', 'attacker', self.userid)
         es.event('setint', 'gg_levelup', 'leveler', self.userid)
         es.event('setint', 'gg_levelup', 'old_level', oldLevel)
-        es.event('setint', 'gg_levelup', 'new_level', self.level)
+        es.event('setint', 'gg_levelup', 'new_level', newLevel)
         es.event('setint', 'gg_levelup', 'userid', victim)
         es.event('setstring', 'gg_levelup', 'reason', reason)
         es.event('fire', 'gg_levelup')
@@ -1847,73 +1843,6 @@ class OrderedMenu(object):
         popuplib.send('OrderedMenu_%s:1' % (self.menu), users)
 
 # ==============================================================================
-#  LOGGER CLASS
-# ==============================================================================
-class Logger(object):
-    '''!Stub class, implemented later.'''
-    
-    def __init__(self, name, fullName, **kw): pass
-    def add(self, data, debug=False): pass
-    def seperator(self, char='='): pass
-    def write(self, data): pass
-    
-""" TODO: Complete this class and get add() function with inspect.stack().
-class Logger(object):
-    '''Logger object. Creates a file in addons/gungame/logs/, and has some
-    functions to easily '''
-    
-    def __init__(self, name, fullName, **kw):
-        '''Open the file.'''
-        try:
-            self.file = open(getGameDir('addons/eventscripts/gungame/logs/%s.txt' % name), 'a')
-        except IOError, e:
-            raise IOError('Cannot create log file: %s' % e)
-        
-        # TODO:  implement size check
-        
-        # TODO:  implement header
-        
-        # Declare variables
-        self.name = name
-        self.fullName = fullName
-        self.data = kw
-        
-        self.__header()
-    
-    def __header(self):
-        '''Prints a header with a few bits and bobs on.'''
-        # Write "log-opened" header
-        self.seperator()
-        self.write('Log opened (%s)' % self.fullName)
-        self.seperator()
-        
-        if not self.data:
-            return
-        
-        for k,v in self.data.iteritems():
-            self.write(' > %s = %s' % (k,v))
-        
-        self.seperator()
-    
-    def add(self, data, debug=False):
-        '''Add a line to the file, with caller information.'''
-        # Get the caller info
-        #_, module, line, func, __, ___ = inspect.stack()[1]
-        #_, module, line, func, __, ___ = None, 'NOT IMPLEMENTED', 0, 'notImplemented', None, None
-        
-        #self.write('%s.%s [line:%s]:%s%s' % (module, func, line, '  [DEBUG]  ' if debug else '  ', data))
-        self.write(data)
-    
-    def seperator(self, char='='):
-        '''Draw a seperator.'''
-        self.write(char*80)
-    
-    def write(self, data):
-        '''Write data to the file.'''
-        self.file.write('%s %s\r\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), data))
-"""
-
-# ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================
 def getPlayer(userid):
@@ -2754,87 +2683,6 @@ def canShowHints():
     @retval False If the HUDHint space is being used by a counter.'''
     return getGlobal('isWarmup') == 0 and getGlobal('voteActive') == 0
 
-def fileHashCheck():
-    '''!@deprecated May be used when we go public.'''
-    # Open file and get lines
-    file = open(getGameDir('addons/eventscripts/gungame/data/hashlist.txt'), 'r')
-    lines = [x.strip() for x in file.readlines()]
-    file.close()
-    
-    # Get files to check
-    files = [x.split(' ', 2) for x in lines]
-    
-    for hashInfo in files:
-        # Get hash info
-        target, targetHash = hashInfo
-        
-        # Try to open file
-        try:
-            targetFile = open(getGameDir('addons/eventscripts/gungame' + target), 'r')
-        except IOError, e:
-            return False, target, e
-        
-        # Get hash
-        hash = hashlib.md5(targetFile.read()).hexdigest()
-        
-        # Check hash
-        if hash != targetHash:
-            return False, target, 'Hash mismatch.  Expecting: %s -- Got: %s' % (targetHash, hash)
-    
-    return True, 0, 0
-
-def generateHashes():
-    '''!@deprecated May be used when we go public.'''
-    baseDir = getGameDir('addons/eventscripts/gungame')
-    
-    # Open file for writing
-    file = open(getGameDir('addons/eventscripts/gungame/data/hashlist.txt'), 'w')
-    
-    for x in os.walk(baseDir):
-        # Get directory in a getGameDir() safe format
-        dir = x[0].replace(baseDir, '').replace('\\', '/')
-        
-        # Append / if its not already there
-        if not dir.endswith('/'):
-            dir += '/'
-        
-        # Loop through the files in this directory
-        for f in x[2]:
-            # Get name and extension
-            name, ext = os.path.splitext(f)
-            fullDir = baseDir + dir + f
-            
-            # Skip compiled Python files
-            if ext == '.pyc': continue
-            
-            # Skip no extension files
-            if ext == '': continue
-            
-            # Skip temporary files
-            if ext == '.tmp': continue
-            
-            # Skip database files
-            if ext == '.db': continue
-            
-            # Skip hashlist (changes on generation)
-            if name == 'hashlist': continue
-            
-            # Skip SVN data files
-            if 'svn' in ext: continue
-            
-            # Skip log files
-            if 'log' in name: continue
-            
-            # Get hash
-            hash = hashlib.md5(open(fullDir).read()).hexdigest()
-            
-            # Announce adding hash and write to file
-            es.dbgmsg(0, '[GunGame] Adding Hash: %s - %s' % (f, hash))
-            file.write('%s %s\n' % (dir+f, hash))
-    
-    # Close file to save changes
-    file.close()
-
 def getFileLines(location, removeBlankLines=True, comment='//', stripLines=True):
     '''!Processes a file, removing blank lines, commented lines and strips lines, too.
     
@@ -2897,54 +2745,6 @@ def removeCommandPrefix(command):
     
     # Return the raw command
     return command
-
-def getMinimumFuncArgs(function):
-    '''!Gets the amount of required arguments for a function.
-    
-    @exception TypeError function must be a: static or class method, lambda or a normal function; builtins are not supported.
-    
-    @param function Function to get minimum arguments for.
-    
-    @return Minimum amount of arguments this function can be bassed.'''
-    if not hasattr(function, 'func_code'):
-        raise TypeError('This function only supports: static methods, class methods and functions (NOT BUILTINS!). Ensure you have passed a function.')
-    
-    return len(inspect.getargspec(function)[0]) - int(hasattr(function, 'im_func'))
-
-def getMaximumFuncArgs(function):
-    '''!Gets the maximum amount of arguments this function can be passed.
-    
-    @param function Function to get maximum arguments for.
-    
-    @return Maximum amount of arguments this function can be passed.'''
-    if not hasattr(function, 'func_code'):
-        raise TypeError('This function only supports: static methods, class methods and functions (NOT BUILTINS!). Ensure you have passed a function.')
-    
-    # Initialise variables
-    modifier = 0
-    names, varargs, _, defaults = inspect.getargspec(function)
-    
-    if varargs:
-        return 9999
-    
-    # Does this function have any defaults?
-    if defaults:
-        modifier += len(defaults)
-    
-    # Is this a class method?
-    if hasattr(function, 'im_func'):
-        modifier -= 1
-    
-    return len(names) + modifier
-
-def inFunctionArgumentRange(function, arguments):
-    '''!Checks to see whether \p arguments is within the allowed arguments of the function.
-    
-    @param function Function to check against.
-    @param arguments Amount of arguments to check is in range.
-    
-    @return bool'''
-    return getMinimumFuncArgs(function) <= arguments <= getMaximumFuncArgs(function)
 
 def serverCmd(*args):
     es.server.cmd(args.join(';'))

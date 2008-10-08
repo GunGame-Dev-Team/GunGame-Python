@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.479
+    Version: 1.0.480
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.479'
+__version__ = '1.0.480'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -98,6 +98,10 @@ def initialize():
     gungamelib.getConfig('gg_en_config.cfg')
     gungamelib.getConfig('gg_default_addons.cfg')
     gungamelib.getConfig('gg_map_vote.cfg')
+    
+    for addon in list_customAddonsDir:
+        es.dbgmsg(0, '---------------> %s' %addon)
+        gungamelib.getConfig('custom_addon_configs/%s.cfg' %addon)
     
     # Fire the gg_server.cfg
     es.server.cmd('exec gungame/gg_server.cfg')
@@ -858,6 +862,13 @@ def server_cvar(event_var):
             es.server.queuecmd('es_load gungame/included_addons/%s' % cvarName)
         elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/%s' % cvarName)
+            
+    # Included addons
+    elif cvarName in list_customAddonsDir:
+        if newValue == 1:
+            es.server.queuecmd('es_load gungame/custom_addons/%s' % cvarName)
+        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonList():
+            es.unload('gungame/custom_addons/%s' % cvarName)
     
     # Multikill override
     elif cvarName == 'gg_multikill_override':

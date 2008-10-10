@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.479
+    Version: 1.0.481
     Description: GunGame Library
 '''
 
@@ -791,7 +791,7 @@ class Config(object):
         try:
             configFile = open(self.path, 'r')
         except IOError, e:
-            if not configName.lower() in list_criticalConfigs:
+            if not self.name in list_criticalConfigs:
                 raise FileError('Unable to load config (%s): %s' % (self.name, e))
             else:
                 es.server.queuecmd('es_xunload gungame')

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.481
+    Version: 1.0.482
     Description: GunGame Library
 '''
 
@@ -762,6 +762,7 @@ class WeaponOrder(object):
         [menu.addItem('[%s] %s' % (x[1], x[0])) for x in self.order.values()]
         menu.buildMenu()
 
+        
 # ==============================================================================
 #   CONFIG CLASS
 # ==============================================================================
@@ -850,6 +851,7 @@ class Config(object):
         # Print config loaded
         echo('gungame', 0, 0, 'Config:Loaded', {'name': self.name})
 
+        
 # ==============================================================================
 #   SOUND CLASS
 # ==============================================================================
@@ -909,6 +911,7 @@ class Sounds(object):
         # File exists?
         return os.path.isfile(soundPath)
 
+        
 # ==============================================================================
 #   ADDON CLASS
 # ==============================================================================
@@ -1158,6 +1161,7 @@ class Addon(object):
         else:
             raise AddonError('Cannot delete dependency (%s): not registered.' % dependencyName)
 
+            
 # ==============================================================================
 #   ADDON DEPENDENCY CLASS
 # ==============================================================================
@@ -1203,6 +1207,7 @@ class AddonDependency(object):
                 # Delete dependency
                 del dict_dependencies[self.dependency]
 
+                
 # ==============================================================================
 #   MESSAGE CLASS
 # ==============================================================================
@@ -1404,6 +1409,7 @@ class Message(object):
                 # Send message
                 usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
+                
 # ==============================================================================
 #   EASYINPUT CLASS
 # ==============================================================================
@@ -1486,6 +1492,7 @@ class EasyInput(object):
         # Call the function, if it exists
         self.callback(userid, formatArgs(), self.extras)
 
+        
 # ==============================================================================
 #  WINNERS CLASS
 # ==============================================================================
@@ -1530,6 +1537,7 @@ class Winners(object):
         else:
             self.attributes[item] = value
 
+            
 # ==============================================================================
 #  LEADER MANAGER CLASS
 # ==============================================================================
@@ -1702,6 +1710,7 @@ class LeaderManager(object):
 
 leaders = LeaderManager()
 
+
 # ==============================================================================
 #  ORDEREDMENU CLASS
 # ==============================================================================
@@ -1842,6 +1851,7 @@ class OrderedMenu(object):
     def send(self, users):
         popuplib.send('OrderedMenu_%s:1' % (self.menu), users)
 
+        
 # ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================
@@ -1940,6 +1950,18 @@ def hudhint(addon, filter, string, tokens={}):
 def centermsg(addon, filter, string, tokens={}):
     dict_addonLang[addon].centermsg(filter, string, tokens)
     
+# ==============================================================================
+#   MISCELLANEOUS COMMANDS
+# ==============================================================================
+def respawn(userid):
+    respawnCommand = getVariable('gg_respawn_cmd')
+    if '#' not in str(respawnCommand):
+        # Userids not requiring the "#" symbol
+        es.server.cmd('%s %s' % (respawnCommand, userid))
+    else:
+        # SourceMod Workaround
+        es.server.cmd('%s%s' % (respawnCommand, userid))
+
 # ==============================================================================
 #   RESET GUNGAME --- WARNING: POWERFUL COMMAND
 # ==============================================================================

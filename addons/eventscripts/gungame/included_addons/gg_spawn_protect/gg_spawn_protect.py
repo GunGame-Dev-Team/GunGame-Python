@@ -109,13 +109,16 @@ def player_spawn(event_var):
     
 def player_death(event_var):
     userid = int(event_var['userid'])
+    
+    # Cancel the delay (they likely killed themselves if this code was reached)
     if userid in list_protected:
-        # Cancel the delay (they likely killed themselves if this code was reached)
         gamethread.cancelDelayed('ggSpawnProtect%s' %userid)
         list_protected.remove(userid)
-        
+
 def player_disconnect(event_var):
     userid = int(event_var['userid'])
+    
+    # Remove from protected list
     if userid in list_protected:
         list_protected.remove(userid)
 
@@ -147,8 +150,14 @@ def startProtect(userid):
     gamethread.delayedname(gungamelib.getVariableValue('gg_spawn_protect'), 'ggSpawnProtect%s' % userid, endProtect, (userid))
 
 def endProtect(userid):
+    # Are they even protected?
+    if userid not in list_protected:
+        return
+    
     # Check the client hasn't left during the protection period
-    if not gungamelib.playerExists(userid):
+    if not gungamelib.clientInServer(userid):
+        # Fix potential memory leak:
+        list_protected.remove(userid)
         return
     
     # Retrieve player objects

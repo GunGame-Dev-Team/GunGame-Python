@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.484'
+__version__ = '1.0.485'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -182,6 +182,9 @@ def initialize():
     
     # Load gg_info_menus -- creates and sends ingame menus (!top, !leader, !score, !ranks, etc)
     es.load('gungame/included_addons/gg_info_menus')
+    
+    # Load gg_thanks -- credits
+    es.load('gungame/included_addons/gg_thanks')
     
     # Fire gg_load event
     es.event('initialize', 'gg_load')

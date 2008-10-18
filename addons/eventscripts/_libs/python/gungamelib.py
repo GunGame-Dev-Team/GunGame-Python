@@ -12,6 +12,8 @@
 import string
 import random
 import os
+import sys
+import inspect
 import time
 import math
 import cPickle
@@ -963,7 +965,7 @@ class Addon(object):
         # Register block
         es.addons.registerBlock('gungamelib', command, self.__publicCommandCallback)
         
-        # Register command if its not already registered
+        # Register command if it isn't already registered
         if not es.exists('command', 'gg_%s' % command):
             es.regclientcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
             es.regsaycmd(getSayCommandName(command), 'gungamelib/%s' % command)
@@ -971,30 +973,6 @@ class Addon(object):
             # Register console command
             if console:
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
-    
-    def __publicCommandCallback(self):
-        # Get variables
-        command = removeCommandPrefix(es.getargv(0))
-        userid = es.getcmduserid()
-        arguments = formatArgs()
-        
-        # Get command info
-        callback, syntax = self.publicCommands[command]
-        
-        # Try and call the command
-        try:
-            callback(userid, *arguments)
-        except TypeError, e:
-            # Argument error
-            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
-                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
-            
-            # Tell them an internal error occured and re-raise the error
-            else:
-                msg('gungame', userid, 'InternalError', {'cmd': command})
-            
-            callback(userid, *arguments)
-            return
     
     def registerAdminCommand(self, command, function, syntax='', console=True, log=True):
         if not callable(function):
@@ -1012,10 +990,6 @@ class Addon(object):
             if not es.exists('command', 'gg_%s' % command):
                 es.regcmd('gg_%s' % command, 'gungamelib/%s' % command, 'Syntax: %s' % syntax)
     
-    def __adminCommandCallback(self):
-        # Call command
-        self.callCommand(removeCommandPrefix(es.getargv(0)), 0, formatArgs())
-    
     def unregisterCommands(self):
         # Unregister admin commands
         for command in filter(lambda x: x[2], self.commands):
@@ -1024,6 +998,37 @@ class Addon(object):
         # Unregister public commands
         for command in filter(lambda x: x[2], self.publicCommands):
             es.addons.unregisterBlock('gungamelib', command)
+    
+    def __publicCommandCallback(self):
+        # Get variables
+        command = removeCommandPrefix(es.getargv(0))
+        userid = es.getcmduserid()
+        arguments = formatArgs()
+        
+        # Get command info
+        callback, syntax = self.publicCommands[command]
+        
+        # Check the amount of arguments is correct
+        if not inFunctionArgumentRange(callback, len(arguments)+1):
+            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            return
+        
+        # Try to call the function
+        try:
+            callback(userid, *arguments)
+        
+        # Report the error
+        except:
+            # Tell them an internal error occured
+            msg('gungame', userid, 'InternalError', {'cmd': command})
+            
+            # Print out the error
+            msg('gungame', 0, 'ConsoleInternalError', {'cmd': command})
+            es.excepter(*sys.exc_info())
+    
+    def __adminCommandCallback(self):
+        # Call command
+        self.callCommand(removeCommandPrefix(es.getargv(0)), 0, formatArgs())
     
     def callCommand(self, command, userid, arguments):
         if command not in self.commands:
@@ -1042,41 +1047,46 @@ class Addon(object):
         # Get command info
         callback, syntax, console, log = self.commands[command]
         
-        # Try and call the command
-        try:
-            callback(userid, *arguments)
-        except TypeError, e:
-            # Argument error
-            if str(e).endswith('argument (%s given)' % len(arguments)+1) or str(e).endswith('arguments (%s given)' % len(arguments)+1):
-                msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
-            
-            # Tell them an internal error occured and re-raise the error
-            else:
-                msg('gungame', userid, 'InternalError', {'cmd': command})
-            
-            callback(userid, *arguments)
+        # Check the amount of arguments is correct
+        if not inFunctionArgumentRange(callback, len(arguments)+1):
+            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
             return
         
-        # Tell everyone about what the admin ran
-        if log:
-            saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
+        # Try to call the function
+        try:
+            callback(userid, *arguments)
         
-        # Print to the admin log
-        if userid and log and getVariableValue('gg_admin_log'):
-            # Get file info
-            logFileName = getGameDir('addons/eventscripts/gungame/logs/adminlog.txt')
-            size = os.path.getsize(logFileName) / 1024
+        # Report the error
+        except:
+            # Tell them an internal error occured
+            msg('gungame', userid, 'InternalError', {'cmd': command})
             
-            # Set log file opening mode
-            if size > getVariableValue('gg_admin_log'):
-                logFile = open(logFileName, 'w')
-                logFile.write('%s Log cleared, limit reached.\n' % time.strftime('[%d/%m/%Y %H:%M:%S]'))
-            else:
-                logFile = open(logFileName, 'a')
+            # Print out the error
+            msg('gungame', 0, 'ConsoleInternalError', {'cmd': command})
+            es.excepter(*sys.exc_info())
+        
+        # Log the command
+        finally:
+            # Tell everyone about what the admin ran
+            if log:
+                saytext2('gungame', '#all', adminIndex, 'AdminRan', {'name': name, 'command': command, 'args': ' '.join(arguments)})
             
-            # Open write to log then close
-            logFile.write('%s Admin %s <%s> ran: %s %s\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), name, steamid, command, ' '.join(arguments)))
-            logFile.close()
+            # Print to the admin log
+            if userid and log and getVariableValue('gg_admin_log'):
+                # Get file info
+                logFileName = getGameDir('addons/eventscripts/gungame/logs/adminlog.txt')
+                size = os.path.getsize(logFileName) / 1024
+                
+                # Set log file opening mode
+                if size > getVariableValue('gg_admin_log'):
+                    logFile = open(logFileName, 'w')
+                    logFile.write('%s Log cleared, limit reached.\n' % time.strftime('[%d/%m/%Y %H:%M:%S]'))
+                else:
+                    logFile = open(logFileName, 'a')
+                
+                # Open write to log then close
+                logFile.write('%s Admin %s <%s> ran: %s %s\n' % (time.strftime('[%d/%m/%Y %H:%M:%S]'), name, steamid, command, ' '.join(arguments)))
+                logFile.close()
     
     def hasCommand(self, command):
         return command in self.commands or command in self.publicCommands
@@ -2334,20 +2344,15 @@ def getWinnerRank(steamid):
     return winners.index(steamid)+1
 
 def getOrderedWinners():
-    return sorted(dict_winners,
-                  lambda x, y: cmp(dict_winners[x]['wins'], dict_winners[y]['wins']),
-                  reverse=True)
+    return sorted(dict_winners, key=lambda x: dict_winners[x]['wins'], reverse=True)
 
 def getWinnerName(uniqueid):
-    global dict_winners
-    
     if uniqueid in dict_winners:
         return dict_winners[uniqueid]['name']
     else:
         return '<UNKNOWN>'
 
 def getWins(uniqueid):
-    global dict_winners
     uniqueid = str(uniqueid)
     
     if uniqueid in dict_winners:
@@ -2401,8 +2406,6 @@ def loadWinnerDatabase():
     setGlobal('winnersloaded', 1)
 
 def pruneWinnerDatabase(days):
-    global dict_winners
-    
     daysInSeconds = float(days) * float(86400)
     currentTime = float(time.time())
     
@@ -2415,11 +2418,16 @@ def pruneWinnerDatabase(days):
 #   ADDON RELATED COMMANDS
 # ==============================================================================
 def registerAddon(addonName):
-    if addonName not in dict_addons:
-        dict_addons[addonName] = Addon(addonName)
-        return dict_addons[addonName]
-    else:
-        raise AddonError('Cannot register addon (%s): already registered.' % addonName)
+    '''!Register an addon.
+    
+    @exception ValueError is raised if the addon is already registered.
+    '''
+    if addonName in dict_addons:
+        raise ValueError('Cannot register addon (%s): already registered.' % addonName)
+    
+    # Register the addon and return the addon instance
+    dict_addons[addonName] = Addon(addonName)
+    return dict_addons[addonName]
 
 def getAddon(addonName):
     '''!Get an addon instance.
@@ -2769,10 +2777,87 @@ def removeCommandPrefix(command):
     return command
 
 def serverCmd(*args):
+    '''!Executes all arguments at once, split by a semi-colon. This is faster than multiple es.server.cmd calls.
+    
+    @note Make sure the length of '''
     es.server.cmd(args.join(';'))
 
-def getPlayerList(filter):
+def getPlayerList(filter='#all'):
+    '''!Returns a list of Player objects, filtered by the /p filter parameter.
+    
+    @return [list] Player instances.'''
     return map(getPlayer, playerlib.getUseridList(filter))
 
 def getOS():
+    '''!Returns the operating system type.
+    
+    @retval nt Windows NT
+    @retval posix Unix & its variants.'''
     return osType
+
+def getMinimumFuncArgs(function):
+    '''!Gets the amount of required arguments for a function.
+    
+    @exception TypeError function must be a: static or class method, lambda or a normal function; builtins are not supported.
+    
+    @param function Function to get minimum arguments for.
+    
+    @return Minimum amount of arguments this function can be passed.'''
+    if not hasattr(function, 'func_code'):
+        raise TypeError('This function only supports: static methods, class methods and functions (NOT BUILTINS!). Ensure you have passed a function.')
+    
+    # Initialise variables
+    modifier = 0
+    names, _, __, defaults = inspect.getargspec(function)
+    
+    # Does this function have any defaults?
+    if defaults:
+        modifier -= len(defaults)
+    
+    # Is this a class method?
+    if hasattr(function, 'im_func'):
+       modifier -= 1
+    
+    return len(names) + modifier
+
+def getMaximumFuncArgs(function):
+    '''!Gets the maximum amount of arguments this function can be passed.
+    
+    @param function Function to get maximum arguments for.
+    
+    @retval -1 This function doesn't have limit on arguments.
+    
+    @return Maximum amount of arguments this function can be passed.'''
+    if not hasattr(function, 'func_code'):
+        raise TypeError('This function only supports: static methods, class methods and functions (NOT BUILTINS!). Ensure you have passed a function.')
+    
+    # Initialise variables
+    modifier = 0
+    names, varargs, _, defaults = inspect.getargspec(function)
+    
+    if varargs:
+        return -1
+    
+    # Does this function have any defaults?
+    if defaults:
+        modifier += len(defaults)
+    
+    # Is this a class method?
+    if hasattr(function, 'im_func'):
+       modifier -= 1
+    
+    return len(names) + modifier
+
+def inFunctionArgumentRange(function, arguments):
+    '''!Checks to see whether \p arguments is within the allowed arguments of the function.
+
+    @param function Function to check against.
+    @param arguments Amount of arguments to check is in range.
+
+    @return bool'''
+    # *args suppor
+    maxArgs = getMaximumFuncArgs(function)
+    if maxArgs == -1:
+        return True
+    
+    return getMinimumFuncArgs(function) <= arguments <= maxArgs

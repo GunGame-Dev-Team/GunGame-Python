@@ -1,9 +1,9 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 1.0.474
+    Version: 1.0.485
     Description: Provides a console interface which allows convertions from
-                 GunGame 3 and 4 are available for usage in GunGame:Python.
+                 GunGame 3 and 4 are available for usage in GunGame 5.
 '''
 
 '''XXX Todo:
@@ -18,10 +18,12 @@
 # ==============================================================================
 # Python imports
 import os
+import sys
 
 # EventScripts imports
 import es
 import usermsg
+import keyvalues
 
 # GunGame imports
 import gungamelib
@@ -32,7 +34,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame: Python)'
-info.version  = '1.0.474'
+info.version  = '1.0.485'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -87,6 +89,7 @@ def convert_dm3(userid):
             points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg/gungame/spawnpoints/legacy/%s' % f), userid)
         except:
             gungamelib.echo('gg_convert', userid, 0, 'dm3:ConvertionFailed')
+            es.excepter(*sys.exc_info())
             continue
         
         # Are there any points?
@@ -99,19 +102,19 @@ def convert_dm3(userid):
         
         # Loop through the points
         for point in points:
-            newFile.write('%s %s %s 0.000000 0.000000 0.000000\n' % (points[point][0], points[point][1], points[point][2]))
+            newFile.write('%s %s %s 0.000000 0.000000 0.000000\n' % (point[0], point[1], point[2]))
         
         # Close the file
         newFile.close()
     
     # Announce that all files have been converted
-    gungamelib.echo('gg_deathmatch', userid, 0, 'dm3:ConvertingCompleted')
+    gungamelib.echo('gg_convert', userid, 0, 'dm3:ConvertionCompleted')
 
 def parseLegacySpawnpoint(file, userid=0):
-    # Create vars
-    points = {}
+    # Initialise variables
+    smallFile = file.split('/')[-1]
     
-    # Load the keygroup file
+    # Load the KeyValues file
     kv = keyvalues.KeyValues(name=file[3:-6])
     kv.load(file)
     
@@ -119,18 +122,16 @@ def parseLegacySpawnpoint(file, userid=0):
     totalVals = int(kv['total']['total'])+1
     
     # Loop through the values
-    for x in [str(x) for x in range(0, totalVals)]:
+    for i in [str(x) for x in xrange(1, totalVals)]:
         # Try to get this value
         try:
-            split = kv['points'][x]
+            point = kv['points'][i]
         except KeyError:
-            gungamelib.echo('gg_convert', userid, 0, 'dm3:InvalidTotal')
-            return points
+            gungamelib.echo('gg_convert', userid, 0, 'dm3:InvalidTotal', {'file': smallFile})
+            return
         
         # Split it
-        points[i] = split.split(',')
-    
-    return points
+        yield point.split(',')
 
 # ==============================================================================
 #   GLOBALS

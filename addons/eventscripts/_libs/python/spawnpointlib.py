@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: spawnpointlib
-    Version: 1.0.464
+    Version: 1.0.484
     Description: GunGame Spawnpoint Library
 '''
 
@@ -9,7 +9,7 @@ import os
 import random
 import es
 import gamethread
-import gungamelib
+import playerlib
 
 model = 'player/ct_gign.mdl'
 
@@ -131,6 +131,10 @@ class SpawnPointManager(object):
         
         # Add spawnpoint to memory
         self.spawnPoints.append([posX, posY, posZ, 0.00000, eyeYaw, 0.00000])
+        
+        # Show the newly added spawnpoint
+        self.show(1)
+        self.__showProp(self.getTotalPoints()-1)
     
     def refresh(self):
         '''Refreshes the current spawnpoint file.'''
@@ -228,15 +232,21 @@ class SpawnPointManager(object):
     
     def __showProp(self, index):
         '''PRIVATE: Shows a model at a specific spawnpoint index.'''
-        self.userid = es.getuserid()
+        userid = es.getuserid()
+        
+        # Only show the spawnpoints if there is a player on the server.
+        if not userid:
+            return
         
         # Check we aren't already showing it
         if index in self.propIndexes:
             return
         
         # Create prop and name it
+        playerView = playerlib.getPlayer(userid).get('viewangle')
         es.server.cmd('es_xprop_dynamic_create %s %s' % (userid, model))
         es.server.cmd('es_xentsetname %s gg_dm_prop%i' % (userid, index))
+        es.server.cmd('es_xsetang %i %f %f' % (userid, playerView[0], playerView[1]))
         
         # Get index
         propIndex = int(es.ServerVar('eventscripts_lastgive'))

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 1.0.483
+    Version: 1.0.484
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -29,7 +29,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.483'
+info.version  = '1.0.484'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -41,20 +41,16 @@ info.author   = 'GunGame Development Team'
 dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
 dict_addonVars['currentRound'] = 0
-dict_addonVars['randSpawn'] = gungamelib.getVariable('gg_elimination_randspawn')
 roundTime = 0
 
 # Player Database
 dict_playersEliminated = {}
 
-# Spawnpoints instance
-spawnPoints = None
-
 # ==============================================================================
 #  GAME EVENTS
 # ==============================================================================
 def load():
-    global spawnPoints
+    global gg_elimination
     
     # Register addon with gungamelib
     gg_elimination = gungamelib.registerAddon('gg_elimination')
@@ -65,39 +61,21 @@ def load():
     gg_elimination.addDependency('gg_dead_strip', 1)
     gg_elimination.addDependency('gg_dissolver', 1)
     gg_elimination.addDependency('gg_knife_elite', 0)
-
+    
     # Get userids of all connected players
     for userid in es.getUseridList():
         dict_playersEliminated[str(userid)] = []
-    
-    # If randSpawn is off, do not create the spawnpoints
-    print int(dict_addonVars['randSpawn'])
-    if not int(dict_addonVars['randSpawn']):
-        return
-    
-    if gungamelib.inMap():
-        print 'do it'
-        spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
 
 def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_elimination')
 
-
 def es_map_start(event_var):
-    global spawnPoints
     global dict_addonVars
     
     # Reset round tracking
     dict_addonVars['roundActive'] = 0
     dict_addonVars['currentRound'] = 0
-    
-    # If randSpawn is off, do not create the spawnpoints
-    if not int(dict_addonVars['randSpawn']):
-        return
-        
-    # Reset spawnpoint manager
-    spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
 
 def round_start(event_var):
     # Round tracking

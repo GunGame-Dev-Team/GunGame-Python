@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.482
+    Version: 1.0.484
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.482'
+info.version  = '1.0.484'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -34,13 +34,11 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
-spawnPoints = None
 
 # ==============================================================================
 #  GAME EVENTS
 # ==============================================================================
 def load():
-    global spawnPoints
     global mp_freezetimeBackUp
     global mp_roundtimeBackUp
     
@@ -56,10 +54,6 @@ def load():
     gg_deathmatch.addDependency('gg_map_obj', 0)
     gg_deathmatch.addDependency('gg_knife_elite', 0)
     gg_deathmatch.addDependency('gg_elimination', 0)
-    
-    # Get the spawn points for the map
-    if gungamelib.inMap():
-        spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
     
     # Create repeats for all players on the server
     for userid in es.getUseridList():
@@ -96,13 +90,8 @@ def unload():
             repeat.delete('gungameRespawnPlayer%s' % userid)
 
 def es_map_start(event_var):
-    global spawnPoints
-    
     # Don't allow respawn
     gungamelib.setGlobal('respawn_allowed', 0)
-    
-    # Reset spawnpoints
-    spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
 
 def gg_win(event_var):
     for userid in es.getUseridList():

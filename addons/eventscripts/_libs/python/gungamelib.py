@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.482
+    Version: 1.0.484
     Description: GunGame Library
 '''
 
@@ -1034,7 +1034,7 @@ class Addon(object):
         arguments = list(arguments)
         
         # Get details of the admin who called the command
-        gungamePlayer = getPlayer(userid)
+        if userid: gungamePlayer = getPlayer(userid)
         adminIndex = gungamePlayer.index if userid else -1
         name = gungamePlayer.name if userid else 'CONSOLE'
         steamid = es.getplayersteamid(userid) if userid else 'CONSOLE'

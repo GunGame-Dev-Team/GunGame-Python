@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_spawnpoints
-    Version: 1.0.385
+    Version: 1.0.484
     Description: Spawnpoints manager for GunGame:Python.
 '''
 
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_spawnpoints (for GunGame: Python)'
-info.version  = '1.0.385'
+info.version  = '1.0.484'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_spawnpoints'
 info.author   = 'GunGame Development Team'
@@ -41,6 +41,7 @@ def load():
     
     # Register addon with gungamelib
     gg_spawnpoints = gungamelib.registerAddon('gg_spawnpoints')
+    gg_spawnpoints.loadTranslationFile()
     
     # Menu settings
     gg_spawnpoints.createMenu(menuCallback)
@@ -221,7 +222,7 @@ def sendAddMenu(userid):
     
     # All all players to the menu
     for _userid in filter(lambda x: x != userid, playerlib.getUseridList('#all')):
-        menu.addoption(_userid, '%s - %s' % (_userid, es.getplayername(_userid)))
+        menu.addoption(_userid, '%s - %s' % (_userid, gungamelib.getPlayer(_userid).name))
     
     # Send menu
     menu.send(userid)

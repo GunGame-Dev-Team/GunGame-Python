@@ -8,6 +8,9 @@
 # ==============================================================================
 #  IMPORTS
 # ==============================================================================
+# Python imports
+import time
+
 # EventScripts imports
 import es
 
@@ -36,7 +39,7 @@ credits = {
         ['RideGuy', 'Saul', 'HitThePipe', 'Artsemis', 'Don'],
     
     'Special Thanks':
-        ['Don', 'Artsemis', 'Predator', 'tnb=[porsche]911'],
+        ['Don', 'Artsemis', 'Predator (x2!)', 'tnb=[porsche]911'],
     
     'Beta Testers':
         ['-=CsFF=- Eagle',

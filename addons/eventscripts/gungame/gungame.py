@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.484
+    Version: 1.0.487
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.486'
+__version__ = '1.0.487'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -1003,21 +1003,9 @@ def levelInfoHint(userid):
     if levelsBehindLeader == 0 and gungamelib.leaders.getLeaderCount() > 1:
         text += gungamelib.lang('gungame', 'LevelInfo_AmongstLeaders')
         
-        # Add leader name(s)
-        text += gungamelib.lang('gungame', 'LevelInfo_LeaderName', {
-            'plural': 's',
-            'names': ', '.join(gungamelib.leaders.getLeaderNames())
-        })
-        
         # Send hint
         sendLevelInfoHint(userid, text)
         return
-    
-    # Add leader name(s)
-    text += gungamelib.lang('gungame', 'LevelInfo_LeaderName', {
-        'plural': 's' if gungamelib.leaders.getLeaderCount() > 1 else '',
-        'names': ', '.join(gungamelib.leaders.getLeaderNames())
-    })
     
     # Add leader level
     text += gungamelib.lang('gungame', 'LevelInfo_LeaderLevel', {

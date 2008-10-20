@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_pro
-    Version: 1.0.474
+    Version: 1.0.487
     Description: When one player knife kills another player, the attacker steals
                  a level from the victim.
 '''
@@ -13,6 +13,7 @@
 import es
 import playerlib
 import usermsg
+import gamethread
 
 # GunGame imports
 import gungamelib
@@ -23,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_knife_pro Addon for GunGame: Python'
-info.version  = '1.0.474'
+info.version  = '1.0.487'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_knife_pro'
 info.author   = 'GunGame Development Team'
@@ -128,6 +129,10 @@ def player_death(event_var):
     # =============
     gungameVictim.leveldown(1, attacker, 'steal')
     gungameAttacker.levelup(1, userid, 'steal')
+    
+    #Prevent player from levelling twice from the same knife kill
+    gungameAttacker.setPreventLevel(1, 'gg_knife_pro')
+    gamethread.delayed(0, gungameAttacker.setPreventLevel, (0, 'gg_knife_pro'))
     
     # ===========
     # PLAY SOUNDS

@@ -115,6 +115,11 @@ def unload():
         repeat.delete('gungameVoteCounter')
 
 
+def player_disconnect(event_var):
+    # Deduct from maximum votes
+    if dict_addonVars['voteActive']:
+        dict_playerChoice['maximumVotes'] -= 1
+
 def es_map_start(event_var):
     # Add current map to list of recent maps
     if int(dict_variables['showLastMaps']):
@@ -221,10 +226,11 @@ def setVoteList():
     dict_playerChoice['totalVotes'] = 0
     dict_playerChoice['winningMap'] = None
     dict_playerChoice['winningMapVotes'] = 0
+    dict_playerChoice['maximumVotes'] = 0
 
 def startVote():
     # Send the map vote to the players
-    gungamelib.msg('gg_map_vote','#all', 'PlaceYourVotes')
+    gungamelib.msg('gg_map_vote', '#all', 'PlaceYourVotes')
     popuplib.send('voteMenu', es.getUseridList())
     
     # Play vote
@@ -237,34 +243,19 @@ def startVote():
     
     # Bot vote code
     if int(es.ServerVar('gg_vote_bots_vote')):
+        # Send menu
         for userid in playerlib.getUseridList('#bot'):
-            choice = random.choice(dict_addonVars['voteList'])
-            _time = random.randint(1, 5)
-            
-            # Send menu
-            gamethread.delayed(_time, voteMenuSelect, (userid, choice, 0))
+            gamethread.delayed(random.randint(1, 5), voteMenuSelect, (userid, random.choice(dict_addonVars['voteList']), 0))
     
     # Set the active vars
     dict_addonVars['voteActive'] = 1
     gungamelib.setGlobal('voteActive', 1)
+    
+    # Set maximum votes possible
+    dict_playerChoice['maximumVotes'] = int(es.getplayercount())
 
 def VoteCountdown():
-    if dict_addonVars['voteTimer']:
-        # Countdown 5 or less?
-        if dict_addonVars['voteTimer'] <= 5:
-            gungamelib.playSound('#all', 'countDownBeep')
-        
-        # Get vote info
-        voteInfo = ''
-        for map in sorted(dict_playerChoice['votedMaps'].items(), key=itemgetter(1), reverse=True):
-            voteInfo += gungamelib.lang('gg_map_vote', 'MapVotes', {'map': map[0], 'votes': map[1]})
-        
-        # Send the HudHint
-        if dict_addonVars['voteTimer'] == 1:
-            gungamelib.hudhint('gg_map_vote', '#all', 'Countdown_Singular', {'voteInfo': voteInfo})
-        else:
-            gungamelib.hudhint('gg_map_vote', '#all', 'Countdown_Plural', {'time': dict_addonVars['voteTimer'], 'voteInfo': voteInfo})
-    else:
+    if not dict_addonVars['voteTimer']:
         # Play beep sound
         gungamelib.playSound('#all', 'countDownBeep')
         
@@ -274,7 +265,24 @@ def VoteCountdown():
         
         # Get results
         voteResults()
+        
+        return
     
+    # Countdown 5 or less?
+    if dict_addonVars['voteTimer'] <= 5:
+        gungamelib.playSound('#all', 'countDownBeep')
+    
+    # Get vote info
+    voteInfo = ''
+    for map in sorted(dict_playerChoice['votedMaps'].items(), key=itemgetter(1), reverse=True):
+        voteInfo += gungamelib.lang('gg_map_vote', 'MapVotes', {'map': map[0], 'votes': map[1]})
+    
+    # Send the HudHint
+    if dict_addonVars['voteTimer'] == 1:
+        gungamelib.hudhint('gg_map_vote', '#all', 'Countdown_Singular', {'voteInfo': voteInfo, 'votes': dict_playerChoice['totalVotes'], 'totalVotes': dict_playerChoice['maximumVotes']})
+    else:
+        gungamelib.hudhint('gg_map_vote', '#all', 'Countdown_Plural', {'time': dict_addonVars['voteTimer'], 'voteInfo': voteInfo, 'votes': dict_playerChoice['totalVotes'], 'totalVotes': dict_playerChoice['maximumVotes']})
+
     # Decrement timer
     dict_addonVars['voteTimer'] -= 1
     
@@ -292,6 +300,9 @@ def voteMenuSelect(userid, mapChoice, popupid):
     # Loop through the map choices
     if mapChoice not in dict_addonVars['voteList']:
         return
+    
+    # Increment total votes
+    dict_playerChoice['totalVotes'] += 1
     
     # Announce players choice if enabled
     if int(dict_variables['showVotes']):
@@ -312,8 +323,14 @@ def voteMenuSelect(userid, mapChoice, popupid):
         dict_playerChoice['winningMap'] = mapChoice
         dict_playerChoice['winningMapVotes'] = dict_playerChoice['votedMaps'][mapChoice]
     
-    # Increment total votes
-    dict_playerChoice['totalVotes'] += 1
+    # All people voted
+    if dict_playerChoice['totalVotes'] == dict_playerChoice['maximumVotes']:
+        # Delete the repeat
+        if repeat.status('gungameVoteCounter'):
+            repeat.delete('gungameVoteCounter')
+        
+        # Show results
+        voteResults()
 
 def voteResults():
     # Set vars
@@ -354,6 +371,8 @@ def cancelVote(userid):
     
     # Set variables
     dict_addonVars['voteActive'] = 0
+    
+    # Stop the counter
     if repeat.status('gungameVoteCounter'):
         repeat.delete('gungameVoteCounter')
     

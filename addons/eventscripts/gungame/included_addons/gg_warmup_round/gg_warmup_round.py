@@ -131,11 +131,6 @@ def unload():
     gungamelib.setGlobal('isWarmup', 0)
     gungamelib.setGlobal('isIntermission', 0)
     
-    # End the round
-    #es.flags('remove', 'cheat', 'endround')
-    #es.delayed(0,'endround')
-    #es.delayed(0, 'es_xflags add cheat endround')
-    
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_warmup_round')
 
@@ -211,7 +206,7 @@ def countDown():
         # mp_restartgame and trigger round_end
         if warmupCountDown['remaining'] == 1:
             es.server.cmd('mp_restartgame 1')
-            gungame.round_end({'reason': 1})
+            gamethread.delayed(1, gungame.round_end, ({'reason': 1}))
     
     # No time left
     elif warmupCountDown['remaining'] == 0:

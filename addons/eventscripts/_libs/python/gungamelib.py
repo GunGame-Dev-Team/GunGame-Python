@@ -1217,7 +1217,7 @@ class AddonDependency(object):
                 # Delete dependency
                 del dict_dependencies[self.dependency]
 
-                
+
 # ==============================================================================
 #   MESSAGE CLASS
 # ==============================================================================
@@ -1274,9 +1274,9 @@ class Message(object):
     
     def lang(self, string, tokens={}):
         return self.__formatString(string, tokens)
-        
+    
     def msg(self, filter, string, tokens, showPrefix = False):
-        #Setup filter
+        # Setup filter
         self.__formatFilter(filter)
         
         # Format the message
@@ -1293,20 +1293,16 @@ class Message(object):
             # Send message
             es.tell(self.filter, '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
         else:
-            if self.filter == '#all':
-                # Show in console
-                self.echo(0, string, tokens, showPrefix)
-            
-            # Get player list
-            players = playerlib.getUseridList(self.filter)
-            
-            for userid in players:
-                player = getPlayer(userid)
-                
+            # Send message
+            for player in playerlib.getPlayerList(self.filter):
                 es.tell(int(player), '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
+        
+        # Show in console
+        if self.filter == '#all':
+            self.echo(0, 0, string, tokens, showPrefix)
     
     def hudhint(self, filter, string, tokens):
-        #Setup filter
+        # Setup filter
         self.__formatFilter(filter)
         
         # Loop through the players in the filter
@@ -1317,17 +1313,12 @@ class Message(object):
             # Send message
             usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
         else:
-            # Get player list
-            players = playerlib.getUseridList(self.filter)
-            
-            for userid in players:
-                player = getPlayer(userid)
-                
-                # Send message
+            # Send message
+            for player in playerlib.getPlayerList(self.filter):
                 usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
     
     def saytext2(self, filter, index, string, tokens, showPrefix = False):
-        #Setup filter
+        # Setup filter
         self.__formatFilter(filter)
         
         # Format the message
@@ -1343,20 +1334,18 @@ class Message(object):
             
             # Send message
             usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
+        
         else:
-            # Get player list
-            players = playerlib.getPlayerList(self.filter)
-            
-            if self.filter == '#all':
-                # Show in console
-                self.echo(0, string, tokens, showPrefix)
-            
-            for player in players:
-                # Send message
+            # Send message
+            for player in playerlib.getPlayerList(self.filter):
                 usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
+        
+        # Show in console
+        if self.filter == '#all':
+            self.echo(0, 0, string, tokens, showPrefix)
     
     def centermsg(self, filter, string, tokens):
-        #Setup filter
+        # Setup filter
         self.__formatFilter(filter)
         
         # Loop through the players in the filter
@@ -1367,17 +1356,12 @@ class Message(object):
             # Send message
             usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
         else:
-            # Get player list
-            players = playerlib.getUseridList(self.filter)
-            
-            for userid in players:
-                player = getPlayer(userid)
-                
-                # Send message
+            # Send message
+            for player in playerlib.getPlayerList(self.filter):
                 usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
     
     def echo(self, filter, level, string, tokens, showPrefix = False):
-        #Setup filter
+        # Setup filter
         self.__formatFilter(filter)
         
         # Is the debug level high enough?
@@ -1407,19 +1391,14 @@ class Message(object):
             # Print message
             es.dbgmsg(0, '%s%s' % (message, cleanStr))
         else:
-            # Get player list
-            players = playerlib.getUseridList(self.filter)
-            
-            for userid in players:
-                player = getPlayer(userid)
-                
+            for player in playerlib.getPlayerList(self.filter):
                 # Get clean string
                 cleanStr = self.__cleanString(self.__formatString(string, tokens, player))
                 
                 # Send message
                 usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
-                
+
 # ==============================================================================
 #   EASYINPUT CLASS
 # ==============================================================================

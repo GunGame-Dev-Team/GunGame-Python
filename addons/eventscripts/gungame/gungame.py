@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.487'
+__version__ = '1.0.488'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -101,7 +101,7 @@ def initialize():
     
     for addon in list_customAddonsDir:
         es.dbgmsg(0, '---------------> %s' %addon)
-        gungamelib.getConfig('custom_addon_configs/%s.cfg' %addon)
+        gungamelib.getConfig('custom_addon_configs/%s.cfg' % addon)
     
     # Fire the gg_server.cfg
     es.server.cmd('exec gungame/gg_server.cfg')
@@ -496,7 +496,7 @@ def player_death(event_var):
     if (attacker == 0 or attacker == userid) and countBombDeathAsSuicide:
         if gungamelib.getVariableValue('gg_suicide_punish') == 0:
             return
-            
+        
         # Trigger level down
         gungameVictim.leveldown(gungamelib.getVariableValue('gg_suicide_punish'), userid, 'suicide')
         
@@ -516,7 +516,7 @@ def player_death(event_var):
     if (event_var['es_userteam'] == event_var['es_attackerteam']):
         if gungamelib.getVariableValue('gg_tk_punish') == 0:
             return
-            
+        
         # Trigger level down
         gungameAttacker.leveldown(gungamelib.getVariableValue('gg_tk_punish'), userid, 'tk')
         
@@ -569,7 +569,7 @@ def player_death(event_var):
             
         # Play the levelup sound
         gungamelib.playSound(attacker, 'levelup')
-        
+    
     # Increment their current multikill value
     else:
         # Message the attacker
@@ -740,7 +740,6 @@ def gg_win(event_var):
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
-    
     if event_var['round'] == '0':
         # ====================================================
         # MAP WIN
@@ -750,28 +749,28 @@ def gg_win(event_var):
         es.server.cmd('es_xfire %d game_end EndGame' % userid)
         
         # Tell the world
-        gungamelib.msg('gungame', '#all', 'PlayerWon', {'player': playerName})
+        gungamelib.saytext2('gungame', '#all', index, 'PlayerWon', {'player': playerName})
         
         # Play the winner sound
         gungamelib.playSound('#all', 'winner')
-        
+    
     else:
         # ====================================================
         # ROUND WIN
         # ====================================================
         # Calculate rounds remaining
         dict_variables['roundsRemaining'] -= 1
-    
+        
         # End the GunGame Round
         es.server.cmd('mp_restartgame 2')
-    
+        
         # Check to see if the warmup round needs to be activated
         if gungamelib.getVariableValue('gg_round_intermission') > 0:
             gungamelib.setGlobal('isIntermission', 1)
             es.load('gungame/included_addons/gg_warmup_round')
-            
+        
         # Tell the world
-        gungamelib.msg('gungame', '#all', 'PlayerWonRound', {'player': playerName})
+        gungamelib.saytext2('gungame', '#all', index, 'PlayerWonRound', {'player': playerName})
         
         # Play the winner sound
         gungamelib.playSound('#all', 'roundwinner')

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 1.0.487
+    Version: 1.0.491
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination Addon for GunGame: Python'
-info.version  = '1.0.487'
+info.version  = '1.0.491'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -39,7 +39,6 @@ info.author   = 'GunGame Development Team'
 dict_addonVars = {}
 dict_addonVars['roundActive'] = 0
 dict_addonVars['currentRound'] = 0
-roundTime = 0
 
 # Player Database
 dict_playersEliminated = {}
@@ -87,43 +86,9 @@ def round_start(event_var):
     gungamelib.msg('gg_elimination', '#all', 'RoundInfo')
 
 def round_end(event_var):
-    global roundTime
-    
-    # Set first spawn round time
-    roundTime = time.time()+8
-    
     # Set round inactive
     dict_addonVars['roundActive'] = 0
 
-def player_spawn(event_var):
-    global spawnPoints
-    global roundTime
-    
-    # Get the userid
-    userid = int(event_var['userid'])
-    
-    # Is a spectator?
-    if gungamelib.isSpectator(userid) or gungamelib.isDead(userid):
-        return
-    
-    if time.time() < roundTime:
-        return
-    
-    if int(gungamelib.getVariable('gg_noblock')):
-        return
-    
-    # Prevent players from sticking together
-    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
-    physexplodeFormat = 'es_xgive %s env_physexplosion;' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "magnitude 100";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "radius 50";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "inner_radius 0";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "spawnflags 15";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "targetentityname player";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion explode;' % userid
-    physexplodeFormat += 'es_xdelayed 0 es_xfire %s env_physexplosion kill' % userid
-    es.delayed(1, physexplodeFormat)
-    gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', 5))
 
 def player_activate(event_var):
     userid = event_var['userid']

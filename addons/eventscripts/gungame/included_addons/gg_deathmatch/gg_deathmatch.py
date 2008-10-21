@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.487
+    Version: 1.0.491
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame: Python)'
-info.version  = '1.0.487'
+info.version  = '1.0.491'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'
@@ -120,32 +120,6 @@ def player_team(event_var):
     
     # Respawn the player
     repeat.start('gungameRespawnPlayer%s' % userid, 1, gungamelib.getVariable('gg_dm_respawn_delay'))
-
-def player_spawn(event_var):
-    global spawnPoints
-    
-    # Get the userid
-    userid = int(event_var['userid'])
-    
-    # Is a spectator?
-    if gungamelib.isSpectator(userid) or gungamelib.isDead(userid):
-        return
-    
-    if int(gungamelib.getVariable('gg_noblock')):
-        return
-    
-    # Prevent players from sticking together
-    es.setplayerprop(userid, 'CBaseEntity.m_CollisionGroup', 17)
-    physexplodeFormat = 'es_xgive %s env_physexplosion;' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "magnitude 100";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "radius 50";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "inner_radius 0";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "spawnflags 15";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion addoutput "targetentityname player";' % userid
-    physexplodeFormat += 'es_xfire %s env_physexplosion explode;' % userid
-    physexplodeFormat += 'es_xdelayed 0 es_xfire %s env_physexplosion kill' % userid
-    es.delayed(1, physexplodeFormat)
-    gamethread.delayed(1.5, es.setplayerprop, (userid, 'CBaseEntity.m_CollisionGroup', 5))
 
 def player_death(event_var):
     # Get the userid

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.484
+    Version: 1.0.490
     Description: GunGame Library
 '''
 
@@ -366,6 +366,9 @@ class Player(object):
             weaponIndex = self.getWeaponIndex(playerHandle, weaponType)
             if weaponIndex:
                 es.server.cmd('es_xremove %i' % weaponIndex)
+                
+        if self.getWeapon() in ['knife', 'hegrenade']:
+            es.sexec(self.userid, 'use weapon_%s' %self.getWeapon())
     
     def getWeaponIndex(self, playerHandle, flag):
         for weapon in getWeaponList(flag):
@@ -389,6 +392,8 @@ class Player(object):
         
         if playerWeapon != 'knife':
             es.delayed(0, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
+        else:
+            es.sexec(self.userid, 'use %s' %playerWeapon)
     
     def getWeapon(self):
         '''Returns the weapon for the players level.'''

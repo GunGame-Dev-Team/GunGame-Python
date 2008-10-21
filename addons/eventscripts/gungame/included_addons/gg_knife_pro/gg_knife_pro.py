@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_knife_pro
-    Version: 1.0.487
+    Version: 1.0.489
     Description: When one player knife kills another player, the attacker steals
                  a level from the victim.
 '''
@@ -12,7 +12,6 @@
 # EventScripts imports
 import es
 import playerlib
-import usermsg
 import gamethread
 
 # GunGame imports
@@ -24,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_knife_pro Addon for GunGame: Python'
-info.version  = '1.0.487'
+info.version  = '1.0.489'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_knife_pro'
 info.author   = 'GunGame Development Team'

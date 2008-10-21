@@ -1,6 +1,6 @@
-GunGame: Python© and and its respective source code are Copyright by 
-the Artistice License/GPLv2 by the GunGame Development Team (see the 
-included ReadMe.txt).
+GunGame5, also knows as GunGame: Python© and and its respective source
+code are Copyright by the Artistice License/GPLv2 by the GunGame 
+Development Team (see the included ReadMe.txt).
 
 http://dev.perl.org/licenses/artistic.html
 

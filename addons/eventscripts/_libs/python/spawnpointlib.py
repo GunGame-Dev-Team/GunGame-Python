@@ -72,7 +72,7 @@ class SpawnPointManager(object):
         if not self.hasPoints():
             return
         
-        gamethread.delayed(0, self.__setupSpawnEntities, ())
+        gamethread.delayed(0.1, self.__setupSpawnEntities, ())
     
     def __setupSpawnEntities(self):
         '''Creates info_player_[counter]terrorist entities at spawnpoint

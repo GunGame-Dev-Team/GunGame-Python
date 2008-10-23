@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.490
+    Version: 1.0.492
     Description: GunGame Library
 '''
 
@@ -509,7 +509,7 @@ class WeaponOrder(object):
         fileName = os.path.splitext(fileName)[0]
         
         # Set the filepath and name
-        self.filepath = getGameDir('cfg/gungame/weapon_orders/%s.txt' % fileName)
+        self.filepath = getGameDir('cfg/gungame5/weapon_orders/%s.txt' % fileName)
         self.filename = fileName
         
         # Initialise other variables
@@ -779,7 +779,7 @@ class Config(object):
     def __init__(self, name):
         '''Sets the class's variables.'''
         self.name = name
-        self.path = getGameDir('cfg/gungame/%s' % name)
+        self.path = getGameDir('cfg/gungame5/%s' % name)
         
         # Check to see if it has been loaded before
         if not self.__isLoaded():
@@ -871,9 +871,9 @@ class Sounds(object):
         
         # Set up the sound pack path
         if '.ini' in soundPackName:
-            self.soundPackPath = getGameDir('cfg/gungame/sound_packs/%s' % soundPackName)
+            self.soundPackPath = getGameDir('cfg/gungame5/sound_packs/%s' % soundPackName)
         else:
-            self.soundPackPath = getGameDir('cfg/gungame/sound_packs/%s.ini' % soundPackName)
+            self.soundPackPath = getGameDir('cfg/gungame5/sound_packs/%s.ini' % soundPackName)
         
         # Make sure that the sound pack INI exists
         if self.__checkSoundPack():
@@ -1248,8 +1248,8 @@ class Message(object):
     def __loadStrings(self):
         '''Loads the Strings instance into the class.'''
         # Does the language file exist?
-        if os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName)):
-            self.strings = langlib.Strings(getGameDir('cfg/gungame/translations/%s.ini' % self.addonName))
+        if os.path.isfile(getGameDir('cfg/gungame5/translations/%s.ini' % self.addonName)):
+            self.strings = langlib.Strings(getGameDir('cfg/gungame5/translations/%s.ini' % self.addonName))
         else:
             raise IOError('Cannot load strings (%s): no string file exists.' % self.addonName)
     
@@ -1915,7 +1915,7 @@ def getCurrentWeaponOrder():
 # ==============================================================================
 def loadTranslations(addon):
     # Check the translations exist
-    if not os.path.isfile(getGameDir('cfg/gungame/translations/%s.ini' % addon)):
+    if not os.path.isfile(getGameDir('cfg/gungame5/translations/%s.ini' % addon)):
         raise IOError('Cannot load strings (%s): no string file exists.' % addon)
     
     dict_addonLang[addon] = Message(addon)
@@ -2184,7 +2184,7 @@ def addDownloadableWinnerSound():
         return
 
     # Open the file
-    sounds = getFileLines('cfg/gungame/random_winner_sounds.txt')
+    sounds = getFileLines('cfg/gungame5/random_winner_sounds.txt')
     
     # No random sounds, set default
     if not sounds:
@@ -2540,7 +2540,7 @@ def isNumeric(value):
 
 def getCfgDir(dir):
     '''!@return An absolute path to the gungame config directory plus \p dir.'''
-    return getGameDir('cfg/gungame/%s' % dir)
+    return getGameDir('cfg/gungame5/%s' % dir)
 
 def getGameDir(dir):
     '''!Gets an absolute path to a game directory.

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.491
+    Version: 1.0.492
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.491'
+__version__ = '1.0.492'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -104,7 +104,7 @@ def initialize():
         gungamelib.getConfig('custom_addon_configs/%s.cfg' % addon)
     
     # Fire the gg_server.cfg
-    es.server.cmd('exec gungame/gg_server.cfg')
+    es.server.cmd('exec gungame5/gg_server.cfg')
     
     # Get strip exceptions
     if gungamelib.getVariableValue('gg_map_strip_exceptions') != 0:
@@ -113,7 +113,7 @@ def initialize():
     gungamelib.echo('gungame', 0, 0, 'Load_WeaponOrders')
     
     # Get weapon order file
-    baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
+    baseDir = gungamelib.getGameDir('cfg/gungame5/weapon_orders/')
     files = files = filter(lambda x: os.path.splitext(x)[1] == '.txt', os.listdir(baseDir))
     
     # Loop through the weapon order files
@@ -254,7 +254,7 @@ def es_map_start(event_var):
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Execute GunGame's autoexec.cfg
-    es.delayed('1', 'exec gungame/gg_server.cfg')
+    es.delayed('1', 'exec gungame5/gg_server.cfg')
     
     # Reset the "gungame_voting_started" variable
     dict_variables['gungame_voting_started'] = False
@@ -265,7 +265,7 @@ def es_map_start(event_var):
     # Is a random weapon order file
     if gungamelib.getVariableValue('gg_weapon_order_random') != 0:
         # Get weapon order file
-        baseDir = gungamelib.getGameDir('cfg/gungame/weapon_orders/')
+        baseDir = gungamelib.getGameDir('cfg/gungame5/weapon_orders/')
         files = filter(lambda x: os.path.splitext(x)[1] == '.txt', os.listdir(baseDir))
         
         # Get random file

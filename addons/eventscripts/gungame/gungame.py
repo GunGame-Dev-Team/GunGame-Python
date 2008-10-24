@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.493'
+__version__ = '1.0.494'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -316,6 +316,19 @@ def es_map_start(event_var):
 def round_start(event_var):
     global list_stripExceptions
     global countBombDeathAsSuicide
+    
+    # ===================================================
+    # MAKE SURE THIS CODE STAYS AT THE TOP OF ROUND_START
+    #
+    
+    # Warmup round completed. Call round_end.
+    if gungamelib.getGlobal('warmupComplete') == 1:
+        gungamelib.setGlobal('warmupComplete', 0)
+        round_end({'reason': 1})
+    
+    #
+    # MAKE SURE THIS CODE STAYS AT THE TOP OF ROUND_START
+    # ===================================================
     
     # Set a global for round_active
     gungamelib.setGlobal('round_active', 1)

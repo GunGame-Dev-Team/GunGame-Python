@@ -1969,6 +1969,8 @@ def resetGunGame():
     # Game is no longer over
     setGlobal('gameOver', 0)
     
+    setGlobal('warmupComplete', 0)
+    
     # Reset the player information dictionary
     dict_players.clear()
     

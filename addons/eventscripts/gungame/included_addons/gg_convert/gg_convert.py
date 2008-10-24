@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 1.0.485
+    Version: 1.0.493
     Description: Provides a console interface which allows convertions from
                  GunGame 3 and 4 are available for usage in GunGame 5.
 '''
@@ -34,7 +34,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame: Python)'
-info.version  = '1.0.485'
+info.version  = '1.0.493'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -70,7 +70,7 @@ def convert_dm3(userid):
     gungamelib.msg('gungame', userid, 'CheckYourConsole')
     
     # Loop through the files in the legacy folder
-    for f in os.listdir(gungamelib.getGameDir('cfg/gungame/spawnpoints/legacy')):
+    for f in os.listdir(gungamelib.getGameDir('cfg/gungame5/spawnpoints/legacy')):
         name, ext = os.path.splitext(f)
         
         # Isn't a text file?
@@ -86,7 +86,7 @@ def convert_dm3(userid):
         
         # Parse it
         try:
-            points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg/gungame/spawnpoints/legacy/%s' % f), userid)
+            points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg/gungame5/spawnpoints/legacy/%s' % f), userid)
         except:
             gungamelib.echo('gg_convert', userid, 0, 'dm3:ConvertionFailed')
             es.excepter(*sys.exc_info())
@@ -98,7 +98,7 @@ def convert_dm3(userid):
         
         # Now write it to a file
         newFileName = name[3:-3]
-        newFile = open(gungamelib.getGameDir('cfg/gungame/spawnpoints/%s.txt' % newFileName), 'w')
+        newFile = open(gungamelib.getGameDir('cfg/gungame5/spawnpoints/%s.txt' % newFileName), 'w')
         
         # Loop through the points
         for point in points:

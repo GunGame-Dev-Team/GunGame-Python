@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.474
+    Version: 1.0.493
     Description: Gives admins control over GunGame and its addons.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_admin (for GunGame: Python)'
-info.version  = '1.0.474'
+info.version  = '1.0.493'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_admin'
 info.author   = 'GunGame Development Team'
@@ -60,7 +60,7 @@ def load():
     gg_admin.registerAdminCommand('admins', cmd_admins, log=False)
     
     # Get admins
-    lines = gungamelib.getFileLines('cfg/gungame/admins.txt')
+    lines = gungamelib.getFileLines('cfg/gungame5/admins.txt')
     
     # Register admins
     for line in lines:
@@ -80,7 +80,7 @@ def load():
         regAdmin(steamid, name, level)
     
     # Register commands
-    lines = gungamelib.getFileLines('cfg/gungame/admin_commands.txt')
+    lines = gungamelib.getFileLines('cfg/gungame5/admin_commands.txt')
     
     for line in lines:
         # Fix for in-line comments
@@ -99,7 +99,7 @@ def load():
         regCmd(command, level)
     
     # Get menu permissions
-    lines = gungamelib.getFileLines('cfg/gungame/admin_menus.txt')
+    lines = gungamelib.getFileLines('cfg/gungame5/admin_menus.txt')
     
     # Register admins
     for line in lines:
@@ -584,7 +584,7 @@ class Command(object):
             es.unregclientcmd('gg_%s' % self.name)
         
         # Open file, get lines then close
-        commandFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'r')
+        commandFile = open(gungamelib.getGameDir('cfg/gungame5/admin_commands.txt'), 'r')
         lines = commandFile.readlines()
         commandFile.close()
         
@@ -606,7 +606,7 @@ class Command(object):
             lines[index] = '%s %s\t// LOG: Level set by %s\n' % (self.name, self.level, logMessage)
         
         # Open the file again, but write the new lines to it
-        commandFile = open(gungamelib.getGameDir('cfg/gungame/admin_commands.txt'), 'w')
+        commandFile = open(gungamelib.getGameDir('cfg/gungame5/admin_commands.txt'), 'w')
         commandFile.writelines(lines)
         commandFile.close()
 
@@ -631,7 +631,7 @@ class Admin(object):
             logMessage = 'CONSOLE'
         
         # Open file
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'a+')
+        adminFile = open(gungamelib.getGameDir('cfg/gungame5/admins.txt'), 'a+')
         
         # Do we exist in the file?
         for line in adminFile.readlines():
@@ -653,12 +653,12 @@ class Admin(object):
     def remove(self):
         '''Removes the admin of all priviledges.'''
         # Open file and remove the line that starts with <steamid>
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
+        adminFile = open(gungamelib.getGameDir('cfg/gungame5/admins.txt'), 'r')
         lines = filter(lambda x: not x.startswith(self.steamid), adminFile.readlines())
         adminFile.close()
         
         # Open the file again, but write the new lines to it
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
+        adminFile = open(gungamelib.getGameDir('cfg/gungame5/admins.txt'), 'w')
         adminFile.writelines(lines)
         adminFile.close()
     
@@ -668,7 +668,7 @@ class Admin(object):
         self.level = gungamelib.clamp(level, 1, 3)
         
         # Open file, get lines then close
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'r')
+        adminFile = open(gungamelib.getGameDir('cfg/gungame5/admins.txt'), 'r')
         lines = adminFile.readlines()
         adminFile.close()
         
@@ -690,6 +690,6 @@ class Admin(object):
             lines[index] = '%s %s %s\t// LOG: Level set by %s\n' % (self.steamid, self.name, self.level, logMessage)
         
         # Open the file again, but write the new lines to it
-        adminFile = open(gungamelib.getGameDir('cfg/gungame/admins.txt'), 'w')
+        adminFile = open(gungamelib.getGameDir('cfg/gungame5/admins.txt'), 'w')
         adminFile.writelines(lines)
         adminFile.close()

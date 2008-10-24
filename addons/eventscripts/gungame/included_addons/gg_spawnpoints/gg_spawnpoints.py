@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_spawnpoints
-    Version: 1.0.484
+    Version: 1.0.493
     Description: Spawnpoints manager for GunGame:Python.
 '''
 
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_spawnpoints (for GunGame: Python)'
-info.version  = '1.0.484'
+info.version  = '1.0.493'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_spawnpoints'
 info.author   = 'GunGame Development Team'
@@ -61,7 +61,7 @@ def load():
     
     # Get the spawn points for the map
     if gungamelib.inMap():
-        spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
+        spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame5/spawnpoints')
 
 def unload():
     global spawnPoints
@@ -81,7 +81,7 @@ def es_map_start(event_var):
     global spawnPoints
     
     # Reset spawnpoints
-    spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame/spawnpoints')
+    spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame5/spawnpoints')
 
 def round_start(event_var):
     global spawnPoints

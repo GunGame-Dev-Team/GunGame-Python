@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.492
+    Version: 1.0.495
     Description: GunGame Library
 '''
 
@@ -1305,6 +1305,22 @@ class Message(object):
         # Show in console
         if self.filter == '#all':
             self.echo(0, 0, string, tokens, showPrefix)
+            
+    def toptext(self, filter, duration, color, string, tokens):
+        # Setup filter
+        self.__formatFilter(filter)
+        
+        # Loop through the players in the filter
+        if isinstance(self.filter, int):
+            # Get player object
+            player = getPlayer(self.filter)
+            
+            # Send message
+            es.toptext(int(player), duration, color, self.__formatString(string, tokens, player))
+        else:
+            # Send message
+            for player in playerlib.getPlayerList(self.filter):
+                es.toptext(int(player), duration, color, self.__formatString(string, tokens, player))
     
     def hudhint(self, filter, string, tokens):
         # Setup filter
@@ -1928,6 +1944,9 @@ def msg(addon, filter, string, tokens={}, showPrefix=True):
         echo(addon, 0, 0, string, tokens, showPrefix)
     else:
         dict_addonLang[addon].msg(filter, string, tokens, showPrefix)
+        
+def toptext(addon, filter, duration, color, string, tokens={}):
+    dict_addonLang[addon].toptext(filter, duration, color, string, tokens)
     
 def echo(addon, filter, level, string, tokens={}, showPrefix=True):
     dict_addonLang[addon].echo(filter, level, string, tokens, showPrefix)

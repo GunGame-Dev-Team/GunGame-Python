@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.493
+    Version: 1.0.495
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.494'
+__version__ = '1.0.495'
 es.ServerVar('eventscripts_ggp', __version__).makepublic()
 
 # Register with EventScripts
@@ -794,13 +794,23 @@ def gg_win(event_var):
     # Enable alltalk
     es.server.cmd('sv_alltalk 1')
     
+    # Tell the world (center message)
+    gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
+    gamethread.delayed(1, gungamelib.centermsg, ('gungame', '#all', 'PlayerWon_Center', {'player': playerName}))
+    gamethread.delayed(2, gungamelib.centermsg, ('gungame', '#all', 'PlayerWon_Center', {'player': playerName}))
+    gamethread.delayed(3, gungamelib.centermsg, ('gungame', '#all', 'PlayerWon_Center', {'player': playerName}))
+    
+    # Toptext
+    if int(event_var['es_attackerteam']) == 2:
+        gungamelib.toptext('gungame', '#all', 10, '#red', 'PlayerWon_Center', {'player': playerName})
+    else:
+        gungamelib.toptext('gungame', '#all', 10, '#blue', 'PlayerWon_Center', {'player': playerName})
+    
+def gg_start(event_var):
     # Reset all the players
     for userid in es.getUseridList():
         gungamelib.getPlayer(userid).resetPlayer()
-    
-    # Tell the world (center message)
-    gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
-    
+        
     # Remove all old players from the dict_players
     gungamelib.clearOldPlayers()
 

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.467
+    Version: 1.0.499
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.467'
+info.version  = '1.0.499'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -95,9 +95,6 @@ def item_pickup(event_var):
     if weapon == item:
         return
     
-    # Get their current weapon
-    currentWeapon = playerlibPlayer.attributes['weapon']
-    
     if weapon == 'hegrenade':
         # Is nade bonus loaded?
         nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
@@ -108,6 +105,9 @@ def item_pickup(event_var):
             if nadeBonus == item:
                 return
     
+    # Get the players current weapon
+    currentWeapon = playerlibPlayer.attributes['weapon']
+    
     # Remove the weapon they just picked up
     es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
     
@@ -116,28 +116,15 @@ def item_pickup(event_var):
         if currentWeapon[7:] != item:
             return
     
-    # Switch the player back to their previous weapon, wait for the next game frame
-    gamethread.delayed(0, getLastWeapon, (userid, gungamePlayer, item))
+    # Select the players previous weapon
+    es.cexec(userid, 'lastinv')
+    
+    # Player can use the weapon without waiting for the animation
+    es.setplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_flNextAttack', 0)
 
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-def getLastWeapon(userid, gungamePlayer, item):
-    weapon = gungamePlayer.getWeapon()
-    
-    if weapon == item:
-        return
-    
-    # Get their last weapon index
-    lastWeapon = es.getplayerprop(userid, 'CBasePlayer.localdata.m_hLastWeapon')
-    
-    # Loop through all the current held weapons
-    if lastWeapon == es.getplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_hMyWeapons.000'):
-        es.sexec(userid, 'use weapon_knife')
-    else:
-        es.sexec(userid, 'use weapon_%s' % weapon)
-    
-    es.setplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_flNextAttack', 0)
 
 def filterDrop(userid, args):
     # If command not drop, continue

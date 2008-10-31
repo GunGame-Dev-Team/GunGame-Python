@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.503
+    Version: 5.0.504
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.503'
+__version__ = '5.0.504'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts
@@ -500,10 +500,6 @@ def player_death(event_var):
     userid = int(event_var['userid'])
     attacker = int(event_var['attacker'])
     
-    # Is the attacker on the server?
-    if not gungamelib.clientInServer(attacker):
-        return
-    
     # Get victim object
     gungameVictim = gungamelib.getPlayer(userid)
     
@@ -517,11 +513,15 @@ def player_death(event_var):
         # Trigger level down
         gungameVictim.leveldown(gungamelib.getVariableValue('gg_suicide_punish'), userid, 'suicide')
         
-        gungamelib.msg('gungame', attacker, 'Suicide_LevelDown', {'newlevel': gungameVictim.level})
+        gungamelib.msg('gungame', userid, 'Suicide_LevelDown', {'newlevel': gungameVictim.level})
         
         # Play the leveldown sound
         gungamelib.playSound(userid, 'leveldown')
         
+        return
+    
+    # Is the attacker on the server?
+    if not gungamelib.clientInServer(attacker):
         return
     
     # Get attacker object

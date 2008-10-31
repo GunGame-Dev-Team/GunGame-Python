@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungamelib
-    Version: 1.0.495
+    Version: 1.0.500
     Description: GunGame Library
 '''
 
@@ -2192,10 +2192,11 @@ def addDownloadableSounds():
     # Loop through all the sounds
     for soundName in dict_sounds:
         if dict_sounds[soundName] != 0:
-            es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
-    
-    # Add winner sounds
-    addDownloadableWinnerSound()
+            if dict_sounds[soundName] != '@random':
+                es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
+            else:
+                # Add winner sounds
+                addDownloadableWinnerSound()
 
 def addDownloadableWinnerSound():
     global list_usedRandomSounds

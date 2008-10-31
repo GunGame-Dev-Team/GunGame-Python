@@ -1,8 +1,9 @@
-''' (c) 2008 by the GunGame Coding Team
+'''!
+@package gungamelib
+@version 5.0.502
 
-    Title: gungamelib
-    Version: 1.0.501
-    Description: GunGame Library
+Copyright (c) 2008, the GunGame Coding Team
+Core GunGame Library
 '''
 
 # ==============================================================================
@@ -42,7 +43,6 @@ dict_addons = {}
 dict_dependencies = {}
 dict_addonLang = {}
 dict_winners = {}
-
 dict_weaponLists = {}
 
 # Primary weapons
@@ -1029,7 +1029,8 @@ class Addon(object):
             
             # Print out the error
             msg('gungame', 0, 'ConsoleInternalError', {'cmd': command})
-            es.excepter(*sys.exc_info())
+            #es.excepter(*sys.exc_info())
+            logException()
     
     def __adminCommandCallback(self):
         # Call command
@@ -1068,7 +1069,8 @@ class Addon(object):
             
             # Print out the error
             msg('gungame', 0, 'ConsoleInternalError', {'cmd': command})
-            es.excepter(*sys.exc_info())
+            #es.excepter(*sys.exc_info())
+            logException()
         
         # Log the command
         finally:
@@ -1267,8 +1269,7 @@ class Message(object):
         
         # Format it
         rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
-        rtnStr = rtnStr.replace('\\3', '\3').replace('\\4', '\4').replace('\\1', '\1')
-        rtnStr = rtnStr.replace('\\x03', '\3').replace('\\x04', '\4').replace('\\x01', '\1')
+        rtnStr = rtnStr.decode('string_escape')
         
         # Crash prevention
         # !! DO NOT REMOVE !!
@@ -2191,12 +2192,17 @@ def addDownloadableSounds():
     
     # Loop through all the sounds
     for soundName in dict_sounds:
-        if dict_sounds[soundName] != 0:
-            if dict_sounds[soundName] != '@random':
-                es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
-            else:
-                # Add winner sounds
-                addDownloadableWinnerSound()
+        # Does the sound exist?
+        if dict_sounds[soundName] == 0:
+            continue
+        
+        # If the sound is random, add winner sound
+        if dict_sounds[soundName] == '@random':
+            addDownloadableWinnerSound()
+            continue
+        
+        # Add to downloadables
+        es.stringtable('downloadables', 'sound/%s' % dict_sounds[soundName])
 
 def addDownloadableWinnerSound():
     global list_usedRandomSounds
@@ -2251,6 +2257,7 @@ def addDownloadableWinnerSound():
             duration = clamp(info['MM'] * 60 + info['SS'], 5, 30)
         except:
             echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
+            logException()
     
     # Is a wav file, use the wave module
     elif ext == 'wav':
@@ -2259,6 +2266,7 @@ def addDownloadableWinnerSound():
             duration = clamp(float(w.getnframes()) / w.getframerate(), 5, 30)
         except:
             echo('gungame', 0, 0, 'DynamicChattimeError', {'file': list_usedRandomSounds[-1]})
+            logException()
         finally:
             w.close()
     
@@ -2861,9 +2869,33 @@ def inFunctionArgumentRange(function, arguments):
     @param arguments Amount of arguments to check is in range.
 
     @return bool'''
-    # *args suppor
+    # Varargs (*args) support
     maxArgs = getMaximumFuncArgs(function)
+    
     if maxArgs == -1:
         return True
     
     return getMinimumFuncArgs(function) <= arguments <= maxArgs
+
+def logException():
+    '''!Shows the last error in the server console and places it in the error log (if gg_error_logging is enabled).
+    
+    @note This will only log if gg_error_logging is enabled, otherwise it will just appear in the server console as normal.'''
+    # Call the except hook
+    sys.excepthook(*sys.exc_info())
+
+def getVersion():
+    '''!Gets the running GunGame version.
+    
+    @return tuple of integers: (major version, minor version, SVN revision)'''
+    return tuple(map(int, str(es.ServerVar('eventscripts_gg')).split('.')))
+
+def compareVersion(version):
+    '''!Compares \p version with the current running GunGame version.
+    
+    @param version Version to compare. Must be an iterable object, 3 items, all integers.
+    
+    @retval -1 The supplied version is less than the one that is running.
+    @retval 0 The supplied version is equal to the one that is running.
+    @retval 1 The supplied version is greater than the one that is running.'''
+    return cmp(version, getVersion())

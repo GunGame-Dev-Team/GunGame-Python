@@ -39,9 +39,9 @@ credits = {
         ['RideGuy', 'Saul', 'HitThePipe', 'Artsemis', 'Don'],
     
     'Special Thanks':
-        ['Don', 'Artsemis', 'Predator (x2!)', 'tnb=[porsche]911'],
+        ['Don', 'Artsemis', 'Predator (x2!)', 'tnb=[porsche]911', 'quantum-servers.com', 'Steven Crothers'],
     
-    'Beta Testers':
+    'Beta Testers (alphabetical order)':
         ['-=CsFF=- Eagle',
         '7355608',
         'Ace Rimmer',
@@ -111,11 +111,15 @@ def unload():
 def thanks(userid):
     # Server console only (for overflow protection)
     if userid != 0:
-        es.tell(userid, '#multi', '\4[GG Thanks] This command is for the server console only.')
+        gungamelib.msg('gg_thanks', userid, 'ServerOnly')
         return
     
+    # Get the categories
+    categories = credits.keys()
+    categories.reverse()
+    
     # Loop through the credits
-    for x in credits:
+    for x in categories:
         # Print category
         es.dbgmsg(0, '[GG Thanks] %s:' % (x))
         
@@ -124,6 +128,3 @@ def thanks(userid):
             es.dbgmsg(0, '[GG Thanks]    %s' % y)
         
         es.dbgmsg(0, '[GG Thanks] ')
-        
-        # Overflow protection
-        time.sleep(0.1)

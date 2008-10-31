@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 1.0.501
+    Version: 5.0.502
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,12 +27,12 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '1.0.501'
-es.ServerVar('eventscripts_ggp', __version__).makepublic()
+__version__ = '5.0.502'
+es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts
 info = es.AddonInfo()
-info.name     = 'GunGame: Python'
+info.name     = 'GunGame5'
 info.version  = __version__
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame'
@@ -321,9 +321,13 @@ def round_start(event_var):
     # MAKE SURE THIS CODE STAYS AT THE TOP OF ROUND_START
     #
     
-    # Warmup round completed. Call round_end.
+    # Warmup round completed.
     if gungamelib.getGlobal('warmupComplete') == 1:
+        # Is not warmup
         gungamelib.setGlobal('warmupComplete', 0)
+        gungamelib.setGlobal('isWarmup', 0)
+        
+        # Call round_end
         round_end({'reason': 1})
     
     #
@@ -345,7 +349,7 @@ def round_start(event_var):
         # Make sure that the admin doesn't want the weapon left on the map
         if weapon in list_stripExceptions:
             continue
-            
+        
         # Remove the weapon from the map
         es.server.cmd('es_xfire %d weapon_%s kill' % (userid, weapon))
     

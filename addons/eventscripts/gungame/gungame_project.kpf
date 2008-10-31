@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="0651bb49-f501-4ccc-aaea-20751ee88255" kpf_version="4" name="gungame_project.kpf">
-<livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="file:///D:/srcds/cstrike/cfg/gungame/translations">
+<livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="../../../cfg/gungame/translations">
 </livefolder>
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
 </folder>
-<file id="3d8f5c75-7a90-467f-95ab-89a95e9a878f" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="spawnpointlib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/spawnpointlib.py">
+<file id="3d8f5c75-7a90-467f-95ab-89a95e9a878f" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="spawnpointlib.py" url="../_libs/python/spawnpointlib.py">
 </file>
-<file id="6d7d0e1b-f62a-4ee8-b154-7397610d4550" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="mp3lib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/mp3lib.py">
+<file id="6d7d0e1b-f62a-4ee8-b154-7397610d4550" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="mp3lib.py" url="../_libs/python/mp3lib.py">
 </file>
-<file id="79d588fc-6aa4-4725-91fc-e2c377c893b4" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="playerlib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/playerlib.py">
+<file id="79d588fc-6aa4-4725-91fc-e2c377c893b4" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="playerlib.py" url="../_libs/python/playerlib.py">
 </file>
-<file id="7c2e111e-2b05-4e00-950e-489a4a76cc03" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="gungamelib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/gungamelib.py">
+<file id="7c2e111e-2b05-4e00-950e-489a4a76cc03" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="gungamelib.py" url="../_libs/python/gungamelib.py">
 </file>
-<file id="8b992a58-6dc8-4ee6-b31a-269aad2cc6be" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="es.py" url="file:///D:/srcds/cstrike/addons/eventscripts/es.py">
+<file id="8b992a58-6dc8-4ee6-b31a-269aad2cc6be" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="es.py" url="../es.py">
 </file>
-<file id="afc30579-0736-4093-8938-079fc7ebbebf" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="usermsg.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/usermsg.py">
+<file id="afc30579-0736-4093-8938-079fc7ebbebf" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="usermsg.py" url="../_libs/python/usermsg.py">
 </file>
 <file id="d1b00640-63f2-42de-a288-dece7d79f6d0" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="gungame.py" url="gungame.py">
 </file>

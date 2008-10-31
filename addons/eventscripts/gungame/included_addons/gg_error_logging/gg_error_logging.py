@@ -56,6 +56,7 @@ def load():
     # Register addon with gungamelib
     gg_error_logging = gungamelib.registerAddon('gg_error_logging')
     gg_error_logging.setDisplayName('GG Error Logging')
+    gg_error_logging.loadTranslationFile()
     
     # Clear existing logs
     clearExistingLogs()
@@ -63,7 +64,7 @@ def load():
     # Set error hook
     sys.excepthook = exceptHook
     
-    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/logs/errorlog %s.txt' % es.ServerVar('eventscripts_ggp'))
+    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/logs/errorlog %s.txt' % es.ServerVar('eventscripts_gg'))
     
     # Don't print header if the file already exists
     if os.path.isfile(logPath):
@@ -87,7 +88,7 @@ def load():
     else:
         errorFile.write('    * ES_Tools: (Not Installed)\n')
     
-    errorFile.write('    * GunGame: %s\n' % es.ServerVar('eventscripts_ggp'))
+    errorFile.write('    * GunGame: %s\n' % es.ServerVar('eventscripts_gg'))
     errorFile.write('    * Popup: %s\n' % popuplib.info.version)
     errorFile.write('    * OS Type: %s\n' % os.name)
     
@@ -126,14 +127,14 @@ def clearExistingLogs():
             continue
         
         # Remove the file
-        if name != 'errorlog %s' % str(es.ServerVar('eventscripts_ggp')):
+        if name != 'errorlog %s' % str(es.ServerVar('eventscripts_gg')):
             os.remove('%s%s' % (baseDir, f))
 
 def openFile(type):
     global errorFile
     
     # Get path
-    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/logs/errorlog %s.txt' % es.ServerVar('eventscripts_ggp'))
+    logPath = gungamelib.getGameDir('addons/eventscripts/gungame/logs/errorlog %s.txt' % es.ServerVar('eventscripts_gg'))
 
     # Open the file
     errorFile = open(logPath, type)
@@ -149,11 +150,37 @@ def exceptHook(type, value, tb):
         es.excepter(type, value, tb)
         return
     
-    # Print header
-    es.dbgmsg(0, '\n%s' % ('*' * 79))
-    es.dbgmsg(0, '  GunGame exception caught!')
-    es.dbgmsg(0, '%s\n' % ('*' * 79))
+    # ============
+    # PRINT HEADER
+    # ============
+    # Seperator
+    es.dbgmsg(0, '==============================================================================')
     
+    # Header. Center it.
+    header = gungamelib.lang('gg_error_logging', 'ExceptionCaught')
+    es.dbgmsg(0, '%s%s' % ((' '*((78-len(header))/2)), header))
+    
+    # Seperator
+    es.dbgmsg(0, '==============================================================================')
+    
+    # Main info
+    gungamelib.echo('gg_error_logging', 0, 0, 'ErrorLogAvailableAt', showPrefix=False)
+    es.dbgmsg(0, ' -> addons/eventscripts/gungame/logs/errorlog %s.txt' % (es.ServerVar('eventscripts_gg')))
+    
+    # Seperator
+    es.dbgmsg(0, '==============================================================================')
+    
+    # Report info
+    gungamelib.echo('gg_error_logging', 0, 0, 'ReportTheError', showPrefix=False)
+    es.dbgmsg(0, ' ')
+    gungamelib.echo('gg_error_logging', 0, 0, 'TracebackAvailable', showPrefix=False)
+    
+    # Seperator
+    es.dbgmsg(0, '******************************************************************************')
+    
+    # ============
+    # TRACEBACK
+    # ============
     # Check for previous occurences of the same bug
     gungameErrorCheck = gungameError[:]
     gungameErrorCheck.pop()
@@ -199,10 +226,7 @@ def exceptHook(type, value, tb):
         errorFile.close()
     
     # Print finishing
-    es.dbgmsg(0, '\n%s' % ('*' * 79))
-    es.dbgmsg(0, '  Please open "addons/eventscripts/gungame/logs/errorlog %s.txt" and' % es.ServerVar('eventscripts_ggp'))
-    es.dbgmsg(0, '  report the bug in the "Bug Reports" topic.')
-    es.dbgmsg(0, '%s\n' % ('*' * 79))
+    es.dbgmsg(0, '******************************************************************************')
     
 def getErrorLine():
     global errorFile

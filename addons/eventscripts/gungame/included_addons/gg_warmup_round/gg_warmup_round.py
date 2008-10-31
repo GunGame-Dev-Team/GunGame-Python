@@ -219,9 +219,6 @@ def countDown():
         # Stop the timer
         repeat.delete('gungameWarmupTimer')
         
-        # Is not warmup
-        gungamelib.setGlobal('isWarmup', 0)
-        
         # Unload "gungame/included_addons/gg_warmup_round"
         es.unload('gungame/included_addons/gg_warmup_round')
         

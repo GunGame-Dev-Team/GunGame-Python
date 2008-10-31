@@ -74,7 +74,7 @@ def getLatestVersion():
     return int(soup.find('td', {'class': 'id'}).a['href'][9:])
 
 def checkVersion(latestRevision=False):
-    currentRevision = int(str(es.ServerVar('eventscripts_ggp')).split('.')[2])
+    currentRevision = gungamelib.getVersion()[2]
     
     if not latestRevision:
         latestRevision = getLatestVersion()
@@ -99,7 +99,7 @@ def update():
     
     # Get variables
     latestRevision = getLatestVersion()
-    thisRevision = int(str(es.ServerVar('eventscripts_ggp')).split('.')[2])
+    thisRevision = gungamelib.getVersion()[2]
     remainingRevisions = latestRevision-thisRevision
     updateRan = False
     
@@ -132,9 +132,10 @@ def update():
             gungamelib.echo('gg_update', 0, 0, 'UpdateError', {'rev': y})
             
             # Print the error out
-            es.dbgmsg(0, ' ')
-            es.excepter(*sys.exc_info())
-            es.dbgmsg(0, ' ')
+            #es.dbgmsg(0, ' ')
+            #es.excepter(*sys.exc_info())
+            #es.dbgmsg(0, ' ')
+            gungamelib.logException()
             
             gungamelib.echo('gg_update', 0, 0, 'RecommendManualUpdate')
             return

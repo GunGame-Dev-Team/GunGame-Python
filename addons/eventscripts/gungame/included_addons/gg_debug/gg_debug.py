@@ -48,7 +48,7 @@ def printDebugInfo(userid):
     
     debugfile = open(logPath, 'w')
     
-    debugfile.write('GunGame5 version: %s \n' % es.ServerVar('eventscripts_ggp'))
+    debugfile.write('GunGame5 version: %s \n' % es.ServerVar('eventscripts_gg'))
     debugfile.write('File created: %s \n\n\n' % time.strftime('%d/%m/%Y @ [%H:%M:%S]'))
     
     debugfile.write('Registered Addons:\n-----------------------\n')

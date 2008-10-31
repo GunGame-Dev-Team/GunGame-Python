@@ -122,7 +122,6 @@ def item_pickup(event_var):
 # ==============================================================================
 #  HELPER FUNCTIONS
 # ==============================================================================
-
 def filterDrop(userid, args):
     # If command not drop, continue
     if args[0].lower() != 'drop':

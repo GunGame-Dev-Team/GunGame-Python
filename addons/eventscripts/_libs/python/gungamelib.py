@@ -1272,7 +1272,20 @@ class Message(object):
         
         # Format it
         rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
-        rtnStr = rtnStr.decode('string_escape')
+        
+        # Windows string escaping
+        if getOS() == 'nt':
+            rtnStr = rtnStr.decode('string_escape')
+        
+        # Other OS string escaping
+        else:
+            rtnStr = rtnStr.replace('\\x01', '\x01').replace('\\x03', '\x03').replace('\\x04', '\x04')
+            rtnStr = rtnStr.replace('\\1', '\x01').replace('\\3', '\x03').replace('\\4', '\x04')
+            rtnStr = rtnStr.replace('\\n', '\n')
+            rtnStr = rtnStr.replace('\\r', '\r')
+            rtnStr = rtnStr.replace('\\t', '\t')
+            rtnStr = rtnStr.replace('\\b', '\b')
+            rtnStr = rtnStr.replace('\\v', '\v')
         
         # Crash prevention
         # !! DO NOT REMOVE !!

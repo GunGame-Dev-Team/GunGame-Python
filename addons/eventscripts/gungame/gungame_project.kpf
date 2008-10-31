@@ -3,6 +3,8 @@
 <project id="0651bb49-f501-4ccc-aaea-20751ee88255" kpf_version="4" name="gungame_project.kpf">
 <livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="../../../cfg/gungame/translations">
 </livefolder>
+<file id="33a2c4f9-f7a8-452a-91d1-f6e0e9ceeed2" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="fix.py" url="file:///C:/Users/Saul/Desktop/fix.py">
+</file>
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
 </folder>
 <file id="9de4b230-2f9a-4bce-8884-f5072dfbce25" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="gg_error_logging.ini" url="file:///D:/srcds/cstrike/cfg/gungame5/translations/gg_error_logging.ini">

@@ -22,7 +22,7 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = 'sample Addon for GunGame: Python'
+info.name     = 'sample (for GunGame5)'
 info.version  = '1.0.480'
 info.url      = ''
 info.basename = 'gungame/custom_addons/gg_sample'

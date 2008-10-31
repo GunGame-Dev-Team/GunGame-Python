@@ -22,9 +22,9 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = 'gg_thanks Addon for GunGame: Python'
+info.name     = 'gg_thanks (for GunGame5)'
 info.version  = '1.0.485'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_thanks'
 info.author   = 'GunGame Development Team'
 

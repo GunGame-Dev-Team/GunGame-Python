@@ -27,9 +27,9 @@ import gungamelib
 # ==============================================================================
 # Register with EventScripts
 info = es.AddonInfo()
-info.name     = 'gg_update (for GunGame: Python)'
+info.name     = 'gg_update (for GunGame5)'
 info.version  = '1.0.474'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_update'
 info.author   = 'GunGame Development Team'
 

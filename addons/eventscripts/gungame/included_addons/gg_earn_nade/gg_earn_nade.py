@@ -22,9 +22,9 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = 'gg_earn_nade (for GunGame: Python)'
+info.name     = 'gg_earn_nade (for GunGame5)'
 info.version  = '1.0.476'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_earn_nade'
 info.author   = 'GunGame Development Team'
 

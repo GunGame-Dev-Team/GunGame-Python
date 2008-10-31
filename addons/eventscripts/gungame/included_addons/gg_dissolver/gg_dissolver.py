@@ -23,9 +23,9 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = 'gg_dissolver (for GunGame: Python)'
+info.name     = 'gg_dissolver (for GunGame5)'
 info.version  = '1.0.402'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_dissolver'
 info.author   = 'GunGame Development Team'
 

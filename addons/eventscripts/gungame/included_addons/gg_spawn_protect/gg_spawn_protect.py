@@ -25,7 +25,7 @@ import gungamelib
 info = es.AddonInfo()
 info.name     = 'gg_spawn_protection (for GunGame:Python)'
 info.version  = '1.0.442'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_spawn_protect'
 info.author   = 'GunGame Development Team'
 

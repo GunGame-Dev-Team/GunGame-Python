@@ -23,9 +23,9 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = 'gg_multi_level Addon for GunGame: Python'
+info.name     = 'gg_multi_level (for GunGame5)'
 info.version  = '1.0.374'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_multi_level'
 info.author   = 'GunGame Development Team'
 

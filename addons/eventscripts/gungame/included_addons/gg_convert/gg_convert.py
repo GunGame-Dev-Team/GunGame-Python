@@ -33,9 +33,9 @@ import gungamelib
 # ==============================================================================
 # Register with EventScripts
 info = es.AddonInfo()
-info.name     = 'gg_convert (for GunGame: Python)'
+info.name     = 'gg_convert (for GunGame5)'
 info.version  = '1.0.493'
-info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
+info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
 
@@ -70,7 +70,7 @@ def convert_dm3(userid):
     gungamelib.msg('gungame', userid, 'CheckYourConsole')
     
     # Loop through the files in the legacy folder
-    for f in os.listdir(gungamelib.getGameDir('cfg/gungame5/spawnpoints/legacy')):
+    for f in os.listdir(gungamelib.getGameDir('cfg/gungame5/converter/gg3 spawnpoints')):
         name, ext = os.path.splitext(f)
         
         # Isn't a text file?
@@ -86,10 +86,11 @@ def convert_dm3(userid):
         
         # Parse it
         try:
-            points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg/gungame5/spawnpoints/legacy/%s' % f), userid)
+            points = parseLegacySpawnpoint(gungamelib.getGameDir('cfg/gungame5/converter/gg3 spawnpoints/%s' % f), userid)
         except:
             gungamelib.echo('gg_convert', userid, 0, 'dm3:ConvertionFailed')
-            es.excepter(*sys.exc_info())
+            #es.excepter(*sys.exc_info())
+            gungamelib.logException()
             continue
         
         # Are there any points?
@@ -134,12 +135,48 @@ def parseLegacySpawnpoint(file, userid=0):
         yield point.split(',')
 
 # ==============================================================================
+#   WINNERS -- GUNGAME 3
+# ==============================================================================
+def convert_winners3(userid):
+    # Tell them to check their console
+    gungamelib.msg('gungame', userid, 'CheckYourConsole')
+    
+    # Get the file
+    file = gungamelib.getGameDir('cfg/gungame5/converter/gg3 winners/es_gg_winners_db.txt')
+    
+    # Load the KeyValues file
+    kv = keyvalues.KeyValues(name=file[3:-6])
+    kv.load(file)
+    
+    # Loop through the winners
+    for x in kv:
+        # Check its a unique id
+        if not x.startswith('STEAM_'):
+            gungamelib.echo('gg_convert', userid, 0, 'winners3:SkippingNonUnique', {'name': x})
+            continue
+        
+        # Get data
+        data = kv[x]
+        
+        # Set winner info
+        gungameWinner = getWinner(x)
+        gungameWinner['wins'] = int(data['wins'])
+        gungameWinner['name'] = data['name']
+        gungameWinner['timestamp'] = time.time()
+        
+        # Print to console
+        gungamelib.echo('gg_convert', userid, 0, 'winners3:Converted', {'name': data['name'], 'wins': data['wins'], 'uniqueid': x})
+    
+    # Completed
+    gungamelib.echo('gg_convert', userid, 0, 'winners3:ConvertionCompleted')
+
+# ==============================================================================
 #   GLOBALS
 # ==============================================================================
 gConverts = {
     'help': convert_help,
     'dm3': convert_dm3,
     #'dm4': convert_dm4,
-    #'winners3': convert_winners3,
+    'winners3': convert_winners3,
     #'winners4': convert_winners4
 }

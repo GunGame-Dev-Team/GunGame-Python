@@ -390,10 +390,13 @@ class Player(object):
         # Get active weapon
         playerWeapon = self.getWeapon()
         
-        if playerWeapon != 'knife':
-            es.delayed(0, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
-        else:
+        # Switch to their knife
+        if playerWeapon == 'knife':
             es.sexec(self.userid, 'use weapon_knife')
+        
+        # Give and switch to their weapon
+        else:
+            es.delayed(0, 'es_xgive %s weapon_%s; es_xsexec %s "use weapon_%s"' % (self.userid, playerWeapon, self.userid, playerWeapon))
     
     def getWeapon(self):
         '''Returns the weapon for the players level.'''

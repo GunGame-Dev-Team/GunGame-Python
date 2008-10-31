@@ -26,11 +26,11 @@ import gungamelib
 # ==============================================================================
 # Register this addon with EventScripts
 info = es.AddonInfo()
-info.name     = "gg_knife_pro Addon for GunGame: Python"
+info.name     = 'gg_knife_pro (for GunGame5)'
 info.version  = '1.0.489'
-info.url      = "http://forums.mattie.info/cs/forums/viewforum.php?f=45"
-info.basename = "gungame/included_addons/gg_knife_pro"
-info.author   = "GunGame Development Team"
+info.url      = 'http://gungame5.com/'
+info.basename = 'gungame/included_addons/gg_knife_pro'
+info.author   = 'GunGame Development Team'
 
 # ==============================================================================
 #  GAME EVENTS

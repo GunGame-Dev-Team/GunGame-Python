@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.499
+    Version: 1.0.501
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame: Python)'
-info.version  = '1.0.499'
+info.version  = '1.0.501'
 info.url      = 'http://forums.mattie.info/cs/forums/viewforum.php?f=45'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -116,11 +116,8 @@ def item_pickup(event_var):
         if currentWeapon[7:] != item:
             return
     
-    # Select the players previous weapon
-    es.cexec(userid, 'lastinv')
-    
-    # Player can use the weapon without waiting for the animation
-    es.setplayerprop(userid, 'CBaseCombatCharacter.bcc_localdata.m_flNextAttack', 0)
+    # Select the players to their gungame weapon
+    es.sexec(userid, 'use weapon_%s' % weapon)
 
 # ==============================================================================
 #  HELPER FUNCTIONS
@@ -128,7 +125,7 @@ def item_pickup(event_var):
 
 def filterDrop(userid, args):
     # If command not drop, continue
-    if args[0] != 'drop':
+    if args[0].lower() != 'drop':
         return 1
     
     # Get player

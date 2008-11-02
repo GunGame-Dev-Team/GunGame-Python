@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.508
+    Version: 5.0.509
     Description: The main addon, handles leaders and events.
 '''
 
@@ -27,7 +27,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.508'
+__version__ = '5.0.509'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 1.0.503
+    Version: 5.0.511
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame5)'
-info.version  = '1.0.503'
+info.version  = '5.0.511'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -112,7 +112,7 @@ def item_pickup(event_var):
     es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
     
     # If the player did not switch to the weapon they just picked up, no need to switch them back to their previous weapon
-    if currentWeapon and currentWeapon[7:] != item:
+    if currentWeapon or currentWeapon[7:] != item:
         return
     
     # Switch to knife just incase they don't have their grenade

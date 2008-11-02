@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 1.0.493
+    Version: 5.0.493
     Description: Provides a console interface which allows convertions from
                  GunGame 3 and 4 are available for usage in GunGame 5.
 '''
@@ -9,7 +9,7 @@
 '''XXX Todo:
  - gg3: deathmatch [DONE]
  - gg4: deathmatch [TODO]
- - gg3: winners    [TODO]
+ - gg3: winners    [DONE]
  - gg4: winners    [TODO]
 '''
 
@@ -34,7 +34,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame5)'
-info.version  = '1.0.493'
+info.version  = '5.0.493'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'

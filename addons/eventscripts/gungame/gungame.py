@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.513
+    Version: 5.0.514
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.513'
+__version__ = '5.0.514'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts
@@ -35,7 +35,7 @@ info.name     = 'GunGame5'
 info.version  = __version__
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame'
-info.author   = 'Michael Barr (XE_ManUp), Paul (RideGuy), Saul Rennison (Cheezus)'
+info.author   = 'Michael Barr (XE_ManUp), Paul (RideGuy), Saul Rennison'
 
 # ==============================================================================
 #   LOAD GUNGAMELIB
@@ -98,8 +98,11 @@ def initialize():
     gungamelib.getConfig('gg_default_addons.cfg')
     gungamelib.getConfig('gg_map_vote.cfg')
     
+    # Execute addon configs
+    gungamelib.echo('gungame', 0, 0, 'Load_CustomConfigs')
+    
     for addon in list_customAddonsDir:
-        es.dbgmsg(0, '---------------> %s' %addon)
+        gungamelib.echo('gungame', 0, 0, 'ExecuteCustomConfig', {'addon': addon})
         gungamelib.getConfig('custom_addon_configs/%s.cfg' % addon)
     
     # Fire the gg_server.cfg
@@ -113,7 +116,7 @@ def initialize():
     
     # Get weapon order file
     baseDir = gungamelib.getGameDir('cfg/gungame5/weapon_orders/')
-    files = files = filter(lambda x: os.path.splitext(x)[1] == '.txt', os.listdir(baseDir))
+    files = filter(lambda x: os.path.splitext(x)[1] == '.txt', os.listdir(baseDir))
     
     # Loop through the weapon order files
     for x in files:
@@ -925,7 +928,7 @@ def server_cvar(event_var):
     
     # Weapon order type
     elif cvarName == 'gg_weapon_order_type':
-        gungamelib.getCurrentWeaponOrder().setWeaponOrderFile(newValue)
+        gungamelib.getCurrentWeaponOrder().setWeaponOrderType(newValue)
     
     # Fire event
     es.event('initialize', 'gg_variable_changed')

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_spawnpoints
-    Version: 1.0.493
+    Version: 5.0.493
     Description: Spawnpoints manager for GunGame:Python.
 '''
 
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_spawnpoints (for GunGame5)'
-info.version  = '1.0.493'
+info.version  = '5.0.493'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_spawnpoints'
 info.author   = 'GunGame Development Team'

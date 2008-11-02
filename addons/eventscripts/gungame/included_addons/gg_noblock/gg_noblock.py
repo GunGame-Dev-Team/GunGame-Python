@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_noblock
-    Version: 1.0.402
+    Version: 5.0.402
     Description: No-block addon for GunGame:Python.
 '''
 
@@ -20,7 +20,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_noblock (for GunGame5)'
-info.version  = '1.0.402'
+info.version  = '5.0.402'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_noblock'
 info.author   = 'GunGame Development Team'

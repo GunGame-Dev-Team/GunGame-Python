@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: spawnpointlib
-    Version: 1.0.484
+    Version: 5.0.484
     Description: GunGame Spawnpoint Library
 '''
 

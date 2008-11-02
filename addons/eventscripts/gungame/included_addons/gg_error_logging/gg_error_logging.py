@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_error_logging
-    Version: 1.0.402
+    Version: 5.0.402
     Description: Logs all errors raised by GunGame and its addons.
 '''
 
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_error_logging (for GunGame5)'
-info.version  = '1.0.402'
+info.version  = '5.0.402'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_error_logging'
 info.author   = 'GunGame Development Team'
@@ -139,14 +139,14 @@ def openFile(type):
     # Open the file
     errorFile = open(logPath, type)
 
-def exceptHook(type, value, tb):
+def exceptHook(type, value, tb, notes=None):
     global errorFile
     
     # Format exception
     gungameError = traceback.format_exception(type, value, tb)
     
     # If not a gungame error, send to ES and return
-    if 'gungame' not in str(gungameError):
+    if 'gungame' not in str(gungameError).lower():
         es.excepter(type, value, tb)
         return
     
@@ -164,15 +164,28 @@ def exceptHook(type, value, tb):
     es.dbgmsg(0, '==============================================================================')
     
     # Main info
+    sys.stdout.write(' ')
     gungamelib.echo('gg_error_logging', 0, 0, 'ErrorLogAvailableAt', showPrefix=False)
     es.dbgmsg(0, ' -> addons/eventscripts/gungame/logs/errorlog %s.txt' % (es.ServerVar('eventscripts_gg')))
     
     # Seperator
     es.dbgmsg(0, '==============================================================================')
     
+    # Additional Info
+    if notes:
+        # Print additional info
+        sys.stdout.write(' ')
+        gungamelib.echo('gg_error_logging', 0, 0, 'AdditionalInformation', showPrefix=False)
+        es.dbgmsg(0, ' -> %s' % notes)
+        
+        # Seperator
+        es.dbgmsg(0, '==============================================================================')
+    
     # Report info
+    sys.stdout.write(' ')
     gungamelib.echo('gg_error_logging', 0, 0, 'ReportTheError', showPrefix=False)
     es.dbgmsg(0, ' ')
+    sys.stdout.write(' ')
     gungamelib.echo('gg_error_logging', 0, 0, 'TracebackAvailable', showPrefix=False)
     
     # Seperator
@@ -192,7 +205,7 @@ def exceptHook(type, value, tb):
         dict_errorTracking[gungameErrorCheck].errorCount += 1
         
         # Format the new line's text
-        newText = '  Exception caught: %s [Occurences: %s]\n' % (time.strftime(dateFormat), dict_errorTracking[gungameErrorCheck].errorCount)
+        newText = '  Exception caught: %s [Occurences: %s]\n%s' % (time.strftime(dateFormat), dict_errorTracking[gungameErrorCheck].errorCount, '\n  Additional Information:\n  -> %s\n' % notes if notes else '')
         
         # Execute the change of the new line so it will write to the error log
         replaceErrorLine(dict_errorTracking[gungameErrorCheck].errorIndex, newText)
@@ -211,7 +224,7 @@ def exceptHook(type, value, tb):
         # Write header to file
         errorFile.write('\n')
         errorFile.write('%s\n' % ('-=' * 33))
-        errorFile.write('  Exception caught: %s [Occurences: %s]\n' % (time.strftime(dateFormat), dict_errorTracking[gungameErrorCheck].errorCount))
+        errorFile.write('  Exception caught: %s [Occurences: %s]\n%s' % (time.strftime(dateFormat), dict_errorTracking[gungameErrorCheck].errorCount, '\n  Additional Information:\n  -> %s\n' % notes if notes else ''))
         errorFile.write('%s\n' % ('-=' * 33))
         errorFile.write('\n')
         

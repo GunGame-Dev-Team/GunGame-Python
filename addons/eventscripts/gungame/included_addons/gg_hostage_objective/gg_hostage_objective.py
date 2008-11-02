@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_hostage_objective
-    Version: 1.0.419
+    Version: 5.0.419
     Description: Adds rewards for rescuing or preventing the rescuing of
                  hostages.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_hostage_objective (for GunGame5)'
-info.version  = '1.0.419'
+info.version  = '5.0.419'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_hostage_objective'
 info.author   = 'GunGame Development Team'

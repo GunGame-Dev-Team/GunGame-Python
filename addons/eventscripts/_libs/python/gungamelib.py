@@ -657,13 +657,13 @@ class WeaponOrder(object):
         msg('gungame', '#all', 'WeaponOrder:FileChanged', {'to': self.filename})
         
         # Set the weapon order type
-        self.__setWeaponOrderType(type)
+        self.setWeaponOrderType(type)
     
     def getWeaponOrderType(self):
         '''Returns the weapon order type.'''
         return self.ordertype    
 
-    def __setWeaponOrderType(self, type):
+    def setWeaponOrderType(self, type):
         '''Changes the order of which the levels go.'''
         type = str(type).lower()
         
@@ -759,7 +759,7 @@ class WeaponOrder(object):
         self.ordertype = type
         
         # Tell the players the weapon order has changed
-        msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': self.ordertype})
+        msg('gungame', '#all', 'WeaponOrder:ChangedTo', {'to': type[1:]})
         
         # Rebuild the menu
         self.buildWeaponOrderMenu()
@@ -772,7 +772,7 @@ class WeaponOrder(object):
         [menu.addItem('[%s] %s' % (x[1], x[0])) for x in self.order.values()]
         menu.buildMenu()
 
-        
+
 # ==============================================================================
 #   CONFIG CLASS
 # ==============================================================================
@@ -861,7 +861,7 @@ class Config(object):
         # Print config loaded
         echo('gungame', 0, 0, 'Config:Loaded', {'name': self.name})
 
-        
+
 # ==============================================================================
 #   SOUND CLASS
 # ==============================================================================
@@ -921,7 +921,7 @@ class Sounds(object):
         # File exists?
         return os.path.isfile(soundPath)
 
-        
+
 # ==============================================================================
 #   ADDON CLASS
 # ==============================================================================
@@ -1018,7 +1018,8 @@ class Addon(object):
         
         # Check the amount of arguments is correct
         if not inFunctionArgumentRange(callback, len(arguments)+1):
-            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            message = 'NoParameters' if getMaximumFuncArgs(callback)-1 == 0 else 'InvalidSyntax'
+            msg('gungame', userid, message, {'cmd': command, 'syntax': syntax})
             return
         
         # Try to call the function
@@ -1029,11 +1030,7 @@ class Addon(object):
         except:
             # Tell them an internal error occured
             msg('gungame', userid, 'InternalError', {'cmd': command})
-            
-            # Print out the error
-            msg('gungame', 0, 'ConsoleInternalError', {'cmd': command})
-            #es.excepter(*sys.exc_info())
-            logException()
+            logException('Public command call. "%s" was called by "%s".' % (command, es.getplayersteamid(userid) if userid else 'CONSOLE'))
     
     def __adminCommandCallback(self):
         # Call command
@@ -1058,7 +1055,8 @@ class Addon(object):
         
         # Check the amount of arguments is correct
         if not inFunctionArgumentRange(callback, len(arguments)+1):
-            msg('gungame', userid, 'InvalidSyntax', {'cmd': command, 'syntax': syntax})
+            message = 'NoParameters' if getMaximumFuncArgs(callback)-1 == 0 else 'InvalidSyntax'
+            msg('gungame', userid, message, {'cmd': command, 'syntax': syntax})
             return
         
         # Try to call the function
@@ -1069,11 +1067,7 @@ class Addon(object):
         except:
             # Tell them an internal error occured
             msg('gungame', userid, 'InternalError', {'cmd': command})
-            
-            # Print out the error
-            msg('gungame', 0, 'ConsoleInternalError', {'cmd': command})
-            #es.excepter(*sys.exc_info())
-            logException()
+            logException('Admin command call. "%s" was called by "%s".' % (command, es.getplayersteamid(userid) if userid else 'CONSOLE'))
         
         # Log the command
         finally:
@@ -1181,7 +1175,7 @@ class Addon(object):
         else:
             raise AddonError('Cannot delete dependency (%s): not registered.' % dependencyName)
 
-            
+
 # ==============================================================================
 #   ADDON DEPENDENCY CLASS
 # ==============================================================================
@@ -1322,7 +1316,7 @@ class Message(object):
         # Show in console
         if self.filter == '#all':
             self.echo(0, 0, string, tokens, showPrefix)
-            
+    
     def toptext(self, filter, duration, color, string, tokens):
         # Setup filter
         self.__formatFilter(filter)
@@ -1878,7 +1872,7 @@ class OrderedMenu(object):
     def send(self, users):
         popuplib.send('OrderedMenu_%s:1' % (self.menu), users)
 
-        
+
 # ==============================================================================
 #  CLASS WRAPPERS
 # ==============================================================================
@@ -1961,7 +1955,7 @@ def msg(addon, filter, string, tokens={}, showPrefix=True):
         echo(addon, 0, 0, string, tokens, showPrefix)
     else:
         dict_addonLang[addon].msg(filter, string, tokens, showPrefix)
-        
+
 def toptext(addon, filter, duration, color, string, tokens={}):
     dict_addonLang[addon].toptext(filter, duration, color, string, tokens)
     
@@ -2893,12 +2887,19 @@ def inFunctionArgumentRange(function, arguments):
     
     return getMinimumFuncArgs(function) <= arguments <= maxArgs
 
-def logException():
-    '''!Shows the last error in the server console and places it in the error log (if gg_error_logging is enabled).
+def logException(notes=None):
+    '''!Shows the last error in the target's console and places it in the error log (if gg_error_logging is enabled).
     
     @note This will only log if gg_error_logging is enabled, otherwise it will just appear in the server console as normal.'''
+    # Set parameters
+    params = list(sys.exc_info())
+    
+    # Add notes if error logging is available
+    if getVariableValue('gg_error_logging') == 1:
+        params.append(notes)
+    
     # Call the except hook
-    sys.excepthook(*sys.exc_info())
+    sys.excepthook(*params)
 
 def getVersion():
     '''!Gets the running GunGame version.

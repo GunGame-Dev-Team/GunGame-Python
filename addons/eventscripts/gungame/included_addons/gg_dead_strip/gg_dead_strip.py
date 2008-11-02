@@ -27,10 +27,6 @@ info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
 
-# ==============================================================================
-#  GLOBALS
-# ==============================================================================
-roundActive = 1
 
 # ==============================================================================
 #  GAME EVENTS
@@ -49,21 +45,10 @@ def unload():
     es.addons.unregisterClientCommandFilter(filterDrop)
 
 
-def es_map_start(event_var):
-    global roundActive
-    roundActive = 0
-
 def round_start(event_var):
-    global roundActive
-    roundActive = 1
-    
     # This makes it so there can be no idle weapons in the world, other than the
     # BSP entities.
     es.server.cmd('es_xfire %s game_weapon_manager AddOutput "maxpieces 0"' % es.getuserid())
-
-def round_end(event_var):
-    global roundActive
-    roundActive = 0
 
 def item_pickup(event_var):
     # Get variables
@@ -112,8 +97,9 @@ def item_pickup(event_var):
     es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
     
     # If the player did not switch to the weapon they just picked up, no need to switch them back to their previous weapon
-    if currentWeapon or currentWeapon[7:] != item:
-        return
+    if currentWeapon:
+        if currentWeapon[7:] != item:
+            return
     
     # Switch to knife just incase they don't have their grenade
     if weapon == 'hegrenade':

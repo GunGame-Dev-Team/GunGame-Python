@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_update
-    Version: 1.0.474
+    Version: 5.0.474
     Description: This addon automatically updates GunGame:Python from the
                  latest SVN revision.
 '''
@@ -28,7 +28,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_update (for GunGame5)'
-info.version  = '1.0.474'
+info.version  = '5.0.474'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_update'
 info.author   = 'GunGame Development Team'

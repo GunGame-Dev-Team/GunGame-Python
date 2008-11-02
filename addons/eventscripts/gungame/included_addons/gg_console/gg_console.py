@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_console
-    Version: 1.0.302
+    Version: 5.0.302
     Description: Provides console interface to be used by admins.
 '''
 
@@ -20,7 +20,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_console (for GunGame5)'
-info.version  = '1.0.302'
+info.version  = '5.0.302'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'

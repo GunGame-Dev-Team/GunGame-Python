@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_stats_logging
-    Version: 1.0.493
+    Version: 5.0.493
     Description: This addon publishes events for use by third-party statistic
                  applications.
 '''
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_stats_logging (for GunGame5)'
-info.version  = '1.0.493'
+info.version  = '5.0.493'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_stats_logging'
 info.author   = 'GunGame Development Team'

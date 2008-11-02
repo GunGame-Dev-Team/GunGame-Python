@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_deathmatch
-    Version: 1.0.491
+    Version: 5.0.491
     Description: Team-deathmatch mod for GunGame.
 '''
 
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_deathmatch (for GunGame5)'
-info.version  = '1.0.491'
+info.version  = '5.0.491'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_deathmatch'
 info.author   = 'GunGame Development Team'

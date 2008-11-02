@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dissolver
-    Version: 1.0.402
+    Version: 5.0.402
     Description: When players die, their ragdoll will dissolve.
 '''
 
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dissolver (for GunGame5)'
-info.version  = '1.0.402'
+info.version  = '5.0.402'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_dissolver'
 info.author   = 'GunGame Development Team'

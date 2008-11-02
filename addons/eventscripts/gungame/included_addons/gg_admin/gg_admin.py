@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_admin
-    Version: 1.0.493
+    Version: 5.0.493
     Description: Gives admins control over GunGame and its addons.
 '''
 
@@ -28,7 +28,7 @@ from gungame import gungame
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_admin (for GunGame5)'
-info.version  = '1.0.493'
+info.version  = '5.0.493'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_admin'
 info.author   = 'GunGame Development Team'

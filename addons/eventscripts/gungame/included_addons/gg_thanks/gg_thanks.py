@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_thanks
-    Version: 1.0.485
+    Version: 5.0.485
     Description: An addon dedicated to... everyone?!
 '''
 
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_thanks (for GunGame5)'
-info.version  = '1.0.485'
+info.version  = '5.0.485'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_thanks'
 info.author   = 'GunGame Development Team'

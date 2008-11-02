@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_debug
-    Version: 1.0.462
+    Version: 5.0.462
     Description: Removes dead player's weapons.
 '''
 
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_debug (for GunGame5)'
-info.version  = '1.0.462'
+info.version  = '5.0.462'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_debug'
 info.author   = 'GunGame Development Team'

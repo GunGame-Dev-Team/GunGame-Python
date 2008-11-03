@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 5.0.474
+    Version: 5.0.516
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -14,13 +14,11 @@
 # EventScripts imports
 import es
 import gamethread
-import usermsg
 import playerlib
 import testrepeat as repeat
 
 # GunGame imports
 import gungamelib
-from gungame import gungame
 
 # ==============================================================================
 #  ADDON REGISTRATION
@@ -28,7 +26,7 @@ from gungame import gungame
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round (for GunGame5)'
-info.version  = '5.0.474'
+info.version  = '5.0.516'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -62,6 +60,9 @@ def load():
 
     # Set "isWarmup" global
     gungamelib.setGlobal('isWarmup', 1)
+    
+    # Set "unloadWarmup" global
+    gungamelib.setGlobal('unloadWarmUp', 0)
     
     # Check to see if we should load deathmatch for warmup round
     if gungamelib.getVariableValue('gg_warmup_deathmatch'):
@@ -113,7 +114,6 @@ def unload():
         es.server.cmd('gg_elimination 0')
     
     # Set everyone's PreventLevel to 0
-    #gamethread.delayed(3, gungamelib.setPreventLevelAll, (0, 'gg_warmup_round'))
     gungamelib.setPreventLevelAll(0, 'gg_warmup_round')
     
     # Cancel the "gungameWarmUpRound" delay
@@ -134,6 +134,13 @@ def unload():
     # Unregister this addon with gungamelib
     gungamelib.unregisterAddon('gg_warmup_round')
 
+def round_start(event_var):
+    if not gungamelib.getGlobal('unloadWarmup'):
+        return
+        
+    # Unload warmup
+    es.unload('gungame/included_addons/gg_warmup_round')
+    
 def player_activate(event_var):
     userid = int(event_var['userid'])
     
@@ -206,7 +213,7 @@ def countDown():
         # mp_restartgame and trigger round_end
         if warmupCountDown['remaining'] == 1:
             es.server.cmd('mp_restartgame 1')
-            gungamelib.setGlobal('warmupComplete', 1)
+            gungamelib.setGlobal('unloadWarmUp', 1)
     
     # No time left
     elif warmupCountDown['remaining'] == 0:

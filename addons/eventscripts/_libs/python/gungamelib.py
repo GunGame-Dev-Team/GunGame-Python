@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.515
+@version 5.0.516
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -1991,8 +1991,6 @@ def resetGunGame():
     
     # Game is no longer over
     setGlobal('gameOver', 0)
-    
-    setGlobal('warmupComplete', 0)
     
     # Reset the player information dictionary
     dict_players.clear()

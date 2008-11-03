@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.514
+    Version: 5.0.515
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.514'
+__version__ = '5.0.515'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts
@@ -178,9 +178,6 @@ def initialize():
     # Load sound pack
     gungamelib.echo('gungame', 0, 0, 'Load_SoundSystem')
     gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
-    
-    # Load gg_console -- the console interface
-    es.load('gungame/included_addons/gg_console')
     
     # Load gg_info_menus -- creates and sends ingame menus (!top, !leader, !score, !ranks, etc)
     es.load('gungame/included_addons/gg_info_menus')

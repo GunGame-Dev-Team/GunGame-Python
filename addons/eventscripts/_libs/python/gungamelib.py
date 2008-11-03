@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.502
+@version 5.0.515
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -350,13 +350,6 @@ class Player(object):
     
     def stripPlayer(self):
         '''Strips the player of his primary and secondary weapon.'''
-        if getOS() == 'posix':
-            stripFormat  = 'es_xgive %s weapon_knife;' % self.userid
-            stripFormat += 'es_xgive %s player_weaponstrip;' % self.userid
-            stripFormat += 'es_xfire %s player_weaponstrip Strip;' % self.userid
-            stripFormat += 'es_xfire %s player_weaponstrip Kill' % self.userid
-            es.server.cmd(stripFormat)
-            return
         
         # Get player handle
         playerHandle = es.getplayerhandle(self.userid)
@@ -2799,12 +2792,6 @@ def removeCommandPrefix(command):
     
     # Return the raw command
     return command
-
-def serverCmd(*args):
-    '''!Executes all arguments at once, split by a semi-colon. This is faster than multiple es.server.cmd calls.
-    
-    @note Make sure the length of '''
-    es.server.cmd(args.join(';'))
 
 def getPlayerList(filter='#all'):
     '''!Returns a list of Player objects, filtered by the /p filter parameter.

@@ -57,6 +57,7 @@ def unload():
     if repeat.status('gungameHandicapLoop'):
         repeat.delete('gungameHandicapLoop')
 
+
 def es_map_start(event_var):
     # Start loop
     repeat.create('gungameHandicapLoop', handicapUpdate)

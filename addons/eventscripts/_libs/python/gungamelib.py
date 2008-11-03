@@ -2080,33 +2080,32 @@ def setPreventLevelAll(state, addon):
     '''Sets the "preventlevel" attribute for all players to the specified value.'''
     state = clamp(state, 0, 1)
     
-    for userid in dict_players:
-        getPlayer(userid).setPreventLevel(state, addon)
+    for player in getPlayerList():
+        player.setPreventLevel(state, addon)
 
 def getAverageLevel():
     '''Returns the average level of all of the players active on the server.'''
-    averageLevel = 0
+    totalLevels = 0
     averageDivider = 0
     
-    for userid in dict_players:
+    # Get levels of all players in server
+    for player in getPlayerList():
         averageDivider += 1
-        averageLevel += int(dict_players[userid]['level'])
+        totalLevels += player.level
     
     if averageDivider:
-        return int(round(averageLevel / averageDivider))
-    else:
-        return 0
+        return totalLevels / averageDivider
+    
+    return 0
 
 def getLevelUseridList(levelNumber):
     '''Returns a list of userids that are on the specified level.'''
     levelNumber = int(levelNumber)
     levelUserids = []
     
-    for userid in dict_players:
-        level = dict_players[userid]['level']
-        
-        if level == levelNumber:
-            levelUserids.append(userid)
+    for player in getPlayerList():
+        if player.level == levelNumber:
+            levelUserids.append(int(player))
     
     return levelUserids
 

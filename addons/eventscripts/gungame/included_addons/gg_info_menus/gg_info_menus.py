@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_info_menus
-    Version: 5.0.518
+    Version: 5.0.520
     Description: GG Stats controls all stat related commands (level, score, top,
                  rank, etc).
 '''
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_info_menus (for GunGame5)'
-info.version  = '5.0.518'
+info.version  = '5.0.520'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_info_menus'
 info.author   = 'GunGame Development Team'
@@ -356,20 +356,16 @@ def buildScoreMenu():
     menu = gungamelib.OrderedMenu('score_menu', [], 10, prepScoreMenu)
     menu.setTitle('GunGame: Player Score')
     
-    if len(es.getUseridList()):
-        levelCounter = gungamelib.getTotalLevels() + 1
-        
-        while levelCounter > 0:
-            levelCounter -= 1
-            for playerid in gungamelib.getLevelUseridList(levelCounter):
-                menu.addItem('[%i] %s' % (levelCounter, gungamelib.getPlayer(playerid)['name']))
-                levelRankUseridList.append(playerid)
-        
-        for emptySlot in range(0, es.getmaxplayercount() - len(levelRankUseridList)):
-            menu.addItem(' ')
-        
-    else:
-        menu.addItem('No Players.')
+    levelCounter = gungamelib.getTotalLevels() + 1
+    
+    while levelCounter > 0:
+        levelCounter -= 1
+        for playerid in gungamelib.getLevelUseridList(levelCounter):
+            menu.addItem('[%i] %s' % (levelCounter, gungamelib.getPlayer(playerid)['name']))
+            levelRankUseridList.append(playerid)
+    
+    for emptySlot in range(0, es.getmaxplayercount() - len(levelRankUseridList)):
+        menu.addItem(' ')
     
     menu.buildMenu()
     
@@ -399,6 +395,7 @@ def rebuildScoreMenu():
     
     for menu in range(1, pages + 1):
         popupMenu = popuplib.find('OrderedMenu_score_menu:%s' % menu)
+        # if not popupMenu: continue
         for userid in es.getUseridList():
             popupMenu.update(userid)
 

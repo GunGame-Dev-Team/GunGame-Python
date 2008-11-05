@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_thanks
-    Version: 5.0.485
+    Version: 5.0.522
     Description: An addon dedicated to... everyone?!
 '''
 
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_thanks (for GunGame5)'
-info.version  = '5.0.485'
+info.version  = '5.0.522'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_thanks'
 info.author   = 'GunGame Development Team'
@@ -32,65 +32,63 @@ info.author   = 'GunGame Development Team'
 #  GLOBALS
 # ==============================================================================
 credits = {
-    'Lead Developer / Project Lead':
-        ['XE_ManUp'],
+    'Project Leaders':
+        ['XE_ManUp',
+        'RideGuy'],
     
     'Developers':
-        ['RideGuy', 'Saul', 'HitThePipe', 'Artsemis', 'Don'],
+        ['Saul',
+        'HitThePipe',
+        'Artsemis',
+        'Don',
+        'Sc0pE',
+        'Goodfelladeal',
+        'cagemonkey'],
     
-    'Special Thanks':
-        ['Don', 'Artsemis', 'Predator (x2!)', 'tnb=[porsche]911', 'quantum-servers.com', 'Steven Crothers'],
-    
-    'Beta Testers (alphabetical order)':
+    'Beta Testers':
         ['-=CsFF=- Eagle',
-        '7355608',
         'Ace Rimmer',
         'aLpO',
-        'Artsemis',
-        'BbluE',
         'bonbon',
         'cagemonkey',
         'Chrisber',
         'Cisco',
         'CmG Knight',
-        'cmoore420',
         'dajayguy',
         'danzig',
-        'Defcon',
         'DerekRDenholm',
         'disconnect81',
-        'Don',
         'DontWannaName',
         'emc0002',
         'Errant',
         'GoodfellaDeal',
-        'HitThePipe',
-        'kkrazyykkidd',
-        'MDK',
-        'Mjtact',
+        'Hacker Killer'
         'moethelawn',
         'monday',
-        'Parah',
         'Q2',
-        'RideGuy',
-        'Saul',
-        'Sc0pE',
         'SIL3NT-DE4TH',
         'sp90378',
         'SquirrelEater',
         'StealthAssassin',
         'Tempe Terror1',
-        'The-Killer',
         'tnb=[porsche]911',
         'Predator',
-        'trcjm',
-        'ultima1221',
         'Wallslide',
         'Warbucks',
         'waspy',
         'Wire Wolf',
         'your-name-here',
-        '{cDS} Blue Ape']
+        '{cDS} Blue Ape'],
+        
+    'Special Thanks':
+        ['Predator',
+        'tnb=[porsche]911',
+        'your-name-here',
+        'RG3 Community',
+        'counter-strike.com',
+        'quantum-servers.com',
+        'Steven Crothers',
+        'The Cheebs'],
 }
 
 # ==============================================================================
@@ -100,8 +98,9 @@ def load():
     # Register addon with gungamelib
     gg_thanks = gungamelib.registerAddon('gg_thanks')
     gg_thanks.setDisplayName('GG Thanks')
+    gg_thanks.loadTranslationFile()
     
-    gg_thanks.registerAdminCommand('thanks', thanks)
+    gg_thanks.registerPublicCommand('thanks', thanks)
 
 def unload():
     # Unregister this addon with gungamelib
@@ -109,22 +108,19 @@ def unload():
 
 
 def thanks(userid):
-    # Server console only (for overflow protection)
-    if userid != 0:
-        gungamelib.msg('gg_thanks', userid, 'ServerOnly')
-        return
+    gungamelib.msg('gg_thanks', userid, 'CheckConsole')
     
     # Get the categories
     categories = credits.keys()
-    categories.reverse()
     
+    es.cexec(userid, 'echo [GG Thanks] ')
     # Loop through the credits
-    for x in categories:
+    for x in ('Project Leaders', 'Developers', 'Beta Testers', 'Special Thanks'):
         # Print category
-        es.dbgmsg(0, '[GG Thanks] %s:' % (x))
+        es.cexec(userid, 'echo [GG Thanks] %s:' % (x))
         
         # Show all in this category
         for y in credits[x]:
-            es.dbgmsg(0, '[GG Thanks]    %s' % y)
+            es.cexec(userid, 'echo [GG Thanks]    %s' % y)
         
-        es.dbgmsg(0, '[GG Thanks] ')
+        es.cexec(userid, 'echo [GG Thanks] ')

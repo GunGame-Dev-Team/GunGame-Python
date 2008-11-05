@@ -306,14 +306,17 @@ def buildTopMenu():
     menu = gungamelib.OrderedMenu('top_menu', [], 10, prepTopMenu)
     menu.setTitle('GunGame: Top Players')
     
-    for winner in orderedWinners:
-        # Get winner information
-        name = gungamelib.getWinnerName(winner)
-        wins = gungamelib.getWins(winner)
-        plural = '' if wins == 1 else 's'
+    if not orderedWinners:
+        menu.addItem('No Winners Recorded')
+    else:
+        for winner in orderedWinners:
+            # Get winner information
+            name = gungamelib.getWinnerName(winner)
+            wins = gungamelib.getWins(winner)
+            plural = '' if wins == 1 else 's'
         
-        # Add menu item
-        menu.addItem('%s: %s win%s' % (name, wins, plural))
+            # Add menu item
+            menu.addItem('%s: %s win%s' % (name, wins, plural))
     
     menu.buildMenu()
 

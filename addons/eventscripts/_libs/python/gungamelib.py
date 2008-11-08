@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.516
+@version 5.0.535
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -2083,13 +2083,19 @@ def setPreventLevelAll(state, addon):
     for player in getPlayerList():
         player.setPreventLevel(state, addon)
 
-def getAverageLevel():
-    '''Returns the average level of all of the players active on the server.'''
+def getAverageLevel(userid=0):
+    '''Returns the average level of all of the players active on the server.
+       
+       Optional userid will be excluded from the average level.'''
     totalLevels = 0
     averageDivider = 0
     
     # Get levels of all players in server
     for player in getPlayerList():
+        #if a userid has been passed exclude them from the averaging
+        if player.userid == int(userid):
+            continue
+        
         averageDivider += 1
         totalLevels += player.level
     

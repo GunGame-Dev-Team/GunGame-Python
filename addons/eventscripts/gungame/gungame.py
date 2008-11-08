@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.534
+    Version: 5.0.535
     Description: The main addon, handles leaders and events.
 '''
 

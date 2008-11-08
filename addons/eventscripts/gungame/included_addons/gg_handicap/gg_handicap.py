@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_handicap
-    Version: 5.0.474
+    Version: 5.0.535
     Description:
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_handicap (for GunGame5)'
-info.version  = '5.0.474'
+info.version  = '5.0.535'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_handicap'
 info.author   = 'GunGame Development Team'
@@ -66,7 +66,7 @@ def es_map_start(event_var):
 def player_activate(event_var):
     # Get vars
     userid = int(event_var['userid'])
-    averageLevel = gungamelib.getAverageLevel()
+    averageLevel = gungamelib.getAverageLevel(userid)
     gungamePlayer = gungamelib.getPlayer(userid)
     
     # Level below average?

@@ -350,6 +350,13 @@ class Player(object):
     
     def stripPlayer(self):
         '''Strips the player of his primary and secondary weapon.'''
+        if getOS() == 'posix':
+            stripFormat  = 'es_xgive %s weapon_knife;' % self.userid
+            stripFormat += 'es_xgive %s player_weaponstrip;' % self.userid
+            stripFormat += 'es_xfire %s player_weaponstrip Strip;' % self.userid
+            stripFormat += 'es_xfire %s player_weaponstrip Kill' % self.userid
+            es.server.cmd(stripFormat)
+            return
         
         # Get player handle
         playerHandle = es.getplayerhandle(self.userid)

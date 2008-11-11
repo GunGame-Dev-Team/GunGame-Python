@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.538
+    Version: 5.0.539
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.538'
+__version__ = '5.0.539'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts
@@ -545,6 +545,9 @@ def player_death(event_var):
         if not gungameVictim.isbot and gungamelib.getVariableValue('gg_afk_rounds') > 0:
             afkPunishCheck(userid)
         
+        return
+    
+    if gungameAttacker.getPreventLevel():
         return
     
     # No multikill? Just level up...

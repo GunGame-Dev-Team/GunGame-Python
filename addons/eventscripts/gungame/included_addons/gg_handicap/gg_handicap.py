@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_handicap
-    Version: 5.0.535
+    Version: 5.0.540
     Description:
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_handicap (for GunGame5)'
-info.version  = '5.0.535'
+info.version  = '5.0.540'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_handicap'
 info.author   = 'GunGame Development Team'
@@ -92,7 +92,36 @@ def handicapUpdate():
         
         # Level them up
         gungamePlayer['level'] = averageLevel
+        giveNewWeapon(userid)
         
         # Play sound and tell them
         gungamelib.playSound(userid, 'handicap')
         gungamelib.msg('gg_handicap', userid, 'LevelAveraged', {'level': averageLevel})
+
+def giveNewWeapon(userid):
+    userid = int(userid)
+    gungamePlayer = gungamelib.getPlayer(userid)
+    
+    if gungamelib.isDead(userid):
+        return
+        
+    if gungamelib.isSpectator(userid):
+        return
+    
+    gungamePlayer.stripPlayer()
+    
+    # Only delay if we are on linux
+    if gungamelib.getOS() == 'posix':
+        gamethread.delayed(0, delayedGiveNewWeapon, (userid))
+    else:
+        gungamePlayer.giveWeapon()
+
+def delayedGiveNewWeapon(userid):
+    if gungamelib.isDead(userid):
+        return
+    
+    if gungamelib.isSpectator(userid):
+        return
+    
+    gungamePlayer = gungamelib.getPlayer(userid)
+    gungamePlayer.giveWeapon()

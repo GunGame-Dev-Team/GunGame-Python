@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_spawn_protection
-    Version: 5.0.538
+    Version: 5.0.540
     Description: This will make players invincible and marked with color when
                  ever a player spawns. Protected players cannot level up during
                  spawn protection.
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_spawn_protection (for GunGame:Python)'
-info.version  = '5.0.538'
+info.version  = '5.0.540'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_spawn_protect'
 info.author   = 'GunGame Development Team'
@@ -130,9 +130,6 @@ def startProtect(userid):
     # Add them to the list of protected players
     list_protected.append(userid)
     
-    # Set health
-    playerlibPlayer.set('health', 999)
-    
     # Set color
     playerlibPlayer.set('color', (gungamelib.getVariableValue('gg_spawn_protect_red'),
                                   gungamelib.getVariableValue('gg_spawn_protect_green'),
@@ -166,9 +163,6 @@ def endProtect(userid):
     
     # Remove the player from the list of protected players
     list_protected.remove(userid)
-    
-    # Health
-    playerlibPlayer.set('health', 100)
     
     # Color
     playerlibPlayer.set('color', (255, 255, 255, 255))

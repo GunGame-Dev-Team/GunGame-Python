@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_handicap
-    Version: 5.0.540
+    Version: 5.0.541
     Description:
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_handicap (for GunGame5)'
-info.version  = '5.0.540'
+info.version  = '5.0.541'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_handicap'
 info.author   = 'GunGame Development Team'
@@ -35,6 +35,7 @@ info.author   = 'GunGame Development Team'
 #  GLOBALS
 # ==============================================================================
 updateType = gungamelib.getVariable('gg_handicap_update')
+gg_turbo = gungamelib.getVariable('gg_turbo')
 
 # ==============================================================================
 #  GAME EVENTS
@@ -92,7 +93,8 @@ def handicapUpdate():
         
         # Level them up
         gungamePlayer['level'] = averageLevel
-        giveNewWeapon(userid)
+        if gg_turbo:
+            giveNewWeapon(userid)
         
         # Play sound and tell them
         gungamelib.playSound(userid, 'handicap')

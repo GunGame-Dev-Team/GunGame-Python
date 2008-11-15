@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.544'
+__version__ = '5.0.545'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts
@@ -478,6 +478,10 @@ def player_death(event_var):
     if gungamelib.getGlobal('isWarmup'):
         return
     
+    # Is game over?
+    if gungamelib.getGlobal('gameOver'):
+        return
+    
     # Get player stuff
     userid = int(event_var['userid'])
     attacker = int(event_var['attacker'])
@@ -633,25 +637,13 @@ def gg_levelup(event_var):
     # WINNER CHECK
     # ============
     if int(event_var['old_level']) == gungamelib.getTotalLevels() and newLevel > gungamelib.getTotalLevels():
-        # Multi-round game
-        if dict_variables['roundsRemaining'] > 1:
-            es.event('initialize', 'gg_win')
-            es.event('setint', 'gg_win', 'attacker', event_var['attacker'])
-            es.event('setint', 'gg_win', 'winner', event_var['attacker'])
-            es.event('setint', 'gg_win', 'userid', event_var['userid'])
-            es.event('setint', 'gg_win', 'loser', event_var['userid'])
-            es.event('setint', 'gg_win', 'round', '1')
-            es.event('fire', 'gg_win')
-        
-        # Normal win
-        else:
-            es.event('initialize', 'gg_win')
-            es.event('setint', 'gg_win', 'attacker', event_var['attacker'])
-            es.event('setint', 'gg_win', 'winner', event_var['attacker'])
-            es.event('setint', 'gg_win', 'userid', event_var['userid'])
-            es.event('setint', 'gg_win', 'loser', event_var['userid'])
-            es.event('setint', 'gg_win', 'round', '0')
-            es.event('fire', 'gg_win')
+        es.event('initialize', 'gg_win')
+        es.event('setint', 'gg_win', 'attacker', event_var['attacker'])
+        es.event('setint', 'gg_win', 'winner', event_var['attacker'])
+        es.event('setint', 'gg_win', 'userid', event_var['userid'])
+        es.event('setint', 'gg_win', 'loser', event_var['userid'])
+        es.event('setint', 'gg_win', 'round', '1' if dict_variables['roundsRemaining'] > 1 else '0')
+        es.event('fire', 'gg_win')
         
         return
     

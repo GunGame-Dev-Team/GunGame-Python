@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.547
+    Version: 5.0.548
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.547'
+__version__ = '5.0.548'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 # Register with EventScripts
@@ -57,6 +57,10 @@ list_stripExceptions = []
 def load():
     # Load translation file for gungame
     gungamelib.loadTranslations('gungame')
+    
+    # Exec server.cfg before gungame loads.  If gungame is loaded from autoexec this is needed
+    # so that the correct values are stored.
+    es.server.cmd('exec server.cfg')
     
     try:
         initialize()

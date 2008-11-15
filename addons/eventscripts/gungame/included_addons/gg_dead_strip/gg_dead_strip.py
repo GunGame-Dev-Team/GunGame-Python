@@ -70,6 +70,10 @@ def item_pickup(event_var):
         deadStrip(item, userid)
 
 def deadStrip(item, userid):
+    # Check the player exists
+    if not gungamelib.playerExists(userid):
+        return
+    
     # Get player objects
     gungamePlayer = gungamelib.getPlayer(userid)
     weapon = gungamePlayer.getWeapon()

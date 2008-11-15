@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 5.0.529
+    Version: 5.0.544
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round (for GunGame5)'
-info.version  = '5.0.529'
+info.version  = '5.0.544'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -125,7 +125,10 @@ def unload():
 def round_start(event_var):
     if not gungamelib.getGlobal('unloadWarmup'):
         return
-        
+    
+    gungamelib.setGlobal('isWarmup', 0)
+    gungamelib.setGlobal('isIntermission', 0)
+    
     # Unload warmup
     es.unload('gungame/included_addons/gg_warmup_round')
     

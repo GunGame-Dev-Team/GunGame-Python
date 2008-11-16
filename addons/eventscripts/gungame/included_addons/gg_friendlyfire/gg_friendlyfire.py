@@ -64,7 +64,7 @@ def gg_start(event_var):
 
 def gg_levelup(event_var):
     # Get activation level
-    activateLevel = gungamelib.getTotalLevels() - int(levelVariable)
+    activateLevel = gungamelib.getTotalLevels()+1 - int(levelVariable)
     
     # If the Leader is on the friendlyfire level?
     if gungamelib.leaders.getLeaderLevel() >= activateLevel:

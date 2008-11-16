@@ -26,8 +26,9 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.548'
+__version__ = '5.0.549'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
+es.ServerVar('eventscripts_gg_short', '%s.%s' % (__version__.split('.')[0], __version__.split('.')[1])).makepublic()
 
 # Register with EventScripts
 info = es.AddonInfo()
@@ -58,8 +59,8 @@ def load():
     # Load translation file for gungame
     gungamelib.loadTranslations('gungame')
     
-    # Exec server.cfg before gungame loads.  If gungame is loaded from autoexec this is needed
-    # so that the correct values are stored.
+    # Exec server.cfg before gungame loads.  If gungame is loaded from autoexec
+    # this is needed so that the correct values are stored.
     es.server.cmd('exec server.cfg')
     
     try:

@@ -60,13 +60,16 @@ def checkBonus(userid):
     if gungamePlayer.getWeapon() != 'hegrenade':
         return
     
-    # Get bonus weapon
-    bonusWeapon = gungamelib.getVariableValue('gg_nade_bonus')
-    if 'weapon_' not in bonusWeapon:
-        bonusWeapon = 'weapon_' + bonusWeapon
+    # Give bonus weapons
+    for weapon in gungamelib.getVariableValue('gg_nade_bonus').split(','):
+        # Prefix weapon_
+        if not weapon.startswith('weapon_'):
+            weapon = 'weapon_%s' % weapon
+        
+        # Give them the weapon
+        es.delayed('0.01', 'es_xgive %s %s' % (userid, weapon))
     
     # Give it and make them use it
-    es.delayed('0.01', 'es_xgive %s %s' % (userid, bonusWeapon))
     es.delayed('0.02', 'es_xsexec %s "use weapon_hegrenade"' % userid)
     
 def hegrenade_detonate(event_var):

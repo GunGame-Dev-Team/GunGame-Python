@@ -62,12 +62,22 @@ def checkBonus(userid):
     
     # Give bonus weapons
     for weapon in gungamelib.getVariableValue('gg_nade_bonus').split(','):
-        # Prefix weapon_
+        # Prefix with weapon_
         if not weapon.startswith('weapon_'):
             weapon = 'weapon_%s' % weapon
         
+        if weapon == 'weapon_knife':
+            # TODO: [see comment below]
+            continue
+        
+        if weapon[7:] not in gungamelib.getWeaponList('all'):
+            print 'Skipping weapon: %s' % weapon
+            # TODO: Add warning message? Preferably not here but when the value
+            #       is changed?
+            continue
+        
         # Give them the weapon
-        es.delayed('0.01', 'es_xgive %s %s' % (userid, weapon))
+        es.delayed('0.01', 'es_xgive %s "%s"' % (userid, weapon))
     
     # Give it and make them use it
     es.delayed('0.02', 'es_xsexec %s "use weapon_hegrenade"' % userid)

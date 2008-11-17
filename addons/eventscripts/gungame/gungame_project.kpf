@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="0651bb49-f501-4ccc-aaea-20751ee88255" kpf_version="4" name="gungame_project.kpf">
-<livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="../../../cfg/gungame/translations">
+<livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/sound_packs" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="sound_packs" url="file:///D:/srcds/cstrike/cfg/gungame5/sound_packs">
 </livefolder>
-<file id="33a2c4f9-f7a8-452a-91d1-f6e0e9ceeed2" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="fix.py" url="file:///C:/Users/Saul/Desktop/fix.py">
-</file>
+<livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="file:///D:/srcds/cstrike/cfg/gungame5/translations">
+</livefolder>
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
 </folder>
-<file id="706989b5-6520-4200-a2bb-8af8c84166df" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="vaclib.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/vaclib.py">
-</file>
-<file id="81caf4e0-dbac-4e98-907f-a16a93d454d8" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="playerlib_test.py" url="file:///C:/Users/Saul/Desktop/playerlib_test.py">
-</file>
 <file id="9de4b230-2f9a-4bce-8884-f5072dfbce25" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="gg_error_logging.ini" url="file:///D:/srcds/cstrike/cfg/gungame5/translations/gg_error_logging.ini">
-</file>
-<file id="c1586c1d-3cd5-435e-96f1-8935095f42d8" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="Timed.py" url="file:///F:/Code/Python/Timed.py">
 </file>
 <file id="3d8f5c75-7a90-467f-95ab-89a95e9a878f" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="spawnpointlib.py" url="../_libs/python/spawnpointlib.py">
 </file>
@@ -104,6 +98,8 @@
 </preference-set>
   <string id="lastInvocation">default</string>
 </preference-set>
+<preference-set idref="0651bb49-f501-4ccc-aaea-20751ee88255/translations/gg_friendlyfire.ini">
+</preference-set>
 <preference-set idref="4b7ebd04-d1ca-4a3b-a7f8-5517514d9155">
 <preference-set id="Invocations">
 <preference-set id="default">
@@ -136,30 +132,6 @@
   <string id="documentRoot"></string>
   <string id="executable-params"></string>
   <string id="filename">D:\srcds\cstrike\addons\eventscripts\_libs\python\mp3lib.py</string>
-  <string id="getparams"></string>
-  <string id="language">Python</string>
-  <string id="mpostparams"></string>
-  <string id="params"></string>
-  <string id="postparams"></string>
-  <string id="posttype">application/x-www-form-urlencoded</string>
-  <string id="request-method">GET</string>
-  <boolean id="show-dialog">1</boolean>
-  <boolean id="sim-cgi">0</boolean>
-  <boolean id="use-console">1</boolean>
-  <string id="userCGIEnvironment"></string>
-  <string id="userEnvironment"></string>
-</preference-set>
-</preference-set>
-  <string id="lastInvocation">default</string>
-</preference-set>
-<preference-set idref="706989b5-6520-4200-a2bb-8af8c84166df">
-<preference-set id="Invocations">
-<preference-set id="default">
-  <string id="cookieparams"></string>
-  <string id="cwd"></string>
-  <string id="documentRoot"></string>
-  <string id="executable-params"></string>
-  <string id="filename">D:\srcds\cstrike\addons\eventscripts\_libs\python\vaclib.py</string>
   <string id="getparams"></string>
   <string id="language">Python</string>
   <string id="mpostparams"></string>
@@ -242,30 +214,6 @@
   <boolean id="show-dialog">1</boolean>
   <boolean id="sim-cgi">0</boolean>
   <boolean id="use-console">0</boolean>
-  <string id="userCGIEnvironment"></string>
-  <string id="userEnvironment"></string>
-</preference-set>
-</preference-set>
-  <string id="lastInvocation">default</string>
-</preference-set>
-<preference-set idref="c1586c1d-3cd5-435e-96f1-8935095f42d8">
-<preference-set id="Invocations">
-<preference-set id="default">
-  <string id="cookieparams"></string>
-  <string id="cwd"></string>
-  <string id="documentRoot"></string>
-  <string id="executable-params"></string>
-  <string id="filename">F:\Code\Python\Timed.py</string>
-  <string id="getparams"></string>
-  <string id="language">Python</string>
-  <string id="mpostparams"></string>
-  <string id="params"></string>
-  <string id="postparams"></string>
-  <string id="posttype">application/x-www-form-urlencoded</string>
-  <string id="request-method">GET</string>
-  <boolean id="show-dialog">1</boolean>
-  <boolean id="sim-cgi">0</boolean>
-  <boolean id="use-console">1</boolean>
   <string id="userCGIEnvironment"></string>
   <string id="userEnvironment"></string>
 </preference-set>

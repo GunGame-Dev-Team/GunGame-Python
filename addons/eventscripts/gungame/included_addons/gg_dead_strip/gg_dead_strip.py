@@ -91,14 +91,14 @@ def deadStrip(item, userid):
     if weapon == item:
         return
     
+    # Nade bonus weapon check
     if weapon == 'hegrenade':
-        # Is nade bonus loaded?
-        nadeBonus = gungamelib.getVariableValue('gg_nade_bonus')
+        # Get nade bonus weapons
+        nadeBonusWeapons = str(gungamelib.getVariableValue('gg_nade_bonus')).split(',')
         
-        # Check to see if the grenade level bonus weapon is active
-        if nadeBonus:
+        if nadeBonusWeapons[0] != '0':
             # Only remove if the item is not the nade bonus weapon
-            if nadeBonus == item:
+            if item in nadeBonusWeapons:
                 return
     
     # Get the players current weapon
@@ -127,14 +127,34 @@ def filterDrop(userid, args):
     if args[0].lower() != 'drop':
         return 1
     
-    # Get player
+    # Get player and their info
     gungamePlayer = gungamelib.getPlayer(userid)
+    weapon = gungamePlayer.getWeapon()
     playerlibPlayer = playerlib.getPlayer(userid)
+    curWeapon = playerlibPlayer.attributes['weapon']
     
     # Check to see if their current weapon is their level weapon
-    if playerlibPlayer.attributes['weapon'] == 'weapon_%s' % gungamePlayer.getWeapon():
-        # Don't let them drop it
-        return 0
-    else:
-        # Let them drop it
-        return 1
+    if weapon != 'hegrenade':
+        return int(curWeapon != 'weapon_%s' % weapon)
+    
+    # ================
+    # NADE BONUS CHECK
+    # ================
+    nadeBonusWeapons = str(gungamelib.getVariableValue('gg_nade_bonus')).split(',')
+    
+    # Is nade bonus enabled?
+    if nadeBonusWeapons[0] == '0':
+        return int(curWeapon != 'weapon_%s' % weapon)
+    
+    # Loop through the nade bonus weapons
+    for nadeWeapon in nadeBonusWeapons:
+        # Prefix weapon_
+        if not nadeWeapon.startswith('weapon_'):
+            nadeWeapon = 'weapon_%s' % nadeWeapon
+        
+        # Don't allow them to drop it
+        if nadeWeapon == curWeapon:
+            return 0
+    
+    # Allow them to drop it
+    return 1

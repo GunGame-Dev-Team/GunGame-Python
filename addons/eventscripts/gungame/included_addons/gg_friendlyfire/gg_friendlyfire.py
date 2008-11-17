@@ -75,4 +75,4 @@ def gg_levelup(event_var):
             
             # Show message and sound
             gungamelib.msg('gg_friendlyfire', '#all', 'WatchYourFire')
-            es.cexec_all('play npc/roller/mine/rmine_tossed1.wav')
+            gungamelib.playSound('#all', 'friendlyfire')

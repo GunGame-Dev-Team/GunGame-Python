@@ -26,9 +26,12 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.549'
+__version__ = '5.0.550'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
-es.ServerVar('eventscripts_gg_short', '%s.%s' % (__version__.split('.')[0], __version__.split('.')[1])).makepublic()
+
+## NOTE TO DEVS:
+## Add this for easier server tracking?
+#es.ServerVar('eventscripts_gg_short', '%s.%s' % (__version__.split('.')[0], __version__.split('.')[1])).makepublic()
 
 # Register with EventScripts
 info = es.AddonInfo()

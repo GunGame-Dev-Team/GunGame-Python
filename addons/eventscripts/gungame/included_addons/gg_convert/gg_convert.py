@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 5.0.493
+    Version: 5.0.553
     Description: Provides a console interface which allows convertions from
                  GunGame 3 and 4 are available for usage in GunGame 5.
 '''
@@ -10,7 +10,7 @@
  - gg3: deathmatch [DONE]
  - gg4: deathmatch [TODO]
  - gg3: winners    [DONE]
- - gg4: winners    [TODO]
+ - gg4: winners    [DONE]
 '''
 
 # ==============================================================================
@@ -19,6 +19,7 @@
 # Python imports
 import os
 import sys
+import time
 
 # EventScripts imports
 import es
@@ -34,7 +35,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame5)'
-info.version  = '5.0.493'
+info.version  = '5.0.553'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -159,7 +160,7 @@ def convert_winners3(userid):
         data = kv[x]
         
         # Set winner info
-        gungameWinner = getWinner(x)
+        gungameWinner = gungamelib.getWinner(x)
         gungameWinner['wins'] = int(data['wins'])
         gungameWinner['name'] = data['name']
         gungameWinner['timestamp'] = time.time()
@@ -167,8 +168,58 @@ def convert_winners3(userid):
         # Print to console
         gungamelib.echo('gg_convert', userid, 0, 'winners3:Converted', {'name': data['name'], 'wins': data['wins'], 'uniqueid': x})
     
+    completeConvert()
+    
     # Completed
     gungamelib.echo('gg_convert', userid, 0, 'winners3:ConvertionCompleted')
+
+# ==============================================================================
+#   WINNERS -- GUNGAME 4
+# ==============================================================================
+def convert_winners4(userid):
+    # Tell them to check their console
+    gungamelib.msg('gungame', userid, 'CheckYourConsole')
+    
+    # Load the database into a keygroup
+    es.sql('open', 'gg_database', 'gungame5/converter/gg4 winners')
+    es.sql('query', 'gg_database', 'gg4c_db', 'SELECT * FROM gg_players')
+    es.sql('close', 'gg_database')
+    
+    # Open the keygroup with keyvalues
+    gg4db = keyvalues.getKeyGroup('gg4c_db')
+    
+    # Loop through the winners
+    for player in gg4db:
+        try:
+            # Set winner info
+            player = str(player)
+            wins = int(gg4db[player]['wins'])
+            if not wins:
+                continue
+            steamid = gg4db[player]['steamid']
+            name = gg4db[player]['name']
+            gungameWinner = gungamelib.getWinner(steamid)
+            gungameWinner['wins'] = wins
+            gungameWinner['name'] = name
+            gungameWinner['timestamp'] = time.time()
+            
+            # Print to console
+            gungamelib.echo('gg_convert', userid, 0, 'winners4:Converted', {'name': name, 'wins': wins, 'uniqueid': steamid})
+        except:
+            # Pass if they were not a valid player
+            pass
+    
+    completeConvert()
+    
+    # Completed
+    gungamelib.echo('gg_convert', userid, 0, 'winners4:ConvertionCompleted')
+
+def completeConvert():
+    # Load the new database
+    gungamelib.saveWinnerDatabase()
+    gungamelib.loadWinnerDatabase()
+    
+    es.reload('gungame/included_addons/gg_info_menus')
 
 # ==============================================================================
 #   GLOBALS
@@ -178,5 +229,5 @@ gConverts = {
     'dm3': convert_dm3,
     #'dm4': convert_dm4,
     'winners3': convert_winners3,
-    #'winners4': convert_winners4
+    'winners4': convert_winners4
 }

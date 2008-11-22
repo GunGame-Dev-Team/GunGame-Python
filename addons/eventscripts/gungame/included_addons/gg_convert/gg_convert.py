@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 5.0.553
+    Version: 5.0.555
     Description: Provides a console interface which allows convertions from
                  GunGame 3 and 4 are available for usage in GunGame 5.
 '''
@@ -35,7 +35,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame5)'
-info.version  = '5.0.553'
+info.version  = '5.0.555'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -190,24 +190,20 @@ def convert_winners4(userid):
     
     # Loop through the winners
     for player in gg4db:
-        try:
-            # Set winner info
-            player = str(player)
-            wins = int(gg4db[player]['wins'])
-            if not wins:
-                continue
-            steamid = gg4db[player]['steamid']
-            name = gg4db[player]['name']
-            gungameWinner = gungamelib.getWinner(steamid)
-            gungameWinner['wins'] = wins
-            gungameWinner['name'] = name
-            gungameWinner['timestamp'] = time.time()
-            
-            # Print to console
-            gungamelib.echo('gg_convert', userid, 0, 'winners4:Converted', {'name': name, 'wins': wins, 'uniqueid': steamid})
-        except:
-            # Pass if they were not a valid player
-            pass
+        # Set winner info
+        player = str(player)
+        wins = int(gg4db[player]['wins'])
+        if not wins:
+            continue
+        steamid = gg4db[player]['steamid']
+        name = gg4db[player]['name']
+        gungameWinner = gungamelib.getWinner(steamid)
+        gungameWinner['wins'] = wins
+        gungameWinner['name'] = name
+        gungameWinner['timestamp'] = time.time()
+        
+        # Print to console
+        gungamelib.echo('gg_convert', userid, 0, 'winners4:Converted', {'name': name, 'wins': wins, 'uniqueid': steamid})
     
     completeConvert()
     

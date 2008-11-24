@@ -1981,10 +1981,10 @@ def respawn(userid):
     respawnCommand = getVariable('gg_respawn_cmd')
     if '#' not in str(respawnCommand):
         # Userids not requiring the "#" symbol
-        es.server.cmd('%s %s' % (respawnCommand, userid))
+        es.server.queuecmd('%s %s' % (respawnCommand, userid))
     else:
         # SourceMod Workaround
-        es.server.cmd('%s%s' % (respawnCommand, userid))
+        es.server.queuecmd('%s%s' % (respawnCommand, userid))
 
 # ==============================================================================
 #   RESET GUNGAME --- WARNING: POWERFUL COMMAND

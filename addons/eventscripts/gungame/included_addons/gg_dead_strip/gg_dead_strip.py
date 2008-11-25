@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 5.0.542
+    Version: 5.0.558
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame5)'
-info.version  = '5.0.542'
+info.version  = '5.0.558'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -48,7 +48,7 @@ def unload():
 def round_start(event_var):
     # This makes it so there can be no idle weapons in the world, other than the
     # BSP entities.
-    es.server.cmd('es_xfire %s game_weapon_manager AddOutput "maxpieces 0"' % es.getuserid())
+    es.server.queuecmd('es_xfire %s game_weapon_manager AddOutput "maxpieces 0"' % es.getuserid())
 
 def item_pickup(event_var):
     # Get variables
@@ -83,7 +83,7 @@ def deadStrip(item, userid):
     if gungamelib.getGlobal('isWarmup') == 1:
         # Only remove if the weapon is not the warmup weapon
         if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
-            es.server.cmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
+            es.server.queuecmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
         
         return
     
@@ -105,7 +105,7 @@ def deadStrip(item, userid):
     currentWeapon = playerlibPlayer.attributes['weapon']
     
     # Remove the weapon they just picked up
-    es.server.cmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+    es.server.queuecmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
     
     # If the player did not switch to the weapon they just picked up, no need to switch them back to their previous weapon
     if currentWeapon:

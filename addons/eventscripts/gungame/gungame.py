@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.557
+    Version: 5.0.558
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,12 +26,14 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.557'
+__version__ = '5.0.558'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 
 ## NOTE TO DEVS:
 ## Add this for easier server tracking?
 #es.ServerVar('eventscripts_gg_short', '%s.%s' % (__version__.split('.')[0], __version__.split('.')[1])).makepublic()
+
+#Nice idea Saul.  What do you think XE?
 
 # Register with EventScripts
 info = es.AddonInfo()
@@ -178,7 +180,7 @@ def initialize():
     
     # Restart map
     gungamelib.msg('gungame', '#all', 'Loaded')
-    es.server.cmd('mp_restartgame 2')
+    es.server.queuecmd('mp_restartgame 2')
     
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
@@ -213,7 +215,7 @@ def unload():
     
     # Enable Buyzones
     userid = es.getuserid()
-    es.server.cmd('es_xfire %d func_buyzone Enable' % userid)
+    es.server.queuecmd('es_xfire %d func_buyzone Enable' % userid)
     
     # Get map if
     try:
@@ -224,19 +226,19 @@ def unload():
             # Re-enable all objectives
             if mapObjectives == 0:
                 if len(es.createentitylist('func_bomb_target')):
-                    es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
+                    es.server.queuecmd('es_xfire %d func_bomb_target Enable' %userid)
                 elif len(es.createentitylist('func_hostage_rescue')):
-                    es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
+                    es.server.queuecmd('es_xfire %d func_hostage_rescue Enable' %userid)
             
             # Enable bomb zone 
             elif mapObjectives == 1:
                 if len(es.createentitylist('func_bomb_target')):
-                    es.server.cmd('es_xfire %d func_bomb_target Enable' %userid)
+                    es.server.queuecmd('es_xfire %d func_bomb_target Enable' %userid)
             
             # Enable hostage objectives
             elif mapObjectives == 2:
                 if len(es.createentitylist('func_hostage_rescue')):
-                    es.server.cmd('es_xfire %d func_hostage_rescue Enable' %userid)
+                    es.server.queuecmd('es_xfire %d func_hostage_rescue Enable' %userid)
     except:
         pass
     
@@ -248,7 +250,7 @@ def unload():
     list_gungameVariables = gungamelib.getVariableList()
     for variable in list_gungameVariables:
         es.ServerVar(variable).removeFlag('notify')
-        es.server.cmd('%s 0' % variable)
+        es.server.queuecmd('%s 0' % variable)
     
     # Unregister this addon
     gungamelib.unregisterAddon('gungame')
@@ -332,7 +334,7 @@ def round_start(event_var):
     
     # Disable Buyzones
     userid = es.getuserid()
-    es.server.cmd('es_xfire %d func_buyzone Disable' % userid)
+    es.server.queuecmd('es_xfire %d func_buyzone Disable' % userid)
     
     # Remove weapons
     for weapon in gungamelib.getWeaponList('all'):
@@ -341,7 +343,7 @@ def round_start(event_var):
             continue
         
         # Remove the weapon from the map
-        es.server.cmd('es_xfire %d weapon_%s kill' % (userid, weapon))
+        es.server.queuecmd('es_xfire %d weapon_%s kill' % (userid, weapon))
     
     # Equip players
     equipPlayer()
@@ -354,24 +356,24 @@ def round_start(event_var):
         # Remove all objectives
         if mapObjectives == 0:
             if len(es.createentitylist('func_bomb_target')):
-                es.server.cmd('es_xfire %d func_bomb_target Disable' %userid)
-                es.server.cmd('es_xfire %d weapon_c4 Kill' %userid)
+                es.server.queuecmd('es_xfire %d func_bomb_target Disable' %userid)
+                es.server.queuecmd('es_xfire %d weapon_c4 Kill' %userid)
             
             elif len(es.createentitylist('func_hostage_rescue')):
-                es.server.cmd('es_xfire %d func_hostage_rescue Disable' %userid)
-                es.server.cmd('es_xfire %d hostage_entity Kill' %userid)
+                es.server.queuecmd('es_xfire %d func_hostage_rescue Disable' %userid)
+                es.server.queuecmd('es_xfire %d hostage_entity Kill' %userid)
         
         # Remove bomb objectives
         elif mapObjectives == 1:
             if len(es.createentitylist('func_bomb_target')):
-                es.server.cmd('es_xfire %d func_bomb_target Disable' %userid)
-                es.server.cmd('es_xfire %d weapon_c4 Kill' % userid)
+                es.server.queuecmd('es_xfire %d func_bomb_target Disable' %userid)
+                es.server.queuecmd('es_xfire %d weapon_c4 Kill' % userid)
         
         # Remove hostage objectives
         elif mapObjectives == 2:
             if len(es.createentitylist('func_hostage_rescue')):
-                es.server.cmd('es_xfire %d func_hostage_rescue Disable' %userid)
-                es.server.cmd('es_xfire %d hostage_entity Kill' % userid)
+                es.server.queuecmd('es_xfire %d func_hostage_rescue Disable' %userid)
+                es.server.queuecmd('es_xfire %d hostage_entity Kill' % userid)
     
     if gungamelib.getVariableValue('gg_leaderweapon_warning'):
         leaderWeapon = gungamelib.getLevelWeapon(gungamelib.leaders.getLeaderLevel())
@@ -747,8 +749,8 @@ def gg_win(event_var):
         # MAP WIN
         # ====================================================
         # End game
-        es.server.cmd('es_xgive %d game_end' % userid)
-        es.server.cmd('es_xfire %d game_end EndGame' % userid)
+        es.server.queuecmd('es_xgive %d game_end' % userid)
+        es.server.queuecmd('es_xfire %d game_end EndGame' % userid)
         
         # Tell the world
         gungamelib.saytext2('gungame', '#all', index, 'PlayerWon', {'player': playerName})
@@ -764,7 +766,7 @@ def gg_win(event_var):
         dict_variables['roundsRemaining'] -= 1
         
         # End the GunGame Round
-        es.server.cmd('mp_restartgame 2')
+        es.server.queuecmd('mp_restartgame 2')
         
         # Check to see if the warmup round needs to be activated
         if gungamelib.getVariableValue('gg_round_intermission') > 0:
@@ -781,7 +783,7 @@ def gg_win(event_var):
     # ALL WINS
     # ====================================================
     # Enable alltalk
-    es.server.cmd('sv_alltalk 1')
+    es.server.queuecmd('sv_alltalk 1')
     
     # Tell the world (center message)
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})
@@ -941,12 +943,12 @@ def afkPunishCheck(userid):
         if gungamePlayer['afkrounds'] >= afkMaxAllowed:
             # Kick the player
             if gungamelib.getVariableValue('gg_afk_action') == 1:
-                es.server.cmd('kickid %d "You were AFK for too long."' % userid)
+                es.server.queuecmd('kickid %d "You were AFK for too long."' % userid)
             
             # Show menu
             elif gungamelib.getVariableValue('gg_afk_action') == 2:
                 # Send them to spectator
-                es.server.cmd('es_xfire %d !self SetTeam 1' % userid)
+                es.server.queuecmd('es_xfire %d !self SetTeam 1' % userid)
                 
                 # Send a popup saying they were switched
                 menu = popuplib.create('gungame_afk')
@@ -967,11 +969,11 @@ def equipPlayer():
     
     # Give the player full armor
     if armorType == 2:
-        es.server.cmd('es_xfire %s game_player_equip AddOutput "item_assaultsuit 1"' % userid)
+        es.server.queuecmd('es_xfire %s game_player_equip AddOutput "item_assaultsuit 1"' % userid)
     
     # Give the player kevlar only
     elif armorType == 1:
-        es.server.cmd('es_xfire %s game_player_equip AddOutput "item_kevlar 1"' % userid)
+        es.server.queuecmd('es_xfire %s game_player_equip AddOutput "item_kevlar 1"' % userid)
 
 def levelInfoHint(userid):
     # Get variables

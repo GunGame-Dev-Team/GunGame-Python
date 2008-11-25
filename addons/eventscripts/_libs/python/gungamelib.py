@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.535
+@version 5.0.558
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -297,12 +297,12 @@ class Player(object):
         
         # Kick the player
         if gungamelib.getVariableValue('gg_afk_action') == 1:
-            es.server.cmd('kickid %s "You were AFK for too long."' % self.userid)
+            es.server.queuecmd('kickid %s "You were AFK for too long."' % self.userid)
         
         # Show menu
         elif gungamelib.getVariableValue('gg_afk_action') == 2:
             # Send them to spectator
-            es.server.cmd('es_xfire %d !self SetTeam 1' % self.userid)
+            es.server.queuecmd('es_xfire %d !self SetTeam 1' % self.userid)
             
             # Send a popup saying they were switched
             menu = popuplib.create('gungame_afk')
@@ -323,11 +323,11 @@ class Player(object):
             raise DeadError('Unable to teleport player (%s): not alive.' % self.userid)
         
         # Set position
-        es.server.cmd('es_xsetpos %d %s %s %s' % (self.userid, x, y, z))
+        es.server.queuecmd('es_xsetpos %d %s %s %s' % (self.userid, x, y, z))
         
         # Set eye angles
         if eyeangle0 != 0 or eyeangle1 != 0:
-            es.server.cmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
+            es.server.queuecmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
         
         # Reset player AFK status
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
@@ -343,21 +343,13 @@ class Player(object):
             raise DeadError('Unable to set player angles (%s): not alive.' % self.userid)
         
         # Set angles
-        es.server.cmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
+        es.server.queuecmd('es_xsetang %d %s %s' % (self.userid, eyeangle0, eyeangle1))
         
         # Reset player AFK status
         gamethread.delayed(0.1, self.resetPlayerLocation, ())
     
     def stripPlayer(self):
         '''Strips the player of his primary and secondary weapon.'''
-        if getOS() == 'posix':
-            stripFormat  = 'es_xgive %s weapon_knife;' % self.userid
-            stripFormat += 'es_xgive %s player_weaponstrip;' % self.userid
-            stripFormat += 'es_xfire %s player_weaponstrip Strip;' % self.userid
-            stripFormat += 'es_xfire %s player_weaponstrip Kill' % self.userid
-            es.server.cmd(stripFormat)
-            return
-        
         # Get player handle
         playerHandle = es.getplayerhandle(self.userid)
         
@@ -365,7 +357,7 @@ class Player(object):
         for weaponType in ('primary', 'secondary'):
             weaponIndex = self.getWeaponIndex(playerHandle, weaponType)
             if weaponIndex:
-                es.server.cmd('es_xremove %i' % weaponIndex)
+                es.server.queuecmd('es_xremove %i' % weaponIndex)
                 
         if self.getWeapon() in ['knife', 'hegrenade']:
             es.sexec(self.userid, 'use weapon_%s' %self.getWeapon())
@@ -633,7 +625,7 @@ class WeaponOrder(object):
         
         # Tell players the multikill value changed
         msg('gungame', '#all', 'WeaponOrder:MultikillValuesChanged', {'to': value})
-        es.server.cmd('mp_restartgame 2')
+        es.server.queuecmd('mp_restartgame 2')
     
     def setMultiKillDefaults(self):
         '''Sets the multikill values back to their default values.'''
@@ -642,7 +634,7 @@ class WeaponOrder(object):
         
         # Tell players the multikill values have been reset
         msg('gungame', '#all', 'WeaponOrder:MultikillReset')
-        es.server.cmd('mp_restartgame 2')
+        es.server.queuecmd('mp_restartgame 2')
     
     def setWeaponOrderFile(self, type):
         '''Sets the current weapon order file to this.'''
@@ -764,7 +756,7 @@ class WeaponOrder(object):
         # Rebuild the menu
         self.buildWeaponOrderMenu()
         
-        es.server.cmd('mp_restartgame 2')
+        es.server.queuecmd('mp_restartgame 2')
     
     def buildWeaponOrderMenu(self):
         menu = OrderedMenu('weapon_order', [], 10, prepWeaponOrderMenu)

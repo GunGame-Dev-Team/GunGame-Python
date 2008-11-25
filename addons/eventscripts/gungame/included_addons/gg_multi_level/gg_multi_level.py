@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_multi_level
-    Version: 5.0.374
+    Version: 5.0.558
     Description: When a player makes a certain number of levels
                  in one round the player will be faster and have
                  an effect for 10 secs.
@@ -24,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_multi_level (for GunGame5)'
-info.version  = '5.0.374'
+info.version  = '5.0.558'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_multi_level'
 info.author   = 'GunGame Development Team'
@@ -93,20 +93,22 @@ def gg_levelup(event_var):
     gungamelib.centermsg('gg_multi_level', '#all', 'CenterMultiLevelled', {'name': name})
     
     # Effect to player
-    es.server.cmd('es_xgive %s env_spark' % attacker)
-    es.server.cmd('es_xfire %s env_spark SetParent !activator' % attacker)
-    es.server.cmd('es_xfire %s env_spark AddOutput "spawnflags 896"' % attacker)
-    es.server.cmd('es_xfire %s env_spark AddOutput "angles -90 0 0"' % attacker)
-    es.server.cmd('es_xfire %s env_spark AddOutput "magnitude 8"' % attacker)
-    es.server.cmd('es_xfire %s env_spark AddOutput "traillength 3"' % attacker)
-    es.server.cmd('es_xfire %s env_spark StartSpark' % attacker)
+    cmdFormat = 'es_xgive %s env_spark; ' % attacker
+    cmdFormat += 'es_xfire %s env_spark SetParent !activator; ' % attacker
+    cmdFormat += 'es_xfire %s env_spark AddOutput "spawnflags 896"; ' % attacker
+    cmdFormat += 'es_xfire %s env_spark AddOutput "angles -90 0 0"; ' % attacker
+    cmdFormat += 'es_xfire %s env_spark AddOutput "magnitude 8"; ' % attacker
+    cmdFormat += 'es_xfire %s env_spark AddOutput "traillength 3"; ' % attacker
+    cmdFormat += 'es_xfire %s env_spark StartSpark' % attacker
+    
+    es.server.queuecmd(cmdFormat)
     
     # Speed
     player = playerlib.getPlayer(attacker)
     player.set('speed', 1.5)
     
     # Gravity
-    es.server.cmd('es_xfire %s !self "gravity 400"' % attacker)
+    es.server.queuecmd('es_xfire %s !self "gravity 400"' % attacker)
     
     # Reset the level counter to 0 since they just multi-levelled
     gungamePlayer['multilevel'] = 0
@@ -136,15 +138,15 @@ def removeMulti(userid, roundMultiStart):
         return
     
     # Stop effect
-    es.server.cmd('es_xfire %s env_spark StopSpark' % userid)
-    es.server.cmd('es_xfire %s env_spark Kill' % userid)
+    es.server.queuecmd('es_xfire %s env_spark StopSpark' % userid)
+    es.server.queuecmd('es_xfire %s env_spark Kill' % userid)
     
     # Reset speed
     player = playerlib.getPlayer(userid)
     player.set('speed', 1)
     
     # Reset gravity
-    es.server.cmd('es_xfire %s !self "gravity %s"' % (userid, es.ServerVar('sv_gravity')))
+    es.server.queuecmd('es_xfire %s !self "gravity %s"' % (userid, es.ServerVar('sv_gravity')))
     
     # Stop the sound playing for the multi-level
     if gungamelib.getSound('multilevel'):

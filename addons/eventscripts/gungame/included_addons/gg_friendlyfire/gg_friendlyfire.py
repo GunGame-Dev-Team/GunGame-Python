@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_friendlyfire
-    Version: 5.0.474
+    Version: 5.0.558
     Description: Friendly fire will activate when a certain level is reached.
 '''
 
@@ -21,7 +21,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_friendlyfire (for GunGame5)'
-info.version  = '5.0.474'
+info.version  = '5.0.558'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_friendlyfire'
 info.author   = 'GunGame Development Team'
@@ -52,7 +52,7 @@ def unload():
     gungamelib.unregisterAddon('gg_friendlyfire')
     
     # Return 'mp_friendlyfire' to what it was originally
-    es.server.cmd('mp_friendlyfire %d' % int_ffBackup)
+    es.server.queuecmd('mp_friendlyfire %d' % int_ffBackup)
 
 def es_map_start(event_var):
     # Set mp_friendlyfire to 0

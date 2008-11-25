@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_earn_nade
-    Version: 5.0.476
+    Version: 5.0.558
     Description: When a player is on "hegrenade" level and they get a kill with
                  a weapon other than an "hegrenade", they are given an
                  additional hegrenade if they do not have one.
@@ -23,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_earn_nade (for GunGame5)'
-info.version  = '5.0.476'
+info.version  = '5.0.558'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_earn_nade'
 info.author   = 'GunGame Development Team'
@@ -92,12 +92,12 @@ def player_death(event_var):
             playerlibSecondary = playerlibPlayer.get('secondary')
             
             if nadeBonusWeapon == playerlibPrimary:
-                es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
+                es.server.queuecmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
             elif nadeBonusWeapon == playerlibSecondary:
-                es.server.cmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
+                es.server.queuecmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
         
-        es.server.cmd('es_xgive %s weapon_hegrenade' % attacker)
+        es.server.queuecmd('es_xgive %s weapon_hegrenade' % attacker)
         es.delayed('0.01', 'es_xsexec %s "use %s"' % (attacker, 'weapon_hegrenade'))
     else:
         # Give them an additional hegrenade
-        es.server.cmd('es_xgive %s weapon_hegrenade' % attacker)
+        es.server.queuecmd('es_xgive %s weapon_hegrenade' % attacker)

@@ -68,13 +68,13 @@ def load():
     if gungamelib.getVariableValue('gg_warmup_deathmatch'):
         if not gungamelib.getVariableValue('gg_deathmatch'):
             dict_addonVars['unloadDeathmatch'] = 1
-            es.server.cmd('gg_deathmatch 1')
+            es.server.queuecmd('gg_deathmatch 1')
         
     # Check to see if we should load elimination for warmup round
     if gungamelib.getVariableValue('gg_warmup_elimination'):
         if not gungamelib.getVariableValue('gg_elimination'):
             dict_addonVars['unloadElimination'] = 1
-            es.server.cmd('gg_elimination 1')
+            es.server.queuecmd('gg_elimination 1')
     
     # Cancel the delay to set PreventLevel for everyone to "0"
     gamethread.cancelDelayed('setPreventAll0')
@@ -179,7 +179,7 @@ def hegrenade_detonate(event_var):
     
     # Give user a hegrenade, if eligable
     if int(event_var['es_userteam']) > 1 and not playerlibPlayer.get('isdead') and gungamelib.getVariableValue('gg_warmup_weapon') == 'hegrenade':
-        es.server.cmd('es_xgive %s weapon_hegrenade' % userid)
+        es.server.queuecmd('es_xgive %s weapon_hegrenade' % userid)
 
 def startTimer():
     # Create a repeat
@@ -209,7 +209,7 @@ def countDown():
         
         # mp_restartgame and trigger round_end
         if warmupCountDown['remaining'] == 1:
-            es.server.cmd('mp_restartgame 1')
+            es.server.queuecmd('mp_restartgame 1')
             gungamelib.setGlobal('unloadWarmUp', 1)
     
     # No time left
@@ -233,8 +233,8 @@ def countDown():
         
         # Check to see if we should load deathmatch for warmup round
         if dict_addonVars['unloadDeathmatch']:
-            es.server.cmd('gg_deathmatch 0')
+            es.server.queuecmd('gg_deathmatch 0')
         
         # Check to see if we should load elimination for warmup round
         if dict_addonVars['unloadElimination']:
-            es.server.cmd('gg_elimination 0')
+            es.server.queuecmd('gg_elimination 0')

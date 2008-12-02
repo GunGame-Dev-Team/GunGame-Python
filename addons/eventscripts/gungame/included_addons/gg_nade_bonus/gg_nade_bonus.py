@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_nade_bonus
-    Version: 5.0.476
+    Version: 5.0.559
     Description: When players are on grenade level, by default, they are just given
                  an hegrenade. This addon will give them an additional weapon of the
                  admin's choice.
@@ -12,6 +12,7 @@
 # ==============================================================================
 # EventScripts imports
 import es
+import gamethread
 
 # GunGame imports
 import gungamelib
@@ -22,7 +23,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_nade_bonus (for GunGame5)'
-info.version  = '5.0.476'
+info.version  = '5.0.559'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_nade_bonus'
 info.author   = 'GunGame Development Team'
@@ -77,7 +78,7 @@ def checkBonus(userid):
             continue
         
         # Give them the weapon
-        es.delayed('0.01', 'es_xgive %s "%s"' % (userid, weapon))
+        gamethread.delayed(0.01, gungamePlayer.give, (weapon, 1))
     
     # Give it and make them use it
     es.delayed('0.02', 'es_xsexec %s "use weapon_hegrenade"' % userid)
@@ -85,7 +86,8 @@ def checkBonus(userid):
 def hegrenade_detonate(event_var):
     userid = event_var['userid']
     
-    if not gungamelib.getPlayer(userid).isbot:
+    gungamePlayer = gungamelib.getPlayer(userid)
+    if not gungamePlayer.isbot:
         return
     
     if gungamelib.getGlobal('isWarmup'):
@@ -100,5 +102,5 @@ def hegrenade_detonate(event_var):
         bonusWeapon = 'weapon_' + bonusWeapon
     
     # Give it and make them use it
-    es.delayed('0.01', 'es_xgive %s %s' % (userid, bonusWeapon))
+    gamethread.delayed(0.01, gungamePlayer.give, (bonusWeapon, 1))
     es.delayed('0.02', 'es_xsexec %s "use %s"' % (userid, bonusWeapon))

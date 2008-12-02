@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_dead_strip
-    Version: 5.0.558
+    Version: 5.0.559
     Description: Removes dead player's weapons.
 '''
 
@@ -22,7 +22,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_dead_strip (for GunGame5)'
-info.version  = '5.0.558'
+info.version  = '5.0.559'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_dead_strip'
 info.author   = 'GunGame Development Team'
@@ -63,45 +63,16 @@ def item_pickup(event_var):
     if not gungamelib.clientInServer(userid):
         return
     
-    # Only delay if we are on linux
-    if gungamelib.getOS() == 'posix':
-        gamethread.delayed(0.1, deadStrip, (item, userid))
-    else:
-        deadStrip(item, userid)
-
-def deadStrip(item, userid):
-    # Check the player exists
-    if not gungamelib.playerExists(userid):
-        return
-    
     # Get player objects
     gungamePlayer = gungamelib.getPlayer(userid)
     weapon = gungamePlayer.getWeapon()
-    playerlibPlayer = playerlib.getPlayer(userid)
     
-    # Is warmup round?
-    if gungamelib.getGlobal('isWarmup') == 1:
-        # Only remove if the weapon is not the warmup weapon
-        if item != gungamelib.getVariableValue('gg_warmup_weapon') and gungamelib.getVariableValue('gg_warmup_weapon') != 0:
-            es.server.queuecmd('es_xremove %i' % playerlibPlayer.get('weaponindex', item))
-        
+    # Check to see if the weapon is their gungame weapon or in their strip exceptions
+    if item == weapon or item in gungamePlayer.stripexceptions + ['flashbang', 'smokegrenade']:
         return
-    
-    # Check to see if this is the right weapon for their level
-    if weapon == item:
-        return
-    
-    # Nade bonus weapon check
-    if weapon == 'hegrenade':
-        # Get nade bonus weapons
-        nadeBonusWeapons = str(gungamelib.getVariableValue('gg_nade_bonus')).split(',')
-        
-        if nadeBonusWeapons[0] != '0':
-            # Only remove if the item is not the nade bonus weapon
-            if item in nadeBonusWeapons:
-                return
     
     # Get the players current weapon
+    playerlibPlayer = playerlib.getPlayer(userid)
     currentWeapon = playerlibPlayer.attributes['weapon']
     
     # Remove the weapon they just picked up

@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.558
+@version 5.0.559
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -117,7 +117,7 @@ class Player(object):
    
     __slots__ = ['userid', 'name', 'team', 'level', 'afkrounds', 'multikill',
                  'multilevel', 'preventlevel', 'afkmathtotal', 'steamid',
-                 'index', 'language', 'isbot']
+                 'index', 'language', 'isbot', 'stripexceptions']
     
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
@@ -157,7 +157,7 @@ class Player(object):
         # Format the item and value
         item = str(item).lower()
         
-        if item not in ('name', 'steamid', 'preventlevel', 'language'):
+        if item not in ('name', 'steamid', 'preventlevel', 'language', 'stripexceptions'):
             value = int(value)
         
         # LEVEL
@@ -229,6 +229,7 @@ class Player(object):
         self.index = int(playerlibPlayer.attributes['index'])
         self.language = playerlibPlayer.get('lang')
         self.isbot = es.isbot(self.userid)
+        self.stripexceptions = []
     
     def resetPlayer(self):
         '''Reset the players attributes.'''
@@ -393,6 +394,24 @@ class Player(object):
     def getWeapon(self):
         '''Returns the weapon for the players level.'''
         return getCurrentWeaponOrder().order[self.level][0]
+    
+    def give(self, weapon, useWeapon=0):
+        ''' Gives a player the specified weapon.
+            Weapons givin by this method will not be stripped by gg_dead_strip'''
+        # Check if the weapon is valid
+        weaponFormat = weapon.replace('weapon_', '')
+        if weaponFormat not in getWeaponList('valid') + ['flashbang', 'smokegrenade']:
+            raise PlayerError('Unable to give (%s): is not a valid weapon' % weapon)
+        
+        # Add weapon to strip exceptions so gg_dead_strip will not strip the weapon
+        self.stripexceptions.append(weaponFormat)
+        gamethread.delayed(0.01, self.stripexceptions.remove, (weaponFormat))
+        
+        # Give the player the weapon
+        giveWeaponFormat = 'es_xgive %i weapon_%s' % (self.userid, weaponFormat)
+        if useWeapon:
+            giveWeaponFormat += '; es_xsexec %i "use weapon_%s"' % (self.userid, weaponFormat)
+        es.server.queuecmd(giveWeaponFormat)
     
     def levelup(self, levelsAwarded, victim=0, reason=''):
         '''Formerly gungamelib.triggerLevelUpEvent

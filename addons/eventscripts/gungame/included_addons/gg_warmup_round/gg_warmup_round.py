@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_warmup_round
-    Version: 5.0.544
+    Version: 5.0.559
     Description: GunGame WarmUp Round allows players to begin warming up for
                  the upcoming GunGame round without allowing them to level up,
                  also allowing connecting players to get a full connection to
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_warmup_round (for GunGame5)'
-info.version  = '5.0.544'
+info.version  = '5.0.559'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_warmup_round'
 info.author   = 'GunGame Development Team'
@@ -145,24 +145,27 @@ def player_spawn(event_var):
     userid = int(event_var['userid'])
 
     # Is a spectator or dead?
-    if int(event_var['es_userteam']) <= 1 or es.getplayerprop(userid, 'CCSPlayer.baseclass.pl.deadflag'):
+    if int(event_var['es_userteam']) <= 1 or gungamelib.isDead(userid):
         return
     
-    # See if the admin wants to give something other than the level 1 weapon
-    if gungamelib.getVariableValue('gg_warmup_weapon') != 0:
-        # Check to make sure that the WarmUp Weapon is not a knife
-        if gungamelib.getVariableValue('gg_warmup_weapon') != 'knife':
-            # Give the player the WarmUp Round Weapon
-            es.sexec(userid, 'use weapon_knife')
-            
-            # Delay giving the weapon by a split second, because the code in round start removes all weapons
-            es.delayed(0, 'es_xgive %s weapon_%s' % (userid, gungamelib.getVariableValue('gg_warmup_weapon')))
-        else:
-            es.sexec(userid, 'use weapon_knife')
-    else:
-        # It looks like we are giving them the level 1 weapon...
-        gungamePlayer = gungamelib.getPlayer(userid)
+    # Get player object
+    gungamePlayer = gungamelib.getPlayer(userid)
+    
+    # Check if the warmup weapon is the level 1 weapon
+    if gungamelib.getVariableValue('gg_warmup_weapon') == 0:
         gungamePlayer.giveWeapon()
+        return
+    
+    # Check if the warmup weapon is a knife
+    if gungamelib.getVariableValue('gg_warmup_weapon') == 'knife':
+        es.sexec(userid, 'use weapon_knife')
+        return
+    
+    # Do we need this line? They will only spawn with a knife, and should already be holding it.
+    # es.sexec(userid, 'use weapon_knife')
+    
+    # Delay giving the weapon by a split second, because the code in round start removes all weapons
+    gamethread.delayed(0, gungamePlayer.give, (gungamelib.getVariableValue('gg_warmup_weapon')))
 
 def hegrenade_detonate(event_var):
     if gungamelib.getGlobal('unloadWarmup'):
@@ -175,11 +178,9 @@ def hegrenade_detonate(event_var):
     if not gungamelib.clientInServer(userid):
         return
     
-    playerlibPlayer = playerlib.getPlayer(userid)
-    
     # Give user a hegrenade, if eligable
-    if int(event_var['es_userteam']) > 1 and not playerlibPlayer.get('isdead') and gungamelib.getVariableValue('gg_warmup_weapon') == 'hegrenade':
-        es.server.queuecmd('es_xgive %s weapon_hegrenade' % userid)
+    if int(event_var['es_userteam']) > 1 and not gungamelib.isDead(userid) and gungamelib.getVariableValue('gg_warmup_weapon') == 'hegrenade':
+        gungamelib.getPlayer(userid).give('hegrenade')
 
 def startTimer():
     # Create a repeat

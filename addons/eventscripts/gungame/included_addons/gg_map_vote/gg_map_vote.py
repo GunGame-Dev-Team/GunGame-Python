@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_map_vote
-    Version: 5.0.559
+    Version: 5.0.560
     Description: Adds map voting capabilities to GunGame.
 '''
 
@@ -31,7 +31,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_map_vote (for GunGame5)'
-info.version  = '5.0.559'
+info.version  = '5.0.560'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_map_vote'
 info.author   = 'GunGame Development Team'
@@ -350,6 +350,9 @@ def voteResults():
         #Set Mani 'nextmap' if Mani is loaded
         if str(es.ServerVar('mani_admin_plugin_version')) != '0':
             es.server.queuecmd('ma_setnextmap %s' % dict_playerChoice['winningMap'])
+        
+        #Set SourceMods 'nextmap' if SourceMod is loaded
+        if str(es.ServerVar('sourcemod_version')) != '0':
             es.server.queuecmd('sm_nextmap %s' % dict_playerChoice['winningMap'])
         
         # Announce the winning map

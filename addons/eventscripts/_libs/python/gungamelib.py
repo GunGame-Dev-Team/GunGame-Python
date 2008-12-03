@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.559
+@version 5.0.561
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -405,7 +405,7 @@ class Player(object):
         
         # Add weapon to strip exceptions so gg_dead_strip will not strip the weapon
         self.stripexceptions.append(weaponFormat)
-        gamethread.delayed(0.01, self.stripexceptions.remove, (weaponFormat))
+        gamethread.delayed(0.1, self.stripexceptions.remove, (weaponFormat))
         
         # Give the player the weapon
         giveWeaponFormat = 'es_xgive %i weapon_%s' % (self.userid, weaponFormat)
@@ -2121,6 +2121,73 @@ def getAverageLevel(userid=0):
         return totalLevels / averageDivider
     
     return 0
+
+def getLowestLevel(userid=0):
+    '''Returns the lowest level of all of the players active on the server.
+       
+       Optional userid will be excluded from the lowest level.'''
+    lowestLevel = 0
+    
+    # Get levels of all players in server
+    for player in getPlayerList():
+        #if a userid has been passed exclude them from the averaging
+        if player.userid == int(userid):
+            continue
+        
+        if not lowestLevel:
+            lowestLevel = player.level
+            continue
+        
+        if player.level < lowestLevel:
+            lowestLevel = player.level
+    
+    return lowestLevel
+
+def getAboveLowestLevel():
+    '''Returns the level above the lowest of all of the players active on the server.'''
+    lowestLevel = getLowestLevel()
+    levelList = []
+    
+    # Get levels of all players in server
+    for player in getPlayerList():
+        if player.level in levelList:
+            continue
+        
+        levelList.append(player.level)
+    
+    levelList.sort()
+    
+    if len(levelList) <= 1:
+        return 0
+    
+    return levelList[1]
+
+def getMedianLevel(userid=0):
+    '''Returns the median level of all of the players active on the server.
+       
+       Optional userid will be excluded from the median level.'''
+    levelList = []
+    
+    # Get levels of all players in server
+    for player in getPlayerList():
+        #if a userid has been passed exclude them from the averaging
+        if player.userid == int(userid):
+            continue
+        
+        levelList.append(player.level)
+    
+    levelList.sort()
+    length = len(levelList)
+    
+    if not length:
+        return 0
+    if length % 2 == 1:
+        return levelList[(length+1)/2-1]
+    else:
+        lower = levelList[length/2-1]
+        upper = levelList[length/2]
+    
+    return int((float(lower + upper)) / 2)
 
 def getLevelUseridList(levelNumber):
     '''Returns a list of userids that are on the specified level.'''

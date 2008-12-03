@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_handicap
-    Version: 5.0.541
+    Version: 5.0.561
     Description:
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_handicap (for GunGame5)'
-info.version  = '5.0.541'
+info.version  = '5.0.561'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_handicap'
 info.author   = 'GunGame Development Team'
@@ -34,7 +34,8 @@ info.author   = 'GunGame Development Team'
 # ==============================================================================
 #  GLOBALS
 # ==============================================================================
-updateType = gungamelib.getVariable('gg_handicap_update')
+handicapType = gungamelib.getVariable('gg_handicap')
+updateTime = gungamelib.getVariable('gg_handicap_update')
 gg_turbo = gungamelib.getVariable('gg_turbo')
 
 # ==============================================================================
@@ -48,7 +49,7 @@ def load():
     
     # Start loop
     repeat.create('gungameHandicapLoop', handicapUpdate)
-    repeat.start('gungameHandicapLoop', 120, 0)
+    repeat.start('gungameHandicapLoop', updateTime, 0)
 
 def unload():
     # Unregister this addon with GunGame
@@ -62,43 +63,75 @@ def unload():
 def es_map_start(event_var):
     # Start loop
     repeat.create('gungameHandicapLoop', handicapUpdate)
-    repeat.start('gungameHandicapLoop', 120, 0)
+    repeat.start('gungameHandicapLoop', updateTime, 0)
 
 def player_activate(event_var):
     # Get vars
     userid = int(event_var['userid'])
-    averageLevel = gungamelib.getAverageLevel(userid)
+    # Set handicap type
+    if handicapType == 1:
+        handicapLevel = gungamelib.getLowestLevel(userid)
+        handicapMethod = 'LevelLowest'
+    elif handicapType == 2:
+        handicapLevel = gungamelib.getMedianLevel(userid)
+        handicapMethod = 'LevelMedian'
+    elif handicapType == 3:
+        handicapLevel = gungamelib.getAverageLevel(userid)
+        handicapMethod = 'LevelAveraged'
     gungamePlayer = gungamelib.getPlayer(userid)
     
-    # Level below average?
-    if gungamePlayer['level'] < averageLevel:
-        gungamePlayer['level'] = averageLevel
-        gungamelib.msg('gg_handicap', userid, 'LevelAveraged', {'level': averageLevel})
+    # Level below handicap?
+    if gungamePlayer['level'] < handicapLevel:
+        gungamePlayer['level'] = handicapLevel
+        gungamelib.msg('gg_handicap', userid, handicapMethod, {'level': handicapLevel})
 
 def handicapUpdate():
-    if not int(updateType):
+    if not int(updateTime):
         return
     
-    # Get average level
-    averageLevel = gungamelib.getAverageLevel()
+    # Set handicap type
+    if handicapType == 1:
+        handicapLevel = gungamelib.getAboveLowestLevel()
+        handicapMethod = 'LevelLowest'
+    elif handicapType == 2:
+        handicapLevel = gungamelib.getMedianLevel()
+        handicapMethod = 'LevelMedian'
+    elif handicapType == 3:
+        handicapLevel = gungamelib.getAverageLevel()
+        handicapMethod = 'LevelAveraged'
     
-    # Loop throughp players
-    for userid in playerlib.getUseridList('#all'):
-        # Get player object
-        gungamePlayer = gungamelib.getPlayer(userid)
+    if handicapType == 1:
+        # Loop through players
+        for userid in gungamelib.getLevelUseridList(gungamelib.getLowestLevel()):
+            # Get gungame player object
+            gungamePlayer = gungamelib.getPlayer(userid)
+            
+            # Level them up
+            gungamePlayer['level'] = handicapLevel
+            if gg_turbo:
+                giveNewWeapon(userid)
+            
+            # Play sound and tell them
+            gungamelib.playSound(userid, 'handicap')
+            gungamelib.msg('gg_handicap', userid, handicapMethod, {'level': handicapLevel})
+        return
+    
+    # Loop through players
+    for gungamePlayer in gungamelib.getPlayerList():
+        userid = gungamePlayer['userid']
         
         # Is level below average?
-        if gungamePlayer['level'] >= averageLevel:
+        if gungamePlayer['level'] >= handicapLevel:
             continue
         
         # Level them up
-        gungamePlayer['level'] = averageLevel
+        gungamePlayer['level'] = handicapLevel
         if gg_turbo:
             giveNewWeapon(userid)
         
         # Play sound and tell them
         gungamelib.playSound(userid, 'handicap')
-        gungamelib.msg('gg_handicap', userid, 'LevelAveraged', {'level': averageLevel})
+        gungamelib.msg('gg_handicap', userid, handicapMethod, {'level': handicapLevel})
 
 def giveNewWeapon(userid):
     userid = int(userid)

@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.560
+    Version: 5.0.561
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.560'
+__version__ = '5.0.561'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 es.ServerVar('eventscripts_gg5', __version__).makepublic()
 
@@ -245,7 +245,7 @@ def unload():
     list_gungameVariables = gungamelib.getVariableList()
     for variable in list_gungameVariables:
         es.ServerVar(variable).removeFlag('notify')
-        es.server.queuecmd('%s 0' % variable)
+        es.server.cmd('%s 0' % variable)
     
     # Unregister this addon
     gungamelib.unregisterAddon('gungame')
@@ -847,6 +847,13 @@ def server_cvar(event_var):
             es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
         elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonList():
             es.unload('gungame/included_addons/gg_spawn_protect')
+    
+    # GG_HANDICAP
+    elif cvarName == 'gg_handicap':
+        if newValue > 0 and 'gg_handicap' not in gungamelib.getRegisteredAddonList():
+            es.server.queuecmd('es_load gungame/included_addons/gg_handicap')
+        elif newValue == 0 and 'gg_handicap' in gungamelib.getRegisteredAddonList():
+            es.unload('gungame/included_addons/gg_handicap')
     
     # GG_RETRY_PUNISH
     elif cvarName == 'gg_retry_punish':

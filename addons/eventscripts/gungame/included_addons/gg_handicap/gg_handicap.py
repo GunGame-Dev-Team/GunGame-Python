@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_handicap
-    Version: 5.0.561
+    Version: 5.0.562
     Description:
 '''
 
@@ -26,7 +26,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_handicap (for GunGame5)'
-info.version  = '5.0.561'
+info.version  = '5.0.562'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_handicap'
 info.author   = 'GunGame Development Team'
@@ -91,16 +91,13 @@ def handicapUpdate():
     
     # Set handicap type
     if handicapType == 1:
+        # Get the level of the player/players above the lowest level player/players
         handicapLevel = gungamelib.getAboveLowestLevel()
-        handicapMethod = 'LevelLowest'
-    elif handicapType == 2:
-        handicapLevel = gungamelib.getMedianLevel()
-        handicapMethod = 'LevelMedian'
-    elif handicapType == 3:
-        handicapLevel = gungamelib.getAverageLevel()
-        handicapMethod = 'LevelAveraged'
-    
-    if handicapType == 1:
+        
+        # If there is nobody above the lowest level player/players, return
+        if not handicapLevel:
+            return
+        
         # Loop through players
         for userid in gungamelib.getLevelUseridList(gungamelib.getLowestLevel()):
             # Get gungame player object
@@ -113,8 +110,14 @@ def handicapUpdate():
             
             # Play sound and tell them
             gungamelib.playSound(userid, 'handicap')
-            gungamelib.msg('gg_handicap', userid, handicapMethod, {'level': handicapLevel})
+            gungamelib.msg('gg_handicap', userid, 'LevelLowest', {'level': handicapLevel})
         return
+    elif handicapType == 2:
+        handicapLevel = gungamelib.getMedianLevel()
+        handicapMethod = 'LevelMedian'
+    elif handicapType == 3:
+        handicapLevel = gungamelib.getAverageLevel()
+        handicapMethod = 'LevelAveraged'
     
     # Loop through players
     for gungamePlayer in gungamelib.getPlayerList():

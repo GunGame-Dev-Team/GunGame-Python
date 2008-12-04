@@ -49,7 +49,7 @@ def load():
     
     # Start loop
     repeat.create('gungameHandicapLoop', handicapUpdate)
-    repeat.start('gungameHandicapLoop', updateTime, 0)
+    repeat.start('gungameHandicapLoop', int(updateTime), 0)
 
 def unload():
     # Unregister this addon with GunGame
@@ -63,21 +63,25 @@ def unload():
 def es_map_start(event_var):
     # Start loop
     repeat.create('gungameHandicapLoop', handicapUpdate)
-    repeat.start('gungameHandicapLoop', updateTime, 0)
+    repeat.start('gungameHandicapLoop', int(updateTime), 0)
 
 def player_activate(event_var):
     # Get vars
     userid = int(event_var['userid'])
+    
     # Set handicap type
     if handicapType == 1:
         handicapLevel = gungamelib.getLowestLevel(userid)
         handicapMethod = 'LevelLowest'
+    
     elif handicapType == 2:
         handicapLevel = gungamelib.getMedianLevel(userid)
         handicapMethod = 'LevelMedian'
+    
     elif handicapType == 3:
         handicapLevel = gungamelib.getAverageLevel(userid)
         handicapMethod = 'LevelAveraged'
+    
     gungamePlayer = gungamelib.getPlayer(userid)
     
     # Level below handicap?
@@ -135,6 +139,17 @@ def handicapUpdate():
         # Play sound and tell them
         gungamelib.playSound(userid, 'handicap')
         gungamelib.msg('gg_handicap', userid, handicapMethod, {'level': handicapLevel})
+
+def getHandicapType():
+    # Set handicap type
+    if int(handicapType) == 1:
+        return gungamelib.getLowestLevel(userid), 'LevelLowest'
+    
+    elif int(handicapType) == 2:
+        return gungamelib.getMedianLevel(userid), 'LevelMedian'
+    
+    elif int(handicapType) == 3:
+        return gungamelib.getAverageLevel(userid), 'LevelAveraged'
 
 def giveNewWeapon(userid):
     userid = int(userid)

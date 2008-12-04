@@ -157,7 +157,7 @@ def exceptHook(type, value, tb, notes=None):
     es.dbgmsg(0, '==============================================================================')
     
     # Header. Center it.
-    header = gungamelib.lang('gg_error_logging', 'ExceptionCaught')
+    header = gungamelib.lang('gg_error_logging', 'ExceptionCaught', {}, 'CONSOLE')
     es.dbgmsg(0, '%s%s' % ((' '*((78-len(header))/2)), header))
     
     # Seperator

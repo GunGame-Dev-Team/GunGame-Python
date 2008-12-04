@@ -60,7 +60,7 @@ def item_pickup(event_var):
         return
     
     # Client in server?
-    if not gungamelib.clientInServer(userid):
+    if not gungamelib.clientInServer(userid) or not gungamelib.playerExists(userid):
         return
     
     # Get player objects

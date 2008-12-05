@@ -72,8 +72,9 @@ def checkBonus(userid):
             continue
         
         if weapon[7:] not in gungamelib.getWeaponList('all'):
+            print 'Skipping weapon: %s' % weapon
             # TODO: Add warning message? Preferably not here but when the value
-            #       is changed in server_cvar.
+            #       is changed?
             continue
         
         # Give them the weapon

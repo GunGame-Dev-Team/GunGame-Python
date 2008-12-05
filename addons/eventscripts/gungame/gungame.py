@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.564
+    Version: 5.0.565
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.564'
+__version__ = '5.0.565'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 es.ServerVar('eventscripts_gg5', __version__).makepublic()
 
@@ -88,13 +88,11 @@ def initialize():
     es.loadevents('declare', 'addons/eventscripts/gungame/events/es_gungame_events.res')
     
     # Loop through included addons
-    # NOTE TO DEVS: Move this over to gungamelib?
     for includedAddon in os.listdir(gungamelib.getGameDir('addons/eventscripts/gungame/included_addons/')):
         if includedAddon[:3] == 'gg_':
             list_includedAddonsDir.append(includedAddon)
     
     # Loop through custom addons
-    # NOTE TO DEVS: Move this over to gungamelib?
     for customAddon in os.listdir(gungamelib.getGameDir('addons/eventscripts/gungame/custom_addons/')):
         if customAddon[:3] == 'gg_':
             list_customAddonsDir.append(customAddon)
@@ -621,8 +619,6 @@ def bomb_exploded(event_var):
     gungamePlayer.levelup(1, '0', 'bomb_exploded')
 
 def player_team(event_var):
-    # NOTE TO DEVS: Remove this and player_changename events as we fixed the leak.
-    
     # Get userid
     userid = int(event_var['userid'])
     
@@ -958,7 +954,7 @@ def afkPunishCheck(userid):
                 
                 # Send a popup saying they were switched
                 menu = popuplib.create('gungame_afk')
-                menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator', {}, userid))
+                menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator'))
                 menu.send(userid)
                 
             # Reset the AFK rounds back to 0
@@ -989,18 +985,18 @@ def levelInfoHint(userid):
     multiKill = gungamelib.getLevelMultiKill(gungamePlayer['level'])
     
     # Start text
-    text =  gungamelib.lang('gungame', 'LevelInfo_CurrentLevel', {'level': gungamePlayer['level'], 'total': gungamelib.getTotalLevels()}, userid)
-    text += gungamelib.lang('gungame', 'LevelInfo_CurrentWeapon', {'weapon': gungamelib.getLevelWeapon(gungamePlayer['level'])}, userid)
+    text =  gungamelib.lang('gungame', 'LevelInfo_CurrentLevel', {'level': gungamePlayer['level'], 'total': gungamelib.getTotalLevels()})
+    text += gungamelib.lang('gungame', 'LevelInfo_CurrentWeapon', {'weapon': gungamelib.getLevelWeapon(gungamePlayer['level'])})
     
     # Multikill?
     if multiKill > 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_RequiredKills', {'kills': gungamePlayer['multikill'], 'total': multiKill}, userid)
+        text += gungamelib.lang('gungame', 'LevelInfo_RequiredKills', {'kills': gungamePlayer['multikill'], 'total': multiKill})
     
     # ===========
     # ONLY LEADER
     # ===========
     if levelsBehindLeader == 0 and gungamelib.leaders.getLeaderCount() == 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_CurrentLeader', usePlayerLang=userid)
+        text += gungamelib.lang('gungame', 'LevelInfo_CurrentLeader')
         
         # Send hint
         sendLevelInfoHint(userid, text)
@@ -1010,7 +1006,7 @@ def levelInfoHint(userid):
     # NO LEADERS
     # ==========
     if levelsBehindLeader == 0 and leaderLevel == 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_NoLeaders', usePlayerLang=userid)
+        text += gungamelib.lang('gungame', 'LevelInfo_NoLeaders')
         
         # Send hint
         sendLevelInfoHint(userid, text)
@@ -1020,7 +1016,7 @@ def levelInfoHint(userid):
     # MULTIPLE LEADERS
     # ================
     if levelsBehindLeader == 0 and gungamelib.leaders.getLeaderCount() > 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_AmongstLeaders', usePlayerLang=userid)
+        text += gungamelib.lang('gungame', 'LevelInfo_AmongstLeaders')
         
         # Send hint
         sendLevelInfoHint(userid, text)
@@ -1031,7 +1027,7 @@ def levelInfoHint(userid):
         'level': gungamelib.leaders.getLeaderLevel(),
         'total': gungamelib.getTotalLevels(),
         'weapon': gungamelib.getLevelWeapon(gungamelib.leaders.getLeaderLevel())
-    }, userid)
+    })
     
     # Send hint
     sendLevelInfoHint(userid, text)

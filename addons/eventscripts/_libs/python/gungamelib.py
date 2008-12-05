@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.564
+@version 5.0.561
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -20,7 +20,6 @@ import math
 import cPickle
 import wave
 import mp3lib
-import encodings
 
 # EventScripts Imports
 import es
@@ -216,8 +215,9 @@ class Player(object):
     
     def __createPlayer(self):
         '''Reset all this players variables.'''
-        self.name = es.getplayername(self.userid) # TODO: Remove these now-- no need for them
-        self.team = es.getplayerteam(self.userid) # TODO: Remove these now-- no need for them
+        
+        self.name = es.getplayername(self.userid)
+        self.team = es.getplayerteam(self.userid)
         self.preventlevel = []
         self.level = 1
         self.afkrounds = 0
@@ -307,7 +307,7 @@ class Player(object):
             
             # Send a popup saying they were switched
             menu = popuplib.create('gungame_afk')
-            menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator', {}, self.userid))
+            menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator'))
             menu.send(userid)
         
         # Reset the AFK status
@@ -359,10 +359,9 @@ class Player(object):
             weaponIndex = self.getWeaponIndex(playerHandle, weaponType)
             if weaponIndex:
                 es.server.queuecmd('es_xremove %i' % weaponIndex)
-        
-        # Use weapon
+                
         if self.getWeapon() in ['knife', 'hegrenade']:
-            es.sexec(self.userid, 'use weapon_%s' % self.getWeapon())
+            es.sexec(self.userid, 'use weapon_%s' %self.getWeapon())
     
     def getWeaponIndex(self, playerHandle, flag):
         for weapon in getWeaponList(flag):
@@ -466,7 +465,7 @@ class Player(object):
         return True
     
     def setPreventLevel(self, value, addon, debug=False):
-        '''!Controls the setting of the "preventlevel" attribute.
+        '''Controls the setting of the "preventlevel" attribute.
         
         @remarks This must be used instead of setting the \c preventlevel attribute. This method prevents one addon from setting the preventlevel attribute to 0, while other addons still have it set to 1.'''
         
@@ -475,8 +474,6 @@ class Player(object):
         # The value must be BOOL
         if value != 0 and value != 1:
             raise ValueError('Unable to set PreventLevel value (%s): must be 0 or 1.' % value)
-        
-        # NOTE TO DEVS: Replace all the addon malarcky with a simple refcount variable?
         
         # See if the value is 0
         if not value:
@@ -1270,42 +1267,40 @@ class Message(object):
         '''Cleans the string for output to the console.'''
         return string.replace('\3', '').replace('\4', '').replace('\1', '')
     
-    def __formatString(self, string, tokens, userid=None):
+    def __formatString(self, string, tokens, player=None):
         '''Retrieves and formats the string.'''
-        # Set the default string (generally english)
-        rtnStr = self.strings(string, tokens)
-        
-        # Is console, get the ES language
-        if userid == 'CONSOLE':
-            # Do not change the very long-hand format of the variable retrieval
-            # IT CRASHES OTHERWISE!
-            var = es.ServerVar('eventscripts_language')
-            var = str(var)
-            
-            # Get language and get the string
-            langAbrv = langlib.getLangAbbreviation(var)
-            rtnStr = self.strings(string, tokens, langAbrv)
-        
-        # Get the player's language
-        elif userid:
-            assert playerExists(userid), '__formatString called with invalid userid: %s' % userid
-            rtnStr = self.strings(string, tokens, getPlayer(userid).language)
+        # Try to get string
+        try:
+            rtnStr = self.strings(string, tokens, player.language)
+        except (KeyError, AttributeError):
+            rtnStr = self.strings(string, tokens)
         
         # Format it
         rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
-        rtnStr = encodings.codecs.escape_decode(rtnStr)
+        
+        # Windows string escaping
+        if getOS() == 'nt':
+            rtnStr = rtnStr.decode('string_escape')
+        
+        # Other OS string escaping
+        else:
+            rtnStr = rtnStr.replace('\\x01', '\x01').replace('\\x03', '\x03').replace('\\x04', '\x04')
+            rtnStr = rtnStr.replace('\\1', '\x01').replace('\\3', '\x03').replace('\\4', '\x04')
+            rtnStr = rtnStr.replace('\\n', '\n')
+            rtnStr = rtnStr.replace('\\r', '\r')
+            rtnStr = rtnStr.replace('\\t', '\t')
+            rtnStr = rtnStr.replace('\\b', '\b')
+            rtnStr = rtnStr.replace('\\v', '\v')
         
         # Crash prevention
         # !! DO NOT REMOVE !!
-        if isinstance(rtnStr, tuple):
-            rtnStr = list(rtnStr)
-            return rtnStr[0] + ' '
+        rtnStr += ' '
         
         # Return the string
-        return rtnStr + ' '
+        return rtnStr
     
-    def lang(self, string, tokens={}, usePlayerLang=None):
-        return self.__formatString(string, tokens, usePlayerLang)
+    def lang(self, string, tokens={}):
+        return self.__formatString(string, tokens)
     
     def msg(self, filter, string, tokens, showPrefix = False):
         # Setup filter
@@ -1317,15 +1312,17 @@ class Message(object):
         else:
             message = ''
         
-        # Just a userid
+        # Loop through the players in the filter
         if isinstance(self.filter, int):
-            es.tell(self.filter, '#multi', '%s%s' % (message, self.__formatString(string, tokens, self.filter)))
-        
-        # Playerlib filter
+            # Get player object
+            player = getPlayer(self.filter)
+            
+            # Send message
+            es.tell(self.filter, '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
         else:
             # Send message
-            for userid in playerlib.getUseridList(self.filter):
-                es.tell(userid, '#multi', '%s%s' % (message, self.__formatString(string, tokens, userid)))
+            for player in playerlib.getPlayerList(self.filter):
+                es.tell(int(player), '#multi', '%s%s' % (message, self.__formatString(string, tokens, player)))
         
         # Show in console
         if self.filter == '#all':
@@ -1335,29 +1332,33 @@ class Message(object):
         # Setup filter
         self.__formatFilter(filter)
         
-        # Just a userid
+        # Loop through the players in the filter
         if isinstance(self.filter, int):
-            es.toptext(self.filter, duration, color, self.__formatString(string, tokens, self.filter))
-        
-        # Playerlib filter
+            # Get player object
+            player = getPlayer(self.filter)
+            
+            # Send message
+            es.toptext(int(player), duration, color, self.__formatString(string, tokens, player))
         else:
             # Send message
-            for userid in playerlib.getUseridList(self.filter):
-                es.toptext(userid, duration, color, self.__formatString(string, tokens, userid))
+            for player in playerlib.getPlayerList(self.filter):
+                es.toptext(int(player), duration, color, self.__formatString(string, tokens, player))
     
     def hudhint(self, filter, string, tokens):
         # Setup filter
         self.__formatFilter(filter)
         
-        # Just a userid
+        # Loop through the players in the filter
         if isinstance(self.filter, int):
-            usermsg.hudhint(self.filter, self.__formatString(string, tokens, self.filter))
-        
-        # Playerlib filter
+            # Get player object
+            player = getPlayer(self.filter)
+            
+            # Send message
+            usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
         else:
             # Send message
-            for userid in playerlib.getUseridList(self.filter):
-                usermsg.hudhint(userid, self.__formatString(string, tokens, userid))
+            for player in playerlib.getPlayerList(self.filter):
+                usermsg.hudhint(int(player), self.__formatString(string, tokens, player))
     
     def saytext2(self, filter, index, string, tokens, showPrefix = False):
         # Setup filter
@@ -1369,15 +1370,18 @@ class Message(object):
         else:
             message = ''
         
-        # Just a userid
+        # Loop through the players in the filter
         if isinstance(self.filter, int):
-            usermsg.saytext2(self.filter, index, '\1%s%s' % (message, self.__formatString(string, tokens, self.filter)))
+            # Get player object
+            player = getPlayer(self.filter)
+            
+            # Send message
+            usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
         
-        # Playerlib filter
         else:
             # Send message
-            for userid in playerlib.getUseridList(self.filter):
-                usermsg.saytext2(userid, index, '\1%s%s' % (message, self.__formatString(string, tokens, userid)))
+            for player in playerlib.getPlayerList(self.filter):
+                usermsg.saytext2(int(player), index, '\1%s%s' % (message, self.__formatString(string, tokens, player)))
         
         # Show in console
         if self.filter == '#all':
@@ -1387,15 +1391,17 @@ class Message(object):
         # Setup filter
         self.__formatFilter(filter)
         
-        # Just a userid
+        # Loop through the players in the filter
         if isinstance(self.filter, int):
-            usermsg.centermsg(self.filter, self.__formatString(string, tokens, self.filter))
-        
-        # Playerlib filter
+            # Get player object
+            player = getPlayer(self.filter)
+            
+            # Send message
+            usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
         else:
             # Send message
-            for userid in playerlib.getPlayerList(self.filter):
-                usermsg.centermsg(userid, self.__formatString(string, tokens, userid))
+            for player in playerlib.getPlayerList(self.filter):
+                usermsg.centermsg(int(player), self.__formatString(string, tokens, player))
     
     def echo(self, filter, level, string, tokens, showPrefix = False):
         # Setup filter
@@ -1411,30 +1417,29 @@ class Message(object):
         else:
             message = ''
         
-        # Just a userid
-        if isinstance(self.filter, int) and self.filter != 0:
+        # Loop through the players in the filter
+        if type(self.filter) == int and self.filter != 0:
+            # Get player object
+            player = getPlayer(self.filter)
+            
             # Get clean string
-            cleanStr = self.__cleanString(self.__formatString(string, tokens, self.filter))
+            cleanStr = self.__cleanString(self.__formatString(string, tokens, player))
             
             # Send message
-            usermsg.echo(self.filter, '%s%s' % (message, cleanStr))
-        
-        # Console
+            usermsg.echo(int(player), '%s%s' % (message, cleanStr))
         elif self.filter == 0:
             # Get clean string
-            cleanStr = self.__cleanString(self.__formatString(string, tokens, 'CONSOLE'))
+            cleanStr = self.__cleanString(self.__formatString(string, tokens, None))
             
             # Print message
             es.dbgmsg(0, '%s%s' % (message, cleanStr))
-        
-        # Playerlib filter
         else:
-            for userid in playerlib.getUseridList(self.filter):
+            for player in playerlib.getPlayerList(self.filter):
                 # Get clean string
-                cleanStr = self.__cleanString(self.__formatString(string, tokens, userid))
+                cleanStr = self.__cleanString(self.__formatString(string, tokens, player))
                 
                 # Send message
-                usermsg.echo(userid, '%s%s' % (message, cleanStr))
+                usermsg.echo(int(player), '%s%s' % (message, cleanStr))
 
 
 # ==============================================================================
@@ -2717,14 +2722,7 @@ def isSpectator(userid):
     
     @retval True The player is a spectator, currently connecting or not on the server.
     @retval False The player is on an active team.'''
-    return es.getplayerteam(userid) <= 1
-
-def isSpectatorStrict(userid):
-    '''!Checks to see if \p userid is a spectator.
-    
-    @retval True The player is a spectator.
-    @retval False The player is on an active team, currently connecting or not on the server.'''
-    return es.getplayerteam(userid) == 1
+    return getPlayer(userid).team <= 1
 
 def hasEST():
     '''!Checks to see if ESTools is installed on the server.
@@ -2993,40 +2991,3 @@ def compareVersion(version):
     @retval 0 The supplied version is equal to the one that is running.
     @retval 1 The supplied version is greater than the one that is running.'''
     return cmp(version, getVersion())
-
-def isWinnersCompatible():
-    '''!Checks whether this server is compatible with game-servers and clan-servers.com servers.
-    
-    @return [bool] Boolean'''
-    tempDir = getGameDir('')
-    return ':' not in tempDir[tempdir.find('/')+1:]
-
-def loadAddon(addonName):
-    '''!Loads a GunGame addon. included and custom_addon already detected. Return values are self-explanatory.
-    
-    @param addonName Name of the addon to load.
-    
-    @return [tuple] In the format of: successful [bool], message [str].'''
-    if not addonExists(addonName):
-        return False, 'Addon does not exist: %s' % addonName
-    
-    if addonName in getRegisteredAddonList():
-        return False, 'Addon already loaded: %s' % addonName
-    
-    es.server.queuecmd('es_xload gungame/%s/%s' % ('included_addons' if getAddonType(addonName) == 0 else 'custom_addons', addonName))
-    return True, 'Loaded addon.'
-
-def unloadAddon(addonName):
-    '''!Unloads a GunGame addon. included and custom_addon already detected. Return values are self-explanatory.
-    
-    @param addonName Name of the addon to unload.
-    
-    @return [tuple] In the format of: successful [bool], message [str].'''
-    if not addonExists(addonName):
-        return False, 'Addon does not exist: %s' % addonName
-    
-    if addonName not in getRegisteredAddonList():
-        return False, 'Addon not already loaded: %s' % addonName
-    
-    es.server.queuecmd('es_xunload gungame/%s/%s' % ('included_addons' if getAddonType(addonName) == 0 else 'custom_addons', addonName))
-    return True, 'Unloaded addon.'

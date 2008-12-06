@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.564
+@version 5.0.568
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -1288,8 +1288,9 @@ class Message(object):
         
         # Get the player's language (if we were supplied with a userid)
         elif userid:
-            assert playerExists(userid), ('__formatString called with invalid userid: %s' % userid)
-            rtnStr = self.strings(string, tokens, getPlayer(userid).language)
+            if playerExists(userid):
+                assert playerExists(userid), ('__formatString called with invalid userid: %s' % userid)
+                rtnStr = self.strings(string, tokens, getPlayer(userid).language)
         
         # Format it
         rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
@@ -2125,14 +2126,19 @@ def getLowestLevel(userid=0):
     
     # Get levels of all players in server
     for player in getPlayerList():
-        #if a userid has been passed exclude them from the averaging
+        # If a userid has been passed, exclude them
         if player.userid == int(userid):
+            continue
+        
+        # If we are checking for a newly connecting user, and the player is a spectator, exclude them
+        if userid and gungamelib.isSpectator(player.userid):
             continue
         
         if not lowestLevel:
             lowestLevel = player.level
             continue
         
+        # If the level of the player is less than the current lowestLevel, update it
         if player.level < lowestLevel:
             lowestLevel = player.level
     

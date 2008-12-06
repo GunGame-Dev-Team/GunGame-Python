@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 5.0.567
+    Version: 5.0.568
     Description: Provides a console interface which allows convertions for
                  GunGame 3 and 4 winner database and spawnpoint files to
                  GunGame 5 formats.
@@ -28,7 +28,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame5)'
-info.version  = '5.0.566'
+info.version  = '5.0.568'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -168,6 +168,7 @@ def convert_dm4(userid):
         
         # Get spawnpoint info
         for x in gg4_sp:
+            x = str(x)
             # Get info
             info = gg4_sp[x]
             
@@ -251,12 +252,11 @@ def convert_winners4(userid):
         # Get winner info
         player = str(player)
         wins = int(gg4db[player]['wins'])
-        steamid = gg4db[player]['steamid']
-        name = gg4db[player]['name']
-        
-        # Do they have any wins?
+        # Do they have any wins? / Are they a fake player?
         if not wins:
             continue
+        steamid = gg4db[player]['steamid']
+        name = gg4db[player]['name']
         
         # Set winner info
         gungameWinner = gungamelib.getWinner(steamid)

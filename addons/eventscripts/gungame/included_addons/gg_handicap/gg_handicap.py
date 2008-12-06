@@ -111,6 +111,7 @@ def handicapUpdate():
             # Play sound and tell them
             gungamelib.playSound(userid, 'handicap')
             gungamelib.msg('gg_handicap', userid, 'LevelLowest', {'level': handicapLevel})
+        
         return
     elif handicapType == 2:
         handicapLevel = gungamelib.getMedianLevel()

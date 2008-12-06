@@ -1,9 +1,10 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 5.0.566
-    Description: Provides a console interface which allows convertions from
-                 GunGame 3 and 4 are available for usage in GunGame 5.
+    Version: 5.0.567
+    Description: Provides a console interface which allows convertions for
+                 GunGame 3 and 4 winner database and spawnpoint files to
+                 GunGame 5 formats.
 '''
 
 # ==============================================================================
@@ -11,7 +12,6 @@
 # ==============================================================================
 # Python imports
 import os
-import sys
 import time
 
 # EventScripts imports
@@ -44,6 +44,9 @@ def load():
     for name in gConverts:
         gg_convert.registerAdminCommand('convert_' + name, gConverts[name])
 
+def unload():
+    gungamelib.unregisterAddon('gg_convert')
+
 # ==============================================================================
 #   HELP
 # ==============================================================================
@@ -54,7 +57,10 @@ def convert_help(userid):
     
     # Echo the lists to them
     for x in gConverts:
-        usermsg.echo(userid, '[gg_convert]  * gg_convert_%s' % x)
+        if userid == 0:
+            es.dbgmsg(0, '[gg_convert]  * gg_convert_%s' % x)
+        else:
+            usermsg.echo(userid, '[gg_convert]  * gg_convert_%s' % x)
 
 # ==============================================================================
 #   DEATHMATCH -- GUNGAME 3
@@ -161,17 +167,12 @@ def convert_dm4(userid):
         points = []
         
         # Get spawnpoint info
-        for id in gg4_sp:
-            id = str(id)
-            eye0 = gg4_sp[id]['eye0']
-            eye1 = gg4_sp[id]['eye1']
-            if eye0 == '0.0':
-                eye0 = '0.000000'
-            if eye1 == '0.0':
-                eye1 = '0.000000'
+        for x in gg4_sp:
+            # Get info
+            info = gg4_sp[x]
             
             # Prepare the spawnpoint to be added
-            point = '%s %s %s %s %s 0.000000\n' % (gg4_sp[id]['loc_x'], gg4_sp[id]['loc_y'], gg4_sp[id]['loc_z'], eye0, eye1)
+            point = '%s %s %s %s %s 0.000000\n' % (float(info['loc_x']), float(info['loc_y']), float(info['loc_z']), float(info['eye0']), float(info['eye1']))
             
             # If the point already exists, skip it
             if point in points:
@@ -184,15 +185,9 @@ def convert_dm4(userid):
         if not len(points):
             continue
         
-        # Now write it to a file
-        newFileName = name
-        newFile = open(gungamelib.getGameDir('cfg/gungame5/spawnpoints/%s.txt' % newFileName), 'w')
-        
-        # Loop through the points
-        for point in points:
-            newFile.write(point)
-        
-        # Close the file
+        # Write to the file, then close it
+        newFile = open(gungamelib.getGameDir('cfg/gungame5/spawnpoints/%s.txt' % name), 'w')
+        newFile.writelines(points)
         newFile.close()
     
     # Announce that all files have been converted
@@ -253,13 +248,17 @@ def convert_winners4(userid):
     
     # Loop through the winners
     for player in gg4db:
-        # Set winner info
+        # Get winner info
         player = str(player)
         wins = int(gg4db[player]['wins'])
-        if not wins:
-            continue
         steamid = gg4db[player]['steamid']
         name = gg4db[player]['name']
+        
+        # Do they have any wins?
+        if not wins:
+            continue
+        
+        # Set winner info
         gungameWinner = gungamelib.getWinner(steamid)
         gungameWinner['wins'] = wins
         gungameWinner['name'] = name
@@ -268,16 +267,16 @@ def convert_winners4(userid):
         # Print to console
         gungamelib.echo('gg_convert', userid, 0, 'winners4:Converted', {'name': name, 'wins': wins, 'uniqueid': steamid})
     
+    # Finalize convertion
     completeConvert()
-    
-    # Completed
     gungamelib.echo('gg_convert', userid, 0, 'winners4:ConvertionCompleted')
 
 def completeConvert():
-    # Load the new database
+    # Reload the database
     gungamelib.saveWinnerDatabase()
     gungamelib.loadWinnerDatabase()
     
+    # Reload gg_info_menus
     es.reload('gungame/included_addons/gg_info_menus')
 
 # ==============================================================================

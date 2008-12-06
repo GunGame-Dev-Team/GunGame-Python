@@ -1,16 +1,9 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_convert
-    Version: 5.0.555
+    Version: 5.0.566
     Description: Provides a console interface which allows convertions from
                  GunGame 3 and 4 are available for usage in GunGame 5.
-'''
-
-'''XXX Todo:
- - gg3: deathmatch [DONE]
- - gg4: deathmatch [TODO]
- - gg3: winners    [DONE]
- - gg4: winners    [DONE]
 '''
 
 # ==============================================================================
@@ -35,7 +28,7 @@ import gungamelib
 # Register with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_convert (for GunGame5)'
-info.version  = '5.0.555'
+info.version  = '5.0.566'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_console'
 info.author   = 'GunGame Development Team'
@@ -136,6 +129,76 @@ def parseLegacySpawnpoint(file, userid=0):
         yield point.split(',')
 
 # ==============================================================================
+#   DEATHMATCH -- GUNGAME 4
+# ==============================================================================
+def convert_dm4(userid):
+    # Tell them to check their console
+    gungamelib.msg('gungame', userid, 'CheckYourConsole')
+    
+    # Loop through the files in the legacy folder
+    for f in os.listdir(gungamelib.getGameDir('cfg/gungame5/converter/gg4 spawnpoints')):
+        name, ext = os.path.splitext(f)
+        
+        # Isn't an ES sqldb file?
+        if not name.startswith('es_') or ext != '.sqldb':
+            continue
+        
+        # Remove the es_
+        name = name[3:]
+        
+        # Announce we are converting it
+        gungamelib.echo('gg_convert', userid, 0, 'dm4:ConvertingFile', {'file': f})
+        
+        # Load the database into a keygroup
+        es.sql('open', name, 'gungame5/converter/gg4 spawnpoints')
+        es.sql('query', name, 'gg4_sp', 'SELECT * FROM spawnpoints')
+        es.sql('close', name)
+        
+        # Open the keygroup with keyvalues
+        gg4_sp = keyvalues.getKeyGroup('gg4_sp')
+        
+        # Create a list to store the spawnpoints
+        points = []
+        
+        # Get spawnpoint info
+        for id in gg4_sp:
+            id = str(id)
+            eye0 = gg4_sp[id]['eye0']
+            eye1 = gg4_sp[id]['eye1']
+            if eye0 == '0.0':
+                eye0 = '0.000000'
+            if eye1 == '0.0':
+                eye1 = '0.000000'
+            
+            # Prepare the spawnpoint to be added
+            point = '%s %s %s %s %s 0.000000\n' % (gg4_sp[id]['loc_x'], gg4_sp[id]['loc_y'], gg4_sp[id]['loc_z'], eye0, eye1)
+            
+            # If the point already exists, skip it
+            if point in points:
+                continue
+            
+            # Add the point to the list
+            points.append(point)
+        
+        # Are there any points?
+        if not len(points):
+            continue
+        
+        # Now write it to a file
+        newFileName = name
+        newFile = open(gungamelib.getGameDir('cfg/gungame5/spawnpoints/%s.txt' % newFileName), 'w')
+        
+        # Loop through the points
+        for point in points:
+            newFile.write(point)
+        
+        # Close the file
+        newFile.close()
+    
+    # Announce that all files have been converted
+    gungamelib.echo('gg_convert', userid, 0, 'dm4:ConvertionCompleted')
+
+# ==============================================================================
 #   WINNERS -- GUNGAME 3
 # ==============================================================================
 def convert_winners3(userid):
@@ -223,7 +286,7 @@ def completeConvert():
 gConverts = {
     'help': convert_help,
     'dm3': convert_dm3,
-    #'dm4': convert_dm4,
+    'dm4': convert_dm4,
     'winners3': convert_winners3,
     'winners4': convert_winners4
 }

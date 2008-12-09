@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.568
+@version 5.0.570
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -118,7 +118,8 @@ class Player(object):
    
     __slots__ = ['userid', 'name', 'team', 'level', 'afkrounds', 'multikill',
                  'multilevel', 'preventlevel', 'afkmathtotal', 'steamid',
-                 'index', 'language', 'isbot', 'stripexceptions']
+                 'index', 'language', 'isbot', 'stripexceptions',
+                 'pendinglevelup', 'weaponcheck']
     
     def __init__(self, userid):
         '''Called everytime getPlayer() is called, and all the attributes are
@@ -230,6 +231,8 @@ class Player(object):
         self.language = playerlibPlayer.get('lang')
         self.isbot = es.isbot(self.userid)
         self.stripexceptions = []
+        self.pendinglevelup = 0
+        self.weaponcheck = 0
     
     def resetPlayer(self):
         '''Reset the players attributes.'''

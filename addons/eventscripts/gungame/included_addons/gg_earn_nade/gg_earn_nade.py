@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_earn_nade
-    Version: 5.0.558
+    Version: 5.0.570
     Description: When a player is on "hegrenade" level and they get a kill with
                  a weapon other than an "hegrenade", they are given an
                  additional hegrenade if they do not have one.
@@ -12,6 +12,7 @@
 # ==============================================================================
 # EventScripts imports
 import es
+import gamethread
 import playerlib
 
 # GunGame imports
@@ -23,7 +24,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_earn_nade (for GunGame5)'
-info.version  = '5.0.558'
+info.version  = '5.0.570'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_earn_nade'
 info.author   = 'GunGame Development Team'
@@ -54,6 +55,9 @@ def player_death(event_var):
     if event_var['es_attackerteam'] == event_var['es_userteam']:
         return
     
+    gamethread.delayed(0, earnNade, (attacker, userid, event_var['weapon']))
+
+def earnNade(attacker, userid, weapon):
     # Get attacker object
     gungameAttacker = gungamelib.getPlayer(attacker)
     
@@ -66,7 +70,7 @@ def player_death(event_var):
         return
     
     # Make sure the attacking weapon was not hegrenade
-    if event_var['weapon'] == 'hegrenade':
+    if weapon == 'hegrenade':
         return
     
     # Get victim object

@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.570
+@version 5.0.573
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -2134,7 +2134,7 @@ def getLowestLevel(userid=0):
             continue
         
         # If we are checking for a newly connecting user, and the player is a spectator, exclude them
-        if userid and gungamelib.isSpectator(player.userid):
+        if userid and isSpectator(player.userid):
             continue
         
         if not lowestLevel:

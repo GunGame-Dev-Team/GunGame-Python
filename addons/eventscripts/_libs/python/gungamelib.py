@@ -1,6 +1,6 @@
 '''!
 @package gungamelib
-@version 5.0.573
+@version 5.0.575
 
 Copyright (c) 2008, the GunGame Coding Team
 Core GunGame Library
@@ -1398,8 +1398,8 @@ class Message(object):
         # Playerlib filter
         else:
             # Send message
-            for userid in playerlib.getPlayerList(self.filter):
-                usermsg.centermsg(userid, self.__formatString(string, tokens, userid))
+            for player in playerlib.getPlayerList(self.filter):
+                usermsg.centermsg(player.userid, self.__formatString(string, tokens, player.userid))
     
     def echo(self, filter, level, string, tokens, showPrefix = False):
         # Setup filter

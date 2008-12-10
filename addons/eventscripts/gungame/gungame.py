@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gungame
-    Version: 5.0.577
+    Version: 5.0.578
     Description: The main addon, handles leaders and events.
 '''
 
@@ -26,7 +26,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.577'
+__version__ = '5.0.578'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 es.ServerVar('eventscripts_gg5', __version__).makepublic()
 
@@ -782,7 +782,8 @@ def gg_win(event_var):
     # ALL WINS
     # ====================================================
     # Enable alltalk
-    es.server.queuecmd('sv_alltalk 1')
+    if not int(es.ServerVar('sv_alltalk')) and gungamelib.getVariableValue('gg_win_alltalk'):
+        es.server.queuecmd('sv_alltalk 1')
     
     # Tell the world (center message)
     gungamelib.centermsg('gungame', '#all', 'PlayerWon_Center', {'player': playerName})

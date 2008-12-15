@@ -168,8 +168,8 @@ def convert_dm4(userid):
         
         # Get spawnpoint info
         for x in gg4_sp:
-            x = str(x)
             # Get info
+            x = str(x)
             info = gg4_sp[x]
             
             # Prepare the spawnpoint to be added
@@ -210,6 +210,8 @@ def convert_winners3(userid):
     
     # Loop through the winners
     for x in kv:
+        x = str(x)
+        
         # Check its a unique id
         if not x.startswith('STEAM_'):
             gungamelib.echo('gg_convert', userid, 0, 'winners3:SkippingNonUnique', {'name': x})
@@ -252,9 +254,11 @@ def convert_winners4(userid):
         # Get winner info
         player = str(player)
         wins = int(gg4db[player]['wins'])
+        
         # Do they have any wins? / Are they a fake player?
         if not wins:
             continue
+        
         steamid = gg4db[player]['steamid']
         name = gg4db[player]['name']
         

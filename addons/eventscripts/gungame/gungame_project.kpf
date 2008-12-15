@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="0651bb49-f501-4ccc-aaea-20751ee88255" kpf_version="4" name="gungame_project.kpf">
+<file id="04536423-ff27-4d26-aea9-837aa1faf8f8" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="pickle.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/pickle.py">
+</file>
 <livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/sound_packs" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="sound_packs" url="file:///D:/srcds/cstrike/cfg/gungame5/sound_packs">
 </livefolder>
 <livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="file:///D:/srcds/cstrike/cfg/gungame5/translations">
@@ -97,8 +99,6 @@
 </preference-set>
 </preference-set>
   <string id="lastInvocation">default</string>
-</preference-set>
-<preference-set idref="0651bb49-f501-4ccc-aaea-20751ee88255/translations/gg_friendlyfire.ini">
 </preference-set>
 <preference-set idref="4b7ebd04-d1ca-4a3b-a7f8-5517514d9155">
 <preference-set id="Invocations">

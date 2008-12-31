@@ -13,6 +13,7 @@ import es
 import playerlib
 import popuplib
 import spawnpointlib
+import gamethread
 
 # GunGame Imports
 import gungamelib
@@ -37,8 +38,6 @@ spawnPoints = None
 #  GAME EVENTS
 # ==============================================================================
 def load():
-    global spawnPoints
-    
     # Register addon with gungamelib
     gg_spawnpoints = gungamelib.registerAddon('gg_spawnpoints')
     gg_spawnpoints.loadTranslationFile()
@@ -60,8 +59,7 @@ def load():
     gg_spawnpoints.registerAdminCommand('spawn_print', cmd_spawn_print)
     
     # Get the spawn points for the map
-    if gungamelib.inMap():
-        spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame5/spawnpoints')
+    getSpawnPointManager()
 
 def unload():
     global spawnPoints
@@ -78,10 +76,7 @@ def unload():
 
 
 def es_map_start(event_var):
-    global spawnPoints
-    
-    # Reset spawnpoints
-    spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame5/spawnpoints')
+    getSpawnPointManager()
 
 def round_start(event_var):
     global spawnPoints
@@ -338,3 +333,24 @@ def selectShowMenu(userid, choice, popupid):
     
     # Return them
     popuplib.send('gg_spawnpoints', userid)
+
+# ==============================================================================
+#   HELPER FUNCTIONS
+# ==============================================================================
+def getSpawnPointManager(_iter=0):
+    global spawnPoints
+    
+    # Make sure we are in level
+    if not gungamelib.inMap():
+        # Only iterate for a minute, then sack it off.
+        if _iter < 60:
+            gamethread.delayed(1, getSpawnPointManager, (_iter+1))
+        
+        return
+    
+    # Get the spawnpoints
+    spawnPoints = spawnpointlib.SpawnPointManager('cfg/gungame5/spawnpoints')
+    
+    # Does the spawnpoint file exist for this map?
+    if not spawnPoints.exists():
+        gungamelib.echo('gg_spawnpoints', 0, 0, 'NoSpawnpoints')

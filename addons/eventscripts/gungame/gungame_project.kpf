@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="0651bb49-f501-4ccc-aaea-20751ee88255" kpf_version="4" name="gungame_project.kpf">
-<file id="04536423-ff27-4d26-aea9-837aa1faf8f8" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="pickle.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/pickle.py">
-</file>
 <livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/sound_packs" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="sound_packs" url="file:///D:/srcds/cstrike/cfg/gungame5/sound_packs">
 </livefolder>
 <livefolder id="0651bb49-f501-4ccc-aaea-20751ee88255/translations" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="translations" url="file:///D:/srcds/cstrike/cfg/gungame5/translations">
@@ -10,6 +8,8 @@
 <folder id="69379199-3f7c-4f31-a172-e3041b6f4bdb" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="libs">
 </folder>
 <file id="9de4b230-2f9a-4bce-8884-f5072dfbce25" idref="0651bb49-f501-4ccc-aaea-20751ee88255" name="gg_error_logging.ini" url="file:///D:/srcds/cstrike/cfg/gungame5/translations/gg_error_logging.ini">
+</file>
+<file id="0172823a-61fe-460d-a747-bf6e39609992" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="pickle.py" url="file:///D:/srcds/cstrike/addons/eventscripts/_libs/python/pickle.py">
 </file>
 <file id="3d8f5c75-7a90-467f-95ab-89a95e9a878f" idref="69379199-3f7c-4f31-a172-e3041b6f4bdb" name="spawnpointlib.py" url="../_libs/python/spawnpointlib.py">
 </file>

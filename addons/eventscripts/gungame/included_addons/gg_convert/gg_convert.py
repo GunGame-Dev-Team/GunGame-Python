@@ -116,7 +116,7 @@ def parseLegacySpawnpoint(file, userid=0):
     smallFile = file.split('/')[-1]
     
     # Load the KeyValues file
-    kv = keyvalues.KeyValues(name=file[3:-6])
+    kv = keyvalues.KeyValues()
     kv.load(file)
     
     # Get the total points
@@ -205,7 +205,7 @@ def convert_winners3(userid):
     file = gungamelib.getGameDir('cfg/gungame5/converter/gg3 winners/es_gg_winners_db.txt')
     
     # Load the KeyValues file
-    kv = keyvalues.KeyValues(name=file[3:-6])
+    kv = keyvalues.KeyValues()
     kv.load(file)
     
     # Loop through the winners

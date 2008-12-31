@@ -96,9 +96,9 @@ def earnNade(attacker, userid, weapon):
             playerlibSecondary = playerlibPlayer.get('secondary')
             
             if nadeBonusWeapon == playerlibPrimary:
-                es.server.queuecmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibPrimary)))
+                gungamelib.safeRemove(playerlibPlayer.get('weaponindex', playerlibPrimary))
             elif nadeBonusWeapon == playerlibSecondary:
-                es.server.queuecmd('es_xremove %d' % int(playerlibPlayer.get('weaponindex', playerlibSecondary)))
+                gungamelib.safeRemove(playerlibPlayer.get('weaponindex', playerlibSecondary))
         
         es.server.queuecmd('es_xgive %s weapon_hegrenade' % attacker)
         es.delayed('0.01', 'es_xsexec %s "use %s"' % (attacker, 'weapon_hegrenade'))

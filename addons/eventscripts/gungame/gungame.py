@@ -25,7 +25,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.581'
+__version__ = '5.0.582'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 es.ServerVar('eventscripts_gg5', __version__).makepublic()
 
@@ -151,6 +151,7 @@ def initialize():
     gungamelib.echo('gungame', 0, 0, 'Load_Commands')
     
     # Register commands
+    # NOTE TO DEVS: Move weapon order menu to gg_info_menus?
     gungame.registerPublicCommand('weapons', gungamelib.sendWeaponOrderMenu)
     
     # Clear out the GunGame system
@@ -174,10 +175,6 @@ def initialize():
             es.event('initialize','gg_start')
             es.event('fire','gg_start')
     
-    # Restart map
-    gungamelib.msg('gungame', '#all', 'Loaded')
-    es.server.queuecmd('mp_restartgame 2')
-    
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
@@ -198,6 +195,9 @@ def initialize():
     # Print load completed
     gungamelib.echo('gungame', 0, 0, 'Load_Completed')
     es.dbgmsg(0, '[GunGame] %s' % ('=' * 80))
+    
+    # Restart game
+    es.server.queuecmd('mp_restartgame 2')
 
 def unload():
     global gungameWeaponOrderMenu
@@ -213,7 +213,6 @@ def unload():
     userid = es.getuserid()
     es.server.queuecmd('es_xfire %d func_buyzone Enable' % userid)
     
-    # Get map if
     try:
         mapObjectives = gungamelib.getVariableValue('gg_map_obj')
         
@@ -243,8 +242,7 @@ def unload():
     es.event('fire', 'gg_unload')
     
     # Remove the notify flag from all GunGame Console Variables
-    list_gungameVariables = gungamelib.getVariableList()
-    for variable in list_gungameVariables:
+    for variable in gungamelib.getVariableList():
         es.ServerVar(variable).removeFlag('notify')
         es.server.cmd('%s 0' % variable)
     
@@ -316,11 +314,13 @@ def es_map_start(event_var):
     gungamelib.addDownloadableSounds()
     
     # Equip the players
-    equipPlayer()
+    gungamelib.Player.prepareEquipEntity()
 
 def round_start(event_var):
     global list_stripExceptions
     global countBombDeathAsSuicide
+    
+    userid = es.getuserid()
     
     # Set a global for round_active
     gungamelib.setGlobal('round_active', 1)
@@ -328,49 +328,7 @@ def round_start(event_var):
     # Create a variable to prevent bomb explosion deaths from counting a suicides
     countBombDeathAsSuicide = False
     
-    # Disable Buyzones
-    userid = es.getuserid()
-    es.server.queuecmd('es_xfire %d func_buyzone Disable' % userid)
-    
-    # Remove weapons
-    for weapon in gungamelib.getWeaponList('all'):
-        # Make sure that the admin doesn't want the weapon left on the map
-        if weapon in list_stripExceptions:
-            continue
-        
-        # Remove the weapon from the map
-        es.server.queuecmd('es_xfire %d weapon_%s kill' % (userid, weapon))
-    
-    # Equip players
-    equipPlayer()
-
-    # Get map info
-    mapObjectives = gungamelib.getVariableValue('gg_map_obj')
-    
-    # If both the BOMB and HOSTAGE objectives are enabled, we don't do anything else
-    if mapObjectives < 3:
-        # Remove all objectives
-        if mapObjectives == 0:
-            if len(es.createentitylist('func_bomb_target')):
-                es.server.queuecmd('es_xfire %d func_bomb_target Disable' %userid)
-                es.server.queuecmd('es_xfire %d weapon_c4 Kill' %userid)
-            
-            elif len(es.createentitylist('func_hostage_rescue')):
-                es.server.queuecmd('es_xfire %d func_hostage_rescue Disable' %userid)
-                es.server.queuecmd('es_xfire %d hostage_entity Kill' %userid)
-        
-        # Remove bomb objectives
-        elif mapObjectives == 1:
-            if len(es.createentitylist('func_bomb_target')):
-                es.server.queuecmd('es_xfire %d func_bomb_target Disable' %userid)
-                es.server.queuecmd('es_xfire %d weapon_c4 Kill' % userid)
-        
-        # Remove hostage objectives
-        elif mapObjectives == 2:
-            if len(es.createentitylist('func_hostage_rescue')):
-                es.server.queuecmd('es_xfire %d func_hostage_rescue Disable' %userid)
-                es.server.queuecmd('es_xfire %d hostage_entity Kill' % userid)
-    
+    # Player knife level and nade level warning sound
     if gungamelib.getVariableValue('gg_leaderweapon_warning'):
         leaderWeapon = gungamelib.getLevelWeapon(gungamelib.leaders.getLeaderLevel())
         
@@ -381,6 +339,52 @@ def round_start(event_var):
         # Play nade sound
         if leaderWeapon == 'hegrenade':
             gungamelib.playSound('#all', 'nadelevel')
+    
+    # If there are no players on the server, stop (all the below requires a player on the server)
+    if not userid:
+        return
+    
+    # Disable buyzones
+    es.server.queuecmd('es_xfire %d func_buyzone Disable' % userid)
+    
+    # Remove weapons
+    for weapon in gungamelib.getWeaponList('all'):
+        # Make sure that the admin doesn't want the weapon left on the map
+        if weapon in list_stripExceptions:
+            continue
+        
+        # Remove the weapon from the map
+        es.server.queuecmd('es_xfire %d weapon_%s Kill' % (userid, weapon))
+    
+    # Equip players
+    gungamelib.Player.prepareEquipEntity()
+
+    # Get map info
+    mapObjectives = gungamelib.getVariableValue('gg_map_obj')
+    
+    # If both the BOMB and HOSTAGE objectives are enabled, we don't do anything else
+    if mapObjectives < 3:
+        # Remove all objectives
+        if mapObjectives == 0:
+            if len(es.createentitylist('func_bomb_target')):
+                es.server.queuecmd('es_xfire %d func_bomb_target Disable' % userid)
+                es.server.queuecmd('es_xfire %d weapon_c4 Kill' % userid)
+            
+            elif len(es.createentitylist('func_hostage_rescue')):
+                es.server.queuecmd('es_xfire %d func_hostage_rescue Disable' % userid)
+                es.server.queuecmd('es_xfire %d hostage_entity Kill' % userid)
+        
+        # Remove bomb objectives
+        elif mapObjectives == 1:
+            if len(es.createentitylist('func_bomb_target')):
+                es.server.queuecmd('es_xfire %d func_bomb_target Disable' % userid)
+                es.server.queuecmd('es_xfire %d weapon_c4 Kill' % userid)
+        
+        # Remove hostage objectives
+        elif mapObjectives == 2:
+            if len(es.createentitylist('func_hostage_rescue')):
+                es.server.queuecmd('es_xfire %d func_hostage_rescue Disable' % userid)
+                es.server.queuecmd('es_xfire %d hostage_entity Kill' % userid)
 
 def round_freeze_end(event_var):
     global countBombDeathAsSuicide
@@ -409,9 +413,8 @@ def round_end(event_var):
     for userid in playerlib.getUseridList('#alive,#human'):
         gungamePlayer = gungamelib.getPlayer(userid)
         
-        # Check to see if the player was AFK
-        if gungamePlayer.isPlayerAFK():
-            afkPunishCheck(userid)
+        # Punish player if they are AFK
+        gungamePlayer.afkPunishCheck()
 
 def player_activate(event_var):
     # Setup the player
@@ -451,23 +454,14 @@ def player_spawn(event_var):
 
     # Check to see if the WarmUp Round is Active
     if not gungamelib.getGlobal('isWarmup'):
-        # Since the WarmUp Round is not Active, give the player the weapon relevant to their level
+        # Give them their level weapon
         gungamePlayer.giveWeapon()
         
-        levelInfoHint(userid)
+        # Show their level information
+        gungamePlayer.sendLevelInfo()
     
-    if gungamelib.getVariableValue('gg_map_obj') > 1:
-        # Check to see if this player is a CT
-        if int(event_var['es_userteam']) == 3:
-            
-            # Are we in a de_ map and want to give defuser?
-            if len(es.createentitylist('func_bomb_target')) and gungamelib.getVariableValue('gg_player_defuser') > 0:
-                # Get player object
-                playerlibPlayer = playerlib.getPlayer(userid)
-                
-                # Make sure the player doesn't already have a defuser
-                if not playerlibPlayer.get('defuser'):
-                    es.server.queuecmd('es_xgive %d item_defuser' % userid)
+    # Give them their defuser
+    gungamePlayer.giveDefuser()
 
 def player_jump(event_var):
     userid = int(event_var['userid'])
@@ -552,8 +546,7 @@ def player_death(event_var):
         gungamelib.hudhint('gungame', attacker, 'PlayerAFK', {'player': event_var['es_username']})
         
         # Check AFK punishment
-        if not gungameVictim.isbot and gungamelib.getVariableValue('gg_afk_rounds') > 0:
-            afkPunishCheck(userid)
+        gungameVictim.afkPunishCheck()
         
         return
     
@@ -674,8 +667,7 @@ def gg_levelup(event_var):
     leaderLevel = gungamelib.leaders.getLeaderLevel()
     
     # Show level info HUDHint
-    if gungamelib.canShowHints():
-        levelInfoHint(attacker)
+    gungamePlayer.sendLevelInfo()
     
     # ==================
     # VOTE TRIGGER CHECK
@@ -824,73 +816,31 @@ def server_cvar(event_var):
         
         return
     
-    # GG_MAPVOTE
-    if cvarName == 'gg_map_vote':
-        if newValue == 1 and 'gg_map_vote' not in gungamelib.getRegisteredAddonList():
-            es.server.queuecmd('es_load gungame/included_addons/gg_map_vote')
-        elif newValue != 1 and 'gg_map_vote' in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/gg_map_vote')
+    # Create a list of addons whose "turn on" value is greater than 0
+    nonZeroAddonLoad = ('gg_multi_level',
+                        'gg_spawn_protect',
+                        'gg_handicap',
+                        'gg_retry_punish',
+                        'gg_friendlyfire')
     
-    # GG_NADE_BONUS
+    # Handle addons which require > 0 values to load
+    if cvarName in nonZeroAddonLoad:
+        if newValue > 0 and cvarName not in gungamelib.getRegisteredAddonList():
+            gungamelib.loadAddon(cvarName, True)
+        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonList():
+            gungamelib.unloadAddon(cvarName, True)
+    
+    # gg_nade_bonus
     elif cvarName == 'gg_nade_bonus':
         if newValue != 0 and 'gg_nade_bonus' not in gungamelib.getRegisteredAddonList():
-            es.server.queuecmd('es_load gungame/included_addons/gg_nade_bonus')
+            gungamelib.loadAddon('gg_nade_bonus', True)
         elif newValue == 0 and 'gg_nade_bonus' in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/gg_nade_bonus')
-    
-    # GG_MULTI_LEVEL
-    elif cvarName == 'gg_multi_level':
-        if newValue > 0 and 'gg_multi_level' not in gungamelib.getRegisteredAddonList():
-            es.server.queuecmd('es_load gungame/included_addons/gg_multi_level')
-        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/gg_multi_level')
-    
-    # GG_SPAWN_PROTECTION
-    elif cvarName == 'gg_spawn_protect':
-        if newValue > 0 and 'gg_spawn_protect' not in gungamelib.getRegisteredAddonList():
-            es.server.queuecmd('es_load gungame/included_addons/gg_spawn_protect')
-        elif newValue == 0 and 'gg_spawn_protect' in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/gg_spawn_protect')
-    
-    # GG_HANDICAP
-    elif cvarName == 'gg_handicap':
-        if newValue > 0 and 'gg_handicap' not in gungamelib.getRegisteredAddonList():
-            es.server.queuecmd('es_load gungame/included_addons/gg_handicap')
-        elif newValue == 0 and 'gg_handicap' in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/gg_handicap')
-    
-    # GG_RETRY_PUNISH
-    elif cvarName == 'gg_retry_punish':
-        if newValue > 0 and 'gg_retry_punish' not in gungamelib.getRegisteredAddonList():
-            es.server.queuecmd('es_load gungame/included_addons/gg_retry_punish')
-        elif newValue == 0 and 'gg_retry_punish' in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/gg_retry_punish')
-    
-    # GG_FRIENDLYFIRE
-    elif cvarName == 'gg_friendlyfire':
-        if newValue > 0 and 'gg_friendlyfire' not in gungamelib.getRegisteredAddonList():
-            es.server.queuecmd('es_load gungame/included_addons/gg_friendlyfire')
-        elif newValue == 0 and 'gg_friendlyfire' in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/gg_friendlyfire')
+            gungamelib.unloadAddon('gg_nade_bonus', True)
     
     # GG Multi Round
     elif cvarName == 'gg_multi_round':
         # Reset the "rounds remaining" variable for multi-rounds
         dict_variables['roundsRemaining'] = gungamelib.getVariableValue('gg_multi_round')
-    
-    # Included addons
-    elif cvarName in list_includedAddonsDir:
-        if newValue == 1:
-            es.server.queuecmd('es_load gungame/included_addons/%s' % cvarName)
-        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/included_addons/%s' % cvarName)
-            
-    # Included addons
-    elif cvarName in list_customAddonsDir:
-        if newValue == 1:
-            es.server.queuecmd('es_load gungame/custom_addons/%s' % cvarName)
-        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonList():
-            es.unload('gungame/custom_addons/%s' % cvarName)
     
     # Multikill override
     elif cvarName == 'gg_multikill_override':
@@ -921,6 +871,13 @@ def server_cvar(event_var):
     elif cvarName == 'gg_weapon_order_type':
         gungamelib.getCurrentWeaponOrder().setWeaponOrderType(newValue)
     
+    # Addon loading -- let everything else process first
+    elif gungamelib.addonExists(cvarName):
+        if newValue == 1 and cvarName not in gungamelib.getRegisteredAddonList():
+            gungamelib.loadAddon(cvarName, True)
+        elif newValue == 0 and cvarName in gungamelib.getRegisteredAddonList():
+            gungamelib.unloadAddon(cvarName, True)
+    
     # Fire event
     es.event('initialize', 'gg_variable_changed')
     es.event('setstring', 'gg_variable_changed', 'name', cvarName)
@@ -930,123 +887,7 @@ def server_cvar(event_var):
 # ==============================================================================
 #   HELPER FUNCTIONS
 # ==============================================================================
-def loadCustom(addonName):
-    es.load('gungame/custom_addons/' + str(addonName))
-    
-def unloadCustom(addonName):
-    es.unload('gungame/custom_addons/' + str(addonName))
 
-def afkPunishCheck(userid):
-    gungamePlayer = gungamelib.getPlayer(userid)
-    afkMaxAllowed = gungamelib.getVariableValue('gg_afk_rounds')
-    
-    # Is AFK punishment enabled?
-    if afkMaxAllowed > 0:
-        # Increment the afk round attribute
-        gungamePlayer['afkrounds'] += 1
-        
-        # Have been AFK for too long
-        if gungamePlayer['afkrounds'] >= afkMaxAllowed:
-            # Kick the player
-            if gungamelib.getVariableValue('gg_afk_action') == 1:
-                es.server.queuecmd('kickid %d "You were AFK for too long."' % userid)
-            
-            # Show menu
-            elif gungamelib.getVariableValue('gg_afk_action') == 2:
-                # Send them to spectator
-                es.server.queuecmd('es_xfire %d !self SetTeam 1' % userid)
-                
-                # Send a popup saying they were switched
-                menu = popuplib.create('gungame_afk')
-                menu.addline(gungamelib.lang('gungame', 'SwitchedToSpectator', {}, userid))
-                menu.send(userid)
-                
-            # Reset the AFK rounds back to 0
-            gungamePlayer['afkrounds'] = 0
-
-def equipPlayer():
-    userid = es.getuserid()
-    es.server.cmd('es_xremove game_player_equip')
-    es.server.cmd('es_xgive %s game_player_equip' % userid)
-    es.server.cmd('es_xfire %s game_player_equip AddOutput "weapon_knife 1"' % userid)
-    
-    # Retrieve the armor type
-    armorType = gungamelib.getVariableValue('gg_player_armor')
-    
-    # Give the player full armor
-    if armorType == 2:
-        es.server.queuecmd('es_xfire %s game_player_equip AddOutput "item_assaultsuit 1"' % userid)
-    
-    # Give the player kevlar only
-    elif armorType == 1:
-        es.server.queuecmd('es_xfire %s game_player_equip AddOutput "item_kevlar 1"' % userid)
-
-def levelInfoHint(userid):
-    # Get variables
-    gungamePlayer = gungamelib.getPlayer(userid)
-    leaderLevel = gungamelib.leaders.getLeaderLevel()
-    levelsBehindLeader = leaderLevel - gungamePlayer['level']
-    multiKill = gungamelib.getLevelMultiKill(gungamePlayer['level'])
-    
-    # Start text
-    text =  gungamelib.lang('gungame', 'LevelInfo_CurrentLevel', {'level': gungamePlayer['level'], 'total': gungamelib.getTotalLevels()}, userid)
-    text += gungamelib.lang('gungame', 'LevelInfo_CurrentWeapon', {'weapon': gungamelib.getLevelWeapon(gungamePlayer['level'])}, userid)
-    
-    # Multikill?
-    if multiKill > 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_RequiredKills', {'kills': gungamePlayer['multikill'], 'total': multiKill}, userid)
-    
-    # ===========
-    # ONLY LEADER
-    # ===========
-    if levelsBehindLeader == 0 and gungamelib.leaders.getLeaderCount() == 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_CurrentLeader', usePlayerLang=userid)
-        
-        # Send hint
-        sendLevelInfoHint(userid, text)
-        return
-    
-    # ==========
-    # NO LEADERS
-    # ==========
-    if levelsBehindLeader == 0 and leaderLevel == 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_NoLeaders', usePlayerLang=userid)
-        
-        # Send hint
-        sendLevelInfoHint(userid, text)
-        return
-    
-    # ================
-    # MULTIPLE LEADERS
-    # ================
-    if levelsBehindLeader == 0 and gungamelib.leaders.getLeaderCount() > 1:
-        text += gungamelib.lang('gungame', 'LevelInfo_AmongstLeaders', usePlayerLang=userid)
-        
-        # Send hint
-        sendLevelInfoHint(userid, text)
-        return
-    
-    # Add leader level
-    text += gungamelib.lang('gungame', 'LevelInfo_LeaderLevel', {
-        'level': gungamelib.leaders.getLeaderLevel(),
-        'total': gungamelib.getTotalLevels(),
-        'weapon': gungamelib.getLevelWeapon(gungamelib.leaders.getLeaderLevel())
-    }, userid)
-    
-    # Send hint
-    sendLevelInfoHint(userid, text)
-
-def sendLevelInfoHint(userid, text):
-    # Is a vote active?
-    if gungamelib.getGlobal('voteActive'):
-        return
-    
-    # Is warmup round?
-    if gungamelib.getGlobal('isWarmup'):
-        return
-    
-    # Send hint
-    gamethread.delayed(0.5, usermsg.hudhint, (str(userid), text))
 
 # ==============================================================================
 #   POPUP COMMANDS

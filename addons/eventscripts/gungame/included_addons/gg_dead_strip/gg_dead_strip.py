@@ -76,7 +76,7 @@ def item_pickup(event_var):
     currentWeapon = playerlibPlayer.attributes['weapon']
     
     # Remove the weapon they just picked up
-    es.server.queuecmd('es_xremove %d' % playerlibPlayer.get('weaponindex', item))
+    gungamelib.safeRemove(playerlibPlayer.get('weaponindex', item))
     
     # If the player did not switch to the weapon they just picked up, no need to switch them back to their previous weapon
     if currentWeapon:

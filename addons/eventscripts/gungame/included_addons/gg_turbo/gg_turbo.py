@@ -130,5 +130,6 @@ def weaponCheck(userid):
 
 def stripWeapon(gungamePlayer, playerHandle, weaponType):
     weaponIndex = gungamePlayer.getWeaponIndex(playerHandle, weaponType)
+    
     if weaponIndex:
-        es.server.queuecmd('es_xremove %i' % weaponIndex)
+        gungamelib.safeRemove(weaponIndex)

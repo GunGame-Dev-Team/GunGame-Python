@@ -74,7 +74,7 @@ def item_pickup(event_var):
     
     # Remove item
     player = playerlib.getPlayer(userid)
-    es.server.queuecmd('es_xremove %i' % player.get('weaponindex', item))
+    gungamelib.safeRemove(player.get('weaponindex', item))
 
 def gg_levelup(event_var):
     attacker = int(event_var['attacker'])

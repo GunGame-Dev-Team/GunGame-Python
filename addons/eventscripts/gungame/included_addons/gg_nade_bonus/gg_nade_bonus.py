@@ -127,7 +127,9 @@ def checkBonus(userid):
 
 def checkNadeBonusVar():
     # Helper function -- lambda isn't very readable
-    def stripWeaponPrefix(text):
+    def cleanWeaponText(text):
+        text = text.strip()
+        
         if text.startswith('weapon_'):
             return text[7:]
         
@@ -141,22 +143,20 @@ def checkNadeBonusVar():
     
     # Loop through the weapons
     for weapon in str(nadeBonusWeapons).split(','):
-        # Prefix with weapon_
-        if not weapon.startswith('weapon_'):
-            weapon = 'weapon_%s' % weapon
+        weapon = cleanWeaponText(weapon)
         
         # Knife check
-        if weapon == 'weapon_knife':
+        if weapon == 'knife':
             gungamelib.echo('gg_nade_bonus', 0, 0, 'InvalidWeapon', {'weapon': 'knife'})
             continue
         
         # Check its a valid weapon
-        if weapon[7:] not in gungamelib.getWeaponList('all'):
-            gungamelib.echo('gg_nade_bonus', 0, 0, 'InvalidWeapon', {'weapon': weapon[7:]})
+        if weapon not in gungamelib.getWeaponList('all'):
+            gungamelib.echo('gg_nade_bonus', 0, 0, 'InvalidWeapon', {'weapon': weapon})
             continue
         
-        # Add to the valid weapons list (without the weapon_ prefix)
-        validWeapons.append(weapon[7:])
+        # Add to the valid weapons list
+        validWeapons.append(weapon)
     
     # Is there any valid weapons?
     if len(validWeapons) == 0:
@@ -165,7 +165,7 @@ def checkNadeBonusVar():
     
     # Get old and updated variable values
     newVariableValue = ','.join(validWeapons)
-    oldVariableValue = ','.join(map(stripWeaponPrefix, str(nadeBonusWeapons).split(',')))
+    oldVariableValue = ','.join(map(cleanWeaponText, str(nadeBonusWeapons).split(',')))
     
     # Have the variable values even changed?
     if newVariableValue == oldVariableValue:

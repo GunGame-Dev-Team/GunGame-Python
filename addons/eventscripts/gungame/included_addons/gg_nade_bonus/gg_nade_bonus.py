@@ -83,8 +83,8 @@ def hegrenade_detonate(event_var):
     if not gungamePlayer.isbot:
         return
     
-    # Is it warmup?
-    if gungamelib.getGlobal('isWarmup'):
+    # Make sure we are on grenade level
+    if gungamePlayer.getWeapon() != 'hegrenade':
         return
     
     # Do we have unlimited grenades enabled?

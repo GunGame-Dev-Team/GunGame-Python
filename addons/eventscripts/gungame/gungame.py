@@ -1,6 +1,6 @@
 ''' (c) 2008 by the GunGame Coding Team
 
-    Version: 5.0.583
+    Version: 5.0.584
     Description: The main addon, handles leaders and events.
 '''
 
@@ -25,7 +25,7 @@ from configobj import ConfigObj
 #   ADDON REGISTRATION
 # ==============================================================================
 # Version info
-__version__ = '5.0.583'
+__version__ = '5.0.584'
 es.ServerVar('eventscripts_gg', __version__).makepublic()
 es.ServerVar('eventscripts_gg5', __version__).makepublic()
 
@@ -414,7 +414,7 @@ def round_end(event_var):
         gungamePlayer = gungamelib.getPlayer(userid)
         
         # Punish player if they are AFK
-        gungamePlayer.afkPunishCheck()
+        gungamePlayer.afkPunish()
 
 def player_activate(event_var):
     # Setup the player
@@ -546,7 +546,7 @@ def player_death(event_var):
         gungamelib.hudhint('gungame', attacker, 'PlayerAFK', {'player': event_var['es_username']})
         
         # Check AFK punishment
-        gungameVictim.afkPunishCheck()
+        gungameVictim.afkPunish()
         
         return
     

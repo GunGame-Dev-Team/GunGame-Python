@@ -361,7 +361,7 @@ class Player(object):
         
         # Strip primary weapon
         for weaponType in ('primary', 'secondary'):
-            weaponIndex = self.getWeaponIndex(playerHandle, weaponType)
+            weaponIndex = self.getWeaponIndex(weaponType)
             
             if weaponIndex:
                 safeRemove(weaponIndex)
@@ -370,12 +370,26 @@ class Player(object):
         if self.getWeapon() in ['knife', 'hegrenade']:
             es.sexec(self.userid, 'use weapon_%s' % self.getWeapon())
     
-    def getWeaponIndex(self, playerHandle, flag):
+    def getOwnedEntityIndex(self, entity):
+        # Get our handle
+        playerHandle = es.getplayerhandle(self.userid)
+        
+        # Loop through entities
+        for weaponIndex in es.createentitylist(entity):
+            if es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity') == playerHandle:
+                return weaponIndex
+    
+    def getWeaponIndex(self, flag):
+        # Get our handle
+        playerHandle = es.getplayerhandle(self.userid)
+        
+        # Loop through weapons
         for weapon in getWeaponList(flag):
-            for weaponIndex in es.createentitylist('weapon_%s' % weapon):
-                # Check the owner against the handle
-                if es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity') == playerHandle:
-                    return weaponIndex
+            entIndex = self.getOwnedEntityIndex('weapon_%s' % weapon)
+            
+            # See if we own this entity
+            if entIndex is not None:
+                return entIndex
     
     def giveWeapon(self):
         '''Gives a player their current weapon.'''
@@ -2108,6 +2122,7 @@ def centermsg(addon, filter, string, tokens={}):
 # ==============================================================================
 def respawn(userid):
     respawnCommand = getVariable('gg_respawn_cmd')
+    
     if '#' not in str(respawnCommand):
         # Userids not requiring the "#" symbol
         es.server.queuecmd('%s %s' % (respawnCommand, userid))

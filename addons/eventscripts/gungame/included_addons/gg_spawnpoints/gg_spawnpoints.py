@@ -92,6 +92,9 @@ def round_start(event_var):
 def cmd_spawn_add(userid, location):
     global spawnPoints
     
+    if not spawnPoints:
+        gungamelib.msg('gg_spawnpoints', userid, 'OperationFailed:PleaseWait')
+    
     # In map?
     if not gungamelib.inMap():
         return
@@ -114,6 +117,9 @@ def cmd_spawn_add(userid, location):
 def cmd_spawn_remove_all(userid):
     global spawnPoints
     
+    if not spawnPoints:
+        gungamelib.msg('gg_spawnpoints', userid, 'OperationFailed:PleaseWait')
+    
     # In map?
     if not gungamelib.inMap():
         return
@@ -130,6 +136,9 @@ def cmd_spawn_remove_all(userid):
 
 def cmd_spawn_print(userid):
     global spawnPoints
+    
+    if not spawnPoints:
+        gungamelib.msg('gg_spawnpoints', userid, 'OperationFailed:PleaseWait')
     
     # In map?
     if not gungamelib.inMap():
@@ -157,6 +166,9 @@ def cmd_spawn_print(userid):
 def cmd_spawn_remove(userid, index):
     global spawnPoints
     
+    if not spawnPoints:
+        gungamelib.msg('gg_spawnpoints', userid, 'OperationFailed:PleaseWait')
+    
     # Make index an integer
     index = int(index)
     
@@ -181,6 +193,9 @@ def cmd_spawn_remove(userid, index):
 
 def cmd_spawn_show(userid, toggle=None):
     global spawnPoints
+    
+    if not spawnPoints:
+        gungamelib.msg('gg_spawnpoints', userid, 'OperationFailed:PleaseWait')
     
     # In map?
     if not gungamelib.inMap():

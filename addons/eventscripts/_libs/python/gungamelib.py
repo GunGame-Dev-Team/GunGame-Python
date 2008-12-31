@@ -1403,15 +1403,18 @@ class Message(object):
         # Get the default language string (generally english)
         rtnStr = self.strings(string, tokens)
         
-        # Is the console, use the value of "eventscripts_language"
-        # NOTE TO DEVS: This is causing instantaneous crashes, we need to find a fix.
+        # NOTE TO DEVS: This is causing instantaneous crashes, we need to find a fix
+        # NOTE TO DEVS: IT DEFINATELY WORKED WHEN I IMPLEMENTED IT!
         # NOTE TO DEVS: Does it have anything to do with the file encoding?
-        # NOTE TO DEVS: Crashes on line: rtnStr = str(self.strings(string, tokens, langAbrv))
-        #if userid == 'CONSOLE':
-        if False:
+        # NOTE TO DEVS: I >>>think<<< it crashes on line: rtnStr = str(self.strings(string, tokens, langAbrv))
+        """# Is the console, use the value of "eventscripts_language"
+        if userid == 'CONSOLE':
             # Get language and get the string
             langAbrv = langlib.getLangAbbreviation(str(es.ServerVar('eventscripts_language')))
             rtnStr = str(self.strings(string, tokens, langAbrv))
+        """
+        if userid == 'CONSOLE':
+            pass
         
         # Get the player's language (if we were supplied with a userid)
         elif userid and playerExists(userid):

@@ -31,7 +31,7 @@ class SpawnPointManager(object):
         self.mapName = str(es.ServerVar('eventscripts_currentmap'))
         
         # Make sure we are currently in a map
-        if self.mapName == '':
+        if str(es.ServerVar('eventscripts_currentmap')) == '':
             raise SpawnPointError('Unable to retrieve spawn points: not currently in a map!')
         
         # Get spawnpoint file
@@ -79,10 +79,9 @@ class SpawnPointManager(object):
         locations and uses inbuilt random spawn selection.'''
         # Remove spawnpoints
         for tSpawn in es.createentitylist('info_player_terrorist'):
-            es.server.cmd('es_xremove "%s"' % tSpawn)
-        
+            es.server.cmd('es_xremove %i' % tSpawn)
         for ctSpawn in es.createentitylist('info_player_counterterrorist'):
-            es.server.cmd('es_xremove "%s"' % ctSpawn)
+            es.server.cmd('es_xremove %i' % ctSpawn)
         
         # Get a userid
         userid = es.getuserid()
@@ -96,7 +95,6 @@ class SpawnPointManager(object):
         for spawn in self.spawnPoints:
             for team in ('info_player_terrorist', 'info_player_counterterrorist'):
                 # Create the spawnpoint and get the index
-                # NOTE TO DEVS: Is this time critical?
                 es.server.cmd('es_xgive %s %s' % (userid, team))
                 index = int(es.ServerVar('eventscripts_lastgive'))
                 
@@ -277,7 +275,7 @@ class SpawnPointManager(object):
         # Remove all props
         for index in self.propIndexes:
             if self.propIndexes[index] in entityIndexes:
-                es.server.queuecmd('es_xremove gg_dm_prop%i' % int(index))
+                es.server.cmd('es_xremove gg_dm_prop%i' % int(index))
         
         # Clear prop index dictionary
         self.propIndexes.clear()

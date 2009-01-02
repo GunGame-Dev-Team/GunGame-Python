@@ -57,7 +57,7 @@ def load():
     gg_warmup_round = gungamelib.registerAddon('gg_warmup_round')
     gg_warmup_round.setDisplayName('GG Warmup Round')
     gg_warmup_round.loadTranslationFile()
-    
+
     # Set "isWarmup" global
     gungamelib.setGlobal('isWarmup', 1)
     
@@ -247,6 +247,3 @@ def countDown():
         # Check to see if we should load elimination for warmup round
         if dict_addonVars['unloadElimination']:
             es.server.queuecmd('gg_elimination 0')
-        
-        # Don't allow anyone to spawn until next round
-        gungamelib.setGlobal('respawn_allowed', 0)

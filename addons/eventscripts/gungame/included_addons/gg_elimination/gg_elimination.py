@@ -1,7 +1,7 @@
 ''' (c) 2008 by the GunGame Coding Team
 
     Title: gg_elimination
-    Version: 5.0.582
+    Version: 5.0.498
     Description: Players respawn after their killer is killed.
     
     Originally for ES1.3 created by ichthys:
@@ -27,7 +27,7 @@ import gungamelib
 # Register this addon with EventScripts
 info = es.AddonInfo()
 info.name     = 'gg_elimination (for GunGame5)'
-info.version  = '5.0.582'
+info.version  = '5.0.498'
 info.url      = 'http://gungame5.com/'
 info.basename = 'gungame/included_addons/gg_elimination'
 info.author   = 'GunGame Development Team'
@@ -98,15 +98,10 @@ def player_activate(event_var):
 def player_disconnect(event_var):
     userid = event_var['userid']
     
-    # Remove disconnecting player from player dict
+    # Remove diconnecting player from player dict
     if userid in dict_playersEliminated:
         respawnEliminated(userid, dict_addonVars['currentRound'])
         del dict_playersEliminated[userid]
-    
-    # Remove disconnecting player from the respawn lists
-    for _userid, players in dict_playersEliminated.iteritems():
-        if userid in players:
-            players.remove(userid)
 
 def player_death(event_var):
     # Check to see if the round is active
@@ -194,7 +189,7 @@ def respawnEliminated(userid, respawnRound):
         gungamelib.respawn(playerid)
         
         # Add to message format
-        players.append('\3%s\1' % es.getplayername(playerid))
+        players.append('\3%s\1' % gungamelib.getPlayer(playerid).name)
         
         # Get index
         if not index:
@@ -207,11 +202,7 @@ def respawnEliminated(userid, respawnRound):
     dict_playersEliminated[userid] = []
 
 def respawnable(userid):
-    # Check player exists
-    if not gungamelib.clientInServer(userid):
-        return False
-    
-    # Check if player is on a team
+    # Check if player is on a team (checks for existancy also)
     if gungamelib.isSpectator(userid):
         return False
     

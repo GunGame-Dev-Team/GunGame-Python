@@ -83,8 +83,8 @@ def hegrenade_detonate(event_var):
     if not gungamePlayer.isbot:
         return
     
-    # Make sure we are on grenade level
-    if gungamePlayer.getWeapon() != 'hegrenade':
+    # Is it warmup?
+    if gungamelib.getGlobal('isWarmup'):
         return
     
     # Do we have unlimited grenades enabled?
@@ -127,9 +127,7 @@ def checkBonus(userid):
 
 def checkNadeBonusVar():
     # Helper function -- lambda isn't very readable
-    def cleanWeaponText(text):
-        text = text.strip()
-        
+    def stripWeaponPrefix(text):
         if text.startswith('weapon_'):
             return text[7:]
         
@@ -143,20 +141,22 @@ def checkNadeBonusVar():
     
     # Loop through the weapons
     for weapon in str(nadeBonusWeapons).split(','):
-        weapon = cleanWeaponText(weapon)
+        # Prefix with weapon_
+        if not weapon.startswith('weapon_'):
+            weapon = 'weapon_%s' % weapon
         
         # Knife check
-        if weapon == 'knife':
+        if weapon == 'weapon_knife':
             gungamelib.echo('gg_nade_bonus', 0, 0, 'InvalidWeapon', {'weapon': 'knife'})
             continue
         
         # Check its a valid weapon
-        if weapon not in gungamelib.getWeaponList('all'):
-            gungamelib.echo('gg_nade_bonus', 0, 0, 'InvalidWeapon', {'weapon': weapon})
+        if weapon[7:] not in gungamelib.getWeaponList('all'):
+            gungamelib.echo('gg_nade_bonus', 0, 0, 'InvalidWeapon', {'weapon': weapon[7:]})
             continue
         
-        # Add to the valid weapons list
-        validWeapons.append(weapon)
+        # Add to the valid weapons list (without the weapon_ prefix)
+        validWeapons.append(weapon[7:])
     
     # Is there any valid weapons?
     if len(validWeapons) == 0:
@@ -165,7 +165,7 @@ def checkNadeBonusVar():
     
     # Get old and updated variable values
     newVariableValue = ','.join(validWeapons)
-    oldVariableValue = ','.join(map(cleanWeaponText, str(nadeBonusWeapons).split(',')))
+    oldVariableValue = ','.join(map(stripWeaponPrefix, str(nadeBonusWeapons).split(',')))
     
     # Have the variable values even changed?
     if newVariableValue == oldVariableValue:

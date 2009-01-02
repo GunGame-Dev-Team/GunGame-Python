@@ -125,17 +125,12 @@ def player_death(event_var):
     # Get the userid
     userid = event_var['userid']
     
-    # Playerlib doesn't know they exist
-    if not gungamelib.clientInServer(userid):
-        return
-    
-    # Gungame doesn't know they exist
-    if not gungamelib.playerExists(userid):
-        return
-    
-    # Do they have a defuser?
-    if playerlib.getPlayer(userid).get('defuser'):
-        gamethread.delayed(0.5, es.server.queuecmd, ('es_xremove item_defuser'))
+    # Remove defuser
+    try:
+        if playerlib.getPlayer(userid).get('defuser'):
+            gamethread.delayed(0.5, es.remove, ('item_defuser'))
+    except playerlib.UseridError:
+        pass
     
     # Respawn the player if the round hasn't ended
     if gungamelib.getGlobal('respawn_allowed'):

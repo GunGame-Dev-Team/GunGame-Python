@@ -104,7 +104,6 @@ def giveNewWeapon(userid, oldLevel, newLevel):
 
 def weaponCheck(userid):
     gungamePlayer = gungamelib.getPlayer(userid)
-    
     if gungamePlayer.weaponcheck >= 7:
         gungamePlayer.giveWeapon()
         return
@@ -117,19 +116,19 @@ def weaponCheck(userid):
         if es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity') == playerHandle:
             return
     
+    playerHandle = es.getplayerhandle(userid)
     weapon = gungamePlayer.getWeapon()
     
     if weapon in gungamelib.getWeaponList('primary'):
-        stripWeapon(gungamePlayer, 'primary')
+        stripWeapon(gungamePlayer, playerHandle, 'primary')
     elif weapon in gungamelib.getWeaponList('secondary'):
-        stripWeapon(gungamePlayer, 'secondary')
+        stripWeapon(gungamePlayer, playerHandle, 'secondary')
     else:
         gungamePlayer.stripPlayer()
     
     gamethread.delayed(0.05, weaponCheck, (userid))
 
-def stripWeapon(gungamePlayer, weaponType):
-    weaponIndex = gungamePlayer.getWeaponIndex(weaponType)
-    
+def stripWeapon(gungamePlayer, playerHandle, weaponType):
+    weaponIndex = gungamePlayer.getWeaponIndex(playerHandle, weaponType)
     if weaponIndex:
-        gungamelib.safeRemove(weaponIndex)
+        es.server.queuecmd('es_xremove %i' % weaponIndex)

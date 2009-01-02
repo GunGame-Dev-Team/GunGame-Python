@@ -17,7 +17,7 @@ import sys
 import inspect
 import time
 import math
-import pickle   # Uses fake Pickle fixer
+import cPickle
 import wave
 import mp3lib
 import encodings
@@ -279,13 +279,11 @@ class Player(object):
         return afkMathTotal == self.afkmathtotal
     
     def afkPunish(self):
-        '''Punishes a player if they have been AFK for too long.'''
+        '''Punishes a player if they have been AFK for too long.
+        
+        TODO: Use this instead of afkPunishCheck in gungame.py'''
         # Check if we are AFK.
         if not self.isPlayerAFK():
-            return
-        
-        # Don't AFK punish bots
-        if self.isbot:
             return
         
         afkMaxAllowed = gungamelib.getVariableValue('gg_afk_rounds')
@@ -361,35 +359,20 @@ class Player(object):
         
         # Strip primary weapon
         for weaponType in ('primary', 'secondary'):
-            weaponIndex = self.getWeaponIndex(weaponType)
-            
+            weaponIndex = self.getWeaponIndex(playerHandle, weaponType)
             if weaponIndex:
-                safeRemove(weaponIndex)
+                es.server.queuecmd('es_xremove %i' % weaponIndex)
         
         # Use weapon
         if self.getWeapon() in ['knife', 'hegrenade']:
             es.sexec(self.userid, 'use weapon_%s' % self.getWeapon())
     
-    def getOwnedEntityIndex(self, entity):
-        # Get our handle
-        playerHandle = es.getplayerhandle(self.userid)
-        
-        # Loop through entities
-        for weaponIndex in es.createentitylist(entity):
-            if es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity') == playerHandle:
-                return weaponIndex
-    
-    def getWeaponIndex(self, flag):
-        # Get our handle
-        playerHandle = es.getplayerhandle(self.userid)
-        
-        # Loop through weapons
+    def getWeaponIndex(self, playerHandle, flag):
         for weapon in getWeaponList(flag):
-            entIndex = self.getOwnedEntityIndex('weapon_%s' % weapon)
-            
-            # See if we own this entity
-            if entIndex is not None:
-                return entIndex
+            for weaponIndex in es.createentitylist('weapon_%s' % weapon):
+                # Check the owner against the handle
+                if es.getindexprop(weaponIndex, 'CBaseEntity.m_hOwnerEntity') == playerHandle:
+                    return weaponIndex
     
     def giveWeapon(self):
         '''Gives a player their current weapon.'''
@@ -532,127 +515,7 @@ class Player(object):
             return 0
         
         return 1
-    
-    def giveDefuser(self):
-        '''Gives this player their defuser (if the variables are at their correct values).'''
-        # Check gg_map_obj value
-        if getVariableValue('gg_map_obj') not in (1, 2, 3):
-            return
-        
-        # Check to see if we are a CT
-        if int(self.team) != 3:
-            return
-        
-        # Check we have bomb sites
-        if not len(es.createentitylist('func_bomb_target')):
-            return
-        
-        # Check gg_player_defuser value
-        if getVariableValue('gg_player_defuser') != 0:
-            return
-        
-        # Get playerlib player
-        playerlibPlayer = playerlib.getPlayer(userid)
-        
-        # We already have a defuser
-        if playerlibPlayer.get('defuser'):
-            return
-        
-        # Give the defuser
-        es.server.queuecmd('es_xgive %d "item_defuser"' % userid)
-    
-    def sendLevelInfo(self):
-        '''Sends level info HudHint for this player.'''
-        def send(text):
-            # Make sure the HUDHint space isn't taken up by something else
-            if not canShowHints():
-                return
-            
-            # Send hint
-            gamethread.delayed(0.5, usermsg.hudhint, (self.userid, text))
-        
-        # Get variables
-        leaderLevel = leaders.getLeaderLevel()
-        levelsBehindLeader = leaderLevel - self.level
-        multiKill = getLevelMultiKill(self.level)
-        
-        # Start text
-        text =  lang('gungame', 'LevelInfo_CurrentLevel', {'level': self.level, 'total': getTotalLevels()}, self.userid)
-        text += lang('gungame', 'LevelInfo_CurrentWeapon', {'weapon': getLevelWeapon(self.level)}, self.userid)
-        
-        # Multikill?
-        if multiKill > 1:
-            text += lang('gungame', 'LevelInfo_RequiredKills', {'kills': self.multikill, 'total': multiKill}, self.userid)
-        
-        # ======================
-        # WE ARE THE ONLY LEADER
-        # ======================
-        if levelsBehindLeader == 0 and leaders.getLeaderCount() == 1:
-            text += lang('gungame', 'LevelInfo_CurrentLeader', usePlayerLang=self.userid)
-            
-            # Send hint
-            send(text)
-        
-        # ====================
-        # THERE ARE NO LEADERS
-        # ====================
-        elif levelsBehindLeader == 0 and leaderLevel == 1:
-            text += lang('gungame', 'LevelInfo_NoLeaders', usePlayerLang=self.userid)
-            
-            # Send hint
-            send(text)
-        
-        # ================
-        # MULTIPLE LEADERS
-        # ================
-        elif levelsBehindLeader == 0 and leaders.getLeaderCount() > 1:
-            text += lang('gungame', 'LevelInfo_AmongstLeaders', usePlayerLang=self.userid)
-            
-            # Send hint
-            send(text)
-        
-        # ================
-        # SHOW LEADER INFO
-        # ================
-        else:
-            # Add leader level
-            text += lang('gungame', 'LevelInfo_LeaderLevel', {
-                'level': leaders.getLeaderLevel(),
-                'total': getTotalLevels(),
-                'weapon': getLevelWeapon(leaders.getLeaderLevel())
-            }, self.userid)
-            
-            # Send hint
-            send(text)
-    
-    @staticmethod
-    def prepareEquipEntity():
-        '''Prepares the game_player_equip entity to automatically equip players with armour and knifes.'''
-        userid = es.getuserid()
-        
-        # No players on the server
-        if not userid:
-            return
-        
-        # Remove existing game_player_equip
-        es.server.queuecmd('es_xremove game_player_equip')
-        
-        # Give game_player_equip
-        es.server.queuecmd('es_xgive %s game_player_equip' % userid)
-        
-        # ALWAYS give knifes
-        es.server.queuecmd('es_xfire %s game_player_equip AddOutput "weapon_knife 1"' % userid)
-        
-        # Retrieve the armor type
-        armorType = getVariableValue('gg_player_armor')
-        
-        # Give the player full armor
-        if armorType == 2:
-            es.server.queuecmd('es_xfire %s game_player_equip AddOutput "item_assaultsuit 1"' % userid)
-        
-        # Give the player kevlar only
-        elif armorType == 1:
-            es.server.queuecmd('es_xfire %s game_player_equip AddOutput "item_kevlar 1"' % userid)
+
 
 # ==============================================================================
 #   WEAPON ORDER CLASS
@@ -918,7 +781,6 @@ class WeaponOrder(object):
         # Rebuild the menu
         self.buildWeaponOrderMenu()
         
-        # Restart game
         es.server.queuecmd('mp_restartgame 2')
     
     def buildWeaponOrderMenu(self):
@@ -1108,14 +970,13 @@ class Addon(object):
         echo('gungame', 0, 0, 'Addon:Unregistered', {'name': self.addon})
     
     def validateAddon(self):
-        addonType = getAddonType(self.addon)
+        if not addonExists(self.addon):
+            return False
         
-        if addonType == 1:
-            self.addonType = 'included'
-        elif addonType == 2:
+        if getAddonType(self.addon) == 0:
             self.addonType = 'custom'
         else:
-            return False
+            self.addonType = 'included'
         
         return True
     
@@ -1414,32 +1275,38 @@ class Message(object):
     
     def __formatString(self, string, tokens, userid=None):
         '''Retrieves and formats the string.'''
-        # Get the default language string (generally english)
+        # Set the default string (generally english)
         rtnStr = self.strings(string, tokens)
         
-        # NOTE TO DEVS: This is causing instantaneous crashes, we need to find a fix
-        # NOTE TO DEVS: IT DEFINATELY WORKED WHEN I IMPLEMENTED IT!
-        # NOTE TO DEVS: Does it have anything to do with the file encoding?
-        # NOTE TO DEVS: I >>>think<<< it crashes on line: rtnStr = str(self.strings(string, tokens, langAbrv))
-        """# Is the console, use the value of "eventscripts_language"
+        # Is the console, use the value of "eventscripts_language"
         if userid == 'CONSOLE':
+            # !!!DO NOT EDIT BELOW!!!
+            var = es.ServerVar('eventscripts_language')
+            var = str(var)
+            # !!!DO NOT EDIT ABOVE!!!
+            
             # Get language and get the string
-            langAbrv = langlib.getLangAbbreviation(str(es.ServerVar('eventscripts_language')))
-            rtnStr = str(self.strings(string, tokens, langAbrv))
-        """
-        if userid == 'CONSOLE':
-            pass
+            langAbrv = langlib.getLangAbbreviation(var)
+            rtnStr = self.strings(string, tokens, langAbrv)
         
         # Get the player's language (if we were supplied with a userid)
-        elif userid and playerExists(userid):
-            rtnStr = str(self.strings(string, tokens, getPlayer(userid).language))
+        elif userid:
+            if playerExists(userid):
+                assert playerExists(userid), ('__formatString called with invalid userid: %s' % userid)
+                rtnStr = self.strings(string, tokens, getPlayer(userid).language)
         
         # Format it
         rtnStr = rtnStr.replace('#lightgreen', '\3').replace('#green', '\4').replace('#default', '\1')
         rtnStr = encodings.codecs.escape_decode(rtnStr)
         
+        # Crash prevention
+        # !! DO NOT REMOVE !!
+        if isinstance(rtnStr, tuple):
+            rtnStr = list(rtnStr)
+            return rtnStr[0] + ' '
+        
         # Return the string
-        return rtnStr[0] + ' '
+        return rtnStr + ' '
     
     def lang(self, string, tokens={}, usePlayerLang=None):
         return self.__formatString(string, tokens, usePlayerLang)
@@ -1531,8 +1398,8 @@ class Message(object):
         # Playerlib filter
         else:
             # Send message
-            for userid in playerlib.getUseridList(self.filter):
-                usermsg.centermsg(userid, self.__formatString(string, tokens, userid))
+            for player in playerlib.getPlayerList(self.filter):
+                usermsg.centermsg(player.userid, self.__formatString(string, tokens, player.userid))
     
     def echo(self, filter, level, string, tokens, showPrefix = False):
         # Setup filter
@@ -2122,7 +1989,6 @@ def centermsg(addon, filter, string, tokens={}):
 # ==============================================================================
 def respawn(userid):
     respawnCommand = getVariable('gg_respawn_cmd')
-    
     if '#' not in str(respawnCommand):
         # Userids not requiring the "#" symbol
         es.server.queuecmd('%s %s' % (respawnCommand, userid))
@@ -2620,7 +2486,7 @@ def saveWinnerDatabase():
     
     # Dump to the file
     winnersDataBaseFile = open(winnersDataBasePath, 'w')
-    pickle.dump(dict_winners, winnersDataBaseFile)
+    cPickle.dump(dict_winners, winnersDataBaseFile)
     winnersDataBaseFile.close()
 
 def loadWinnerDatabase():
@@ -2635,14 +2501,14 @@ def loadWinnerDatabase():
         winnersDataBaseFile = open(winnersDataBasePath, 'w')
         
         # Place the contents of dict_winners in
-        pickle.dump(dict_winners, winnersDataBaseFile)
+        cPickle.dump(dict_winners, winnersDataBaseFile)
         
         # Save changes
         winnersDataBaseFile.close()
     
     # Read the file
     winnersDataBaseFile = open(winnersDataBasePath, 'r')
-    dict_winners = pickle.load(winnersDataBaseFile)
+    dict_winners = cPickle.load(winnersDataBaseFile)
     winnersDataBaseFile.close()
     
     # Set the global for having the database loaded
@@ -2656,8 +2522,6 @@ def pruneWinnerDatabase(days):
         # Prune the player?
         if (currentTime - float(dict_winners[steamid]['timestamp'])) > daysInSeconds:
             del dict_winners[steamid]
-    
-    # NOTE TO DEVS: Save the database here?
 
 # ==============================================================================
 #   ADDON RELATED COMMANDS
@@ -2839,7 +2703,7 @@ def getAddonDir(addonName, dir):
     dir = dir.replace('\\', '/')
     
     # Return
-    return '%s/%s/%s' % (addonPath, 'custom_addons' if getAddonType(addonName) == 2 else 'included_addons', dir)
+    return '%s/%s/%s' % (addonPath, 'custom_addons' if getAddonType(addonName) else 'included_addons', dir)
 
 def clientInServer(userid):
     '''!Checks to see whether \p userid is in the server.
@@ -2901,24 +2765,22 @@ def playerExists(userid):
     
     @retval True The player has a \c Player instance.
     @return False The player has no \c Player instance.'''
-    return int(userid) in dict_players
+    userid = int(userid)
+    return userid in dict_players
 
 def getAddonType(addonName):
     '''!Gets the type of an addon.
     
     @param addonName The name of the addon to get the type of.
     
-    @retval 0 /p addonName doesn't exist
-    @retval 1 /p addonName is an included addon.
-    @retval 2 /p addonName is a custom addon.'''
-    if os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)):
-        return 1
+    @retval 0 /p addonName is an included addon.
+    @retval 1 /p addonName is a custom addon.'''
+    # Check addon exists
+    if not addonExists(addonName):
+        raise ValueError('Cannot get addon type (%s): doesn\'t exist.' % addonName)
     
-    elif os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)):
-        return 2
-    
-    else:
-        return 0
+    # Get addon type
+    return int(os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)))
 
 def addonExists(addonName):
     '''!Checks to see if an addon exists.
@@ -2926,7 +2788,7 @@ def addonExists(addonName):
     @param addonName The name of the addon to check exists.
     
     @return True or False depending on whether the addon exists.'''
-    return getAddonType(addonName) != 0
+    return os.path.isdir(getGameDir('addons/eventscripts/gungame/included_addons/%s' % addonName)) or os.path.isdir(getGameDir('addons/eventscripts/gungame/custom_addons/%s' % addonName))
 
 def formatArgs():
     '''!@return A list of arguments that was supplied to the last console command.'''
@@ -3148,61 +3010,32 @@ def isWinnersCompatible():
     tempDir = getGameDir('')
     return ':' not in tempDir[tempdir.find('/')+1:]
 
-def loadAddon(addonName, verbose=False):
+def loadAddon(addonName):
     '''!Loads a GunGame addon. included and custom_addon already detected. Return values are self-explanatory.
     
     @param addonName Name of the addon to load.
     
-    @return [bool] Successful=True, Unsuccessful=False.'''
+    @return [tuple] In the format of: successful [bool], message [str].'''
     if not addonExists(addonName):
-        if verbose:
-            echo('gungame', 0, 0, 'AddonLoader:InvalidName', {'name': addonName})
-        return False
+        return False, 'Addon does not exist: %s' % addonName
     
     if addonName in getRegisteredAddonList():
-        if verbose:
-            echo('gungame', 0, 0, 'AddonLoader:AlreadyLoaded', {'name': addonName})
-        return False
+        return False, 'Addon already loaded: %s' % addonName
     
-    es.server.queuecmd('es_xload gungame/%s/%s' % ('included_addons' if getAddonType(addonName) == 1 else 'custom_addons', addonName))
-    return True
+    es.server.queuecmd('es_xload gungame/%s/%s' % ('included_addons' if getAddonType(addonName) == 0 else 'custom_addons', addonName))
+    return True, 'Loaded addon.'
 
-def unloadAddon(addonName, verbose=False):
+def unloadAddon(addonName):
     '''!Unloads a GunGame addon. included and custom_addon already detected. Return values are self-explanatory.
     
     @param addonName Name of the addon to unload.
     
-    @return [bool] Successful=True, Unsuccessful=False.'''
+    @return [tuple] In the format of: successful [bool], message [str].'''
     if not addonExists(addonName):
-        if verbose:
-            echo('gungame', 0, 0, 'AddonLoader:InvalidName', {'name': addonName})
-        return False
+        return False, 'Addon does not exist: %s' % addonName
     
     if addonName not in getRegisteredAddonList():
-        if verbose:
-            echo('gungame', 0, 0, 'AddonLoader:NotAlreadyLoaded', {'name': addonName})
-        return False
+        return False, 'Addon not already loaded: %s' % addonName
     
-    es.server.queuecmd('es_xunload gungame/%s/%s' % ('included_addons' if getAddonType(addonName) == 1 else 'custom_addons', addonName))
-    return True
-
-def safeRemove(index):
-    '''!Safely removes an entity. Has crash protection and only removes existant entities.
-    
-    @param index Index of the entity to remove.'''
-    # Time to intify
-    index = int(index)
-    
-    # Don't remove worldspawn (or below)
-    if index <= 0:
-        es.dbgmsg(0, 'safeRemove(%s):  Entity index <= 0' % index)
-        return
-    
-    # Check the entity exists
-    if index not in es.createentitylist(index):
-        es.dbgmsg(0, 'safeRemove(%s):  Entity not in entity list.' % index)
-        return
-    
-    # Kill it
-    #es.dbgmsg(0, 'safeRemove(%s):  Removing entity.' % index)
-    es.server.queuecmd('es_xremove "%s"' % index)
+    es.server.queuecmd('es_xunload gungame/%s/%s' % ('included_addons' if getAddonType(addonName) == 0 else 'custom_addons', addonName))
+    return True, 'Unloaded addon.'

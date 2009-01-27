@@ -1,6 +1,6 @@
 ''' (c) 2008 by the GunGame Coding Team
 
-    Version: 5.0.585
+    Version: 5.0.586
     Description: The main addon, handles leaders and events.
 '''
 
@@ -168,7 +168,7 @@ def initialize():
     if gungamelib.inMap():
         # Check to see if the warmup round needs to be activated
         if gungamelib.getVariableValue('gg_warmup_timer') > 0:
-            es.load('gungame/included_addons/gg_warmup_round')
+            es.server.queuecmd('es_xload gungame/included_addons/gg_warmup_round')
         else:
             # Fire gg_start event
             es.event('initialize','gg_start')
@@ -186,10 +186,10 @@ def initialize():
     gungamelib.getSoundPack(gungamelib.getVariableValue('gg_soundpack'))
     
     # Load gg_info_menus -- creates and sends ingame menus (!top, !leader, !score, !ranks, etc)
-    es.load('gungame/included_addons/gg_info_menus')
+    es.server.queuecmd('es_xload gungame/included_addons/gg_info_menus')
     
     # Load gg_thanks -- credits
-    es.load('gungame/included_addons/gg_thanks')
+    es.server.queuecmd('es_xload gungame/included_addons/gg_thanks')
     
     # Fire gg_load event
     es.event('initialize', 'gg_load')
@@ -303,7 +303,7 @@ def es_map_start(event_var):
     
     # Check to see if the warmup round needs to be activated
     if gungamelib.getVariableValue('gg_warmup_timer') > 0:
-        es.load('gungame/included_addons/gg_warmup_round')
+        es.server.queuecmd('es_xload gungame/included_addons/gg_warmup_round')
     else:
         # Fire gg_start event
         es.event('initialize','gg_start')
@@ -769,7 +769,7 @@ def gg_win(event_var):
         # Check to see if the warmup round needs to be activated
         if gungamelib.getVariableValue('gg_round_intermission') > 0:
             gungamelib.setGlobal('isIntermission', 1)
-            es.load('gungame/included_addons/gg_warmup_round')
+            es.server.queuecmd('es_xload gungame/included_addons/gg_warmup_round')
         
         # Tell the world
         gungamelib.saytext2('gungame', '#all', index, 'PlayerWonRound', {'player': playerName})
@@ -931,10 +931,10 @@ def server_cvar(event_var):
 #   HELPER FUNCTIONS
 # ==============================================================================
 def loadCustom(addonName):
-    es.load('gungame/custom_addons/' + str(addonName))
+    es.server.queuecmd('es_xload gungame/custom_addons/' + str(addonName))
     
 def unloadCustom(addonName):
-    es.unload('gungame/custom_addons/' + str(addonName))
+    es.server.queuecmd('es_xunload gungame/custom_addons/' + str(addonName))
 
 def afkPunishCheck(userid):
     gungamePlayer = gungamelib.getPlayer(userid)

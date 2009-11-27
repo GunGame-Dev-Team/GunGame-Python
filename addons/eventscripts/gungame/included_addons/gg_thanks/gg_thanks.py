@@ -64,7 +64,7 @@ credits = {
         'GoodfellaDeal',
         'Hacker Killer',
         'moethelawn',
-        'monday',
+        'Monday',
         'Q2',
         'SIL3NT-DE4TH',
         'sp90378',
